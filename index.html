@@ -69,48 +69,53 @@
         </div>
 
         <!-- Main Application (Logged In) -->
-        <div v-else class="flex-1 flex h-full overflow-hidden">
+        <div v-else class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
             
-            <!-- Sidebar -->
-            <aside class="w-64 bg-axisBlue text-white flex flex-col shadow-lg z-10">
-                <div class="p-6 border-b border-blue-800 flex items-center justify-center">
-                    <i class="fas fa-car text-axisRed text-2xl mr-3"></i>
-                    <div>
-                        <h2 class="text-xl font-bold leading-tight">Axis Auto</h2>
-                        <span class="text-xs text-blue-300 uppercase tracking-wider">{{ currentUser.role }} Portal</span>
+            <!-- Sidebar / Topbar -->
+            <aside class="w-full md:w-64 bg-axisBlue text-white flex flex-col shadow-lg z-10 shrink-0">
+                <div class="p-4 md:p-6 border-b border-blue-800 flex items-center justify-between md:justify-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-car text-axisRed text-2xl mr-3"></i>
+                        <div>
+                            <h2 class="text-xl font-bold leading-tight">Axis Auto</h2>
+                            <span class="text-xs text-blue-300 uppercase tracking-wider">{{ currentUser.role }} Portal</span>
+                        </div>
                     </div>
+                    <button @click="logout" class="md:hidden text-blue-200 hover:text-white p-2">
+                        <i class="fas fa-sign-out-alt text-xl"></i>
+                    </button>
                 </div>
                 
-                <div class="p-4 text-sm bg-blue-900 border-b border-blue-800">
+                <div class="p-2 md:p-4 text-sm bg-blue-900 border-b border-blue-800 text-center md:text-left">
                     <p>Welcome, <strong>{{ currentUser.name }}</strong></p>
                 </div>
 
-                <nav class="flex-1 overflow-y-auto py-4">
+                <nav class="flex md:flex-col overflow-x-auto md:overflow-y-auto py-2 md:py-4 whitespace-nowrap">
                     <!-- Admin Navigation -->
                     <template v-if="isAdmin">
-                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
                             <i class="fas fa-chart-line w-6"></i> Global Dashboard
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
                             <i class="fas fa-file-invoice w-6"></i> Live File Tracking
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
                             <i class="fas fa-users-cog w-6"></i> User Management
                         </a>
                     </template>
 
                     <!-- RO Navigation -->
                     <template v-else>
-                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
                             <i class="fas fa-home w-6"></i> My Pipeline
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
                             <i class="fas fa-plus-circle w-6"></i> New Customer File
                         </a>
                     </template>
                 </nav>
 
-                <div class="p-4 border-t border-blue-800">
+                <div class="p-4 border-t border-blue-800 hidden md:block">
                     <button @click="logout" class="w-full flex items-center justify-center py-2 px-4 bg-axisRed hover:bg-red-700 text-white rounded transition duration-200">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </button>
@@ -166,8 +171,8 @@
                             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
                                 <h3 class="font-semibold text-gray-700">Recent Activity</h3>
                             </div>
-                            <div class="p-0">
-                                <table class="w-full text-left border-collapse">
+                            <div class="p-0 overflow-x-auto">
+                                <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                                     <thead>
                                         <tr class="bg-gray-100 text-gray-600 text-sm">
                                             <th class="p-4 font-medium border-b">Customer Name</th>
@@ -287,8 +292,8 @@
                             </button>
                         </div>
                         
-                        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                            <table class="w-full text-left border-collapse">
+                        <div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
+                            <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                                 <thead>
                                     <tr class="bg-gray-100 text-gray-600 text-sm">
                                         <th class="p-4 font-medium border-b">Name</th>
