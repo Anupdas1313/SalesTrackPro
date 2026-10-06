@@ -51,16 +51,16 @@
                 <form @submit.prevent="login">
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
-                        <input v-model="loginForm.username" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue" required>
+                        <input v-model="loginForm.username" type="text" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue text-lg md:text-base" required>
                     </div>
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                        <input v-model="loginForm.password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue" required>
+                        <input v-model="loginForm.password" type="password" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue text-lg md:text-base" required>
                     </div>
                     <div v-if="loginError" class="mb-4 text-red-500 text-sm text-center">
                         {{ loginError }}
                     </div>
-                    <button type="submit" class="w-full bg-axisBlue text-white font-bold py-2 px-4 rounded-md hover:bg-blue-900 transition duration-300">
+                    <button type="submit" class="w-full bg-axisBlue text-white font-bold py-3 md:py-2 px-4 rounded-md hover:bg-blue-900 transition duration-300 text-lg md:text-base">
                         Sign In
                     </button>
                     <p class="mt-4 text-xs text-center text-gray-500">Default Admin - admin / password123</p>
@@ -72,7 +72,7 @@
         <div v-else class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
             
             <!-- Sidebar / Topbar -->
-            <aside class="w-full md:w-64 bg-axisBlue text-white flex flex-col shadow-lg z-10 shrink-0">
+            <aside class="w-full md:w-64 bg-axisBlue text-white flex flex-col shadow-lg z-20 shrink-0 relative">
                 <div class="p-4 md:p-6 border-b border-blue-800 flex items-center justify-between md:justify-center">
                     <div class="flex items-center">
                         <i class="fas fa-car text-axisRed text-2xl mr-3"></i>
@@ -81,44 +81,47 @@
                             <span class="text-xs text-blue-300 uppercase tracking-wider">{{ currentUser.role }} Portal</span>
                         </div>
                     </div>
-                    <button @click="logout" class="md:hidden text-blue-200 hover:text-white p-2">
-                        <i class="fas fa-sign-out-alt text-xl"></i>
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-white p-3 focus:outline-none">
+                        <i :class="mobileMenuOpen ? 'fas fa-times text-2xl' : 'fas fa-bars text-2xl'"></i>
                     </button>
                 </div>
                 
-                <div class="p-2 md:p-4 text-sm bg-blue-900 border-b border-blue-800 text-center md:text-left">
-                    <p>Welcome, <strong>{{ currentUser.name }}</strong></p>
-                </div>
+                <!-- Collapsible Menu -->
+                <div :class="{'hidden md:flex': !mobileMenuOpen, 'flex': mobileMenuOpen}" class="flex-col absolute md:relative top-full left-0 w-full md:w-auto bg-axisBlue z-20 shadow-xl md:shadow-none md:flex-1 pb-4 md:pb-0">
+                    <div class="p-4 text-sm bg-blue-900 border-b border-blue-800">
+                        <p>Welcome, <strong>{{ currentUser.name }}</strong></p>
+                    </div>
 
-                <nav class="flex md:flex-col overflow-x-auto md:overflow-y-auto py-2 md:py-4 whitespace-nowrap">
-                    <!-- Admin Navigation -->
-                    <template v-if="isAdmin">
-                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
-                            <i class="fas fa-chart-line w-6"></i> Global Dashboard
-                        </a>
-                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
-                            <i class="fas fa-file-invoice w-6"></i> Live File Tracking
-                        </a>
-                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
-                            <i class="fas fa-users-cog w-6"></i> User Management
-                        </a>
-                    </template>
+                    <nav class="flex flex-col py-2">
+                        <!-- Admin Navigation -->
+                        <template v-if="isAdmin">
+                            <a href="#" @click.prevent="currentTab = 'dashboard'; mobileMenuOpen = false" :class="[currentTab === 'dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-4 transition-colors text-lg md:text-base']">
+                                <i class="fas fa-chart-line w-8 md:w-6"></i> Global Dashboard
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'tracking'; mobileMenuOpen = false" :class="[currentTab === 'tracking' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-4 transition-colors text-lg md:text-base']">
+                                <i class="fas fa-file-invoice w-8 md:w-6"></i> Live File Tracking
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'users'; mobileMenuOpen = false" :class="[currentTab === 'users' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-4 transition-colors text-lg md:text-base']">
+                                <i class="fas fa-users-cog w-8 md:w-6"></i> User Management
+                            </a>
+                        </template>
 
-                    <!-- RO Navigation -->
-                    <template v-else>
-                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
-                            <i class="fas fa-home w-6"></i> My Pipeline
-                        </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-blue-800 border-b-4 md:border-b-0 md:border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-b-4 md:hover:border-b-0 md:hover:border-l-4 hover:border-blue-400', 'flex items-center px-4 md:px-6 py-3 transition-colors']">
-                            <i class="fas fa-plus-circle w-6"></i> New Customer File
-                        </a>
-                    </template>
-                </nav>
+                        <!-- RO Navigation -->
+                        <template v-else>
+                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'; mobileMenuOpen = false" :class="[currentTab === 'ro-dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-4 transition-colors text-lg md:text-base']">
+                                <i class="fas fa-home w-8 md:w-6"></i> My Pipeline
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'ro-add-file'; mobileMenuOpen = false" :class="[currentTab === 'ro-add-file' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-4 transition-colors text-lg md:text-base']">
+                                <i class="fas fa-plus-circle w-8 md:w-6"></i> New Customer File
+                            </a>
+                        </template>
+                    </nav>
 
-                <div class="p-4 border-t border-blue-800 hidden md:block">
-                    <button @click="logout" class="w-full flex items-center justify-center py-2 px-4 bg-axisRed hover:bg-red-700 text-white rounded transition duration-200">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                    </button>
+                    <div class="px-4 mt-2">
+                        <button @click="logout" class="w-full flex items-center justify-center py-4 bg-axisRed hover:bg-red-700 text-white rounded text-lg font-medium transition duration-200">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </button>
+                    </div>
                 </div>
             </aside>
 
@@ -227,7 +230,7 @@
                                 </select>
                             </div>
                             <div class="w-full md:w-auto mt-2 md:mt-0">
-                                <button @click="exportToExcel" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-sm flex items-center justify-center transition">
+                                <button @click="exportToExcel" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-4 py-3 md:py-2 rounded shadow-sm flex items-center justify-center transition text-base md:text-sm">
                                     <i class="fas fa-file-excel mr-2"></i> Export to Excel
                                 </button>
                             </div>
@@ -380,7 +383,7 @@
                                             </td>
                                             <td class="p-4 text-sm text-gray-500">{{ formatDate(file.createdAt) }}</td>
                                             <td class="p-4 text-right">
-                                                <button @click="openEditStatusModal(file)" class="text-axisBlue hover:text-blue-800 text-sm font-medium border border-axisBlue hover:bg-blue-50 px-3 py-1 rounded transition">
+                                                <button @click="openEditStatusModal(file)" class="text-axisBlue hover:text-blue-800 text-base md:text-sm font-medium border border-axisBlue hover:bg-blue-50 px-4 py-2 md:px-3 md:py-1 rounded transition whitespace-nowrap">
                                                     Update Status
                                                 </button>
                                             </td>
@@ -405,28 +408,28 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Customer Full Name *</label>
-                                            <input v-model="newFileForm.customerName" type="text" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                            <input v-model="newFileForm.customerName" type="text" required class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                                            <input v-model="newFileForm.phone" type="tel" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                            <input v-model="newFileForm.phone" type="tel" required class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
                                         </div>
                                     </div>
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make & Model</label>
-                                            <input v-model="newFileForm.vehicleModel" type="text" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none" placeholder="e.g. Hyundai Creta 2023">
+                                            <input v-model="newFileForm.vehicleModel" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base" placeholder="e.g. Hyundai Creta 2023">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Requested Loan Amount (₹) *</label>
-                                            <input v-model.number="newFileForm.loanAmount" type="number" min="0" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                            <input v-model.number="newFileForm.loanAmount" type="number" min="0" required class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
                                         </div>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Initial Status</label>
-                                        <select v-model="newFileForm.status" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none bg-white">
+                                        <select v-model="newFileForm.status" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none bg-white text-base">
                                             <option value="Lead">Lead (Initial Contact)</option>
                                             <option value="Login">Login (Documents Collected & Processing)</option>
                                         </select>
@@ -434,7 +437,7 @@
 
                                     <div class="mb-6">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Notes / Remarks</label>
-                                        <textarea v-model="newFileForm.notes" rows="3" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none"></textarea>
+                                        <textarea v-model="newFileForm.notes" rows="3" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base"></textarea>
                                     </div>
 
                                     <!-- Mock Document Upload UI -->
@@ -444,9 +447,9 @@
                                         <p class="text-xs text-gray-400">Files are mocked for this demo</p>
                                     </div>
 
-                                    <div class="flex justify-end pt-4 border-t">
-                                        <button type="button" @click="resetNewFileForm" class="mr-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition">Clear</button>
-                                        <button type="submit" class="px-6 py-2 bg-axisBlue hover:bg-blue-900 text-white font-medium rounded shadow transition">
+                                    <div class="flex flex-col md:flex-row justify-end pt-4 border-t gap-3 md:gap-0">
+                                        <button type="button" @click="resetNewFileForm" class="md:mr-3 px-4 py-3 md:py-2 text-gray-600 hover:bg-gray-100 rounded transition text-center text-lg md:text-base border border-gray-300 md:border-transparent">Clear</button>
+                                        <button type="submit" class="px-6 py-3 md:py-2 bg-axisBlue hover:bg-blue-900 text-white font-medium rounded shadow transition flex items-center justify-center text-lg md:text-base">
                                             <i class="fas fa-save mr-2"></i> Save Customer File
                                         </button>
                                     </div>

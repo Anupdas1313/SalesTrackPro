@@ -7,6 +7,7 @@ const app = createApp({
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
         const currentTab = ref('');
+        const mobileMenuOpen = ref(false);
 
         // Data arrays
         const roUsers = ref([]);
@@ -292,7 +293,7 @@ const app = createApp({
 
         // Return everything needed by the template
         return {
-            currentUser, loginForm, loginError, currentTab,
+            currentUser, loginForm, loginError, currentTab, mobileMenuOpen,
             isAdmin, stats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
