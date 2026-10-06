@@ -20,7 +20,7 @@ const app = createApp({
         const newRoForm = ref({ name: '', username: '', password: '' });
         const addRoError = ref('');
 
-        const newFileForm = ref({ customerName: '', phone: '', vehicleModel: '', loanAmount: 0, status: 'Lead', notes: '' });
+        const newFileForm = ref({ appId: '', customerName: '', nclUcl: '', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
         
         const showUpdateStatusModal = ref(false);
         const selectedFile = ref(null);
@@ -196,7 +196,7 @@ const app = createApp({
 
         // RO: Add File
         const resetNewFileForm = () => {
-            newFileForm.value = { customerName: '', phone: '', vehicleModel: '', loanAmount: 0, status: 'Lead', notes: '' };
+            newFileForm.value = { appId: '', customerName: '', nclUcl: '', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' };
         };
 
         const saveNewFile = async () => {
@@ -255,16 +255,18 @@ const app = createApp({
 
             // Map data to a clean format for Excel
             const exportData = filteredFiles.value.map(file => ({
-                'File ID': `#${String(file.id).padStart(5, '0')}`,
+                'App ID': file.appId || '',
                 'Customer Name': file.customerName,
-                'Phone': file.phone,
-                'Vehicle Model': file.vehicleModel,
+                'NCL/UCL': file.nclUcl || '',
                 'Loan Amount (Rs)': file.loanAmount,
                 'Status': file.status,
+                'Ppc': file.ppc || '',
+                'SM Name': file.smName || '',
                 'RO Name': file.roName,
+                'VCIP': file.vcip || '',
+                'MI': file.mi || '',
                 'Created At': formatDate(file.createdAt),
-                'Last Updated': formatDate(file.updatedAt || file.createdAt),
-                'Notes': file.notes
+                'Last Updated': formatDate(file.updatedAt || file.createdAt)
             }));
 
             // Create worksheet and workbook
@@ -308,4 +310,5 @@ const app = createApp({
 });
 
 app.mount('#app');
+
 
