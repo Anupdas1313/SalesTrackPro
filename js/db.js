@@ -1,4 +1,4 @@
-﻿import { collection, getDocs, addDoc, updateDoc, doc, query, where, getCountFromServer, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 const usersCol = collection(db, 'users');
@@ -59,4 +59,9 @@ export const addLoanFile = async (fileData) => {
 export const updateLoanFile = async (id, updateData) => {
     const docRef = doc(db, 'loanFiles', id);
     await updateDoc(docRef, updateData);
+};
+
+export const deleteLoanFile = async (id) => {
+    const docRef = doc(db, 'loanFiles', id);
+    await deleteDoc(docRef);
 };

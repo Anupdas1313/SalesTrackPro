@@ -22,6 +22,10 @@ const app = createApp({
 
         const newFileForm = ref({ appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
         
+        // Full File Edit Modal (RO & Admin)
+        const showEditFileModal = ref(false);
+        const editFileForm = ref({ id: '', appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
+
         const showUpdateStatusModal = ref(false);
         const selectedFile = ref(null);
         const statusUpdateForm = ref({ status: '', note: '' });
@@ -30,6 +34,14 @@ const app = createApp({
 
         // Filters (Admin Tracking)
         const filters = ref({ search: '', status: '', roId: '' });
+        
+        // Filters & Sorting (RO Tracking)
+        const roFilters = ref({
+            search: '',
+            status: '',
+            nclUcl: '',
+            sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
+        });
         const mySearch = ref('');
 
         // --- Computed ---
@@ -43,6 +55,24 @@ const app = createApp({
                 totalFiles: files.length,
                 approvedFiles: approved.length,
                 totalValue: files.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0)
+            };
+        });
+
+        // RO Overview KPIs
+        const roStats = computed(() => {
+            const files = myFiles.value;
+            const approved = files.filter(f => f.status === 'Approved');
+            const disbursed = files.filter(f => f.status === 'Disbursed');
+            const login = files.filter(f => f.status === 'Login');
+            const rejected = files.filter(f => f.status === 'Rejected');
+            const totalAmount = files.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            return {
+                totalFiles: files.length,
+                totalAmount,
+                approvedCount: approved.length,
+                disbursedCount: disbursed.length,
+                loginCount: login.length,
+                rejectedCount: rejected.length
             };
         });
 
@@ -64,15 +94,37 @@ const app = createApp({
             }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
         });
 
-        // RO Pipeline
+        // RO Pipeline & Overview Tracking (with filtering & sorting)
         const filteredMyFiles = computed(() => {
-            const q = mySearch.value.trim().toLowerCase();
-            return myFiles.value.filter(file => {
-                return !q ||
+            const q = (roFilters.value.search || mySearch.value).trim().toLowerCase();
+            let list = myFiles.value.filter(file => {
+                const matchSearch = !q ||
                     (file.customerName && file.customerName.toLowerCase().includes(q)) ||
                     (file.appId && file.appId.toLowerCase().includes(q)) ||
-                    (file.smName && file.smName.toLowerCase().includes(q));
-            }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+                    (file.smName && file.smName.toLowerCase().includes(q)) ||
+                    (file.ppc && file.ppc.toLowerCase().includes(q));
+                const matchStatus = roFilters.value.status ? file.status === roFilters.value.status : true;
+                const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
+                return matchSearch && matchStatus && matchCategory;
+            });
+
+            // Sorting
+            return list.sort((a, b) => {
+                switch (roFilters.value.sortBy) {
+                    case 'newest':
+                        return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
+                    case 'oldest':
+                        return new Date(a.createdAt || a.updatedAt) - new Date(b.createdAt || b.updatedAt);
+                    case 'amount-desc':
+                        return (Number(b.loanAmount) || 0) - (Number(a.loanAmount) || 0);
+                    case 'amount-asc':
+                        return (Number(a.loanAmount) || 0) - (Number(b.loanAmount) || 0);
+                    case 'name-asc':
+                        return (a.customerName || '').localeCompare(b.customerName || '');
+                    default:
+                        return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
+                }
+            });
         });
 
 
@@ -102,7 +154,14 @@ const app = createApp({
         };
 
         const getTabTitle = (tab) => {
-            return tab.replace('-', ' ');
+            switch (tab) {
+                case 'ro-dashboard': return 'Overview & File Tracking';
+                case 'ro-add-file': return 'New Customer Login';
+                case 'dashboard': return 'Global Dashboard';
+                case 'tracking': return 'Live File Tracking';
+                case 'users': return 'User Management';
+                default: return tab ? tab.replace('-', ' ') : '';
+            }
         };
 
         // Data Loading
@@ -224,7 +283,91 @@ const app = createApp({
             await loadRoData();
         };
 
-        // File Management (Status)
+        // Full File Edit Modal (RO & Admin)
+        const openEditFileModal = (file) => {
+            editFileForm.value = {
+                id: file.id,
+                appId: file.appId || '',
+                customerName: file.customerName || '',
+                nclUcl: file.nclUcl || 'NCL',
+                loanAmount: file.loanAmount || 0,
+                status: file.status || 'Login',
+                ppc: file.ppc || '',
+                smName: file.smName || '',
+                vcip: file.vcip || '',
+                mi: file.mi || ''
+            };
+            showEditFileModal.value = true;
+        };
+
+        const saveEditedFile = async () => {
+            if (!editFileForm.value.id) return;
+            
+            const updatedData = {
+                appId: editFileForm.value.appId,
+                customerName: editFileForm.value.customerName,
+                nclUcl: editFileForm.value.nclUcl,
+                loanAmount: editFileForm.value.loanAmount,
+                status: editFileForm.value.status,
+                ppc: editFileForm.value.ppc,
+                smName: editFileForm.value.smName,
+                vcip: editFileForm.value.vcip,
+                mi: editFileForm.value.mi,
+                updatedAt: new Date().toISOString()
+            };
+            
+            await db.updateLoanFile(editFileForm.value.id, updatedData);
+            showEditFileModal.value = false;
+            if (isAdmin.value) {
+                await loadAdminData();
+            } else {
+                await loadRoData();
+            }
+        };
+
+        const deleteFile = async (file) => {
+            if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
+                await db.deleteLoanFile(file.id);
+                if (isAdmin.value) {
+                    await loadAdminData();
+                } else {
+                    await loadRoData();
+                }
+            }
+        };
+
+        // Export RO Files to Excel
+        const exportRoFilesToExcel = () => {
+            if (filteredMyFiles.value.length === 0) {
+                alert("No files to export based on current filters.");
+                return;
+            }
+
+            const exportData = filteredMyFiles.value.map(file => ({
+                'App ID': file.appId || '',
+                'Customer Name': file.customerName,
+                'NCL / UCL': file.nclUcl || '',
+                'Loan Amount (INR)': file.loanAmount,
+                'Status': file.status,
+                'PPC': file.ppc || '',
+                'SM Name': file.smName || '',
+                'RO Name': file.roName,
+                'VCIP': file.vcip || '',
+                'MI': file.mi || '',
+                'Created At': formatDate(file.createdAt),
+                'Last Updated': formatDate(file.updatedAt || file.createdAt)
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "My_Login_Details");
+            
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `AxisAuto_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        };
+
+        // File Management (Status Only)
         const openEditStatusModal = (file) => {
             selectedFile.value = file;
             statusUpdateForm.value = { status: file.status, note: '' };
@@ -237,7 +380,6 @@ const app = createApp({
             await db.updateLoanFile(selectedFile.value.id, {
                 status: statusUpdateForm.value.status,
                 updatedAt: new Date().toISOString()
-                // In a real app, you might append the note to an audit log array
             });
             
             showUpdateStatusModal.value = false;
@@ -254,14 +396,13 @@ const app = createApp({
             showViewFileModal.value = true;
         };
 
-        // Export to Excel
+        // Export to Excel (Admin)
         const exportToExcel = () => {
             if (filteredFiles.value.length === 0) {
                 alert("No data to export based on current filters.");
                 return;
             }
 
-            // Map data to a clean format for Excel
             const exportData = filteredFiles.value.map(file => ({
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
@@ -277,16 +418,12 @@ const app = createApp({
                 'Last Updated': formatDate(file.updatedAt || file.createdAt)
             }));
 
-            // Create worksheet and workbook
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Files");
             
-            // Generate filename with current date
             const dateStr = new Date().toISOString().split('T')[0];
             const filename = `AxisAuto_CRM_Export_${dateStr}.xlsx`;
-
-            // Trigger download
             XLSX.writeFile(workbook, filename);
         };
 
@@ -305,14 +442,14 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen,
-            isAdmin, stats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
+            isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
-            newFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, mySearch,
+            newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
+            showViewFileModal, filters, roFilters, mySearch,
             formatCurrency, formatDate, getStatusBadgeClass, getTabTitle,
             login, logout, saveNewRo, toggleUserStatus,
-            resetNewFileForm, saveNewFile, openEditStatusModal, saveFileStatus,
-            openViewFileModal, exportToExcel
+            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
+            openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
         };
     }
 });
