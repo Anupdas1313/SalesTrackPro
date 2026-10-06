@@ -147,10 +147,13 @@
                         <!-- RO Navigation -->
                         <template v-else>
                             <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-lg shadow-[#97144D]/30' : 'hover:bg-slate-800 hover:text-white', 'flex items-center px-4 py-3 rounded-2xl transition-all duration-300 font-medium']">
-                                <i class="fas fa-table-list w-6 text-lg"></i> Overview & Tracking
+                                <i class="fas fa-chart-pie w-6 text-lg"></i> Overview
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-lg shadow-[#97144D]/30' : 'hover:bg-slate-800 hover:text-white', 'flex items-center px-4 py-3 rounded-2xl transition-all duration-300 font-medium']">
+                                <i class="fas fa-layer-group w-6 text-lg"></i> File Tracking
                             </a>
                             <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-lg shadow-[#97144D]/30' : 'hover:bg-slate-800 hover:text-white', 'flex items-center px-4 py-3 rounded-2xl transition-all duration-300 font-medium']">
-                                <i class="fas fa-plus-circle w-6 text-lg"></i> New Login Entry
+                                <i class="fas fa-plus-circle w-6 text-lg"></i> Add New File
                             </a>
                         </template>
                     </nav>
@@ -371,44 +374,38 @@
                     </div>
 
 
-                    <!-- RO: OVERVIEW & TRACKING PAGE -->
+                    <!-- RO: PURE OVERVIEW DASHBOARD -->
                     <div v-if="currentTab === 'ro-dashboard' && !isAdmin" class="space-y-6 pb-12">
                         
-                        <!-- Top Action Bar -->
-                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                        <!-- Header -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
-                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Overview & File Tracking</h1>
-                                <p class="text-xs text-slate-500 font-medium">Manage, filter, and track all your logged customer files</p>
+                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Portfolio Overview</h1>
+                                <p class="text-xs text-slate-500 font-medium">High-level summary of your loan applications</p>
                             </div>
-                            <div class="flex items-center gap-2.5">
-                                <button @click="exportRoFilesToExcel" class="flex-1 sm:flex-initial px-4 py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-2xl border border-slate-200 shadow-sm transition flex items-center justify-center gap-2 text-xs">
-                                    <i class="fas fa-file-excel text-emerald-600 text-sm"></i>
-                                    <span>Export Excel</span>
-                                </button>
-                                <button @click="currentTab = 'ro-add-file'" class="flex-1 sm:flex-initial px-5 py-3 bg-gradient-to-r from-[#97144D] to-[#ED1C24] hover:from-[#851244] hover:to-[#D11920] text-white font-bold rounded-2xl shadow-lg shadow-[#97144D]/25 transition transform active:scale-[0.99] flex items-center justify-center gap-2 text-xs">
-                                    <i class="fas fa-plus-circle text-sm"></i>
-                                    <span>Add New File</span>
-                                </button>
+                            <div class="px-3.5 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-slate-700">
+                                <span>Approval Rate: </span>
+                                <span class="text-emerald-600 ml-1">{{ roStats.approvalRate }}%</span>
                             </div>
                         </div>
 
-                        <!-- KPI Summary Cards -->
+                        <!-- Top KPI Cards -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                             <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Files</span>
-                                    <span class="w-7 h-7 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 text-xs">
+                                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 text-xs">
                                         <i class="fas fa-folder"></i>
                                     </span>
                                 </div>
                                 <p class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{{ roStats.totalFiles }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Logged files</p>
+                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Total logged files</p>
                             </div>
 
                             <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</span>
-                                    <span class="w-7 h-7 rounded-xl bg-[#97144D]/10 flex items-center justify-center text-[#97144D] text-xs font-bold">
+                                    <span class="w-8 h-8 rounded-xl bg-[#97144D]/10 flex items-center justify-center text-[#97144D] text-xs font-bold">
                                         ₹
                                     </span>
                                 </div>
@@ -419,23 +416,141 @@
                             <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Approved</span>
-                                    <span class="w-7 h-7 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xs">
+                                    <span class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xs">
                                         <i class="fas fa-check-circle"></i>
                                     </span>
                                 </div>
                                 <p class="text-2xl sm:text-3xl font-black text-emerald-600 mt-2">{{ roStats.approvedCount }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ roStats.disbursedCount }} Disbursed</p>
+                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">₹{{ formatCurrency(roStats.approvedAmount) }}</p>
                             </div>
 
                             <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">In Login</span>
-                                    <span class="w-7 h-7 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-xs">
+                                    <span class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-xs">
                                         <i class="fas fa-clock"></i>
                                     </span>
                                 </div>
                                 <p class="text-2xl sm:text-3xl font-black text-blue-600 mt-2">{{ roStats.loginCount }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">{{ roStats.rejectedCount }} Rejected</p>
+                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">₹{{ formatCurrency(roStats.loginAmount) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Status & Value Distribution Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Status Breakdown Card -->
+                            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                                    <h3 class="font-bold text-slate-800 text-sm">Status Distribution</h3>
+                                    <span class="text-xs text-slate-400 font-medium">Count & Volume</span>
+                                </div>
+
+                                <div class="space-y-3.5">
+                                    <!-- Login -->
+                                    <div class="space-y-1.5">
+                                        <div class="flex justify-between text-xs font-bold">
+                                            <span class="text-blue-600 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+                                                <span>Login (In-Process)</span>
+                                            </span>
+                                            <span class="text-slate-800">{{ roStats.loginCount }} files (₹{{ formatCurrency(roStats.loginAmount) }})</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                            <div class="bg-blue-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.loginCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Approved -->
+                                    <div class="space-y-1.5">
+                                        <div class="flex justify-between text-xs font-bold">
+                                            <span class="text-emerald-600 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                                                <span>Approved</span>
+                                            </span>
+                                            <span class="text-slate-800">{{ roStats.approvedCount }} files (₹{{ formatCurrency(roStats.approvedAmount) }})</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.approvedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Disbursed -->
+                                    <div class="space-y-1.5">
+                                        <div class="flex justify-between text-xs font-bold">
+                                            <span class="text-purple-600 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-purple-600 inline-block"></span>
+                                                <span>Disbursed</span>
+                                            </span>
+                                            <span class="text-slate-800">{{ roStats.disbursedCount }} files (₹{{ formatCurrency(roStats.disbursedAmount) }})</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                            <div class="bg-purple-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.disbursedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Rejected -->
+                                    <div class="space-y-1.5">
+                                        <div class="flex justify-between text-xs font-bold">
+                                            <span class="text-rose-600 flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+                                                <span>Rejected</span>
+                                            </span>
+                                            <span class="text-slate-800">{{ roStats.rejectedCount }} files (₹{{ formatCurrency(roStats.rejectedAmount) }})</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                            <div class="bg-rose-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.rejectedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Category Breakdown (NCL vs UCL) -->
+                            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
+                                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                                    <h3 class="font-bold text-slate-800 text-sm">Category Breakdown</h3>
+                                    <span class="text-xs text-slate-400 font-medium">NCL vs UCL</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 my-auto">
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+                                        <span class="inline-block px-2.5 py-0.5 bg-[#97144D]/10 text-[#97144D] text-[11px] font-bold rounded-md uppercase">NCL</span>
+                                        <p class="text-2xl font-black text-slate-900 mt-2">{{ roStats.nclCount }}</p>
+                                        <p class="text-xs font-bold text-slate-500 mt-0.5">₹{{ formatCurrency(roStats.nclAmount) }}</p>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+                                        <span class="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-md uppercase">UCL</span>
+                                        <p class="text-2xl font-black text-slate-900 mt-2">{{ roStats.uclCount }}</p>
+                                        <p class="text-xs font-bold text-slate-500 mt-0.5">₹{{ formatCurrency(roStats.uclAmount) }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/70 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 font-medium">Logged-In RO Account</span>
+                                    <span class="text-slate-800 font-bold">{{ currentUser.name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
+                    <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-6 pb-12">
+                        
+                        <!-- Top Action Bar -->
+                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                            <div>
+                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Saved Login Details</h1>
+                                <p class="text-xs text-slate-500 font-medium">Search, filter, edit, and export customer files</p>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <button @click="exportRoFilesToExcel" class="flex-1 sm:flex-initial px-4 py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-2xl border border-slate-200 shadow-sm transition flex items-center justify-center gap-2 text-xs">
+                                    <i class="fas fa-file-excel text-emerald-600 text-sm"></i>
+                                    <span>Export Excel</span>
+                                </button>
+                                <button @click="currentTab = 'ro-add-file'" class="flex-1 sm:flex-initial px-5 py-3 bg-gradient-to-r from-[#97144D] to-[#ED1C24] hover:from-[#851244] hover:to-[#D11920] text-white font-bold rounded-2xl shadow-lg shadow-[#97144D]/25 transition transform active:scale-[0.99] flex items-center justify-center gap-2 text-xs">
+                                    <i class="fas fa-plus-circle text-sm"></i>
+                                    <span>Add New File</span>
+                                </button>
                             </div>
                         </div>
 
@@ -779,8 +894,12 @@
                     </template>
                     <template v-else>
                         <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-table-list text-xl mb-1"></i>
+                            <i class="fas fa-chart-pie text-xl mb-1"></i>
                             <span class="text-[10px]">Overview</span>
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
+                            <i class="fas fa-layer-group text-xl mb-1"></i>
+                            <span class="text-[10px]">Tracking</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
                             <i class="fas fa-plus-circle text-xl mb-1"></i>

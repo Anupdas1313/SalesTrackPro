@@ -65,14 +65,36 @@ const app = createApp({
             const disbursed = files.filter(f => f.status === 'Disbursed');
             const login = files.filter(f => f.status === 'Login');
             const rejected = files.filter(f => f.status === 'Rejected');
+            const ncl = files.filter(f => f.nclUcl === 'NCL');
+            const ucl = files.filter(f => f.nclUcl === 'UCL');
+
             const totalAmount = files.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const approvedAmount = approved.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const disbursedAmount = disbursed.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const loginAmount = login.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const rejectedAmount = rejected.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+
+            const nclAmount = ncl.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const uclAmount = ucl.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+
+            const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
+
             return {
                 totalFiles: files.length,
                 totalAmount,
                 approvedCount: approved.length,
+                approvedAmount,
                 disbursedCount: disbursed.length,
+                disbursedAmount,
                 loginCount: login.length,
-                rejectedCount: rejected.length
+                loginAmount,
+                rejectedCount: rejected.length,
+                rejectedAmount,
+                nclCount: ncl.length,
+                nclAmount,
+                uclCount: ucl.length,
+                uclAmount,
+                approvalRate
             };
         });
 
@@ -155,7 +177,8 @@ const app = createApp({
 
         const getTabTitle = (tab) => {
             switch (tab) {
-                case 'ro-dashboard': return 'Overview & File Tracking';
+                case 'ro-dashboard': return 'Portfolio Overview';
+                case 'ro-tracking': return 'Saved Login Details';
                 case 'ro-add-file': return 'New Customer Login';
                 case 'dashboard': return 'Global Dashboard';
                 case 'tracking': return 'Live File Tracking';
@@ -279,7 +302,7 @@ const app = createApp({
             
             await db.addLoanFile(newFile);
             resetNewFileForm();
-            currentTab.value = 'ro-dashboard';
+            currentTab.value = 'ro-tracking';
             await loadRoData();
         };
 
