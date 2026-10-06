@@ -116,11 +116,7 @@
                         </template>
                     </nav>
 
-                    <div class="px-4 mt-2">
-                        <button @click="logout" class="w-full flex items-center justify-center py-4 bg-axisRed hover:bg-red-700 text-white rounded text-lg font-medium transition duration-200">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                        </button>
-                    </div>
+
                 </div>
             </aside>
 
@@ -129,8 +125,13 @@
                 <!-- Header -->
                 <header class="bg-white shadow-sm border-b px-4 md:px-8 py-3 md:py-4 flex justify-between items-center z-0">
                     <h2 class="text-xl md:text-2xl font-semibold text-gray-800 capitalize">{{ getTabTitle(currentTab) }}</h2>
-                    <div class="text-xs md:text-sm text-gray-500 text-right">
-                        {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
+                    <div class="flex items-center gap-4">
+                        <div class="text-xs md:text-sm text-gray-500 text-right hidden md:block">
+                            {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
+                        </div>
+                        <button @click="logout" class="text-red-600 hover:bg-red-50 px-3 py-2 md:py-1.5 rounded transition font-medium border border-red-200 text-sm md:text-base flex items-center shadow-sm">
+                            <i class="fas fa-sign-out-alt md:mr-2 text-lg md:text-base"></i> <span class="hidden md:inline">Logout</span>
+                        </button>
                     </div>
                 </header>
 
