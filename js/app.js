@@ -42,10 +42,18 @@ const app = createApp({
             nclUcl: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
+        const showMobileFilters = ref(false);
         const mySearch = ref('');
 
         // --- Computed ---
         const isAdmin = computed(() => currentUser.value?.role === 'admin');
+
+        const activeFilterCount = computed(() => {
+            let count = 0;
+            if (roFilters.value.nclUcl) count++;
+            if (roFilters.value.sortBy && roFilters.value.sortBy !== 'newest') count++;
+            return count;
+        });
 
         // Admin Stats
         const stats = computed(() => {
@@ -468,7 +476,7 @@ const app = createApp({
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, mySearch,
+            showViewFileModal, filters, roFilters, showMobileFilters, activeFilterCount, mySearch,
             formatCurrency, formatDate, getStatusBadgeClass, getTabTitle,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,

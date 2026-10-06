@@ -544,57 +544,92 @@
                             </div>
                         </div>
 
-                        <!-- Filter, Search & Sort Toolbar -->
-                        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <!-- Filter, Search & Sort Toolbar (Compact & Mobile-Optimized) -->
+                        <div class="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm space-y-2.5">
+                            <!-- Top Search & Filter Bar -->
+                            <div class="flex items-center gap-2">
                                 <!-- Search Input -->
-                                <div class="sm:col-span-4 relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 text-xs">
+                                <div class="relative flex-1">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
                                         <i class="fas fa-search"></i>
                                     </span>
-                                    <input v-model="roFilters.search" type="text" placeholder="Search App ID, Customer, SM..." class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    <input v-model="roFilters.search" type="text" placeholder="Search customer, App ID, SM..." class="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition placeholder-slate-400">
+                                    <button v-if="roFilters.search" @click="roFilters.search = ''" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 text-xs">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
                                 </div>
 
-                                <!-- Status Filter -->
-                                <div class="sm:col-span-3">
-                                    <select v-model="roFilters.status" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-slate-700">
-                                        <option value="">All Statuses</option>
-                                        <option value="Login">Login</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="Rejected">Rejected</option>
-                                        <option value="Disbursed">Disbursed</option>
-                                    </select>
+                                <!-- Filter & Sort Toggle Button -->
+                                <button @click="showMobileFilters = !showMobileFilters" :class="[showMobileFilters || activeFilterCount > 0 ? 'bg-[#97144D] text-white shadow-sm shadow-[#97144D]/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200', 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 border border-transparent']">
+                                    <i class="fas fa-sliders text-xs"></i>
+                                    <span class="hidden sm:inline">Filters & Sort</span>
+                                    <span v-if="activeFilterCount > 0" class="w-4 h-4 rounded-full bg-white text-[#97144D] text-[10px] font-black flex items-center justify-center">{{ activeFilterCount }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Quick Horizontal Status Filter Pills -->
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 hide-scrollbar">
+                                <button type="button" @click="roFilters.status = ''" :class="[roFilters.status === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
+                                    All <span class="text-[10px] opacity-75">({{ myFiles.length }})</span>
+                                </button>
+                                <button type="button" @click="roFilters.status = 'Login'" :class="[roFilters.status === 'Login' ? 'bg-blue-600 text-white font-bold' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
+                                    Login <span class="text-[10px] opacity-75">({{ roStats.loginCount }})</span>
+                                </button>
+                                <button type="button" @click="roFilters.status = 'Approved'" :class="[roFilters.status === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
+                                    Approved <span class="text-[10px] opacity-75">({{ roStats.approvedCount }})</span>
+                                </button>
+                                <button type="button" @click="roFilters.status = 'Disbursed'" :class="[roFilters.status === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
+                                    Disbursed <span class="text-[10px] opacity-75">({{ roStats.disbursedCount }})</span>
+                                </button>
+                                <button type="button" @click="roFilters.status = 'Rejected'" :class="[roFilters.status === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
+                                    Rejected <span class="text-[10px] opacity-75">({{ roStats.rejectedCount }})</span>
+                                </button>
+                            </div>
+
+                            <!-- Expanded Drawer for Category & Sort (Desktop & Mobile) -->
+                            <div v-if="showMobileFilters" class="pt-3 border-t border-slate-100 space-y-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <!-- Category Filter -->
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category (NCL / UCL)</label>
+                                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                            <button type="button" @click="roFilters.nclUcl = ''" :class="roFilters.nclUcl === '' ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">All</button>
+                                            <button type="button" @click="roFilters.nclUcl = 'NCL'" :class="roFilters.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
+                                            <button type="button" @click="roFilters.nclUcl = 'UCL'" :class="roFilters.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sort By -->
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Files By</label>
+                                        <select v-model="roFilters.sortBy" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-slate-700">
+                                            <option value="newest">Newest First</option>
+                                            <option value="oldest">Oldest First</option>
+                                            <option value="amount-desc">Amount: High to Low</option>
+                                            <option value="amount-asc">Amount: Low to High</option>
+                                            <option value="name-asc">Customer Name: A to Z</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <!-- Category Filter (NCL / UCL) -->
-                                <div class="sm:col-span-2">
-                                    <select v-model="roFilters.nclUcl" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-slate-700">
-                                        <option value="">All Categories</option>
-                                        <option value="NCL">NCL</option>
-                                        <option value="UCL">UCL</option>
-                                    </select>
-                                </div>
-
-                                <!-- Sort By -->
-                                <div class="sm:col-span-3">
-                                    <select v-model="roFilters.sortBy" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-slate-700">
-                                        <option value="newest">Sort: Newest First</option>
-                                        <option value="oldest">Sort: Oldest First</option>
-                                        <option value="amount-desc">Amount: High to Low</option>
-                                        <option value="amount-asc">Amount: Low to High</option>
-                                        <option value="name-asc">Name: A to Z</option>
-                                    </select>
+                                <!-- Drawer Actions -->
+                                <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                                    <button type="button" @click="roFilters.search = ''; roFilters.status = ''; roFilters.nclUcl = ''; roFilters.sortBy = 'newest'" class="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1">
+                                        <i class="fas fa-undo text-[10px]"></i>
+                                        <span>Reset All</span>
+                                    </button>
+                                    <button type="button" @click="showMobileFilters = false" class="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-bold text-xs hover:bg-slate-800 transition">
+                                        Apply
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- Filter info & Reset -->
-                            <div v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sortBy !== 'newest'" class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                                <span class="text-slate-500 font-medium">
-                                    Showing <strong>{{ filteredMyFiles.length }}</strong> of {{ myFiles.length }} files
-                                </span>
-                                <button @click="roFilters.search = ''; roFilters.status = ''; roFilters.nclUcl = ''; roFilters.sortBy = 'newest'" class="text-[#97144D] hover:underline font-bold text-xs flex items-center gap-1">
-                                    <i class="fas fa-undo text-[10px]"></i>
-                                    <span>Reset Filters</span>
+                            <!-- Active Filters Summary (When drawer is closed) -->
+                            <div v-if="!showMobileFilters && (roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sortBy !== 'newest')" class="flex items-center justify-between pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+                                <span>Showing <strong>{{ filteredMyFiles.length }}</strong> of {{ myFiles.length }} files</span>
+                                <button type="button" @click="roFilters.search = ''; roFilters.status = ''; roFilters.nclUcl = ''; roFilters.sortBy = 'newest'" class="text-[#97144D] font-bold hover:underline flex items-center gap-1">
+                                    <i class="fas fa-times-circle text-[10px]"></i>
+                                    <span>Clear filters</span>
                                 </button>
                             </div>
                         </div>
