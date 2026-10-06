@@ -436,98 +436,29 @@
                             </div>
                         </div>
 
-                        <!-- Pipeline Status & Value Distribution Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <!-- Status Breakdown Card -->
-                            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-                                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                                    <h3 class="font-bold text-slate-800 text-sm">Status Distribution</h3>
-                                    <span class="text-xs text-slate-400 font-medium">Count & Volume</span>
+                        <!-- Category Breakdown (NCL vs UCL) -->
+                        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                                <h3 class="font-bold text-slate-800 text-sm">Category Breakdown</h3>
+                                <span class="text-xs text-slate-400 font-medium">NCL vs UCL</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+                                    <span class="inline-block px-3 py-1 bg-[#97144D]/10 text-[#97144D] text-xs font-bold rounded-lg uppercase">NCL (New Car Loan)</span>
+                                    <p class="text-3xl font-black text-slate-900 mt-3">{{ roStats.nclCount }} <span class="text-xs text-slate-400 font-semibold">files</span></p>
+                                    <p class="text-sm font-bold text-slate-600 mt-1">₹{{ formatCurrency(roStats.nclAmount) }}</p>
                                 </div>
-
-                                <div class="space-y-3.5">
-                                    <!-- Login -->
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between text-xs font-bold">
-                                            <span class="text-blue-600 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
-                                                <span>Login (In-Process)</span>
-                                            </span>
-                                            <span class="text-slate-800">{{ roStats.loginCount }} files (₹{{ formatCurrency(roStats.loginAmount) }})</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                            <div class="bg-blue-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.loginCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Approved -->
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between text-xs font-bold">
-                                            <span class="text-emerald-600 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
-                                                <span>Approved</span>
-                                            </span>
-                                            <span class="text-slate-800">{{ roStats.approvedCount }} files (₹{{ formatCurrency(roStats.approvedAmount) }})</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.approvedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Disbursed -->
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between text-xs font-bold">
-                                            <span class="text-purple-600 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-purple-600 inline-block"></span>
-                                                <span>Disbursed</span>
-                                            </span>
-                                            <span class="text-slate-800">{{ roStats.disbursedCount }} files (₹{{ formatCurrency(roStats.disbursedAmount) }})</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                            <div class="bg-purple-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.disbursedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Rejected -->
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between text-xs font-bold">
-                                            <span class="text-rose-600 flex items-center gap-1.5">
-                                                <span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
-                                                <span>Rejected</span>
-                                            </span>
-                                            <span class="text-slate-800">{{ roStats.rejectedCount }} files (₹{{ formatCurrency(roStats.rejectedAmount) }})</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                            <div class="bg-rose-500 h-full rounded-full transition-all duration-500" :style="{ width: roStats.totalFiles ? (roStats.rejectedCount / roStats.totalFiles * 100) + '%' : '0%' }"></div>
-                                        </div>
-                                    </div>
+                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+                                    <span class="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg uppercase">UCL (Used Car Loan)</span>
+                                    <p class="text-3xl font-black text-slate-900 mt-3">{{ roStats.uclCount }} <span class="text-xs text-slate-400 font-semibold">files</span></p>
+                                    <p class="text-sm font-bold text-slate-600 mt-1">₹{{ formatCurrency(roStats.uclAmount) }}</p>
                                 </div>
                             </div>
 
-                            <!-- Category Breakdown (NCL vs UCL) -->
-                            <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
-                                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                                    <h3 class="font-bold text-slate-800 text-sm">Category Breakdown</h3>
-                                    <span class="text-xs text-slate-400 font-medium">NCL vs UCL</span>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3 my-auto">
-                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
-                                        <span class="inline-block px-2.5 py-0.5 bg-[#97144D]/10 text-[#97144D] text-[11px] font-bold rounded-md uppercase">NCL</span>
-                                        <p class="text-2xl font-black text-slate-900 mt-2">{{ roStats.nclCount }}</p>
-                                        <p class="text-xs font-bold text-slate-500 mt-0.5">₹{{ formatCurrency(roStats.nclAmount) }}</p>
-                                    </div>
-                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
-                                        <span class="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-md uppercase">UCL</span>
-                                        <p class="text-2xl font-black text-slate-900 mt-2">{{ roStats.uclCount }}</p>
-                                        <p class="text-xs font-bold text-slate-500 mt-0.5">₹{{ formatCurrency(roStats.uclAmount) }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 bg-slate-50/70 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
-                                    <span class="text-slate-500 font-medium">Logged-In RO Account</span>
-                                    <span class="text-slate-800 font-bold">{{ currentUser.name }}</span>
-                                </div>
+                            <div class="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+                                <span class="text-slate-500 font-medium">Logged-In RO Account</span>
+                                <span class="text-slate-800 font-bold">{{ currentUser.name }}</span>
                             </div>
                         </div>
                     </div>
