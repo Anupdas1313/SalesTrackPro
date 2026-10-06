@@ -331,7 +331,7 @@
 
                     <!-- RO: DASHBOARD / PIPELINE -->
                     <div v-if="currentTab === 'ro-dashboard' && !isAdmin">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
                             <div class="bg-white rounded-lg shadow-sm border p-4">
                                 <p class="text-xs text-gray-500 uppercase font-semibold mb-1">My Pipeline</p>
                                 <p class="text-2xl font-bold text-axisBlue">{{ myFiles.length }}</p>
@@ -357,7 +357,8 @@
                                     <input v-model="mySearch" type="text" placeholder="Search by name..." class="w-full px-3 py-1.5 border rounded text-sm">
                                 </div>
                             </div>
-                            <div class="overflow-x-auto">
+                            <!-- Desktop Table View -->
+                            <div class="hidden md:block overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
                                         <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
@@ -392,6 +393,37 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- Mobile Card View -->
+                            <div class="md:hidden flex flex-col gap-4 p-4 bg-gray-100">
+                                <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border rounded-xl shadow-sm p-5 relative border-l-4" :class="{'border-l-green-500': file.status==='Approved', 'border-l-blue-500': file.status==='Login', 'border-l-gray-400': file.status==='Lead', 'border-l-red-500': file.status==='Rejected', 'border-l-purple-500': file.status==='Disbursed'}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h4 class="font-bold text-gray-900 text-lg">{{ file.customerName }}</h4>
+                                            <p class="text-sm text-gray-500 mt-1"><i class="fas fa-phone mr-1"></i> {{ file.phone }}</p>
+                                        </div>
+                                        <span :class="getStatusBadgeClass(file.status)" class="text-sm">{{ file.status }}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 mt-4 mb-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <div>
+                                            <p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Vehicle</p>
+                                            <p class="font-medium text-gray-800">{{ file.vehicleModel || 'N/A' }}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Amount</p>
+                                            <p class="font-bold text-axisBlue text-base">₹{{ formatCurrency(file.loanAmount) }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="openEditStatusModal(file)" class="w-full text-axisBlue hover:text-white hover:bg-axisBlue text-base font-medium border-2 border-axisBlue py-3 rounded-lg transition text-center mt-2 flex justify-center items-center">
+                                        <i class="fas fa-edit mr-2"></i> Update Status
+                                    </button>
+                                </div>
+                                <div v-if="filteredMyFiles.length === 0" class="p-8 text-center text-gray-500 bg-white rounded-xl border border-dashed shadow-sm mt-4">
+                                    <i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i>
+                                    <p class="text-lg">No files found.</p>
+                                    <p class="text-sm mt-1">Tap the + button to add one.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -458,6 +490,11 @@
                     </div>
 
                 </div>
+                
+                <!-- Floating Action Button for RO (Mobile Only) -->
+                <button v-if="!isAdmin && currentTab === 'ro-dashboard'" @click="currentTab = 'ro-add-file'" class="fixed bottom-6 right-6 md:hidden w-16 h-16 bg-axisRed text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-700 transition transform hover:scale-105 z-50">
+                    <i class="fas fa-plus text-2xl"></i>
+                </button>
             </main>
         </div>
 
