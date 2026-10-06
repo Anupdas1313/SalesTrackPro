@@ -20,7 +20,7 @@ const app = createApp({
         const newRoForm = ref({ name: '', username: '', password: '' });
         const addRoError = ref('');
 
-        const newFileForm = ref({ appId: '', customerName: '', nclUcl: '', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
+        const newFileForm = ref({ appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
         
         const showUpdateStatusModal = ref(false);
         const selectedFile = ref(null);
@@ -51,9 +51,13 @@ const app = createApp({
         });
 
         const filteredFiles = computed(() => {
+            const q = filters.value.search.trim().toLowerCase();
             return allFiles.value.filter(file => {
-                const matchSearch = file.customerName.toLowerCase().includes(filters.value.search.toLowerCase()) || 
-                                    (file.phone && file.phone.includes(filters.value.search));
+                const matchSearch = !q || 
+                    (file.customerName && file.customerName.toLowerCase().includes(q)) || 
+                    (file.appId && file.appId.toLowerCase().includes(q)) ||
+                    (file.smName && file.smName.toLowerCase().includes(q)) ||
+                    (file.roName && file.roName.toLowerCase().includes(q));
                 const matchStatus = filters.value.status ? file.status === filters.value.status : true;
                 const matchRo = filters.value.roId ? file.roId === filters.value.roId : true;
                 return matchSearch && matchStatus && matchRo;
@@ -62,8 +66,12 @@ const app = createApp({
 
         // RO Pipeline
         const filteredMyFiles = computed(() => {
+            const q = mySearch.value.trim().toLowerCase();
             return myFiles.value.filter(file => {
-                return file.customerName.toLowerCase().includes(mySearch.value.toLowerCase());
+                return !q ||
+                    (file.customerName && file.customerName.toLowerCase().includes(q)) ||
+                    (file.appId && file.appId.toLowerCase().includes(q)) ||
+                    (file.smName && file.smName.toLowerCase().includes(q));
             }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
         });
 
@@ -84,12 +92,12 @@ const app = createApp({
 
         const getStatusBadgeClass = (status) => {
             switch (status) {
-                case 'Lead': return 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold';
-                case 'Login': return 'px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold';
-                case 'Approved': return 'px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold';
-                case 'Rejected': return 'px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold';
-                case 'Disbursed': return 'px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold';
-                default: return 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold';
+                case 'Lead': return 'px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-xs font-bold';
+                case 'Login': return 'px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold';
+                case 'Approved': return 'px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold';
+                case 'Rejected': return 'px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-bold';
+                case 'Disbursed': return 'px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-bold';
+                default: return 'px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-xs font-bold';
             }
         };
 
