@@ -20,7 +20,8 @@ const app = createApp({
         const newRoForm = ref({ name: '', username: '', password: '' });
         const addRoError = ref('');
 
-        const newFileForm = ref({ appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
+        const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
+        const newFileForm = ref({ appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: defaultSmName.value, vcip: '', mi: '' });
         
         // Full File Edit Modal (RO & Admin)
         const showEditFileModal = ref(false);
@@ -296,6 +297,18 @@ const app = createApp({
             }
         };
 
+        const initUserSm = () => {
+            if (currentUser.value) {
+                const savedSm = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
+                if (savedSm) {
+                    defaultSmName.value = savedSm;
+                    if (!newFileForm.value.smName) {
+                        newFileForm.value.smName = savedSm;
+                    }
+                }
+            }
+        };
+
         // Auth
         const login = async () => {
             loginError.value = '';
@@ -326,6 +339,7 @@ const app = createApp({
                     const sessionUser = { id: user.id, username: user.username, role: user.role, name: user.name };
                     localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                     currentUser.value = sessionUser;
+                    initUserSm();
                     
                     currentTab.value = isAdmin.value ? 'dashboard' : 'ro-dashboard';
                     await loadData();
@@ -375,14 +389,33 @@ const app = createApp({
 
         // RO: Add File
         const resetNewFileForm = () => {
-            newFileForm.value = { appId: '', customerName: '', nclUcl: '', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' };
+            newFileForm.value = {
+                appId: '',
+                customerName: '',
+                nclUcl: 'NCL',
+                loanAmount: '',
+                status: 'Login',
+                ppc: '',
+                smName: defaultSmName.value || '',
+                vcip: '',
+                mi: ''
+            };
         };
 
         const saveNewFile = async () => {
             if (!currentUser.value) return;
             
+            if (newFileForm.value.smName && newFileForm.value.smName.trim()) {
+                defaultSmName.value = newFileForm.value.smName.trim();
+                localStorage.setItem('axis_default_sm_' + currentUser.value.id, defaultSmName.value);
+                localStorage.setItem('axis_default_sm', defaultSmName.value);
+            }
+            
+            const smToSave = newFileForm.value.smName ? newFileForm.value.smName.trim() : (defaultSmName.value || '');
+            
             const newFile = {
                 ...newFileForm.value,
+                smName: smToSave,
                 roId: currentUser.value.id,
                 roName: currentUser.value.name,
                 createdAt: new Date().toISOString(),
@@ -405,7 +438,7 @@ const app = createApp({
                 loanAmount: file.loanAmount || 0,
                 status: file.status || 'Login',
                 ppc: file.ppc || '',
-                smName: file.smName || '',
+                smName: file.smName || defaultSmName.value || '',
                 vcip: file.vcip || '',
                 mi: file.mi || ''
             };
@@ -546,6 +579,7 @@ const app = createApp({
             const savedUser = localStorage.getItem('axis_user');
             if (savedUser) {
                 currentUser.value = JSON.parse(savedUser);
+                initUserSm();
                 currentTab.value = isAdmin.value ? 'dashboard' : 'ro-dashboard';
                 await loadData();
             }
@@ -553,7 +587,7 @@ const app = createApp({
 
         // Return everything needed by the template
         return {
-            currentUser, loginForm, loginError, currentTab, mobileMenuOpen,
+            currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,

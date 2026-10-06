@@ -709,7 +709,7 @@
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
                                             </td>
                                             <td class="p-4 text-xs">
-                                                <div class="font-semibold text-slate-800">{{ file.smName || '-' }}</div>
+                                                <div class="font-semibold text-slate-800">{{ file.smName || defaultSmName || '-' }}</div>
                                                 <div class="text-slate-400 font-medium">PPC: {{ file.ppc || '-' }}</div>
                                             </td>
                                             <td class="p-4 text-xs">
@@ -777,7 +777,7 @@
                                         </div>
                                         <div>
                                             <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">SM Name / PPC</p>
-                                            <p class="font-semibold text-slate-700">{{ file.smName || '-' }} <span class="text-slate-400">({{ file.ppc || '-' }})</span></p>
+                                            <p class="font-semibold text-slate-700">{{ file.smName || defaultSmName || '-' }} <span class="text-slate-400">({{ file.ppc || '-' }})</span></p>
                                         </div>
                                         <div class="text-right">
                                             <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">VCIP / MI</p>
@@ -920,7 +920,12 @@
                                         <input type="text" v-model="newFileForm.ppc" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="PPC info">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">SM NAME</label>
+                                        <div class="flex justify-between items-center mb-1.5">
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">SM NAME</label>
+                                            <span v-if="defaultSmName" class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                                                <i class="fas fa-check-circle text-[9px]"></i> Default SM
+                                            </span>
+                                        </div>
                                         <input type="text" v-model="newFileForm.smName" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="SM Name">
                                     </div>
                                 </div>
@@ -1204,7 +1209,7 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">SM Name</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.smName || 'N/A' }}</p>
+                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">RO Name</p>
