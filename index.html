@@ -121,7 +121,7 @@
             </aside>
 
             <!-- Main Content Area -->
-            <main class="flex-1 bg-gray-50 flex flex-col h-full overflow-hidden">
+            <main class="flex-1 flex flex-col h-full overflow-hidden">
                 <!-- Header -->
                 <header class="bg-white shadow-sm border-b px-4 md:px-8 py-3 md:py-4 flex justify-between items-center z-0">
                     <h2 class="text-xl md:text-2xl font-semibold text-gray-800 capitalize">{{ getTabTitle(currentTab) }}</h2>
@@ -136,7 +136,7 @@
                 </header>
 
                 <!-- Scrollable Content -->
-                <div class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
+                <div :class="[currentTab === 'ro-add-file' && !isAdmin ? 'bg-purple-50' : 'bg-gray-50', 'flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 transition-colors duration-300']">
                     
                     <!-- ADMIN: DASHBOARD -->
                     <div v-if="currentTab === 'dashboard' && isAdmin">
@@ -429,87 +429,111 @@
                         </div>
                     </div>
 
-                    <!-- RO: ADD NEW FILE -->
-                    <div v-if="currentTab === 'ro-add-file' && !isAdmin">
-                        <div class="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto">
-                            <div class="px-6 py-4 border-b bg-gray-50 rounded-t-lg">
-                                <h3 class="font-semibold text-gray-700">Enter New Customer Loan File Details</h3>
+                    <!-- RO: ADD NEW FILE (Google Forms Style) -->
+                    <div v-if="currentTab === 'ro-add-file' && !isAdmin" class="max-w-3xl mx-auto pb-12">
+                        <form @submit.prevent="saveNewFile">
+                            <!-- Header Card -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-t-8 border-t-purple-600 p-8 mb-4">
+                                <h1 class="text-3xl font-normal text-gray-900 mb-2">Login Details Entry</h1>
+                                <p class="text-sm text-gray-600">Please fill out the customer application details.</p>
+                                <p class="text-xs text-red-600 mt-4">* Indicates required question</p>
                             </div>
-                            <div class="p-6">
-                                <form @submit.prevent="saveNewFile">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">App ID</label>
-                                            <input v-model="newFileForm.appId" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base" placeholder="e.g. ALA00000">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                            <input v-model="newFileForm.customerName" type="text" required class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">NCL/UCL</label>
-                                            <select v-model="newFileForm.nclUcl" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base bg-white">
-                                                <option value="">Select...</option>
-                                                <option value="NCL">NCL</option>
-                                                <option value="UCL">UCL</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">L/ AMOUNT</label>
-                                            <input v-model.number="newFileForm.loanAmount" type="number" min="0" required class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                    </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">STATUS</label>
-                                            <select v-model="newFileForm.status" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none bg-white text-base">
-                                                <option value="Login">Login</option>
-                                                <option value="Approved">Approved</option>
-                                                <option value="Rejected">Rejected</option>
-                                                <option value="Disbursed">Disbursed</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Ppc</label>
-                                            <input v-model="newFileForm.ppc" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">SM NAME</label>
-                                            <input v-model="newFileForm.smName" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">RO NAME</label>
-                                            <input :value="currentUser.name" type="text" disabled class="w-full px-3 py-3 md:py-2 border rounded bg-gray-100 text-gray-500 outline-none text-base cursor-not-allowed">
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">VCIP</label>
-                                            <input v-model="newFileForm.vcip" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">MI</label>
-                                            <input v-model="newFileForm.mi" type="text" class="w-full px-3 py-3 md:py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none text-base">
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-col md:flex-row justify-end pt-4 border-t gap-3 md:gap-0">
-                                        <button type="button" @click="resetNewFileForm" class="md:mr-3 px-4 py-3 md:py-2 text-gray-600 hover:bg-gray-100 rounded transition text-center text-lg md:text-base border border-gray-300 md:border-transparent">Clear</button>
-                                        <button type="submit" class="px-6 py-3 md:py-2 bg-axisBlue hover:bg-blue-900 text-white font-medium rounded shadow transition flex items-center justify-center text-lg md:text-base">
-                                            <i class="fas fa-save mr-2"></i> Save Customer File
-                                        </button>
-                                    </div>
-                                </form>
+                            <!-- App ID -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">App id <span class="text-red-600">*</span></label>
+                                <input v-model="newFileForm.appId" type="text" required class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
                             </div>
-                        </div>
+
+                            <!-- Name -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">Name <span class="text-red-600">*</span></label>
+                                <input v-model="newFileForm.customerName" type="text" required class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- NCL/UCL -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">NCL/UCL <span class="text-red-600">*</span></label>
+                                <div class="flex flex-col gap-3">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.nclUcl" value="NCL" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">NCL</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.nclUcl" value="UCL" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">UCL</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- L/ AMOUNT -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">L/ AMOUNT <span class="text-red-600">*</span></label>
+                                <input v-model.number="newFileForm.loanAmount" type="number" min="0" required class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- STATUS -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">STATUS <span class="text-red-600">*</span></label>
+                                <div class="flex flex-col gap-3">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.status" value="Login" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">Login</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.status" value="Approved" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">Approved</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.status" value="Rejected" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">Rejected</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" v-model="newFileForm.status" value="Disbursed" required class="w-5 h-5 text-purple-600 focus:ring-purple-500 border-gray-300">
+                                        <span class="ml-3 text-gray-700">Disbursed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Ppc -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">Ppc</label>
+                                <input v-model="newFileForm.ppc" type="text" class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- SM NAME -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">SM NAME</label>
+                                <input v-model="newFileForm.smName" type="text" class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- RO NAME -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4 opacity-75">
+                                <label class="block text-base text-gray-800 mb-4">RO NAME (Auto-filled)</label>
+                                <input :value="currentUser.name" type="text" disabled class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent text-gray-500 cursor-not-allowed text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- VCIP -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+                                <label class="block text-base text-gray-800 mb-4">VCIP</label>
+                                <input v-model="newFileForm.vcip" type="text" class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <!-- MI -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                                <label class="block text-base text-gray-800 mb-4">MI</label>
+                                <input v-model="newFileForm.mi" type="text" class="w-full md:w-1/2 px-0 py-2 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-purple-600 bg-transparent transition-colors text-base" placeholder="Your answer">
+                            </div>
+
+                            <div class="flex justify-between items-center mt-6">
+                                <button type="submit" class="bg-purple-700 hover:bg-purple-800 text-white font-medium py-2.5 px-6 rounded transition shadow">
+                                    Submit
+                                </button>
+                                <button type="button" @click="resetNewFileForm" class="text-purple-700 hover:bg-purple-50 font-medium py-2 px-4 rounded transition">
+                                    Clear form
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                 </div>
