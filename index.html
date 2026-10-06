@@ -536,9 +536,56 @@
                     <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
                     <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-4 pb-12">
                         
-                        <!-- Filter, Search & Sort Toolbar (Compact & Mobile-Optimized) -->
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm space-y-2.5">
-                            <!-- Top Search & Filter Bar -->
+                        <!-- Filter, Search & Timeline Toolbar (Modern, Compact & User-Friendly) -->
+                        <div class="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+                            
+                            <!-- Row 1: Timeline Selector (Quick Date Chips) -->
+                            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar flex-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline-flex items-center gap-1">
+                                        <i class="fas fa-calendar-alt text-[#97144D]"></i> Timeline:
+                                    </span>
+                                    <button type="button" @click="roFilters.timeline = 'today'" :class="[roFilters.timeline === 'today' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5']">
+                                        <span>Today</span>
+                                        <span :class="roFilters.timeline === 'today' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.today }}</span>
+                                    </button>
+                                    <button type="button" @click="roFilters.timeline = 'yesterday'" :class="[roFilters.timeline === 'yesterday' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5']">
+                                        <span>Yesterday</span>
+                                        <span :class="roFilters.timeline === 'yesterday' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.yesterday }}</span>
+                                    </button>
+                                    <button type="button" @click="roFilters.timeline = 'this-week'" :class="[roFilters.timeline === 'this-week' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5']">
+                                        <span>This Week</span>
+                                        <span :class="roFilters.timeline === 'this-week' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.thisWeek }}</span>
+                                    </button>
+                                    <button type="button" @click="roFilters.timeline = 'this-month'" :class="[roFilters.timeline === 'this-month' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5']">
+                                        <span>This Month</span>
+                                        <span :class="roFilters.timeline === 'this-month' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.thisMonth }}</span>
+                                    </button>
+                                    <button type="button" @click="roFilters.timeline = 'all'" :class="[roFilters.timeline === 'all' ? 'bg-slate-900 text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5']">
+                                        <span>All Time</span>
+                                        <span :class="roFilters.timeline === 'all' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.all }}</span>
+                                    </button>
+                                </div>
+
+                                <!-- Custom Date Picker button -->
+                                <button type="button" @click="showCustomDateInput = !showCustomDateInput; if (showCustomDateInput) roFilters.timeline = 'custom'" :class="[roFilters.timeline === 'custom' ? 'bg-[#97144D] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200', 'p-2 rounded-xl text-xs font-bold transition shrink-0 flex items-center gap-1']" title="Pick Specific Date">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <span class="hidden md:inline text-xs">{{ roFilters.timeline === 'custom' && roFilters.customDate ? roFilters.customDate : 'Date' }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Custom Date Picker Row (when opened) -->
+                            <div v-if="showCustomDateInput || roFilters.timeline === 'custom'" class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                                    <span class="text-xs font-bold text-slate-600">Specific Date:</span>
+                                    <input type="date" v-model="roFilters.customDate" @change="roFilters.timeline = 'custom'" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:border-[#97144D]">
+                                </div>
+                                <button type="button" @click="roFilters.timeline = 'today'; showCustomDateInput = false; roFilters.customDate = ''" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+                                    Back to Today
+                                </button>
+                            </div>
+
+                            <!-- Row 2: Search Input & Filter/Sort Drawer Toggle -->
                             <div class="flex items-center gap-2">
                                 <!-- Search Input -->
                                 <div class="relative flex-1">
@@ -554,27 +601,27 @@
                                 <!-- Filter & Sort Toggle Button -->
                                 <button @click="showMobileFilters = !showMobileFilters" :class="[showMobileFilters || activeFilterCount > 0 ? 'bg-[#97144D] text-white shadow-sm shadow-[#97144D]/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200', 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 border border-transparent']">
                                     <i class="fas fa-sliders text-xs"></i>
-                                    <span class="hidden sm:inline">Filters & Sort</span>
+                                    <span class="hidden sm:inline">Sort & Filters</span>
                                     <span v-if="activeFilterCount > 0" class="w-4 h-4 rounded-full bg-white text-[#97144D] text-[10px] font-black flex items-center justify-center">{{ activeFilterCount }}</span>
                                 </button>
                             </div>
 
-                            <!-- Quick Horizontal Status Filter Pills -->
+                            <!-- Row 3: Quick Horizontal Status Filter Pills -->
                             <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 hide-scrollbar">
                                 <button type="button" @click="roFilters.status = ''" :class="[roFilters.status === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
-                                    All <span class="text-[10px] opacity-75">({{ myFiles.length }})</span>
+                                    All Statuses
                                 </button>
                                 <button type="button" @click="roFilters.status = 'Login'" :class="[roFilters.status === 'Login' ? 'bg-blue-600 text-white font-bold' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
-                                    Login <span class="text-[10px] opacity-75">({{ roStats.loginCount }})</span>
+                                    Login
                                 </button>
                                 <button type="button" @click="roFilters.status = 'Approved'" :class="[roFilters.status === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
-                                    Approved <span class="text-[10px] opacity-75">({{ roStats.approvedCount }})</span>
+                                    Approved
                                 </button>
                                 <button type="button" @click="roFilters.status = 'Disbursed'" :class="[roFilters.status === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
-                                    Disbursed <span class="text-[10px] opacity-75">({{ roStats.disbursedCount }})</span>
+                                    Disbursed
                                 </button>
                                 <button type="button" @click="roFilters.status = 'Rejected'" :class="[roFilters.status === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold', 'px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition']">
-                                    Rejected <span class="text-[10px] opacity-75">({{ roStats.rejectedCount }})</span>
+                                    Rejected
                                 </button>
                             </div>
 
@@ -595,20 +642,20 @@
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Files By</label>
                                         <select v-model="roFilters.sortBy" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-slate-700">
-                                            <option value="newest">Newest First</option>
-                                            <option value="oldest">Oldest First</option>
-                                            <option value="amount-desc">Amount: High to Low</option>
-                                            <option value="amount-asc">Amount: Low to High</option>
-                                            <option value="name-asc">Customer Name: A to Z</option>
+                                            <option value="newest">🕒 Newest First</option>
+                                            <option value="oldest">⏳ Oldest First</option>
+                                            <option value="amount-desc">💰 Loan Amount: High to Low</option>
+                                            <option value="amount-asc">💵 Loan Amount: Low to High</option>
+                                            <option value="name-asc">🔤 Customer Name: A to Z</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <!-- Drawer Actions -->
                                 <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                                    <button type="button" @click="roFilters.search = ''; roFilters.status = ''; roFilters.nclUcl = ''; roFilters.sortBy = 'newest'" class="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1">
+                                    <button type="button" @click="resetRoFilters" class="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1">
                                         <i class="fas fa-undo text-[10px]"></i>
-                                        <span>Reset All</span>
+                                        <span>Reset to Today's Default</span>
                                     </button>
                                     <button type="button" @click="showMobileFilters = false" class="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-bold text-xs hover:bg-slate-800 transition">
                                         Apply
@@ -616,12 +663,17 @@
                                 </div>
                             </div>
 
-                            <!-- Active Filters Summary (When drawer is closed) -->
-                            <div v-if="!showMobileFilters && (roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sortBy !== 'newest')" class="flex items-center justify-between pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-                                <span>Showing <strong>{{ filteredMyFiles.length }}</strong> of {{ myFiles.length }} files</span>
-                                <button type="button" @click="roFilters.search = ''; roFilters.status = ''; roFilters.nclUcl = ''; roFilters.sortBy = 'newest'" class="text-[#97144D] font-bold hover:underline flex items-center gap-1">
+                            <!-- Active Filters & Timeline Summary Bar -->
+                            <div class="flex flex-wrap items-center justify-between pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium gap-1">
+                                <div>
+                                    <span>Showing <strong>{{ filteredMyFiles.length }}</strong> files for </span>
+                                    <span class="font-bold text-[#97144D]">{{ getTimelineLabel(roFilters.timeline) }}</span>
+                                    <span v-if="roFilters.status"> • Status: <strong class="text-slate-800">{{ roFilters.status }}</strong></span>
+                                    <span v-if="roFilters.nclUcl"> • Category: <strong class="text-slate-800">{{ roFilters.nclUcl }}</strong></span>
+                                </div>
+                                <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" type="button" @click="resetRoFilters" class="text-[#97144D] font-bold hover:underline flex items-center gap-1 ml-auto">
                                     <i class="fas fa-times-circle text-[10px]"></i>
-                                    <span>Clear filters</span>
+                                    <span>Reset to Default</span>
                                 </button>
                             </div>
                         </div>
@@ -680,10 +732,21 @@
                                             </td>
                                         </tr>
                                         <tr v-if="filteredMyFiles.length === 0">
-                                            <td colspan="8" class="p-16 text-center text-slate-400">
-                                                <i class="fas fa-inbox text-4xl mb-3 text-slate-300 block"></i>
-                                                <p class="font-bold text-base text-slate-600">No matching login details found</p>
-                                                <p class="text-xs text-slate-400 mt-1">Try clearing your filters or adding a new customer file.</p>
+                                            <td colspan="8" class="p-12 text-center text-slate-400">
+                                                <i class="fas fa-calendar-day text-4xl mb-3 text-slate-300 block"></i>
+                                                <p class="font-bold text-base text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
+                                                <p class="text-xs text-slate-400 mt-1">
+                                                    {{ roFilters.timeline === 'today' && myFiles.length > 0 ? 'You have files logged on other dates.' : 'Try adjusting your search, filters, or timeline.' }}
+                                                </p>
+                                                <div class="mt-4 flex items-center justify-center gap-2">
+                                                    <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
+                                                        <i class="fas fa-globe text-xs"></i>
+                                                        <span>View All Time ({{ myFiles.length }} files)</span>
+                                                    </button>
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                        Reset Filters
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -738,10 +801,21 @@
                                     </div>
                                 </div>
 
-                                <div v-if="filteredMyFiles.length === 0" class="p-10 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
-                                    <i class="fas fa-inbox text-3xl mb-2 text-slate-300 block"></i>
-                                    <p class="text-sm font-bold text-slate-600">No customer files found</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">Try adjusting your search or filters.</p>
+                                <div v-if="filteredMyFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
+                                    <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
+                                    <p class="text-sm font-bold text-slate-700">No files for {{ getTimelineLabel(roFilters.timeline) }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">
+                                        {{ roFilters.timeline === 'today' && myFiles.length > 0 ? 'You have files logged on other dates.' : 'Try adjusting your search or filters.' }}
+                                    </p>
+                                    <div class="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2">
+                                        <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="w-full sm:w-auto px-4 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center justify-center gap-1.5">
+                                            <i class="fas fa-globe text-xs"></i>
+                                            <span>View All Time ({{ myFiles.length }} files)</span>
+                                        </button>
+                                        <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                            Reset Filters
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

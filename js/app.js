@@ -40,10 +40,52 @@ const app = createApp({
             search: '',
             status: '',
             nclUcl: '',
+            timeline: 'today', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
+            customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
         const showMobileFilters = ref(false);
+        const showCustomDateInput = ref(false);
         const mySearch = ref('');
+
+        // Helper: Date timeline matching
+        const matchesTimeline = (fileDateStr, timeline, customDate) => {
+            if (!fileDateStr) return timeline === 'all';
+            
+            const fileD = new Date(fileDateStr);
+            if (isNaN(fileD.getTime())) return true;
+
+            const fileYear = fileD.getFullYear();
+            const fileMonth = fileD.getMonth();
+            const fileDate = fileD.getDate();
+
+            const now = new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = now.getMonth();
+            const nowDate = now.getDate();
+
+            const todayDateObj = new Date(nowYear, nowMonth, nowDate);
+            const fileDateObj = new Date(fileYear, fileMonth, fileDate);
+            const diffDays = Math.round((todayDateObj - fileDateObj) / (1000 * 60 * 60 * 24));
+
+            switch (timeline) {
+                case 'today':
+                    return diffDays === 0;
+                case 'yesterday':
+                    return diffDays === 1;
+                case 'this-week':
+                    return diffDays >= 0 && diffDays <= 7;
+                case 'this-month':
+                    return fileYear === nowYear && fileMonth === nowMonth;
+                case 'custom':
+                    if (!customDate) return true;
+                    const [cYear, cMonth, cDay] = customDate.split('-').map(Number);
+                    return fileYear === cYear && fileMonth === (cMonth - 1) && fileDate === cDay;
+                case 'all':
+                default:
+                    return true;
+            }
+        };
 
         // --- Computed ---
         const isAdmin = computed(() => currentUser.value?.role === 'admin');
@@ -52,7 +94,21 @@ const app = createApp({
             let count = 0;
             if (roFilters.value.nclUcl) count++;
             if (roFilters.value.sortBy && roFilters.value.sortBy !== 'newest') count++;
+            if (roFilters.value.timeline && roFilters.value.timeline !== 'today') count++;
+            if (roFilters.value.status) count++;
             return count;
+        });
+
+        // Timeline File Counts
+        const timelineCounts = computed(() => {
+            const files = myFiles.value;
+            return {
+                today: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'today')).length,
+                yesterday: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'yesterday')).length,
+                thisWeek: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'this-week')).length,
+                thisMonth: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'this-month')).length,
+                all: files.length
+            };
         });
 
         // Admin Stats
@@ -124,7 +180,7 @@ const app = createApp({
             }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
         });
 
-        // RO Pipeline & Overview Tracking (with filtering & sorting)
+        // RO Pipeline & Overview Tracking (with filtering, timeline & sorting)
         const filteredMyFiles = computed(() => {
             const q = (roFilters.value.search || mySearch.value).trim().toLowerCase();
             let list = myFiles.value.filter(file => {
@@ -135,7 +191,8 @@ const app = createApp({
                     (file.ppc && file.ppc.toLowerCase().includes(q));
                 const matchStatus = roFilters.value.status ? file.status === roFilters.value.status : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
-                return matchSearch && matchStatus && matchCategory;
+                const matchTime = matchesTimeline(file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
+                return matchSearch && matchStatus && matchCategory && matchTime;
             });
 
             // Sorting
@@ -193,6 +250,30 @@ const app = createApp({
                 case 'users': return 'User Management';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
+        };
+
+        const getTimelineLabel = (timeline) => {
+            switch (timeline) {
+                case 'today': return 'Today';
+                case 'yesterday': return 'Yesterday';
+                case 'this-week': return 'This Week';
+                case 'this-month': return 'This Month';
+                case 'custom': return roFilters.value.customDate ? `Date: ${roFilters.value.customDate}` : 'Custom Date';
+                case 'all': return 'All Time';
+                default: return 'Today';
+            }
+        };
+
+        const resetRoFilters = () => {
+            roFilters.value = {
+                search: '',
+                status: '',
+                nclUcl: '',
+                timeline: 'today',
+                customDate: '',
+                sortBy: 'newest'
+            };
+            showCustomDateInput.value = false;
         };
 
         // Data Loading
@@ -476,8 +557,8 @@ const app = createApp({
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilters, activeFilterCount, mySearch,
-            formatCurrency, formatDate, getStatusBadgeClass, getTabTitle,
+            showViewFileModal, filters, roFilters, showMobileFilters, showCustomDateInput, activeFilterCount, timelineCounts, mySearch,
+            formatCurrency, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, resetRoFilters,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
