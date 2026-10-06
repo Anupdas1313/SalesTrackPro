@@ -265,6 +265,16 @@ const app = createApp({
             }
         };
 
+        const getSortLabel = (sortBy) => {
+            switch (sortBy) {
+                case 'oldest': return 'Oldest First';
+                case 'amount-desc': return 'Amount: High to Low';
+                case 'amount-asc': return 'Amount: Low to High';
+                case 'name-asc': return 'Name: A to Z';
+                default: return 'Newest First';
+            }
+        };
+
         const resetRoFilters = () => {
             roFilters.value = {
                 search: '',
@@ -592,7 +602,7 @@ const app = createApp({
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilters, showCustomDateInput, activeFilterCount, timelineCounts, mySearch,
-            formatCurrency, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, resetRoFilters,
+            formatCurrency, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
