@@ -1,3 +1,4 @@
+import * as db from './db.js';
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const app = createApp({
@@ -98,13 +99,13 @@ const app = createApp({
 
         // Data Loading
         const loadAdminData = async () => {
-            allFiles.value = await db.loanFiles.toArray();
-            roUsers.value = await db.users.where('role').equals('ro').toArray();
+            allFiles.value = await db.getAllLoanFiles();
+            roUsers.value = await db.getROUsers();
         };
 
         const loadRoData = async () => {
             if (!currentUser.value) return;
-            myFiles.value = await db.loanFiles.where('roId').equals(currentUser.value.id).toArray();
+            myFiles.value = await db.getLoanFilesByRO(currentUser.value.id);
         };
 
         const loadData = async () => {
@@ -121,9 +122,9 @@ const app = createApp({
             loginError.value = '';
             try {
                 // Ensure the database has the admin user (just in case seeding failed earlier)
-                const count = await db.users.count();
+                const count = await db.getUsersCount();
                 if (count === 0) {
-                    await db.users.add({
+                    await db.addUser({
                         username: 'admin',
                         password: 'password123',
                         role: 'admin',
@@ -134,7 +135,7 @@ const app = createApp({
                 }
 
                 const inputUsername = loginForm.value.username.trim().toLowerCase();
-                const allUsers = await db.users.toArray();
+                const allUsers = await db.getAllUsers();
                 const user = allUsers.find(u => u.username.toLowerCase() === inputUsername);
                 
                 if (user && user.password === loginForm.value.password.trim()) {
@@ -167,13 +168,13 @@ const app = createApp({
         // Admin: Users
         const saveNewRo = async () => {
             addRoError.value = '';
-            const existing = await db.users.where('username').equals(newRoForm.value.username).first();
+            const existing = await db.getUserByUsername(newRoForm.value.username);
             if (existing) {
                 addRoError.value = 'Username already exists';
                 return;
             }
             
-            await db.users.add({
+            await db.addUser({
                 username: newRoForm.value.username,
                 password: newRoForm.value.password,
                 role: 'ro',
@@ -189,7 +190,7 @@ const app = createApp({
 
         const toggleUserStatus = async (user) => {
             const newStatus = user.status === 'active' ? 'suspended' : 'active';
-            await db.users.update(user.id, { status: newStatus });
+            await db.updateUser(user.id, { status: newStatus });
             await loadAdminData();
         };
 
@@ -209,7 +210,7 @@ const app = createApp({
                 updatedAt: new Date().toISOString()
             };
             
-            await db.loanFiles.add(newFile);
+            await db.addLoanFile(newFile);
             resetNewFileForm();
             currentTab.value = 'ro-dashboard';
             await loadRoData();
@@ -225,7 +226,7 @@ const app = createApp({
         const saveFileStatus = async () => {
             if (!selectedFile.value) return;
             
-            await db.loanFiles.update(selectedFile.value.id, {
+            await db.updateLoanFile(selectedFile.value.id, {
                 status: statusUpdateForm.value.status,
                 updatedAt: new Date().toISOString()
                 // In a real app, you might append the note to an audit log array
@@ -307,3 +308,4 @@ const app = createApp({
 });
 
 app.mount('#app');
+
