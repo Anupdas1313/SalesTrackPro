@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axis Auto Loans Wheels - CRM</title>
+    
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        axisBlue: '#002E6E', // Corporate blue
+                        axisRed: '#AE132A'   // Corporate red
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Dexie.js (IndexedDB) -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+
+    <!-- SheetJS (for Excel export) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        [v-cloak] { display: none; }
+        body { background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="text-gray-800 font-sans antialiased h-screen flex flex-col overflow-hidden">
+    
+    <div id="app" v-cloak class="h-full flex flex-col">
+        <!-- Login Screen -->
+        <div v-if="!currentUser" class="flex-1 flex items-center justify-center bg-gray-100">
+            <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border-t-4 border-axisRed">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-axisBlue"><i class="fas fa-car mr-2 text-axisRed"></i>Axis Auto</h1>
+                    <p class="text-gray-500 mt-2">Loans Wheels CRM</p>
+                </div>
+                
+                <form @submit.prevent="login">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                        <input v-model="loginForm.username" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                        <input v-model="loginForm.password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-axisBlue" required>
+                    </div>
+                    <div v-if="loginError" class="mb-4 text-red-500 text-sm text-center">
+                        {{ loginError }}
+                    </div>
+                    <button type="submit" class="w-full bg-axisBlue text-white font-bold py-2 px-4 rounded-md hover:bg-blue-900 transition duration-300">
+                        Sign In
+                    </button>
+                    <p class="mt-4 text-xs text-center text-gray-500">Default Admin - admin / password123</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Application (Logged In) -->
+        <div v-else class="flex-1 flex h-full overflow-hidden">
+            
+            <!-- Sidebar -->
+            <aside class="w-64 bg-axisBlue text-white flex flex-col shadow-lg z-10">
+                <div class="p-6 border-b border-blue-800 flex items-center justify-center">
+                    <i class="fas fa-car text-axisRed text-2xl mr-3"></i>
+                    <div>
+                        <h2 class="text-xl font-bold leading-tight">Axis Auto</h2>
+                        <span class="text-xs text-blue-300 uppercase tracking-wider">{{ currentUser.role }} Portal</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 text-sm bg-blue-900 border-b border-blue-800">
+                    <p>Welcome, <strong>{{ currentUser.name }}</strong></p>
+                </div>
+
+                <nav class="flex-1 overflow-y-auto py-4">
+                    <!-- Admin Navigation -->
+                    <template v-if="isAdmin">
+                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                            <i class="fas fa-chart-line w-6"></i> Global Dashboard
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                            <i class="fas fa-file-invoice w-6"></i> Live File Tracking
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                            <i class="fas fa-users-cog w-6"></i> User Management
+                        </a>
+                    </template>
+
+                    <!-- RO Navigation -->
+                    <template v-else>
+                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                            <i class="fas fa-home w-6"></i> My Pipeline
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-blue-800 border-l-4 border-axisRed' : 'hover:bg-blue-800 hover:border-l-4 hover:border-blue-400', 'flex items-center px-6 py-3 transition-colors']">
+                            <i class="fas fa-plus-circle w-6"></i> New Customer File
+                        </a>
+                    </template>
+                </nav>
+
+                <div class="p-4 border-t border-blue-800">
+                    <button @click="logout" class="w-full flex items-center justify-center py-2 px-4 bg-axisRed hover:bg-red-700 text-white rounded transition duration-200">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 bg-gray-50 flex flex-col h-full overflow-hidden">
+                <!-- Header -->
+                <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center z-0">
+                    <h2 class="text-2xl font-semibold text-gray-800 capitalize">{{ getTabTitle(currentTab) }}</h2>
+                    <div class="text-sm text-gray-500">
+                        {{ new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                    </div>
+                </header>
+
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-x-hidden overflow-y-auto p-8">
+                    
+                    <!-- ADMIN: DASHBOARD -->
+                    <div v-if="currentTab === 'dashboard' && isAdmin">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+                                <div class="p-4 rounded-full bg-blue-100 text-axisBlue mr-4">
+                                    <i class="fas fa-folder-open text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 uppercase font-semibold">Total Files</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ stats.totalFiles }}</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+                                <div class="p-4 rounded-full bg-green-100 text-green-600 mr-4">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 uppercase font-semibold">Approved Files</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ stats.approvedFiles }}</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+                                <div class="p-4 rounded-full bg-purple-100 text-purple-600 mr-4">
+                                    <i class="fas fa-rupee-sign text-xl px-1"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500 uppercase font-semibold">Total Pipeline Value</p>
+                                    <p class="text-3xl font-bold text-gray-800">₹{{ formatCurrency(stats.totalValue) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm border">
+                            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
+                                <h3 class="font-semibold text-gray-700">Recent Activity</h3>
+                            </div>
+                            <div class="p-0">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100 text-gray-600 text-sm">
+                                            <th class="p-4 font-medium border-b">Customer Name</th>
+                                            <th class="p-4 font-medium border-b">Loan Amount</th>
+                                            <th class="p-4 font-medium border-b">Status</th>
+                                            <th class="p-4 font-medium border-b">RO Name</th>
+                                            <th class="p-4 font-medium border-b">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="file in recentFiles" :key="file.id" class="border-b hover:bg-gray-50">
+                                            <td class="p-4">{{ file.customerName }}</td>
+                                            <td class="p-4">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="p-4">
+                                                <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
+                                            </td>
+                                            <td class="p-4">{{ file.roName }}</td>
+                                            <td class="p-4 text-gray-500 text-sm">{{ formatDate(file.createdAt) }}</td>
+                                        </tr>
+                                        <tr v-if="recentFiles.length === 0">
+                                            <td colspan="5" class="p-8 text-center text-gray-500">No recent activity found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN: LIVE FILE TRACKING -->
+                    <div v-if="currentTab === 'tracking' && isAdmin" class="flex flex-col h-full">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border mb-4 flex flex-wrap gap-4 items-end">
+                            <div class="flex-1 min-w-[200px]">
+                                <label class="block text-xs text-gray-500 font-semibold mb-1 uppercase">Search Customer</label>
+                                <input v-model="filters.search" type="text" placeholder="Name, Phone, etc..." class="w-full px-3 py-2 border rounded text-sm">
+                            </div>
+                            <div class="w-48">
+                                <label class="block text-xs text-gray-500 font-semibold mb-1 uppercase">Status Filter</label>
+                                <select v-model="filters.status" class="w-full px-3 py-2 border rounded text-sm bg-white">
+                                    <option value="">All Statuses</option>
+                                    <option value="Lead">Lead</option>
+                                    <option value="Login">Login (Processing)</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Disbursed">Disbursed</option>
+                                </select>
+                            </div>
+                            <div class="w-48">
+                                <label class="block text-xs text-gray-500 font-semibold mb-1 uppercase">RO Filter</label>
+                                <select v-model="filters.roId" class="w-full px-3 py-2 border rounded text-sm bg-white">
+                                    <option value="">All ROs</option>
+                                    <option v-for="user in roUsers" :value="user.id">{{ user.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button @click="exportToExcel" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-sm flex items-center transition">
+                                    <i class="fas fa-file-excel mr-2"></i> Export to Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm border flex-1 overflow-hidden flex flex-col">
+                            <div class="overflow-auto flex-1">
+                                <table class="w-full text-left border-collapse relative">
+                                    <thead class="sticky top-0 bg-gray-100 shadow-sm z-10">
+                                        <tr class="text-gray-600 text-sm">
+                                            <th class="p-4 font-medium border-b whitespace-nowrap cursor-pointer hover:bg-gray-200">ID <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">Customer Info</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">Vehicle Details</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap text-right">Loan Amount</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">Status</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">Assigned RO</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">Last Updated</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="file in filteredFiles" :key="file.id" class="border-b hover:bg-blue-50 transition-colors">
+                                            <td class="p-4 text-xs text-gray-500">#{{ String(file.id).padStart(5, '0') }}</td>
+                                            <td class="p-4">
+                                                <div class="font-semibold text-gray-800">{{ file.customerName }}</div>
+                                                <div class="text-xs text-gray-500"><i class="fas fa-phone mr-1"></i> {{ file.phone || 'N/A' }}</div>
+                                            </td>
+                                            <td class="p-4 text-sm text-gray-700">{{ file.vehicleModel || 'N/A' }}</td>
+                                            <td class="p-4 text-right font-medium">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="p-4">
+                                                <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
+                                            </td>
+                                            <td class="p-4 text-sm text-gray-700">{{ file.roName }}</td>
+                                            <td class="p-4 text-xs text-gray-500">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
+                                            <td class="p-4 text-center">
+                                                <button @click="openViewFileModal(file)" class="text-axisBlue hover:text-blue-800 p-1" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="filteredFiles.length === 0">
+                                            <td colspan="8" class="p-8 text-center text-gray-500 bg-gray-50">
+                                                <i class="fas fa-search text-3xl mb-3 text-gray-300 block"></i>
+                                                No files match your filters.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bg-gray-50 p-3 border-t text-xs text-gray-500 flex justify-between items-center rounded-b-lg">
+                                <span>Showing {{ filteredFiles.length }} records</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN: USER MANAGEMENT -->
+                    <div v-if="currentTab === 'users' && isAdmin">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-700">Relationship Officers (ROs)</h3>
+                            <button @click="showAddRoModal = true" class="bg-axisBlue hover:bg-blue-900 text-white px-4 py-2 rounded shadow-sm flex items-center transition">
+                                <i class="fas fa-user-plus mr-2"></i> Add New RO
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-600 text-sm">
+                                        <th class="p-4 font-medium border-b">Name</th>
+                                        <th class="p-4 font-medium border-b">Username</th>
+                                        <th class="p-4 font-medium border-b">Status</th>
+                                        <th class="p-4 font-medium border-b">Date Added</th>
+                                        <th class="p-4 font-medium border-b text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="user in roUsers" :key="user.id" class="border-b hover:bg-gray-50">
+                                        <td class="p-4 font-medium">{{ user.name }}</td>
+                                        <td class="p-4 text-gray-600">{{ user.username }}</td>
+                                        <td class="p-4">
+                                            <span v-if="user.status === 'active'" class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Active</span>
+                                            <span v-else class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">Suspended</span>
+                                        </td>
+                                        <td class="p-4 text-gray-500 text-sm">{{ formatDate(user.createdAt) }}</td>
+                                        <td class="p-4 text-right">
+                                            <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'" class="px-2 py-1 rounded text-sm font-medium border border-transparent hover:border-current transition">
+                                                {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="roUsers.length === 0">
+                                        <td colspan="5" class="p-8 text-center text-gray-500">No RO accounts created yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                    <!-- RO: DASHBOARD / PIPELINE -->
+                    <div v-if="currentTab === 'ro-dashboard' && !isAdmin">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-lg shadow-sm border p-4">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">My Pipeline</p>
+                                <p class="text-2xl font-bold text-axisBlue">{{ myFiles.length }}</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border p-4">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Approved</p>
+                                <p class="text-2xl font-bold text-green-600">{{ myFiles.filter(f => f.status === 'Approved').length }}</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border p-4">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Processing</p>
+                                <p class="text-2xl font-bold text-yellow-600">{{ myFiles.filter(f => f.status === 'Login').length }}</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border p-4">
+                                <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Disbursed</p>
+                                <p class="text-2xl font-bold text-purple-600">{{ myFiles.filter(f => f.status === 'Disbursed').length }}</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                                <h3 class="font-semibold text-gray-700">My Customer Files</h3>
+                                <div class="w-64">
+                                    <input v-model="mySearch" type="text" placeholder="Search by name..." class="w-full px-3 py-1.5 border rounded text-sm">
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                                            <th class="p-4 font-medium border-b">Customer Name</th>
+                                            <th class="p-4 font-medium border-b">Vehicle</th>
+                                            <th class="p-4 font-medium border-b text-right">Loan Amount</th>
+                                            <th class="p-4 font-medium border-b text-center">Status</th>
+                                            <th class="p-4 font-medium border-b">Created</th>
+                                            <th class="p-4 font-medium border-b text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="border-b hover:bg-gray-50">
+                                            <td class="p-4">
+                                                <div class="font-semibold text-gray-800">{{ file.customerName }}</div>
+                                                <div class="text-xs text-gray-500">{{ file.phone }}</div>
+                                            </td>
+                                            <td class="p-4 text-sm">{{ file.vehicleModel }}</td>
+                                            <td class="p-4 text-right font-medium">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="p-4 text-center">
+                                                <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
+                                            </td>
+                                            <td class="p-4 text-sm text-gray-500">{{ formatDate(file.createdAt) }}</td>
+                                            <td class="p-4 text-right">
+                                                <button @click="openEditStatusModal(file)" class="text-axisBlue hover:text-blue-800 text-sm font-medium border border-axisBlue hover:bg-blue-50 px-3 py-1 rounded transition">
+                                                    Update Status
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="filteredMyFiles.length === 0">
+                                            <td colspan="6" class="p-8 text-center text-gray-500">You have no files matching your search.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RO: ADD NEW FILE -->
+                    <div v-if="currentTab === 'ro-add-file' && !isAdmin">
+                        <div class="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto">
+                            <div class="px-6 py-4 border-b bg-gray-50 rounded-t-lg">
+                                <h3 class="font-semibold text-gray-700">Enter New Customer Loan File Details</h3>
+                            </div>
+                            <div class="p-6">
+                                <form @submit.prevent="saveNewFile">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Full Name *</label>
+                                            <input v-model="newFileForm.customerName" type="text" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                            <input v-model="newFileForm.phone" type="tel" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make & Model</label>
+                                            <input v-model="newFileForm.vehicleModel" type="text" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none" placeholder="e.g. Hyundai Creta 2023">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Requested Loan Amount (₹) *</label>
+                                            <input v-model.number="newFileForm.loanAmount" type="number" min="0" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Initial Status</label>
+                                        <select v-model="newFileForm.status" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none bg-white">
+                                            <option value="Lead">Lead (Initial Contact)</option>
+                                            <option value="Login">Login (Documents Collected & Processing)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes / Remarks</label>
+                                        <textarea v-model="newFileForm.notes" rows="3" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-axisBlue focus:border-axisBlue outline-none"></textarea>
+                                    </div>
+
+                                    <!-- Mock Document Upload UI -->
+                                    <div class="mb-6 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600 mb-1">Drag and drop documents here (Aadhar, PAN, Bank Stmt)</p>
+                                        <p class="text-xs text-gray-400">Files are mocked for this demo</p>
+                                    </div>
+
+                                    <div class="flex justify-end pt-4 border-t">
+                                        <button type="button" @click="resetNewFileForm" class="mr-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition">Clear</button>
+                                        <button type="submit" class="px-6 py-2 bg-axisBlue hover:bg-blue-900 text-white font-medium rounded shadow transition">
+                                            <i class="fas fa-save mr-2"></i> Save Customer File
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- MODALS -->
+        
+        <!-- Add RO Modal (Admin only) -->
+        <div v-if="showAddRoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 bg-axisBlue text-white flex justify-between items-center">
+                    <h3 class="font-bold">Add New Relationship Officer</h3>
+                    <button @click="showAddRoModal = false" class="text-blue-200 hover:text-white"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <form @submit.prevent="saveNewRo">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input v-model="newRoForm.name" type="text" required class="w-full px-3 py-2 border rounded outline-none focus:ring-2 focus:ring-axisBlue">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username (for login)</label>
+                            <input v-model="newRoForm.username" type="text" required class="w-full px-3 py-2 border rounded outline-none focus:ring-2 focus:ring-axisBlue">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input v-model="newRoForm.password" type="password" required class="w-full px-3 py-2 border rounded outline-none focus:ring-2 focus:ring-axisBlue">
+                        </div>
+                        <div v-if="addRoError" class="mb-4 text-red-500 text-sm">{{ addRoError }}</div>
+                        <div class="flex justify-end">
+                            <button type="button" @click="showAddRoModal = false" class="mr-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-axisBlue text-white rounded hover:bg-blue-900">Create RO Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Status Modal (RO only) -->
+        <div v-if="showUpdateStatusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800">Update File Status</h3>
+                    <button @click="showUpdateStatusModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-100">
+                        <p class="text-sm text-gray-600">Customer: <strong class="text-gray-900">{{ selectedFile?.customerName }}</strong></p>
+                        <p class="text-sm text-gray-600">Current Status: <strong>{{ selectedFile?.status }}</strong></p>
+                    </div>
+                    
+                    <form @submit.prevent="saveFileStatus">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">New Status</label>
+                            <select v-model="statusUpdateForm.status" required class="w-full px-3 py-2 border rounded outline-none focus:ring-2 focus:ring-axisBlue bg-white">
+                                <option value="Lead">Lead</option>
+                                <option value="Login">Login</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Disbursed">Disbursed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Add Note (Optional)</label>
+                            <textarea v-model="statusUpdateForm.note" rows="2" class="w-full px-3 py-2 border rounded outline-none focus:ring-2 focus:ring-axisBlue"></textarea>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="button" @click="showUpdateStatusModal = false" class="mr-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-axisBlue text-white rounded hover:bg-blue-900">Update Status</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Details Modal (Admin) -->
+        <div v-if="showViewFileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-file-alt text-axisBlue mr-2"></i> File Details - #{{ String(selectedFile?.id).padStart(5, '0') }}
+                    </h3>
+                    <button @click="showViewFileModal = false" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6 overflow-y-auto">
+                    <div class="grid grid-cols-2 gap-y-4 gap-x-8">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Customer Name</p>
+                            <p class="font-medium text-gray-900">{{ selectedFile?.customerName }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Phone</p>
+                            <p class="font-medium text-gray-900">{{ selectedFile?.phone }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Vehicle Details</p>
+                            <p class="font-medium text-gray-900">{{ selectedFile?.vehicleModel || 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Loan Amount</p>
+                            <p class="font-medium text-gray-900">₹{{ selectedFile ? formatCurrency(selectedFile.loanAmount) : 0 }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Current Status</p>
+                            <span :class="getStatusBadgeClass(selectedFile?.status)" class="mt-1 inline-block">{{ selectedFile?.status }}</span>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Assigned RO</p>
+                            <p class="font-medium text-gray-900"><i class="fas fa-user text-gray-400 mr-1"></i> {{ selectedFile?.roName }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Created Date</p>
+                            <p class="font-medium text-gray-900">{{ selectedFile ? formatDate(selectedFile.createdAt) : '' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Last Updated</p>
+                            <p class="font-medium text-gray-900">{{ selectedFile ? formatDate(selectedFile.updatedAt || selectedFile.createdAt) : '' }}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-xs text-gray-500 uppercase">Initial Notes / Remarks</p>
+                            <div class="bg-gray-50 p-3 rounded text-sm text-gray-700 mt-1 border">
+                                {{ selectedFile?.notes || 'No remarks provided.' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                    <button @click="showViewFileModal = false" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Close</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/db.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
+</body>
+</html>
