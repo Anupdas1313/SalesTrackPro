@@ -162,25 +162,37 @@
 
             <!-- Main Content Area -->
             <main class="flex-1 flex flex-col h-full overflow-hidden pb-[72px] md:pb-0 bg-slate-50">
-                <!-- Header -->
-                <header class="bg-white/80 backdrop-blur-md shadow-sm border-b px-4 md:px-8 py-3 flex justify-between items-center z-10 sticky top-0">
-                    <div class="flex items-center">
-                        <i class="fas fa-car-side text-blue-600 text-2xl mr-2 md:hidden"></i>
-                        <h2 class="text-xl md:text-2xl font-bold text-slate-800 capitalize tracking-tight">{{ getTabTitle(currentTab) }}</h2>
+                <!-- Clean Minimal Header -->
+                <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-4 md:px-8 py-3 flex justify-between items-center z-10 sticky top-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="md:hidden w-8 h-8 rounded-lg bg-[#97144D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                            A
+                        </div>
+                        <div>
+                            <h2 class="text-base md:text-xl font-bold text-slate-900 tracking-tight leading-tight">{{ getTabTitle(currentTab) }}</h2>
+                            <p class="text-[11px] text-slate-400 font-medium md:hidden">{{ currentUser.name }}</p>
+                        </div>
                     </div>
                     
-                    <div class="flex items-center gap-4">
-                        <div class="text-xs md:text-sm text-slate-500 font-medium hidden md:block">
+                    <div class="flex items-center gap-3">
+                        <div class="text-xs text-slate-400 font-medium hidden md:block">
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
-                        <button @click="logout" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 md:py-1.5 rounded-2xl transition-colors font-semibold border border-red-100 text-sm md:text-base flex items-center">
-                            <i class="fas fa-sign-out-alt md:mr-2"></i> <span class="hidden md:inline">Logout</span>
+                        <div class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs">
+                            <span class="w-7 h-7 rounded-full bg-[#97144D]/10 text-[#97144D] font-bold flex items-center justify-center text-xs">
+                                {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
+                            </span>
+                            <span class="font-semibold text-slate-700">{{ currentUser?.name }}</span>
+                        </div>
+                        <button @click="logout" title="Logout" class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fas fa-arrow-right-from-bracket"></i>
+                            <span class="hidden md:inline">Logout</span>
                         </button>
                     </div>
                 </header>
 
                 <!-- Scrollable Content -->
-                <div :class="[currentTab === 'ro-add-file' && !isAdmin ? 'bg-purple-50' : 'bg-gray-50', 'flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 transition-colors duration-300']">
+                <div class="bg-slate-50 flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
                     
                     <!-- ADMIN: DASHBOARD -->
                     <div v-if="currentTab === 'dashboard' && isAdmin">
@@ -374,91 +386,85 @@
                     </div>
 
 
-                    <!-- RO: PURE OVERVIEW DASHBOARD -->
-                    <div v-if="currentTab === 'ro-dashboard' && !isAdmin" class="space-y-6 pb-12">
+                    <!-- RO: PURE OVERVIEW DASHBOARD (Minimal & Clean) -->
+                    <div v-if="currentTab === 'ro-dashboard' && !isAdmin" class="space-y-5 pb-12 max-w-5xl mx-auto">
                         
                         <!-- Header -->
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
-                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Portfolio Overview</h1>
-                                <p class="text-xs text-slate-500 font-medium">High-level summary of your loan applications</p>
+                                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Portfolio Overview</h1>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">Summary of your loan applications</p>
                             </div>
-                            <div class="px-3.5 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-slate-700">
-                                <span>Approval Rate: </span>
-                                <span class="text-emerald-600 ml-1">{{ roStats.approvalRate }}%</span>
+                            <div class="px-3 py-1.5 bg-white rounded-xl border border-slate-200/70 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                                <span class="text-slate-400">Approval Rate:</span>
+                                <span class="text-emerald-600 font-bold">{{ roStats.approvalRate }}%</span>
                             </div>
                         </div>
 
                         <!-- Top KPI Cards -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Files</span>
-                                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 text-xs">
-                                        <i class="fas fa-folder"></i>
-                                    </span>
-                                </div>
-                                <p class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{{ roStats.totalFiles }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Total logged files</p>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Total Files -->
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
+                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Files</div>
+                                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">{{ roStats.totalFiles }}</div>
+                                <div class="text-[11px] text-slate-400 font-medium mt-1">Total logged files</div>
                             </div>
 
-                            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</span>
-                                    <span class="w-8 h-8 rounded-xl bg-[#97144D]/10 flex items-center justify-center text-[#97144D] text-xs font-bold">
-                                        ₹
-                                    </span>
-                                </div>
-                                <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 truncate">₹{{ formatCurrency(roStats.totalAmount) }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Cumulative pipeline</p>
+                            <!-- Total Value -->
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
+                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Value</div>
+                                <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1.5 truncate">₹{{ formatCurrency(roStats.totalAmount) }}</div>
+                                <div class="text-[11px] text-slate-400 font-medium mt-1">Cumulative pipeline</div>
                             </div>
 
-                            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Approved</span>
-                                    <span class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xs">
-                                        <i class="fas fa-check-circle"></i>
-                                    </span>
-                                </div>
-                                <p class="text-2xl sm:text-3xl font-black text-emerald-600 mt-2">{{ roStats.approvedCount }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">₹{{ formatCurrency(roStats.approvedAmount) }}</p>
+                            <!-- Approved -->
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
+                                <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Approved</div>
+                                <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1.5">{{ roStats.approvedCount }}</div>
+                                <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.approvedAmount) }}</div>
                             </div>
 
-                            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">In Login</span>
-                                    <span class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-xs">
-                                        <i class="fas fa-clock"></i>
-                                    </span>
-                                </div>
-                                <p class="text-2xl sm:text-3xl font-black text-blue-600 mt-2">{{ roStats.loginCount }}</p>
-                                <p class="text-[11px] text-slate-500 font-medium mt-0.5">₹{{ formatCurrency(roStats.loginAmount) }}</p>
+                            <!-- In Login -->
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
+                                <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">In Login</div>
+                                <div class="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-1.5">{{ roStats.loginCount }}</div>
+                                <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.loginAmount) }}</div>
                             </div>
                         </div>
 
                         <!-- Category Breakdown (NCL vs UCL) -->
-                        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-xs space-y-4">
                             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                                <h3 class="font-bold text-slate-800 text-sm">Category Breakdown</h3>
-                                <span class="text-xs text-slate-400 font-medium">NCL vs UCL</span>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-sm">Category Breakdown</h3>
+                                    <p class="text-xs text-slate-400">Portfolio distribution</p>
+                                </div>
+                                <span class="text-xs text-slate-500 font-semibold">{{ roStats.totalFiles }} Total</span>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
-                                    <span class="inline-block px-3 py-1 bg-[#97144D]/10 text-[#97144D] text-xs font-bold rounded-lg uppercase">NCL (New Car Loan)</span>
-                                    <p class="text-3xl font-black text-slate-900 mt-3">{{ roStats.nclCount }} <span class="text-xs text-slate-400 font-semibold">files</span></p>
-                                    <p class="text-sm font-bold text-slate-600 mt-1">₹{{ formatCurrency(roStats.nclAmount) }}</p>
-                                </div>
-                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
-                                    <span class="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg uppercase">UCL (Used Car Loan)</span>
-                                    <p class="text-3xl font-black text-slate-900 mt-3">{{ roStats.uclCount }} <span class="text-xs text-slate-400 font-semibold">files</span></p>
-                                    <p class="text-sm font-bold text-slate-600 mt-1">₹{{ formatCurrency(roStats.uclAmount) }}</p>
-                                </div>
+                            <!-- Minimal Proportional Progress Bar -->
+                            <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
+                                <div :style="{ width: (roStats.totalFiles ? (roStats.nclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-[#97144D] h-full transition-all" title="NCL"></div>
+                                <div :style="{ width: (roStats.totalFiles ? (roStats.uclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-slate-700 h-full transition-all" title="UCL"></div>
                             </div>
 
-                            <div class="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
-                                <span class="text-slate-500 font-medium">Logged-In RO Account</span>
-                                <span class="text-slate-800 font-bold">{{ currentUser.name }}</span>
+                            <div class="grid grid-cols-2 gap-4 pt-1">
+                                <div class="p-4 bg-slate-50/70 rounded-xl border border-slate-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#97144D]"></span>
+                                        <span class="text-xs font-bold text-slate-700">NCL (New Car)</span>
+                                    </div>
+                                    <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">{{ roStats.nclCount }} <span class="text-xs text-slate-400 font-normal">files</span></div>
+                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">₹{{ formatCurrency(roStats.nclAmount) }}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50/70 rounded-xl border border-slate-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                                        <span class="text-xs font-bold text-slate-700">UCL (Used Car)</span>
+                                    </div>
+                                    <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">{{ roStats.uclCount }} <span class="text-xs text-slate-400 font-normal">files</span></div>
+                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">₹{{ formatCurrency(roStats.uclAmount) }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -717,54 +723,54 @@
                             </div>
                         </div>
 
-                        <!-- Data List Card -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+                        <!-- Data List Card (Minimal & Clean) -->
+                        <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs overflow-hidden">
                             <!-- Desktop Table View -->
                             <div class="hidden lg:block overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider font-bold border-b border-slate-100">
-                                            <th class="p-4">App ID & Customer</th>
-                                            <th class="p-4">Category</th>
-                                            <th class="p-4 text-right">L/ AMOUNT</th>
-                                            <th class="p-4 text-center">Status</th>
-                                            <th class="p-4">PPC / SM</th>
-                                            <th class="p-4">VCIP / MI</th>
-                                            <th class="p-4">Date</th>
-                                            <th class="p-4 text-right">Actions</th>
+                                        <tr class="bg-slate-50/70 text-slate-400 text-[11px] uppercase tracking-wider font-bold border-b border-slate-100">
+                                            <th class="py-3 px-4">App ID & Customer</th>
+                                            <th class="py-3 px-4">Category</th>
+                                            <th class="py-3 px-4 text-right">L/ Amount</th>
+                                            <th class="py-3 px-4 text-center">Status</th>
+                                            <th class="py-3 px-4">SM / PPC</th>
+                                            <th class="py-3 px-4">VCIP / MI</th>
+                                            <th class="py-3 px-4">Date</th>
+                                            <th class="py-3 px-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 text-sm">
-                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50/70 transition">
-                                            <td class="p-4">
+                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50/60 transition">
+                                            <td class="py-3.5 px-4">
                                                 <div class="font-bold text-slate-900">{{ file.customerName }}</div>
-                                                <div class="text-xs font-bold text-[#97144D] mt-0.5">#{{ file.appId || 'No ID' }}</div>
+                                                <div class="text-xs font-semibold text-[#97144D] mt-0.5">#{{ file.appId || 'No ID' }}</div>
                                             </td>
-                                            <td class="p-4 text-xs font-bold text-slate-700">
-                                                <span class="px-2.5 py-1 bg-slate-100 rounded-lg">{{ file.nclUcl || '-' }}</span>
+                                            <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">
+                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px]">{{ file.nclUcl || '-' }}</span>
                                             </td>
-                                            <td class="p-4 text-right font-black text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="p-4 text-center">
+                                            <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="py-3.5 px-4 text-center">
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
                                             </td>
-                                            <td class="p-4 text-xs">
+                                            <td class="py-3.5 px-4 text-xs">
                                                 <div class="font-semibold text-slate-800">{{ file.smName || defaultSmName || '-' }}</div>
-                                                <div class="text-slate-400 font-medium">PPC: {{ file.ppc || '-' }}</div>
+                                                <div class="text-slate-400 text-[11px]">PPC: {{ file.ppc || '-' }}</div>
                                             </td>
-                                            <td class="p-4 text-xs">
+                                            <td class="py-3.5 px-4 text-xs">
                                                 <div class="font-semibold text-slate-800">{{ file.vcip || '-' }}</div>
-                                                <div class="text-slate-400 font-medium">MI: {{ file.mi || '-' }}</div>
+                                                <div class="text-slate-400 text-[11px]">MI: {{ file.mi || '-' }}</div>
                                             </td>
-                                            <td class="p-4 text-xs text-slate-500 font-medium">{{ formatDate(file.createdAt) }}</td>
-                                            <td class="p-4 text-right">
-                                                <div class="inline-flex items-center gap-1.5">
-                                                    <button @click="openViewFileModal(file)" title="View Details" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition text-xs">
+                                            <td class="py-3.5 px-4 text-xs text-slate-400">{{ formatDate(file.createdAt) }}</td>
+                                            <td class="py-3.5 px-4 text-right">
+                                                <div class="inline-flex items-center gap-1">
+                                                    <button @click="openViewFileModal(file)" title="View Details" class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition text-xs">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <button @click="openEditFileModal(file)" title="Edit All Details" class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition text-xs font-bold">
-                                                        <i class="fas fa-edit"></i>
+                                                    <button @click="openEditFileModal(file)" title="Edit Details" class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition text-xs">
+                                                        <i class="fas fa-pen-to-square"></i>
                                                     </button>
-                                                    <button @click="deleteFile(file)" title="Delete File" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition text-xs">
+                                                    <button @click="deleteFile(file)" title="Delete File" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
@@ -772,17 +778,17 @@
                                         </tr>
                                         <tr v-if="filteredMyFiles.length === 0">
                                             <td colspan="8" class="p-12 text-center text-slate-400">
-                                                <i class="fas fa-calendar-day text-4xl mb-3 text-slate-300 block"></i>
-                                                <p class="font-bold text-base text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
-                                                <p class="text-xs text-slate-400 mt-1">
-                                                    {{ roFilters.timeline === 'today' && myFiles.length > 0 ? 'You have files logged on other dates.' : 'Try adjusting your search, filters, or timeline.' }}
+                                                <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
+                                                <p class="font-bold text-sm text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
+                                                <p class="text-xs text-slate-400 mt-0.5">
+                                                    {{ roFilters.timeline === 'today' && myFiles.length > 0 ? 'You have files logged on other dates.' : 'Try adjusting your search or filters.' }}
                                                 </p>
                                                 <div class="mt-4 flex items-center justify-center gap-2">
-                                                    <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
+                                                    <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-3.5 py-1.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
                                                         <i class="fas fa-globe text-xs"></i>
                                                         <span>View All Time ({{ myFiles.length }} files)</span>
                                                     </button>
-                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                                                         Reset Filters
                                                     </button>
                                                 </div>
@@ -792,55 +798,57 @@
                                 </table>
                             </div>
 
-                            <!-- Mobile Card View -->
-                            <div class="lg:hidden flex flex-col gap-3 p-4 bg-slate-50/60">
-                                <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-4 relative">
-                                    <!-- Header -->
-                                    <div class="flex justify-between items-start mb-2.5">
-                                        <div>
-                                            <h4 class="font-bold text-slate-900 text-base leading-tight">{{ file.customerName }}</h4>
-                                            <span class="inline-block mt-1 text-xs font-bold text-[#97144D]">#{{ file.appId || 'No ID' }}</span>
+                            <!-- Mobile Card View (Minimal, Clean & Modern) -->
+                            <div class="lg:hidden flex flex-col gap-2.5 p-3 sm:p-4 bg-slate-50/50">
+                                <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-2.5">
+                                    <!-- Row 1: Customer Name, Status & Loan Amount -->
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="font-bold text-slate-900 text-sm truncate">{{ file.customerName }}</h4>
+                                            <div class="flex items-center gap-1.5 mt-0.5 text-xs">
+                                                <span class="font-semibold text-[#97144D]">#{{ file.appId || 'No ID' }}</span>
+                                                <span class="text-slate-300">•</span>
+                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">{{ file.nclUcl || 'NCL' }}</span>
+                                            </div>
                                         </div>
-                                        <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
-                                    </div>
-
-                                    <!-- Grid Details -->
-                                    <div class="grid grid-cols-2 gap-2 my-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <div>
-                                            <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Category</p>
-                                            <p class="font-bold text-slate-800">{{ file.nclUcl || '-' }}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">L/ Amount</p>
-                                            <p class="font-black text-slate-900 text-sm">₹{{ formatCurrency(file.loanAmount) }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">SM Name / PPC</p>
-                                            <p class="font-semibold text-slate-700">{{ file.smName || defaultSmName || '-' }} <span class="text-slate-400">({{ file.ppc || '-' }})</span></p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">VCIP / MI</p>
-                                            <p class="font-semibold text-slate-700">{{ file.vcip || '-' }} / {{ file.mi || '-' }}</p>
+                                        <div class="text-right shrink-0">
+                                            <div class="text-base font-extrabold text-slate-900 leading-tight">₹{{ formatCurrency(file.loanAmount) }}</div>
+                                            <span :class="getStatusBadgeClass(file.status)" class="mt-1 inline-block">{{ file.status }}</span>
                                         </div>
                                     </div>
 
-                                    <!-- Actions Bar -->
-                                    <div class="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-                                        <button @click="openViewFileModal(file)" class="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 transition text-center flex items-center justify-center gap-1.5">
-                                            <i class="fas fa-eye text-xs"></i>
+                                    <!-- Row 2: Metadata row (Clean chips without heavy boxes) -->
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
+                                            <span>{{ file.smName || defaultSmName || 'No SM' }}</span>
+                                        </span>
+                                        <span v-if="file.ppc" class="inline-flex items-center gap-1 text-slate-400">
+                                            <span>PPC: {{ file.ppc }}</span>
+                                        </span>
+                                        <span v-if="file.vcip" class="inline-flex items-center gap-1 text-slate-400">
+                                            <span>VCIP: {{ file.vcip }}</span>
+                                        </span>
+                                        <span class="ml-auto text-[11px] text-slate-400">{{ formatDate(file.createdAt) }}</span>
+                                    </div>
+
+                                    <!-- Row 3: Minimal Action Bar -->
+                                    <div class="flex items-center justify-end gap-1 pt-2 border-t border-slate-100 text-xs">
+                                        <button @click="openViewFileModal(file)" class="px-3 py-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition font-medium flex items-center gap-1.5">
+                                            <i class="fas fa-eye text-xs text-slate-400"></i>
                                             <span>View</span>
                                         </button>
-                                        <button @click="openEditFileModal(file)" class="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition text-center flex items-center justify-center gap-1.5">
-                                            <i class="fas fa-edit text-xs"></i>
-                                            <span>Edit File</span>
+                                        <button @click="openEditFileModal(file)" class="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition font-medium flex items-center gap-1.5">
+                                            <i class="fas fa-pen-to-square text-xs"></i>
+                                            <span>Edit</span>
                                         </button>
-                                        <button @click="deleteFile(file)" class="p-2 text-red-500 hover:bg-red-50 rounded-xl border border-red-100 transition">
-                                            <i class="fas fa-trash"></i>
+                                        <button @click="deleteFile(file)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Delete">
+                                            <i class="fas fa-trash text-xs"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div v-if="filteredMyFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
+                                <div v-if="filteredMyFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-xs">
                                     <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
                                     <p class="text-sm font-bold text-slate-700">No files for {{ getTimelineLabel(roFilters.timeline) }}</p>
                                     <p class="text-xs text-slate-400 mt-0.5">
@@ -860,149 +868,126 @@
                         </div>
                     </div>
 
-                    <!-- RO: ADD NEW FILE (Customer Login Details Entry) -->
+                    <!-- RO: ADD NEW FILE (Customer Login Details Entry - Minimal & Clean) -->
                     <div v-if="currentTab === 'ro-add-file' && !isAdmin" class="max-w-xl mx-auto pb-12">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+                        <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs p-5 sm:p-8 space-y-5">
                             <!-- Card Header -->
-                            <div class="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
-                                <div>
-                                    <span class="inline-block px-2.5 py-1 bg-[#97144D]/10 text-[#97144D] text-[11px] font-bold rounded-full uppercase tracking-wider mb-2">
-                                        Customer File Entry
-                                    </span>
-                                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Login Details</h1>
-                                    <p class="text-xs text-slate-500 mt-0.5 font-medium">Enter details for daily tracking</p>
-                                </div>
-                                <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#97144D] shadow-sm">
-                                    <i class="fas fa-file-invoice text-xl"></i>
-                                </div>
+                            <div class="pb-4 border-b border-slate-100">
+                                <h1 class="text-xl font-bold text-slate-900 tracking-tight">New Customer File</h1>
+                                <p class="text-xs text-slate-400 mt-0.5 font-medium">Log loan application details for daily tracking</p>
                             </div>
 
                             <form @submit.prevent="saveNewFile" class="space-y-4">
                                 
-                                <!-- App ID -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        App ID <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 font-semibold text-sm">#</span>
-                                        <input type="text" v-model="newFileForm.appId" class="w-full pl-9 pr-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400 uppercase" placeholder="ALA00000" autocapitalize="characters" required>
+                                <!-- App ID & Customer Name Grid -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                            App ID <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">#</span>
+                                            <input type="text" v-model="newFileForm.appId" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ALA00000" autocapitalize="characters" required>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                            Customer Name <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input type="text" v-model="newFileForm.customerName" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-semibold text-slate-900 placeholder-slate-400" placeholder="Full Customer Name" required>
                                     </div>
                                 </div>
 
-                                <!-- Customer Name -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        Customer Name <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                                            <i class="fas fa-user text-sm"></i>
-                                        </span>
-                                        <input type="text" v-model="newFileForm.customerName" class="w-full pl-10 pr-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400" placeholder="Full Customer Name" required>
+                                <!-- Category (NCL / UCL) & Loan Amount -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                            Category <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                            <button type="button" @click="newFileForm.nclUcl = 'NCL'" :class="newFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                                NCL
+                                            </button>
+                                            <button type="button" @click="newFileForm.nclUcl = 'UCL'" :class="newFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                                UCL
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- NCL / UCL Category Selector -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        Category (NCL / UCL) <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
-                                        <button type="button" @click="newFileForm.nclUcl = 'NCL'" :class="newFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2">
-                                            <i v-if="newFileForm.nclUcl === 'NCL'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            <span>NCL</span>
-                                        </button>
-                                        <button type="button" @click="newFileForm.nclUcl = 'UCL'" :class="newFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2">
-                                            <i v-if="newFileForm.nclUcl === 'UCL'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            <span>UCL</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Loan Amount -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        Loan Amount (L/ AMOUNT) <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 font-bold text-base">₹</span>
-                                        <input type="number" inputmode="numeric" min="0" v-model.number="newFileForm.loanAmount" class="w-full pl-9 pr-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-base font-bold text-slate-900 placeholder-slate-400" placeholder="0" required>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                            Loan Amount (₹) <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">₹</span>
+                                            <input type="number" inputmode="numeric" min="0" v-model.number="newFileForm.loanAmount" class="w-full pl-8 pr-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400" placeholder="0" required>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Status Selection -->
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                        Status <span class="text-red-500">*</span>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        Status <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                         <button type="button" v-for="st in ['Login', 'Approved', 'Rejected', 'Disbursed']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
-                                                ? (st === 'Approved' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 
-                                                   st === 'Rejected' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20' : 
-                                                   st === 'Disbursed' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 
-                                                   'bg-blue-600 text-white shadow-md shadow-blue-600/20') 
-                                                : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100',
-                                            'py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5'
+                                                ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
+                                                   st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
+                                                   st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
+                                                   'bg-blue-600 text-white font-bold') 
+                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
+                                            'py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5'
                                         ]">
-                                            <i v-if="newFileForm.status === st" class="fas fa-check text-[10px]"></i>
                                             <span>{{ st }}</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- PPC & SM Name Grid -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ppc</label>
-                                        <input type="text" v-model="newFileForm.ppc" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="PPC info">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">PPC Location</label>
+                                        <input type="text" v-model="newFileForm.ppc" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="e.g. Branch Name">
                                     </div>
                                     <div>
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">SM NAME</label>
+                                        <div class="flex justify-between items-center mb-1">
+                                            <label class="block text-xs font-semibold text-slate-700">SM Name</label>
                                             <span v-if="defaultSmName" class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                                                 <i class="fas fa-check-circle text-[9px]"></i> Default SM
                                             </span>
                                         </div>
-                                        <input type="text" v-model="newFileForm.smName" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="SM Name">
+                                        <input type="text" v-model="newFileForm.smName" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="Sales Manager Name">
                                     </div>
                                 </div>
 
                                 <!-- VCIP & MI Grid -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">VCIP</label>
-                                        <input type="text" v-model="newFileForm.vcip" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP Status">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
+                                        <input type="text" v-model="newFileForm.vcip" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP Status">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">MI</label>
-                                        <input type="text" v-model="newFileForm.mi" class="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="MI Details">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
+                                        <input type="text" v-model="newFileForm.mi" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="MI Details">
                                     </div>
                                 </div>
 
-                                <!-- RO Badge (Locked) -->
-                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs mt-2">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-[#97144D]/10 text-[#97144D] flex items-center justify-center font-bold">
-                                            <i class="fas fa-id-badge"></i>
-                                        </div>
-                                        <div>
-                                            <span class="text-slate-400 font-medium">Submitting RO:</span>
-                                            <span class="text-slate-800 font-bold ml-1">{{ currentUser.name }}</span>
-                                        </div>
-                                    </div>
-                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded-md text-[10px]">Active</span>
+                                <!-- RO Attribution Line -->
+                                <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+                                    <span>RO: <strong class="text-slate-700">{{ currentUser.name }}</strong></span>
+                                    <span>Branch ID: <strong class="text-slate-700">Axis Auto</strong></span>
                                 </div>
 
                                 <!-- Actions -->
-                                <div class="flex gap-3 pt-3">
-                                    <button type="button" @click="resetNewFileForm" class="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition text-sm">
+                                <div class="flex gap-2.5 pt-3 border-t border-slate-100">
+                                    <button type="button" @click="resetNewFileForm" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition text-xs">
                                         Clear
                                     </button>
-                                    <button type="submit" class="flex-1 py-3.5 bg-gradient-to-r from-[#97144D] to-[#BD1E59] hover:from-[#851244] hover:to-[#A71A4F] text-white font-bold rounded-xl shadow-lg shadow-[#97144D]/25 transition transform active:scale-[0.98] text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Save Login Details</span>
+                                    <button type="submit" class="flex-1 py-2.5 bg-[#97144D] hover:bg-[#801040] text-white font-bold rounded-xl transition shadow-xs text-xs flex items-center justify-center gap-1.5">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                        <span>Save Customer File</span>
                                     </button>
                                 </div>
                             </form>
@@ -1011,33 +996,33 @@
 
                 </div>
 
-                <!-- Bottom Navigation (Mobile Only) -->
-                <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-lg border-t border-slate-200 flex justify-around items-center z-40 pb-safe">
+                <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
+                <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isAdmin">
-                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-blue-600' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-chart-pie text-xl mb-1"></i>
-                            <span class="text-[10px] font-medium">Dashboard</span>
+                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-blue-600 font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-chart-pie text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Dashboard</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-blue-600' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-layer-group text-xl mb-1"></i>
-                            <span class="text-[10px] font-medium">Tracking</span>
+                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-blue-600 font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-layer-group text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Tracking</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-blue-600' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-users-cog text-xl mb-1"></i>
-                            <span class="text-[10px] font-medium">Users</span>
+                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-blue-600 font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-users-cog text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Users</span>
                         </a>
                     </template>
                     <template v-else>
-                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-chart-pie text-xl mb-1"></i>
+                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Overview</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-layer-group text-xl mb-1"></i>
+                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Tracking</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#97144D] font-bold' : 'text-slate-400', 'flex flex-col items-center py-3 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-plus-circle text-xl mb-1"></i>
+                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-plus-circle text-lg mb-0.5"></i>
                             <span class="text-[10px]">New Entry</span>
                         </a>
                     </template>
@@ -1047,60 +1032,61 @@
 
         <!-- MODALS -->
         
-        <!-- Full Edit Customer File Modal (RO & Admin) -->
-        <div v-if="showEditFileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-6">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 flex flex-col max-h-[92vh]">
-                <div class="px-6 py-4 bg-gradient-to-r from-[#97144D] to-[#BD1E59] text-white flex justify-between items-center shrink-0">
+        <!-- Full Edit Customer File Modal (RO & Admin - Minimal & Clean) -->
+        <div v-if="showEditFileModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 px-4 py-6">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-slate-100 flex flex-col max-h-[92vh]">
+                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                     <div>
-                        <h3 class="font-bold text-base">Edit Customer File</h3>
-                        <p class="text-xs text-white/80 font-medium">Update all file details & status</p>
+                        <h3 class="font-bold text-slate-900 text-sm">Edit Customer File</h3>
+                        <p class="text-xs text-slate-400 font-medium">Update file details & status</p>
                     </div>
-                    <button @click="showEditFileModal = false" class="text-white/70 hover:text-white p-1"><i class="fas fa-times"></i></button>
+                    <button @click="showEditFileModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
                 </div>
 
-                <div class="p-6 overflow-y-auto space-y-4">
+                <div class="p-5 overflow-y-auto space-y-4">
                     <form @submit.prevent="saveEditedFile" id="editFileFormEl" class="space-y-4">
                         <!-- App ID & Customer Name -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">App ID <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="editFileForm.appId" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm font-semibold uppercase">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">App ID <span class="text-rose-500">*</span></label>
+                                <input type="text" v-model="editFileForm.appId" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold uppercase">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Customer Name <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="editFileForm.customerName" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm font-semibold">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Name <span class="text-rose-500">*</span></label>
+                                <input type="text" v-model="editFileForm.customerName" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-semibold">
                             </div>
                         </div>
 
                         <!-- Category & Loan Amount -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Category <span class="text-red-500">*</span></label>
-                                <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
-                                    <button type="button" @click="editFileForm.nclUcl = 'NCL'" :class="editFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
-                                    <button type="button" @click="editFileForm.nclUcl = 'UCL'" :class="editFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-sm font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                    <button type="button" @click="editFileForm.nclUcl = 'NCL'" :class="editFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
+                                    <button type="button" @click="editFileForm.nclUcl = 'UCL'" :class="editFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Loan Amount (₹) <span class="text-red-500">*</span></label>
-                                <input type="number" inputmode="numeric" min="0" v-model.number="editFileForm.loanAmount" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm font-bold">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Loan Amount (₹) <span class="text-rose-500">*</span></label>
+                                <input type="number" inputmode="numeric" min="0" v-model.number="editFileForm.loanAmount" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold">
                             </div>
                         </div>
 
                         <!-- Status Selector -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status <span class="text-red-500">*</span></label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Status <span class="text-rose-500">*</span></label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" v-for="st in ['Login', 'Approved', 'Rejected', 'Disbursed']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
-                                        ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20' : 
-                                           st === 'Rejected' ? 'bg-rose-600 text-white font-bold shadow-md shadow-rose-600/20' : 
-                                           st === 'Disbursed' ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/20' : 
-                                           'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20') 
-                                        : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100',
-                                    'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center gap-1 font-semibold'
+                                        ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
+                                           st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
+                                           st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
+                                           'bg-blue-600 text-white font-bold') 
+                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+                                    'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center font-semibold'
                                 ]">
-                                    <i v-if="editFileForm.status === st" class="fas fa-check text-[10px]"></i>
                                     <span>{{ st }}</span>
                                 </button>
                             </div>
@@ -1109,33 +1095,33 @@
                         <!-- PPC & SM Name -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Ppc</label>
-                                <input type="text" v-model="editFileForm.ppc" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">PPC</label>
+                                <input type="text" v-model="editFileForm.ppc" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">SM NAME</label>
-                                <input type="text" v-model="editFileForm.smName" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">SM Name</label>
+                                <input type="text" v-model="editFileForm.smName" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
                             </div>
                         </div>
 
                         <!-- VCIP & MI -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">VCIP</label>
-                                <input type="text" v-model="editFileForm.vcip" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
+                                <input type="text" v-model="editFileForm.vcip" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">MI</label>
-                                <input type="text" v-model="editFileForm.mi" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
+                                <input type="text" v-model="editFileForm.mi" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
                             </div>
                         </div>
                     </form>
                 </div>
 
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
-                    <button type="button" @click="showEditFileModal = false" class="px-4 py-2.5 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-bold transition">Cancel</button>
-                    <button type="submit" form="editFileFormEl" class="px-5 py-2.5 bg-gradient-to-r from-[#97144D] to-[#BD1E59] hover:from-[#851244] hover:to-[#A71A4F] text-white rounded-xl text-xs font-bold shadow-md shadow-[#97144D]/25 transition flex items-center gap-1.5">
-                        <i class="fas fa-save"></i>
+                <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end gap-2 shrink-0">
+                    <button type="button" @click="showEditFileModal = false" class="px-3.5 py-2 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" form="editFileFormEl" class="px-4 py-2 bg-[#97144D] hover:bg-[#801040] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                        <i class="fas fa-check text-xs"></i>
                         <span>Save Changes</span>
                     </button>
                 </div>
@@ -1211,69 +1197,69 @@
             </div>
         </div>
 
-        <!-- View Details Modal (Admin) -->
-        <div v-if="showViewFileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
-                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                    <h3 class="font-bold text-slate-900 text-base flex items-center">
-                        <i class="fas fa-file-alt text-[#97144D] mr-2"></i> File Details - #{{ selectedFile?.appId || selectedFile?.id }}
-                    </h3>
-                    <button @click="showViewFileModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+        <!-- View Details Modal (Minimal & Clean) -->
+        <div v-if="showViewFileModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 px-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
+                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm">Customer File Details</h3>
+                        <p class="text-xs text-slate-400 font-medium">#{{ selectedFile?.appId || selectedFile?.id }} • {{ selectedFile?.customerName }}</p>
+                    </div>
+                    <button @click="showViewFileModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
                 </div>
-                <div class="p-6 overflow-y-auto">
-                    <div class="grid grid-cols-2 gap-y-4 gap-x-6">
+                <div class="p-5 overflow-y-auto space-y-4">
+                    <!-- Key Highlight Bar -->
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center justify-between">
                         <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Loan Amount</span>
+                            <span class="text-lg font-black text-slate-900">₹{{ selectedFile ? formatCurrency(selectedFile.loanAmount) : 0 }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Status</span>
+                            <span :class="getStatusBadgeClass(selectedFile?.status)">{{ selectedFile?.status }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-2 gap-3.5 text-xs">
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">App ID</p>
-                            <p class="font-bold text-[#97144D] text-sm mt-0.5">{{ selectedFile?.appId || 'N/A' }}</p>
+                            <p class="font-bold text-[#97144D] mt-0.5">#{{ selectedFile?.appId || 'N/A' }}</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Customer Name</p>
-                            <p class="font-bold text-slate-900 text-sm mt-0.5">{{ selectedFile?.customerName }}</p>
-                        </div>
-                        <div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Category</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.nclUcl || 'N/A' }}</p>
+                            <p class="font-bold text-slate-800 mt-0.5">{{ selectedFile?.nclUcl || 'N/A' }}</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Loan Amount</p>
-                            <p class="font-black text-slate-900 text-base mt-0.5">₹{{ selectedFile ? formatCurrency(selectedFile.loanAmount) : 0 }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Current Status</p>
-                            <span :class="getStatusBadgeClass(selectedFile?.status)" class="mt-1 inline-block">{{ selectedFile?.status }}</span>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Ppc</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.ppc || 'N/A' }}</p>
-                        </div>
-                        <div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">SM Name</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">RO Name</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.roName }}</p>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">PPC Location</p>
+                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.ppc || 'N/A' }}</p>
                         </div>
-                        <div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">VCIP</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.vcip || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.vcip || 'N/A' }}</p>
                         </div>
-                        <div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MI</p>
-                            <p class="font-bold text-slate-800 text-sm mt-0.5">{{ selectedFile?.mi || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.mi || 'N/A' }}</p>
                         </div>
-                        <div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Logged By (RO)</p>
+                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.roName || 'N/A' }}</p>
+                        </div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Created Date</p>
-                            <p class="font-medium text-slate-600 text-xs mt-0.5">{{ selectedFile ? formatDate(selectedFile.createdAt) : '' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Last Updated</p>
-                            <p class="font-medium text-slate-600 text-xs mt-0.5">{{ selectedFile ? formatDate(selectedFile.updatedAt || selectedFile.createdAt) : '' }}</p>
+                            <p class="font-semibold text-slate-600 mt-0.5">{{ selectedFile ? formatDate(selectedFile.createdAt) : '' }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                    <button @click="showViewFileModal = false" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition">Close</button>
+                <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end">
+                    <button @click="showViewFileModal = false" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition">Close</button>
                 </div>
             </div>
         </div>
