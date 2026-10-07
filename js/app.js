@@ -21,7 +21,7 @@ const app = createApp({
         const addRoError = ref('');
 
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
-        const newFileForm = ref({ appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: defaultSmName.value, vcip: '', mi: '' });
+        const newFileForm = ref({ appId: 'ALA00000', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: defaultSmName.value, vcip: '', mi: '' });
         
         // Full File Edit Modal (RO & Admin)
         const showEditFileModal = ref(false);
@@ -400,7 +400,7 @@ const app = createApp({
         // RO: Add File
         const resetNewFileForm = () => {
             newFileForm.value = {
-                appId: '',
+                appId: 'ALA00000',
                 customerName: '',
                 nclUcl: 'NCL',
                 loanAmount: '',
