@@ -616,12 +616,11 @@ const app = createApp({
             }
 
             const exportData = filteredMyFiles.value.map(file => ({
+                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'Category': file.nclUcl || '',
                 'Channel': file.sourcingChannel || 'DSA',
-                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
-                'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
                 'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
                 'PPC': file.ppc || '',
@@ -690,12 +689,11 @@ const app = createApp({
             }
 
             const exportData = filteredFiles.value.map(file => ({
+                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'Category': file.nclUcl || '',
                 'Channel': file.sourcingChannel || 'DSA',
-                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
-                'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
                 'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
                 'PPC': file.ppc || '',
