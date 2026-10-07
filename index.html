@@ -783,63 +783,50 @@
                             <!-- Mobile Card View (Minimal, Clean & Modern) -->
                             <div class="lg:hidden flex flex-col gap-2.5 p-3 sm:p-4 bg-slate-50/50">
                                 <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-2.5">
-                                    <!-- Header: Customer Name and Loan Amount -->
-                                    <div class="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-100">
-                                        <div class="flex-1">
-                                            <h4 class="font-extrabold text-slate-900 text-[15px] uppercase leading-tight">{{ file.customerName }}</h4>
-                                            <div class="font-bold text-[#97144D] text-[11px] uppercase mt-1 tracking-wide">#{{ file.appId || 'No ID' }}</div>
+                                    <!-- Top: ID & Date -->
+                                    <div class="flex justify-between items-start mb-1.5">
+                                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <span class="text-[#97144D]">#{{ file.appId || 'NO ID' }}</span>
+                                            <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                            <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
                                         </div>
-                                        <div class="text-right shrink-0">
-                                            <div class="text-base font-extrabold text-slate-900 leading-tight">₹{{ formatCurrency(file.loanAmount) }}</div>
-                                            <span :class="getStatusBadgeClass(file.status)" class="mt-1.5 inline-block">{{ file.status }}</span>
-                                        </div>
+                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] shadow-sm">{{ file.status }}</span>
                                     </div>
 
-                                    <!-- Grid Details -->
-                                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 py-1 text-xs">
-                                        <div>
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category & Channel</div>
-                                            <div class="font-bold text-slate-700 uppercase flex gap-1.5">
-                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px]">{{ file.nclUcl || 'NCL' }}</span>
-                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px]">{{ file.sourcingChannel || 'DSA' }}</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Manager (SM)</div>
-                                            <div class="font-bold text-slate-700 uppercase truncate flex items-center gap-1.5">
-                                                <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
-                                                <span class="truncate">{{ file.smName || defaultSmName || 'No SM' }}</span>
-                                            </div>
-                                        </div>
-                                        <div v-if="file.ppc || file.vcip">
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">PPC & VCIP</div>
-                                            <div class="font-bold text-slate-700 uppercase flex gap-2">
-                                                <span v-if="file.ppc">PPC: {{ file.ppc }}</span>
-                                                <span v-if="file.vcip">VCIP: {{ file.vcip }}</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Login Date</div>
-                                            <div class="font-bold text-slate-700 flex items-center gap-1.5">
-                                                <i class="fas fa-calendar-day text-[10px] text-slate-400"></i>
-                                                <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
-                                            </div>
-                                        </div>
+                                    <!-- Middle: Name & Amount -->
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="font-black text-slate-900 text-[15px] leading-tight uppercase max-w-[60%] truncate pr-2">{{ file.customerName }}</h4>
+                                        <div class="text-[17px] font-black text-slate-900 leading-tight">₹{{ formatCurrency(file.loanAmount) }}</div>
                                     </div>
 
-                                    <!-- Row 3: Minimal Action Bar -->
-                                    <div class="flex items-center justify-end gap-1 pt-2 border-t border-slate-100 text-xs">
-                                        <button @click="openViewFileModal(file)" class="px-3 py-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition font-medium flex items-center gap-1.5">
-                                            <i class="fas fa-eye text-xs text-slate-400"></i>
-                                            <span>View</span>
-                                        </button>
-                                        <button @click="openEditFileModal(file)" class="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition font-medium flex items-center gap-1.5">
-                                            <i class="fas fa-pen-to-square text-xs"></i>
-                                            <span>Edit</span>
-                                        </button>
-                                        <button @click="deleteFile(file)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Delete">
-                                            <i class="fas fa-trash text-xs"></i>
-                                        </button>
+                                    <!-- Tags Row -->
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        <span class="px-2 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-bold border border-slate-100 uppercase">{{ file.nclUcl || 'NCL' }}</span>
+                                        <span class="px-2 py-1 bg-blue-50/50 text-blue-700 rounded-lg text-[10px] font-bold border border-blue-100/50 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                        
+                                        <span v-if="file.ppc" class="px-2 py-1 bg-purple-50/50 text-purple-700 rounded-lg text-[10px] font-bold border border-purple-100/50 uppercase flex items-center gap-1"><i class="fas fa-file-contract text-[9px] opacity-70"></i> PPC: {{ file.ppc }}</span>
+                                        <span v-if="file.vcip" class="px-2 py-1 bg-orange-50/50 text-orange-700 rounded-lg text-[10px] font-bold border border-orange-100/50 uppercase flex items-center gap-1"><i class="fas fa-video text-[9px] opacity-70"></i> VCIP: {{ file.vcip }}</span>
+                                    </div>
+
+                                    <!-- Bottom: SM & Actions -->
+                                    <div class="flex items-center justify-between pt-3 border-t border-slate-50">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-[10px]">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div class="text-[11px] font-bold text-slate-600 uppercase truncate max-w-[120px]">{{ file.smName || defaultSmName || 'Unassigned' }}</div>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <button @click="openViewFileModal(file)" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-full transition" title="View">
+                                                <i class="fas fa-eye text-xs"></i>
+                                            </button>
+                                            <button @click="openEditFileModal(file)" class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition" title="Edit">
+                                                <i class="fas fa-pen text-xs"></i>
+                                            </button>
+                                            <button @click="deleteFile(file)" class="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-full transition" title="Delete">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
