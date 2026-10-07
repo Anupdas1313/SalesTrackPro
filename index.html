@@ -783,38 +783,48 @@
                             <!-- Mobile Card View (Minimal, Clean & Modern) -->
                             <div class="lg:hidden flex flex-col gap-2.5 p-3 sm:p-4 bg-slate-50/50">
                                 <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-2.5">
-                                    <!-- Row 1: Customer Name, Status & Loan Amount -->
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="font-bold text-slate-900 text-sm truncate uppercase">{{ file.customerName }}</h4>
-                                            <div class="flex items-center gap-1.5 mt-0.5 text-xs">
-                                                <span class="font-semibold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</span>
-                                                <span class="text-slate-300">•</span>
-                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">{{ file.nclUcl || 'NCL' }}</span>
-                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
-                                            </div>
+                                    <!-- Header: Customer Name and Loan Amount -->
+                                    <div class="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-100">
+                                        <div class="flex-1">
+                                            <h4 class="font-extrabold text-slate-900 text-[15px] uppercase leading-tight">{{ file.customerName }}</h4>
+                                            <div class="font-bold text-[#97144D] text-[11px] uppercase mt-1 tracking-wide">#{{ file.appId || 'No ID' }}</div>
                                         </div>
                                         <div class="text-right shrink-0">
                                             <div class="text-base font-extrabold text-slate-900 leading-tight">₹{{ formatCurrency(file.loanAmount) }}</div>
-                                            <span :class="getStatusBadgeClass(file.status)" class="mt-1 inline-block">{{ file.status }}</span>
+                                            <span :class="getStatusBadgeClass(file.status)" class="mt-1.5 inline-block">{{ file.status }}</span>
                                         </div>
                                     </div>
 
-                                    <!-- Row 2: Metadata row (Clean chips without heavy boxes) -->
-                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 pt-2 border-t border-slate-100">
-                                        <span class="inline-flex items-center gap-1">
-                                            <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
-                                            <span class="uppercase">{{ file.smName || defaultSmName || 'No SM' }}</span>
-                                        </span>
-                                        <span v-if="file.ppc" class="inline-flex items-center gap-1 text-slate-400 uppercase">
-                                            <span>PPC: {{ file.ppc }}</span>
-                                        </span>
-                                        <span v-if="file.vcip" class="inline-flex items-center gap-1 text-slate-400 uppercase">
-                                            <span>VCIP: {{ file.vcip }}</span>
-                                        </span>
-                                        <span class="ml-auto text-[11px] font-semibold text-slate-500">
-                                            <i class="fas fa-calendar-day text-[10px] text-slate-400 mr-1"></i>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
-                                        </span>
+                                    <!-- Grid Details -->
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 py-1 text-xs">
+                                        <div>
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category & Channel</div>
+                                            <div class="font-bold text-slate-700 uppercase flex gap-1.5">
+                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px]">{{ file.nclUcl || 'NCL' }}</span>
+                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px]">{{ file.sourcingChannel || 'DSA' }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Manager (SM)</div>
+                                            <div class="font-bold text-slate-700 uppercase truncate flex items-center gap-1.5">
+                                                <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
+                                                <span class="truncate">{{ file.smName || defaultSmName || 'No SM' }}</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="file.ppc || file.vcip">
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">PPC & VCIP</div>
+                                            <div class="font-bold text-slate-700 uppercase flex gap-2">
+                                                <span v-if="file.ppc">PPC: {{ file.ppc }}</span>
+                                                <span v-if="file.vcip">VCIP: {{ file.vcip }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Login Date</div>
+                                            <div class="font-bold text-slate-700 flex items-center gap-1.5">
+                                                <i class="fas fa-calendar-day text-[10px] text-slate-400"></i>
+                                                <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Row 3: Minimal Action Bar -->
