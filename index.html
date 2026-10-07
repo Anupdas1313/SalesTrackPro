@@ -962,7 +962,7 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                         <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
-                                                ? 'bg-slate-900 text-white font-bold shadow-xs'
+                                                ? 'bg-[#97144D] text-white font-bold shadow-xs'
                                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
                                             'py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5'
                                         ]">
@@ -1145,7 +1145,7 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
-                                        ? 'bg-slate-900 text-white font-bold shadow-xs'
+                                        ? 'bg-[#97144D] text-white font-bold shadow-xs'
                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
                                     'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center'
                                 ]">
