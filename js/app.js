@@ -112,6 +112,30 @@ const app = createApp({
             };
         });
 
+        // Loan Amount in Lakhs normalization and formatters
+        const toLakhs = (value) => {
+            if (value === null || value === undefined || value === '') return 0;
+            const num = Number(value);
+            if (isNaN(num)) return 0;
+            // Auto-normalize legacy entries stored in full rupees (>= 1000)
+            return num >= 1000 ? num / 100000 : num;
+        };
+
+        const formatCurrency = (value) => {
+            const lakhs = toLakhs(value);
+            return lakhs.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' L';
+        };
+
+        const formatLakhsToRupees = (value) => {
+            const lakhs = toLakhs(value);
+            if (!lakhs) return '₹0';
+            const rupees = Math.round(lakhs * 100000);
+            return '₹' + rupees.toLocaleString('en-IN');
+        };
+
         // Admin Stats
         const stats = computed(() => {
             const files = allFiles.value;
@@ -119,7 +143,7 @@ const app = createApp({
             return {
                 totalFiles: files.length,
                 approvedFiles: approved.length,
-                totalValue: files.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0)
+                totalValue: files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0)
             };
         });
 
@@ -133,14 +157,14 @@ const app = createApp({
             const ncl = files.filter(f => f.nclUcl === 'NCL');
             const ucl = files.filter(f => f.nclUcl === 'UCL');
 
-            const totalAmount = files.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-            const approvedAmount = approved.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-            const disbursedAmount = disbursed.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-            const loginAmount = login.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-            const rejectedAmount = rejected.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const disbursedAmount = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const loginAmount = login.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const rejectedAmount = rejected.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
-            const nclAmount = ncl.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-            const uclAmount = ucl.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+            const nclAmount = ncl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const uclAmount = ucl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
             const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
 
@@ -204,9 +228,9 @@ const app = createApp({
                     case 'oldest':
                         return new Date(a.createdAt || a.updatedAt) - new Date(b.createdAt || b.updatedAt);
                     case 'amount-desc':
-                        return (Number(b.loanAmount) || 0) - (Number(a.loanAmount) || 0);
+                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
                     case 'amount-asc':
-                        return (Number(a.loanAmount) || 0) - (Number(b.loanAmount) || 0);
+                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
                     case 'name-asc':
                         return (a.customerName || '').localeCompare(b.customerName || '');
                     default:
@@ -219,10 +243,6 @@ const app = createApp({
         // --- Methods ---
 
         // Helpers
-        const formatCurrency = (value) => {
-            if (!value) return "0.00";
-            return Number(value).toLocaleString('en-IN', { maximumFractionDigits: 2 });
-        };
 
         const formatDate = (isoString) => {
             if (!isoString) return '';
@@ -425,6 +445,7 @@ const app = createApp({
             
             const newFile = {
                 ...newFileForm.value,
+                loanAmount: Number(newFileForm.value.loanAmount) || 0,
                 smName: smToSave,
                 roId: currentUser.value.id,
                 roName: currentUser.value.name,
@@ -445,7 +466,7 @@ const app = createApp({
                 appId: file.appId || '',
                 customerName: file.customerName || '',
                 nclUcl: file.nclUcl || 'NCL',
-                loanAmount: file.loanAmount || 0,
+                loanAmount: toLakhs(file.loanAmount),
                 status: file.status || 'Login',
                 ppc: file.ppc || '',
                 smName: file.smName || defaultSmName.value || '',
@@ -462,7 +483,7 @@ const app = createApp({
                 appId: editFileForm.value.appId,
                 customerName: editFileForm.value.customerName,
                 nclUcl: editFileForm.value.nclUcl,
-                loanAmount: editFileForm.value.loanAmount,
+                loanAmount: Number(editFileForm.value.loanAmount) || 0,
                 status: editFileForm.value.status,
                 ppc: editFileForm.value.ppc,
                 smName: editFileForm.value.smName,
@@ -502,7 +523,8 @@ const app = createApp({
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'NCL / UCL': file.nclUcl || '',
-                'Loan Amount (INR)': file.loanAmount,
+                'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
+                'Loan Amount (₹)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
                 'PPC': file.ppc || '',
                 'SM Name': file.smName || '',
@@ -562,7 +584,8 @@ const app = createApp({
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'NCL/UCL': file.nclUcl || '',
-                'Loan Amount (Rs)': file.loanAmount,
+                'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
+                'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
                 'Ppc': file.ppc || '',
                 'SM Name': file.smName || '',
@@ -602,7 +625,7 @@ const app = createApp({
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilters, showCustomDateInput, activeFilterCount, timelineCounts, mySearch,
-            formatCurrency, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
+            formatCurrency, formatLakhsToRupees, toLakhs, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
