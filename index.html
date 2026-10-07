@@ -299,7 +299,7 @@
                                         <tr class="text-gray-600 text-sm">
                                             <th class="p-4 font-medium border-b whitespace-nowrap cursor-pointer hover:bg-gray-200">App ID <i class="fas fa-sort ml-1"></i></th>
                                             <th class="p-4 font-medium border-b whitespace-nowrap">Customer Name</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">NCL/UCL</th>
+                                            <th class="p-4 font-medium border-b whitespace-nowrap">NCL/UCL / Channel</th>
                                             <th class="p-4 font-medium border-b whitespace-nowrap text-right">Loan Amount</th>
                                             <th class="p-4 font-medium border-b whitespace-nowrap">Status</th>
                                             <th class="p-4 font-medium border-b whitespace-nowrap">RO / SM</th>
@@ -311,7 +311,10 @@
                                         <tr v-for="file in filteredFiles" :key="file.id" class="border-b hover:bg-blue-50 transition-colors">
                                             <td class="p-4 text-xs font-semibold text-axisBlue uppercase">{{ file.appId || 'No ID' }}</td>
                                             <td class="p-4 font-semibold text-gray-800 uppercase">{{ file.customerName }}</td>
-                                            <td class="p-4 text-sm text-gray-700 uppercase">{{ file.nclUcl || 'N/A' }}</td>
+                                            <td class="p-4 text-sm text-gray-700 uppercase">
+                                                <span>{{ file.nclUcl || 'N/A' }}</span>
+                                                <span class="ml-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded">{{ file.sourcingChannel || 'DSA' }}</span>
+                                            </td>
                                             <td class="p-4 text-right font-medium">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="p-4">
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
@@ -539,6 +542,12 @@
                                     <button type="button" @click="roFilters.nclUcl = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
                                 </span>
 
+                                <!-- Sourcing Channel tag -->
+                                <span v-if="roFilters.sourcingChannel" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold">
+                                    <span>Channel: {{ roFilters.sourcingChannel }}</span>
+                                    <button type="button" @click="roFilters.sourcingChannel = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
+                                </span>
+
                                 <!-- Custom Date tag -->
                                 <span v-if="roFilters.timeline === 'custom'" class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold">
                                     <span>Date: {{ roFilters.customDate || 'Selected' }}</span>
@@ -665,7 +674,25 @@
                                         </div>
                                     </div>
 
-                                    <!-- 4. Sort By Section -->
+                                    <!-- 4. Sourcing Channel Section -->
+                                    <div class="pt-4 space-y-2">
+                                        <label class="block text-xs font-bold text-slate-700">
+                                            <i class="fas fa-network-wired text-indigo-600 mr-1.5"></i>Sourcing Channel
+                                        </label>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <button type="button" @click="roFilters.sourcingChannel = ''" :class="roFilters.sourcingChannel === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
+                                                All
+                                            </button>
+                                            <button type="button" @click="roFilters.sourcingChannel = 'DSA'" :class="roFilters.sourcingChannel === 'DSA' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
+                                                DSA
+                                            </button>
+                                            <button type="button" @click="roFilters.sourcingChannel = 'Branch'" :class="roFilters.sourcingChannel === 'Branch' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
+                                                Branch
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5. Sort By Section -->
                                     <div class="pt-4 space-y-2">
                                         <label class="block text-xs font-bold text-slate-700">
                                             <i class="fas fa-sort-amount-down text-slate-600 mr-1.5"></i>Sort Files By
@@ -731,12 +758,12 @@
                                     <thead>
                                         <tr class="bg-slate-50/70 text-slate-400 text-[11px] uppercase tracking-wider font-bold border-b border-slate-100">
                                             <th class="py-3 px-4">App ID & Customer</th>
-                                            <th class="py-3 px-4">Category</th>
+                                            <th class="py-3 px-4">Category / Channel</th>
                                             <th class="py-3 px-4 text-right">Loan Amount</th>
                                             <th class="py-3 px-4 text-center">Status</th>
                                             <th class="py-3 px-4">SM / PPC</th>
                                             <th class="py-3 px-4">VCIP / MI</th>
-                                            <th class="py-3 px-4">Date</th>
+                                            <th class="py-3 px-4">Login Date</th>
                                             <th class="py-3 px-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -747,7 +774,8 @@
                                                 <div class="text-xs font-semibold text-[#97144D] mt-0.5 uppercase">#{{ file.appId || 'No ID' }}</div>
                                             </td>
                                             <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">
-                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px] uppercase">{{ file.nclUcl || '-' }}</span>
+                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px] font-bold uppercase">{{ file.nclUcl || '-' }}</span>
+                                                <span class="ml-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/60 rounded-md text-[11px] font-bold uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
                                             </td>
                                             <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="py-3.5 px-4 text-center">
@@ -761,7 +789,10 @@
                                                 <div class="font-semibold text-slate-800 uppercase">{{ file.vcip || '-' }}</div>
                                                 <div class="text-slate-400 text-[11px] uppercase">MI: {{ file.mi || '-' }}</div>
                                             </td>
-                                            <td class="py-3.5 px-4 text-xs text-slate-400">{{ formatDate(file.createdAt) }}</td>
+                                            <td class="py-3.5 px-4 text-xs">
+                                                <div class="font-bold text-slate-800 text-xs">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
+                                                <div class="text-[10px] text-slate-400">{{ formatDate(file.createdAt) }}</div>
+                                            </td>
                                             <td class="py-3.5 px-4 text-right">
                                                 <div class="inline-flex items-center gap-1">
                                                     <button @click="openViewFileModal(file)" title="View Details" class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition text-xs">
@@ -788,7 +819,7 @@
                                                         <i class="fas fa-globe text-xs"></i>
                                                         <span>View All Time ({{ myFiles.length }} files)</span>
                                                     </button>
-                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                                                         Reset Filters
                                                     </button>
                                                 </div>
@@ -809,6 +840,7 @@
                                                 <span class="font-semibold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</span>
                                                 <span class="text-slate-300">•</span>
                                                 <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">{{ file.nclUcl || 'NCL' }}</span>
+                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
                                             </div>
                                         </div>
                                         <div class="text-right shrink-0">
@@ -829,7 +861,9 @@
                                         <span v-if="file.vcip" class="inline-flex items-center gap-1 text-slate-400 uppercase">
                                             <span>VCIP: {{ file.vcip }}</span>
                                         </span>
-                                        <span class="ml-auto text-[11px] text-slate-400">{{ formatDate(file.createdAt) }}</span>
+                                        <span class="ml-auto text-[11px] font-semibold text-slate-500">
+                                            <i class="fas fa-calendar-day text-[10px] text-slate-400 mr-1"></i>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
+                                        </span>
                                     </div>
 
                                     <!-- Row 3: Minimal Action Bar -->
@@ -898,7 +932,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Category (NCL / UCL) & Loan Amount -->
+                                <!-- Category (NCL / UCL) & Sourcing Channel (DSA / Branch) -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">
@@ -912,6 +946,46 @@
                                                 UCL
                                             </button>
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                            Sourcing Channel <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                            <button type="button" @click="newFileForm.sourcingChannel = 'DSA'" :class="newFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                                DSA
+                                            </button>
+                                            <button type="button" @click="newFileForm.sourcingChannel = 'Branch'" :class="newFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                                Branch
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Login Date & Loan Amount (in Lakhs) -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-xs font-semibold text-slate-700">
+                                                Login Date <span class="text-rose-500">*</span>
+                                            </label>
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" @click="newFileForm.loginDate = getTodayDateStr()" :class="newFileForm.loginDate === getTodayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">
+                                                    Today
+                                                </button>
+                                                <button type="button" @click="newFileForm.loginDate = getYesterdayDateStr()" :class="newFileForm.loginDate === getYesterdayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">
+                                                    Yesterday
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="relative">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
+                                                <i class="fas fa-calendar-day"></i>
+                                            </span>
+                                            <input type="date" v-model="newFileForm.loginDate" class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900" required>
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 mt-1">Default is today; pick date or use quick buttons</p>
                                     </div>
 
                                     <div>
@@ -1066,13 +1140,39 @@
                             </div>
                         </div>
 
-                        <!-- Category & Loan Amount -->
+                        <!-- Category (NCL / UCL) & Sourcing Channel (DSA / Branch) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
                                 <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
                                     <button type="button" @click="editFileForm.nclUcl = 'NCL'" :class="editFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
                                     <button type="button" @click="editFileForm.nclUcl = 'UCL'" :class="editFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Sourcing Channel <span class="text-rose-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                    <button type="button" @click="editFileForm.sourcingChannel = 'DSA'" :class="editFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">DSA</button>
+                                    <button type="button" @click="editFileForm.sourcingChannel = 'Branch'" :class="editFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">Branch</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Login Date & Loan Amount (in Lakhs) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-semibold text-slate-700">Login Date <span class="text-rose-500">*</span></label>
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" @click="editFileForm.loginDate = getTodayDateStr()" :class="editFileForm.loginDate === getTodayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">Today</button>
+                                        <button type="button" @click="editFileForm.loginDate = getYesterdayDateStr()" :class="editFileForm.loginDate === getYesterdayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">Yesterday</button>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </span>
+                                    <input type="date" v-model="editFileForm.loginDate" required class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold text-slate-900">
                                 </div>
                             </div>
                             <div>
@@ -1253,6 +1353,14 @@
                             <p class="font-bold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.nclUcl || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Sourcing Channel</p>
+                            <p class="font-bold text-[#97144D] mt-0.5 uppercase">{{ selectedFile?.sourcingChannel || 'DSA' }}</p>
+                        </div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Login Date</p>
+                            <p class="font-bold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.loginDate ? formatDateOnly(selectedFile.loginDate) : (selectedFile ? formatDateOnly(selectedFile.createdAt) : 'N/A') }}</p>
+                        </div>
+                        <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">SM Name</p>
                             <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
                         </div>
@@ -1273,7 +1381,7 @@
                             <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.roName || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Created Date</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">System Created</p>
                             <p class="font-semibold text-slate-600 mt-0.5">{{ selectedFile ? formatDate(selectedFile.createdAt) : '' }}</p>
                         </div>
                     </div>
@@ -1287,7 +1395,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=4"></script>
+    <script type="module" src="js/app.js?v=5"></script>
 </body>
 </html>
 

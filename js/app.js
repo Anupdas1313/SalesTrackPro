@@ -20,12 +20,55 @@ const app = createApp({
         const newRoForm = ref({ name: '', username: '', password: '' });
         const addRoError = ref('');
 
+        // Date Helpers
+        const getTodayDateStr = () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const getYesterdayDateStr = () => {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
-        const newFileForm = ref({ appId: 'ALA00000', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: defaultSmName.value, vcip: '', mi: '' });
+        const newFileForm = ref({
+            appId: 'ALA00000',
+            customerName: '',
+            nclUcl: 'NCL',
+            sourcingChannel: 'DSA',
+            loginDate: getTodayDateStr(),
+            loanAmount: '',
+            status: 'Login',
+            ppc: '',
+            smName: defaultSmName.value,
+            vcip: '',
+            mi: ''
+        });
         
         // Full File Edit Modal (RO & Admin)
         const showEditFileModal = ref(false);
-        const editFileForm = ref({ id: '', appId: '', customerName: '', nclUcl: 'NCL', loanAmount: '', status: 'Login', ppc: '', smName: '', vcip: '', mi: '' });
+        const editFileForm = ref({
+            id: '',
+            appId: '',
+            customerName: '',
+            nclUcl: 'NCL',
+            sourcingChannel: 'DSA',
+            loginDate: getTodayDateStr(),
+            loanAmount: '',
+            status: 'Login',
+            ppc: '',
+            smName: '',
+            vcip: '',
+            mi: ''
+        });
 
         const showUpdateStatusModal = ref(false);
         const selectedFile = ref(null);
@@ -41,6 +84,7 @@ const app = createApp({
             search: '',
             status: '',
             nclUcl: '',
+            sourcingChannel: '',
             timeline: 'today', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
             customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
@@ -49,16 +93,23 @@ const app = createApp({
         const showCustomDateInput = ref(false);
         const mySearch = ref('');
 
-        // Helper: Date timeline matching
+        // Helper: Date timeline matching (supports YYYY-MM-DD strings and ISO timestamps)
         const matchesTimeline = (fileDateStr, timeline, customDate) => {
             if (!fileDateStr) return timeline === 'all';
             
-            const fileD = new Date(fileDateStr);
-            if (isNaN(fileD.getTime())) return true;
-
-            const fileYear = fileD.getFullYear();
-            const fileMonth = fileD.getMonth();
-            const fileDate = fileD.getDate();
+            let fileYear, fileMonth, fileDate;
+            if (typeof fileDateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fileDateStr)) {
+                const parts = fileDateStr.substring(0, 10).split('-').map(Number);
+                fileYear = parts[0];
+                fileMonth = parts[1] - 1;
+                fileDate = parts[2];
+            } else {
+                const fileD = new Date(fileDateStr);
+                if (isNaN(fileD.getTime())) return true;
+                fileYear = fileD.getFullYear();
+                fileMonth = fileD.getMonth();
+                fileDate = fileD.getDate();
+            }
 
             const now = new Date();
             const nowYear = now.getFullYear();
@@ -94,6 +145,7 @@ const app = createApp({
         const activeFilterCount = computed(() => {
             let count = 0;
             if (roFilters.value.nclUcl) count++;
+            if (roFilters.value.sourcingChannel) count++;
             if (roFilters.value.sortBy && roFilters.value.sortBy !== 'newest') count++;
             if (roFilters.value.timeline && roFilters.value.timeline !== 'today') count++;
             if (roFilters.value.status) count++;
@@ -104,10 +156,10 @@ const app = createApp({
         const timelineCounts = computed(() => {
             const files = myFiles.value;
             return {
-                today: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'today')).length,
-                yesterday: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'yesterday')).length,
-                thisWeek: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'this-week')).length,
-                thisMonth: files.filter(f => matchesTimeline(f.createdAt || f.updatedAt, 'this-month')).length,
+                today: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'today')).length,
+                yesterday: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'yesterday')).length,
+                thisWeek: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'this-week')).length,
+                thisMonth: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'this-month')).length,
                 all: files.length
             };
         });
@@ -213,20 +265,24 @@ const app = createApp({
                     (file.customerName && file.customerName.toLowerCase().includes(q)) ||
                     (file.appId && file.appId.toLowerCase().includes(q)) ||
                     (file.smName && file.smName.toLowerCase().includes(q)) ||
+                    (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
                 const matchStatus = roFilters.value.status ? file.status === roFilters.value.status : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
-                const matchTime = matchesTimeline(file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
-                return matchSearch && matchStatus && matchCategory && matchTime;
+                const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
+                const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
+                return matchSearch && matchStatus && matchCategory && matchSourcing && matchTime;
             });
 
             // Sorting
             return list.sort((a, b) => {
+                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt);
+                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt);
                 switch (roFilters.value.sortBy) {
                     case 'newest':
-                        return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
+                        return dateB - dateA;
                     case 'oldest':
-                        return new Date(a.createdAt || a.updatedAt) - new Date(b.createdAt || b.updatedAt);
+                        return dateA - dateB;
                     case 'amount-desc':
                         return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
                     case 'amount-asc':
@@ -234,7 +290,7 @@ const app = createApp({
                     case 'name-asc':
                         return (a.customerName || '').localeCompare(b.customerName || '');
                     default:
-                        return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
+                        return dateB - dateA;
                 }
             });
         });
@@ -243,6 +299,16 @@ const app = createApp({
         // --- Methods ---
 
         // Helpers
+
+        const formatDateOnly = (dateStr) => {
+            if (!dateStr) return '';
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                const [y, m, d] = dateStr.split('-');
+                return `${d}/${m}/${y}`;
+            }
+            const d = new Date(dateStr);
+            return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-IN');
+        };
 
         const formatDate = (isoString) => {
             if (!isoString) return '';
@@ -300,6 +366,7 @@ const app = createApp({
                 search: '',
                 status: '',
                 nclUcl: '',
+                sourcingChannel: '',
                 timeline: 'today',
                 customDate: '',
                 sortBy: 'newest'
@@ -423,6 +490,8 @@ const app = createApp({
                 appId: 'ALA00000',
                 customerName: '',
                 nclUcl: 'NCL',
+                sourcingChannel: 'DSA',
+                loginDate: getTodayDateStr(),
                 loanAmount: '',
                 status: 'Login',
                 ppc: '',
@@ -441,11 +510,18 @@ const app = createApp({
                 localStorage.setItem('axis_default_sm_' + currentUser.value.id, defaultSmName.value);
                 localStorage.setItem('axis_default_sm', defaultSmName.value);
             }
+
+            const chosenDate = newFileForm.value.loginDate || getTodayDateStr();
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const createdAtIso = `${chosenDate}T${timeStr}.000Z`;
             
             const newFile = {
                 appId: (newFileForm.value.appId || 'ALA00000').trim().toUpperCase(),
                 customerName: (newFileForm.value.customerName || '').trim().toUpperCase(),
                 nclUcl: (newFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
+                sourcingChannel: (newFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
+                loginDate: chosenDate,
                 loanAmount: Number(newFileForm.value.loanAmount) || 0,
                 status: newFileForm.value.status || 'Login',
                 ppc: (newFileForm.value.ppc || '').trim().toUpperCase(),
@@ -454,7 +530,7 @@ const app = createApp({
                 mi: (newFileForm.value.mi || '').trim().toUpperCase(),
                 roId: currentUser.value.id,
                 roName: currentUser.value.name,
-                createdAt: new Date().toISOString(),
+                createdAt: createdAtIso,
                 updatedAt: new Date().toISOString()
             };
             
@@ -466,11 +542,17 @@ const app = createApp({
 
         // Full File Edit Modal (RO & Admin)
         const openEditFileModal = (file) => {
+            let fDate = file.loginDate;
+            if (!fDate && file.createdAt) {
+                fDate = file.createdAt.substring(0, 10);
+            }
             editFileForm.value = {
                 id: file.id,
                 appId: (file.appId || '').toUpperCase(),
                 customerName: (file.customerName || '').toUpperCase(),
                 nclUcl: (file.nclUcl || 'NCL').toUpperCase(),
+                sourcingChannel: (file.sourcingChannel || 'DSA').toUpperCase(),
+                loginDate: fDate || getTodayDateStr(),
                 loanAmount: toLakhs(file.loanAmount),
                 status: file.status || 'Login',
                 ppc: (file.ppc || '').toUpperCase(),
@@ -488,6 +570,8 @@ const app = createApp({
                 appId: (editFileForm.value.appId || '').trim().toUpperCase(),
                 customerName: (editFileForm.value.customerName || '').trim().toUpperCase(),
                 nclUcl: (editFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
+                sourcingChannel: (editFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
+                loginDate: editFileForm.value.loginDate || getTodayDateStr(),
                 loanAmount: Number(editFileForm.value.loanAmount) || 0,
                 status: editFileForm.value.status,
                 ppc: (editFileForm.value.ppc || '').trim().toUpperCase(),
@@ -528,6 +612,8 @@ const app = createApp({
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'NCL / UCL': file.nclUcl || '',
+                'Sourcing Channel': file.sourcingChannel || 'DSA',
+                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
                 'Loan Amount (₹)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
@@ -590,6 +676,8 @@ const app = createApp({
                 'App ID': file.appId || '',
                 'Customer Name': file.customerName,
                 'NCL/UCL': file.nclUcl || '',
+                'Sourcing Channel': file.sourcingChannel || 'DSA',
+                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'Loan Amount (in Lakhs)': toLakhs(file.loanAmount),
                 'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
                 'Status': file.status,
@@ -631,7 +719,8 @@ const app = createApp({
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilters, showCustomDateInput, activeFilterCount, timelineCounts, mySearch,
-            formatCurrency, formatLakhsToRupees, toLakhs, formatDate, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
+            formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
+            getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
