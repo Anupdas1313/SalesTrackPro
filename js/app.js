@@ -38,6 +38,7 @@ const app = createApp({
             return `${year}-${month}-${day}`;
         };
 
+        const STANDARD_STATUSES = ['Lead', 'FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled'];
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
         const newFileForm = ref({
             appId: 'ALA00000',
@@ -47,6 +48,7 @@ const app = createApp({
             loginDate: getTodayDateStr(),
             loanAmount: '',
             status: 'FI',
+            customStatus: '',
             ppc: '',
             smName: defaultSmName.value,
             vcip: '',
@@ -64,6 +66,7 @@ const app = createApp({
             loginDate: getTodayDateStr(),
             loanAmount: '',
             status: 'FI',
+            customStatus: '',
             ppc: '',
             smName: '',
             vcip: '',
@@ -72,7 +75,7 @@ const app = createApp({
 
         const showUpdateStatusModal = ref(false);
         const selectedFile = ref(null);
-        const statusUpdateForm = ref({ status: '', note: '' });
+        const statusUpdateForm = ref({ status: '', customStatus: '', note: '' });
 
         const showViewFileModal = ref(false);
 
@@ -250,8 +253,11 @@ const app = createApp({
                     (file.customerName && file.customerName.toLowerCase().includes(q)) || 
                     (file.appId && file.appId.toLowerCase().includes(q)) ||
                     (file.smName && file.smName.toLowerCase().includes(q)) ||
-                    (file.roName && file.roName.toLowerCase().includes(q));
-                const matchStatus = filters.value.status ? file.status === filters.value.status : true;
+                    (file.roName && file.roName.toLowerCase().includes(q)) ||
+                    (file.status && file.status.toLowerCase().includes(q));
+                const matchStatus = filters.value.status 
+                    ? (filters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : file.status === filters.value.status) 
+                    : true;
                 const matchRo = filters.value.roId ? file.roId === filters.value.roId : true;
                 return matchSearch && matchStatus && matchRo;
             }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
@@ -266,8 +272,11 @@ const app = createApp({
                     (file.appId && file.appId.toLowerCase().includes(q)) ||
                     (file.smName && file.smName.toLowerCase().includes(q)) ||
                     (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
+                    (file.status && file.status.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
-                const matchStatus = roFilters.value.status ? file.status === roFilters.value.status : true;
+                const matchStatus = roFilters.value.status 
+                    ? (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : file.status === roFilters.value.status) 
+                    : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
                 const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
                 const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
@@ -322,12 +331,11 @@ const app = createApp({
                 case 'FI': return 'px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold';
                 case 'FCU': return 'px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-semibold';
                 case 'UW': return 'px-2.5 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[11px] font-semibold';
-                case 'Custom': return 'px-2.5 py-0.5 bg-fuchsia-50 text-fuchsia-700 rounded-full text-[11px] font-semibold';
                 case 'Cancelled': return 'px-2.5 py-0.5 bg-stone-50 text-stone-700 rounded-full text-[11px] font-semibold';
                 case 'Approved': return 'px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[11px] font-semibold';
                 case 'Rejected': return 'px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-[11px] font-semibold';
                 case 'Disbursed': return 'px-2.5 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[11px] font-semibold';
-                default: return 'px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full text-[11px] font-semibold';
+                default: return 'px-2.5 py-0.5 bg-fuchsia-50 text-fuchsia-700 rounded-full text-[11px] font-semibold';
             }
         };
 
@@ -498,6 +506,7 @@ const app = createApp({
                 loginDate: getTodayDateStr(),
                 loanAmount: '',
                 status: 'FI',
+                customStatus: '',
                 ppc: '',
                 smName: (defaultSmName.value || '').toUpperCase(),
                 vcip: '',
@@ -520,6 +529,11 @@ const app = createApp({
             const timeStr = now.toTimeString().split(' ')[0];
             const createdAtIso = `${chosenDate}T${timeStr}.000Z`;
             
+            let finalStatus = newFileForm.value.status || 'FI';
+            if (finalStatus === 'Custom' && newFileForm.value.customStatus) {
+                finalStatus = newFileForm.value.customStatus.trim().toUpperCase();
+            }
+            
             const newFile = {
                 appId: (newFileForm.value.appId || 'ALA00000').trim().toUpperCase(),
                 customerName: (newFileForm.value.customerName || '').trim().toUpperCase(),
@@ -527,7 +541,7 @@ const app = createApp({
                 sourcingChannel: (newFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
                 loginDate: chosenDate,
                 loanAmount: Number(newFileForm.value.loanAmount) || 0,
-                status: newFileForm.value.status || 'FI',
+                status: finalStatus,
                 ppc: (newFileForm.value.ppc || '').trim().toUpperCase(),
                 smName: rawSm,
                 vcip: (newFileForm.value.vcip || '').trim().toUpperCase(),
@@ -550,6 +564,7 @@ const app = createApp({
             if (!fDate && file.createdAt) {
                 fDate = file.createdAt.substring(0, 10);
             }
+            const isStandard = STANDARD_STATUSES.includes(file.status);
             editFileForm.value = {
                 id: file.id,
                 appId: (file.appId || '').toUpperCase(),
@@ -558,7 +573,8 @@ const app = createApp({
                 sourcingChannel: (file.sourcingChannel || 'DSA').toUpperCase(),
                 loginDate: fDate || getTodayDateStr(),
                 loanAmount: toLakhs(file.loanAmount),
-                status: file.status || 'FI',
+                status: isStandard ? file.status : 'Custom',
+                customStatus: isStandard ? '' : file.status,
                 ppc: (file.ppc || '').toUpperCase(),
                 smName: (file.smName || defaultSmName.value || '').toUpperCase(),
                 vcip: (file.vcip || '').toUpperCase(),
@@ -570,6 +586,11 @@ const app = createApp({
         const saveEditedFile = async () => {
             if (!editFileForm.value.id) return;
             
+            let finalStatus = editFileForm.value.status;
+            if (finalStatus === 'Custom' && editFileForm.value.customStatus) {
+                finalStatus = editFileForm.value.customStatus.trim().toUpperCase();
+            }
+            
             const updatedData = {
                 appId: (editFileForm.value.appId || '').trim().toUpperCase(),
                 customerName: (editFileForm.value.customerName || '').trim().toUpperCase(),
@@ -577,7 +598,7 @@ const app = createApp({
                 sourcingChannel: (editFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
                 loginDate: editFileForm.value.loginDate || getTodayDateStr(),
                 loanAmount: Number(editFileForm.value.loanAmount) || 0,
-                status: editFileForm.value.status,
+                status: finalStatus,
                 ppc: (editFileForm.value.ppc || '').trim().toUpperCase(),
                 smName: (editFileForm.value.smName || '').trim().toUpperCase(),
                 vcip: (editFileForm.value.vcip || '').trim().toUpperCase(),
@@ -642,15 +663,25 @@ const app = createApp({
         // File Management (Status Only)
         const openEditStatusModal = (file) => {
             selectedFile.value = file;
-            statusUpdateForm.value = { status: file.status, note: '' };
+            const isStandard = STANDARD_STATUSES.includes(file.status);
+            statusUpdateForm.value = { 
+                status: isStandard ? file.status : 'Custom', 
+                customStatus: isStandard ? '' : file.status,
+                note: '' 
+            };
             showUpdateStatusModal.value = true;
         };
 
         const saveFileStatus = async () => {
             if (!selectedFile.value) return;
             
+            let finalStatus = statusUpdateForm.value.status;
+            if (finalStatus === 'Custom' && statusUpdateForm.value.customStatus) {
+                finalStatus = statusUpdateForm.value.customStatus.trim().toUpperCase();
+            }
+            
             await db.updateLoanFile(selectedFile.value.id, {
-                status: statusUpdateForm.value.status,
+                status: finalStatus,
                 note: (statusUpdateForm.value.note || '').trim().toUpperCase(),
                 updatedAt: new Date().toISOString()
             });
