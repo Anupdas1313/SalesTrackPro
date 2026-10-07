@@ -46,7 +46,7 @@ const app = createApp({
             sourcingChannel: 'DSA',
             loginDate: getTodayDateStr(),
             loanAmount: '',
-            status: 'Login',
+            status: 'FI',
             ppc: '',
             smName: defaultSmName.value,
             vcip: '',
@@ -63,7 +63,7 @@ const app = createApp({
             sourcingChannel: 'DSA',
             loginDate: getTodayDateStr(),
             loanAmount: '',
-            status: 'Login',
+            status: 'FI',
             ppc: '',
             smName: '',
             vcip: '',
@@ -204,7 +204,7 @@ const app = createApp({
             const files = myFiles.value;
             const approved = files.filter(f => f.status === 'Approved');
             const disbursed = files.filter(f => f.status === 'Disbursed');
-            const login = files.filter(f => f.status === 'Login');
+            const login = files.filter(f => f.status === 'FI');
             const rejected = files.filter(f => f.status === 'Rejected');
             const ncl = files.filter(f => f.nclUcl === 'NCL');
             const ucl = files.filter(f => f.nclUcl === 'UCL');
@@ -319,7 +319,11 @@ const app = createApp({
         const getStatusBadgeClass = (status) => {
             switch (status) {
                 case 'Lead': return 'px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full text-[11px] font-semibold';
-                case 'Login': return 'px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold';
+                case 'FI': return 'px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold';
+                case 'FCU': return 'px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-semibold';
+                case 'UW': return 'px-2.5 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[11px] font-semibold';
+                case 'Custom': return 'px-2.5 py-0.5 bg-fuchsia-50 text-fuchsia-700 rounded-full text-[11px] font-semibold';
+                case 'Cancelled': return 'px-2.5 py-0.5 bg-stone-50 text-stone-700 rounded-full text-[11px] font-semibold';
                 case 'Approved': return 'px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[11px] font-semibold';
                 case 'Rejected': return 'px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-[11px] font-semibold';
                 case 'Disbursed': return 'px-2.5 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[11px] font-semibold';
@@ -493,7 +497,7 @@ const app = createApp({
                 sourcingChannel: 'DSA',
                 loginDate: getTodayDateStr(),
                 loanAmount: '',
-                status: 'Login',
+                status: 'FI',
                 ppc: '',
                 smName: (defaultSmName.value || '').toUpperCase(),
                 vcip: '',
@@ -523,7 +527,7 @@ const app = createApp({
                 sourcingChannel: (newFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
                 loginDate: chosenDate,
                 loanAmount: Number(newFileForm.value.loanAmount) || 0,
-                status: newFileForm.value.status || 'Login',
+                status: newFileForm.value.status || 'FI',
                 ppc: (newFileForm.value.ppc || '').trim().toUpperCase(),
                 smName: rawSm,
                 vcip: (newFileForm.value.vcip || '').trim().toUpperCase(),
@@ -554,7 +558,7 @@ const app = createApp({
                 sourcingChannel: (file.sourcingChannel || 'DSA').toUpperCase(),
                 loginDate: fDate || getTodayDateStr(),
                 loanAmount: toLakhs(file.loanAmount),
-                status: file.status || 'Login',
+                status: file.status || 'FI',
                 ppc: (file.ppc || '').toUpperCase(),
                 smName: (file.smName || defaultSmName.value || '').toUpperCase(),
                 vcip: (file.vcip || '').toUpperCase(),

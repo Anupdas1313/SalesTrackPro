@@ -272,10 +272,14 @@
                                 <select v-model="filters.status" class="w-full px-3 py-2 border rounded text-sm bg-white">
                                     <option value="">All Statuses</option>
                                     <option value="Lead">Lead</option>
-                                    <option value="Login">Login (Processing)</option>
+                                    <option value="FI">FI</option>
+                                    <option value="FCU">FCU</option>
+                                    <option value="UW">UW</option>
                                     <option value="Approved">Approved</option>
                                     <option value="Rejected">Rejected</option>
                                     <option value="Disbursed">Disbursed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Custom">Custom</option>
                                 </select>
                             </div>
                             <div class="w-full md:w-48">
@@ -427,9 +431,9 @@
                                 <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.approvedAmount) }}</div>
                             </div>
 
-                            <!-- In Login -->
+                            <!-- In FI -->
                             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
-                                <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">In Login</div>
+                                <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">In FI</div>
                                 <div class="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-1.5">{{ roStats.loginCount }}</div>
                                 <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.loginAmount) }}</div>
                             </div>
@@ -641,8 +645,14 @@
                                             <button type="button" @click="roFilters.status = ''" :class="roFilters.status === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3.5 rounded-xl text-xs transition">
                                                 All Statuses
                                             </button>
-                                            <button type="button" @click="roFilters.status = 'Login'" :class="roFilters.status === 'Login' ? 'bg-blue-600 text-white font-bold' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium border border-blue-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Login
+                                            <button type="button" @click="roFilters.status = 'FI'" :class="roFilters.status === 'FI' ? 'bg-blue-600 text-white font-bold' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium border border-blue-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
+                                                FI
+                                            </button>
+                                            <button type="button" @click="roFilters.status = 'FCU'" :class="roFilters.status === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium border border-indigo-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
+                                                FCU
+                                            </button>
+                                            <button type="button" @click="roFilters.status = 'UW'" :class="roFilters.status === 'UW' ? 'bg-violet-600 text-white font-bold' : 'bg-violet-50 text-violet-700 hover:bg-violet-100 font-medium border border-violet-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
+                                                UW
                                             </button>
                                             <button type="button" @click="roFilters.status = 'Approved'" :class="roFilters.status === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium border border-emerald-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
                                                 Approved
@@ -652,6 +662,12 @@
                                             </button>
                                             <button type="button" @click="roFilters.status = 'Rejected'" :class="roFilters.status === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 font-medium border border-rose-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
                                                 Rejected
+                                            </button>
+                                            <button type="button" @click="roFilters.status = 'Cancelled'" :class="roFilters.status === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 'bg-stone-50 text-stone-700 hover:bg-stone-100 font-medium border border-stone-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
+                                                Cancelled
+                                            </button>
+                                            <button type="button" @click="roFilters.status = 'Custom'" :class="roFilters.status === 'Custom' ? 'bg-fuchsia-600 text-white font-bold' : 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100 font-medium border border-fuchsia-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
+                                                Custom
                                             </button>
                                         </div>
                                     </div>
@@ -1012,12 +1028,16 @@
                                         Status <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        <button type="button" v-for="st in ['Login', 'Approved', 'Rejected', 'Disbursed']" :key="st" @click="newFileForm.status = st" :class="[
+                                        <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
                                                 ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
                                                    st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
                                                    st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
-                                                   'bg-blue-600 text-white font-bold') 
+                                                   st === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 
+                                                   st === 'FI' ? 'bg-blue-600 text-white font-bold' : 
+                                                   st === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 
+                                                   st === 'UW' ? 'bg-violet-600 text-white font-bold' : 
+                                                   'bg-fuchsia-600 text-white font-bold') 
                                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
                                             'py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5'
                                         ]">
@@ -1195,12 +1215,16 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Status <span class="text-rose-500">*</span></label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <button type="button" v-for="st in ['Login', 'Approved', 'Rejected', 'Disbursed']" :key="st" @click="editFileForm.status = st" :class="[
+                                <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
                                         ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
                                            st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
                                            st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
-                                           'bg-blue-600 text-white font-bold') 
+                                           st === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 
+                                           st === 'FI' ? 'bg-blue-600 text-white font-bold' : 
+                                           st === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 
+                                           st === 'UW' ? 'bg-violet-600 text-white font-bold' : 
+                                           'bg-fuchsia-600 text-white font-bold') 
                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
                                     'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center font-semibold'
                                 ]">
@@ -1293,10 +1317,14 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Status</label>
                             <select v-model="statusUpdateForm.status" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm font-semibold">
-                                <option value="Login">Login</option>
+                                <option value="FI">FI</option>
+                                <option value="FCU">FCU</option>
+                                <option value="UW">UW</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
                                 <option value="Disbursed">Disbursed</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Custom">Custom</option>
                             </select>
                         </div>
                         
