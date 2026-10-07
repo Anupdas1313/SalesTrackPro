@@ -180,9 +180,13 @@ const app = createApp({
             };
         });
 
+        // RO Overview State
+        const roOverviewTimeline = ref('all');
+        const roOverviewCustomDate = ref('');
+
         // RO Overview KPIs
         const roStats = computed(() => {
-            const files = myFiles.value;
+            const files = myFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, roOverviewTimeline.value, roOverviewCustomDate.value));
             const approved = files.filter(f => f.status === 'Approved');
             const disbursed = files.filter(f => f.status === 'Disbursed');
             const login = files.filter(f => f.status === 'FI');
@@ -731,7 +735,7 @@ const app = createApp({
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilterDrawer,
+            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
