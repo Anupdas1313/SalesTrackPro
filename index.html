@@ -297,45 +297,46 @@
 
                         <div class="bg-white rounded-2xl shadow-sm border flex-1 overflow-hidden flex flex-col">
                             <div class="overflow-auto flex-1">
-                                <table class="w-full text-left border-collapse relative">
-                                    <thead class="sticky top-0 bg-gray-100 shadow-sm z-10">
-                                        <tr class="text-gray-600 text-sm">
-                                            <th class="p-4 font-medium border-b whitespace-nowrap cursor-pointer hover:bg-gray-200">App ID <i class="fas fa-sort ml-1"></i></th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">Customer Name</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">NCL/UCL / Channel</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap text-right">Loan Amount</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">Status</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">RO / SM</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap">Last Updated</th>
-                                            <th class="p-4 font-medium border-b whitespace-nowrap text-center">Action</th>
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
+                                    <thead class="sticky top-0 bg-slate-100 z-10">
+                                        <tr class="text-slate-600 text-[11px] uppercase tracking-wider">
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap cursor-pointer hover:bg-slate-200">App ID <i class="fas fa-sort ml-1"></i></th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">NCL/UCL / Channel</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-right">Loan Amount</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Status</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">RO / SM</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Last Updated</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr v-for="file in filteredFiles" :key="file.id" class="border-b hover:bg-blue-50 transition-colors">
-                                            <td class="p-4 text-xs font-semibold text-axisBlue uppercase">{{ file.appId || 'No ID' }}</td>
-                                            <td class="p-4 font-semibold text-gray-800 uppercase">{{ file.customerName }}</td>
-                                            <td class="p-4 text-sm text-gray-700 uppercase">
+                                    <tbody class="text-xs">
+                                        <tr v-for="file in filteredFiles" :key="file.id" class="hover:bg-blue-50/50 transition-colors">
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-700 uppercase">
                                                 <span>{{ file.nclUcl || 'N/A' }}</span>
-                                                <span class="ml-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded">{{ file.sourcingChannel || 'DSA' }}</span>
+                                                <span class="text-slate-300 mx-0.5">|</span>
+                                                <span class="text-blue-700">{{ file.sourcingChannel || 'DSA' }}</span>
                                             </td>
-                                            <td class="p-4 text-right font-medium">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="p-4">
-                                                <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-center">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[10px]">{{ file.status }}</span>
                                             </td>
-                                            <td class="p-4">
-                                                <div class="text-sm font-medium uppercase">{{ file.roName }}</div>
-                                                <div class="text-xs text-gray-500 uppercase">{{ file.smName || 'N/A' }}</div>
+                                            <td class="border border-slate-300 px-3 py-1.5">
+                                                <div class="font-bold text-slate-800 uppercase">{{ file.roName }}</div>
+                                                <div class="text-[10px] text-slate-500 uppercase font-semibold">SM: {{ file.smName || 'N/A' }}</div>
                                             </td>
-                                            <td class="p-4 text-xs text-gray-500">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
-                                            <td class="p-4 text-center">
-                                                <button @click="openViewFileModal(file)" class="text-axisBlue hover:text-blue-800 p-1" title="View Details">
+                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-600">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-center">
+                                                <button @click="openViewFileModal(file)" class="text-slate-500 hover:text-slate-900 p-1" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                         <tr v-if="filteredFiles.length === 0">
-                                            <td colspan="8" class="p-8 text-center text-gray-500 bg-gray-50">
-                                                <i class="fas fa-search text-3xl mb-3 text-gray-300 block"></i>
+                                            <td colspan="8" class="border border-slate-300 p-8 text-center text-slate-500 bg-slate-50">
+                                                <i class="fas fa-search text-3xl mb-3 text-slate-300 block"></i>
                                                 No files match your filters.
                                             </td>
                                         </tr>
@@ -704,61 +705,60 @@
                         <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs overflow-hidden">
                             <!-- Desktop Table View -->
                             <div class="hidden lg:block overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr class="bg-slate-50/70 text-slate-400 text-[11px] uppercase tracking-wider font-bold border-b border-slate-100">
-                                            <th class="py-3 px-4">App ID & Customer</th>
-                                            <th class="py-3 px-4">Category / Channel</th>
-                                            <th class="py-3 px-4 text-right">Loan Amount</th>
-                                            <th class="py-3 px-4 text-center">Status</th>
-                                            <th class="py-3 px-4">SM / PPC</th>
-                                            <th class="py-3 px-4">VCIP / MI</th>
-                                            <th class="py-3 px-4">Login Date</th>
-                                            <th class="py-3 px-4 text-right">Actions</th>
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
+                                    <thead class="bg-slate-100 z-10">
+                                        <tr class="text-slate-600 text-[11px] uppercase tracking-wider">
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">App ID & Customer</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Category / Channel</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-right">Loan Amount</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Status</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">SM / PPC</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">VCIP / MI</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100 text-sm">
-                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50/60 transition">
-                                            <td class="py-3.5 px-4">
+                                    <tbody class="text-xs">
+                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-blue-50/50 transition-colors">
+                                            <td class="border border-slate-300 px-3 py-1.5">
                                                 <div class="font-bold text-slate-900 uppercase">{{ file.customerName }}</div>
-                                                <div class="text-xs font-semibold text-[#97144D] mt-0.5 uppercase">#{{ file.appId || 'No ID' }}</div>
+                                                <div class="text-[10px] font-bold text-[#97144D] mt-0.5 uppercase">#{{ file.appId || 'No ID' }}</div>
                                             </td>
-                                            <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">
-                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px] font-bold uppercase">{{ file.nclUcl || '-' }}</span>
-                                                <span class="ml-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/60 rounded-md text-[11px] font-bold uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-700 uppercase">
+                                                {{ file.nclUcl || '-' }} <span class="text-slate-300 mx-0.5">|</span> <span class="text-blue-700">{{ file.sourcingChannel || 'DSA' }}</span>
                                             </td>
-                                            <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="py-3.5 px-4 text-center">
-                                                <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-center">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[10px]">{{ file.status }}</span>
                                             </td>
-                                            <td class="py-3.5 px-4 text-xs">
-                                                <div class="font-semibold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</div>
-                                                <div class="text-slate-400 text-[11px] uppercase">PPC: {{ file.ppc || '-' }}</div>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px]">
+                                                <div class="font-bold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</div>
+                                                <div class="text-slate-500 uppercase font-semibold">PPC: {{ file.ppc || '-' }}</div>
                                             </td>
-                                            <td class="py-3.5 px-4 text-xs">
-                                                <div class="font-semibold text-slate-800 uppercase">{{ file.vcip || '-' }}</div>
-                                                <div class="text-slate-400 text-[11px] uppercase">MI: {{ file.mi || '-' }}</div>
+                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px]">
+                                                <div class="font-bold text-slate-800 uppercase">{{ file.vcip || '-' }}</div>
+                                                <div class="text-slate-500 uppercase font-semibold">MI: {{ file.mi || '-' }}</div>
                                             </td>
-                                            <td class="py-3.5 px-4 text-xs">
-                                                <div class="font-bold text-slate-800 text-xs">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
-                                                <div class="text-[10px] text-slate-400">{{ formatDate(file.createdAt) }}</div>
+                                            <td class="border border-slate-300 px-3 py-1.5">
+                                                <div class="font-bold text-slate-800 text-[11px]">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
+                                                <div class="text-[9px] text-slate-400">{{ formatDate(file.createdAt) }}</div>
                                             </td>
-                                            <td class="py-3.5 px-4 text-right">
-                                                <div class="inline-flex items-center gap-1">
-                                                    <button @click="openViewFileModal(file)" title="View Details" class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition text-xs">
+                                            <td class="border border-slate-300 px-3 py-1.5 text-center whitespace-nowrap">
+                                                <div class="inline-flex items-center gap-1.5">
+                                                    <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <button @click="openEditFileModal(file)" title="Edit Details" class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition text-xs">
+                                                    <button @click="openEditFileModal(file)" title="Edit Details" class="text-blue-600 hover:text-blue-900 transition text-[11px]">
                                                         <i class="fas fa-pen-to-square"></i>
                                                     </button>
-                                                    <button @click="deleteFile(file)" title="Delete File" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs">
+                                                    <button @click="deleteFile(file)" title="Delete File" class="text-slate-400 hover:text-rose-600 transition text-[11px]">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
                                         <tr v-if="filteredMyFiles.length === 0">
-                                            <td colspan="8" class="p-12 text-center text-slate-400">
+                                            <td colspan="8" class="border border-slate-300 p-8 text-center text-slate-400 bg-slate-50">
                                                 <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
                                                 <p class="font-bold text-sm text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
                                                 <p class="text-xs text-slate-400 mt-0.5">
