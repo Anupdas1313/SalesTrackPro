@@ -243,12 +243,12 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="file in recentFiles" :key="file.id" class="border-b hover:bg-gray-50">
-                                            <td class="p-4">{{ file.customerName }}</td>
+                                            <td class="p-4 uppercase">{{ file.customerName }}</td>
                                             <td class="p-4">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="p-4">
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
                                             </td>
-                                            <td class="p-4">{{ file.roName }}</td>
+                                            <td class="p-4 uppercase">{{ file.roName }}</td>
                                             <td class="p-4 text-gray-500 text-sm">{{ formatDate(file.createdAt) }}</td>
                                         </tr>
                                         <tr v-if="recentFiles.length === 0">
@@ -265,7 +265,7 @@
                         <div class="bg-white p-4 rounded-2xl shadow-sm border mb-4 flex flex-col md:flex-row flex-wrap gap-4 items-start md:items-end">
                             <div class="flex-1 w-full md:min-w-[200px]">
                                 <label class="block text-xs text-gray-500 font-semibold mb-1 uppercase">Search Customer</label>
-                                <input v-model="filters.search" type="text" placeholder="Name, Phone, etc..." class="w-full px-3 py-2 border rounded text-sm">
+                                <input v-model="filters.search" @input="filters.search = $event.target.value.toUpperCase()" type="text" placeholder="Name, Phone, etc..." class="w-full px-3 py-2 border rounded text-sm uppercase">
                             </div>
                             <div class="w-full md:w-48">
                                 <label class="block text-xs text-gray-500 font-semibold mb-1 uppercase">Status Filter</label>
@@ -309,16 +309,16 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="file in filteredFiles" :key="file.id" class="border-b hover:bg-blue-50 transition-colors">
-                                            <td class="p-4 text-xs font-semibold text-axisBlue">{{ file.appId || 'No ID' }}</td>
-                                            <td class="p-4 font-semibold text-gray-800">{{ file.customerName }}</td>
-                                            <td class="p-4 text-sm text-gray-700">{{ file.nclUcl || 'N/A' }}</td>
+                                            <td class="p-4 text-xs font-semibold text-axisBlue uppercase">{{ file.appId || 'No ID' }}</td>
+                                            <td class="p-4 font-semibold text-gray-800 uppercase">{{ file.customerName }}</td>
+                                            <td class="p-4 text-sm text-gray-700 uppercase">{{ file.nclUcl || 'N/A' }}</td>
                                             <td class="p-4 text-right font-medium">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="p-4">
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
                                             </td>
                                             <td class="p-4">
-                                                <div class="text-sm font-medium">{{ file.roName }}</div>
-                                                <div class="text-xs text-gray-500">{{ file.smName || 'N/A' }}</div>
+                                                <div class="text-sm font-medium uppercase">{{ file.roName }}</div>
+                                                <div class="text-xs text-gray-500 uppercase">{{ file.smName || 'N/A' }}</div>
                                             </td>
                                             <td class="p-4 text-xs text-gray-500">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
                                             <td class="p-4 text-center">
@@ -483,7 +483,7 @@
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
                                         <i class="fas fa-search"></i>
                                     </span>
-                                    <input v-model="roFilters.search" type="text" placeholder="Search customer, App ID, SM..." class="w-full pl-8 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition placeholder-slate-400">
+                                    <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search customer, App ID, SM..." class="w-full pl-8 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition placeholder-slate-400 uppercase">
                                     <button v-if="roFilters.search" @click="roFilters.search = ''" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 text-xs">
                                         <i class="fas fa-times-circle"></i>
                                     </button>
@@ -743,23 +743,23 @@
                                     <tbody class="divide-y divide-slate-100 text-sm">
                                         <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50/60 transition">
                                             <td class="py-3.5 px-4">
-                                                <div class="font-bold text-slate-900">{{ file.customerName }}</div>
-                                                <div class="text-xs font-semibold text-[#97144D] mt-0.5">#{{ file.appId || 'No ID' }}</div>
+                                                <div class="font-bold text-slate-900 uppercase">{{ file.customerName }}</div>
+                                                <div class="text-xs font-semibold text-[#97144D] mt-0.5 uppercase">#{{ file.appId || 'No ID' }}</div>
                                             </td>
                                             <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">
-                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px]">{{ file.nclUcl || '-' }}</span>
+                                                <span class="px-2 py-0.5 bg-slate-100 rounded-md text-[11px] uppercase">{{ file.nclUcl || '-' }}</span>
                                             </td>
                                             <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="py-3.5 px-4 text-center">
                                                 <span :class="getStatusBadgeClass(file.status)">{{ file.status }}</span>
                                             </td>
                                             <td class="py-3.5 px-4 text-xs">
-                                                <div class="font-semibold text-slate-800">{{ file.smName || defaultSmName || '-' }}</div>
-                                                <div class="text-slate-400 text-[11px]">PPC: {{ file.ppc || '-' }}</div>
+                                                <div class="font-semibold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</div>
+                                                <div class="text-slate-400 text-[11px] uppercase">PPC: {{ file.ppc || '-' }}</div>
                                             </td>
                                             <td class="py-3.5 px-4 text-xs">
-                                                <div class="font-semibold text-slate-800">{{ file.vcip || '-' }}</div>
-                                                <div class="text-slate-400 text-[11px]">MI: {{ file.mi || '-' }}</div>
+                                                <div class="font-semibold text-slate-800 uppercase">{{ file.vcip || '-' }}</div>
+                                                <div class="text-slate-400 text-[11px] uppercase">MI: {{ file.mi || '-' }}</div>
                                             </td>
                                             <td class="py-3.5 px-4 text-xs text-slate-400">{{ formatDate(file.createdAt) }}</td>
                                             <td class="py-3.5 px-4 text-right">
@@ -804,11 +804,11 @@
                                     <!-- Row 1: Customer Name, Status & Loan Amount -->
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="font-bold text-slate-900 text-sm truncate">{{ file.customerName }}</h4>
+                                            <h4 class="font-bold text-slate-900 text-sm truncate uppercase">{{ file.customerName }}</h4>
                                             <div class="flex items-center gap-1.5 mt-0.5 text-xs">
-                                                <span class="font-semibold text-[#97144D]">#{{ file.appId || 'No ID' }}</span>
+                                                <span class="font-semibold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</span>
                                                 <span class="text-slate-300">•</span>
-                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">{{ file.nclUcl || 'NCL' }}</span>
+                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase">{{ file.nclUcl || 'NCL' }}</span>
                                             </div>
                                         </div>
                                         <div class="text-right shrink-0">
@@ -821,12 +821,12 @@
                                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 pt-2 border-t border-slate-100">
                                         <span class="inline-flex items-center gap-1">
                                             <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
-                                            <span>{{ file.smName || defaultSmName || 'No SM' }}</span>
+                                            <span class="uppercase">{{ file.smName || defaultSmName || 'No SM' }}</span>
                                         </span>
-                                        <span v-if="file.ppc" class="inline-flex items-center gap-1 text-slate-400">
+                                        <span v-if="file.ppc" class="inline-flex items-center gap-1 text-slate-400 uppercase">
                                             <span>PPC: {{ file.ppc }}</span>
                                         </span>
-                                        <span v-if="file.vcip" class="inline-flex items-center gap-1 text-slate-400">
+                                        <span v-if="file.vcip" class="inline-flex items-center gap-1 text-slate-400 uppercase">
                                             <span>VCIP: {{ file.vcip }}</span>
                                         </span>
                                         <span class="ml-auto text-[11px] text-slate-400">{{ formatDate(file.createdAt) }}</span>
@@ -887,14 +887,14 @@
                                         </label>
                                         <div class="relative">
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">#</span>
-                                            <input type="text" v-model="newFileForm.appId" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ALA00000" autocapitalize="characters" required>
+                                            <input type="text" v-model="newFileForm.appId" @input="newFileForm.appId = $event.target.value.toUpperCase()" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ALA00000" autocapitalize="characters" required>
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">
                                             Customer Name <span class="text-rose-500">*</span>
                                         </label>
-                                        <input type="text" v-model="newFileForm.customerName" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-semibold text-slate-900 placeholder-slate-400" placeholder="Full Customer Name" required>
+                                        <input type="text" v-model="newFileForm.customerName" @input="newFileForm.customerName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-semibold text-slate-900 placeholder-slate-400 uppercase" placeholder="FULL CUSTOMER NAME" autocapitalize="characters" required>
                                     </div>
                                 </div>
 
@@ -956,7 +956,7 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">PPC Location</label>
-                                        <input type="text" v-model="newFileForm.ppc" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="e.g. Branch Name">
+                                        <input type="text" v-model="newFileForm.ppc" @input="newFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="E.G. BRANCH NAME" autocapitalize="characters">
                                     </div>
                                     <div>
                                         <div class="flex justify-between items-center mb-1">
@@ -965,7 +965,7 @@
                                                 <i class="fas fa-check-circle text-[9px]"></i> Default SM
                                             </span>
                                         </div>
-                                        <input type="text" v-model="newFileForm.smName" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="Sales Manager Name">
+                                        <input type="text" v-model="newFileForm.smName" @input="newFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="SALES MANAGER NAME" autocapitalize="characters">
                                     </div>
                                 </div>
 
@@ -973,11 +973,11 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
-                                        <input type="text" v-model="newFileForm.vcip" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP Status">
+                                        <input type="text" v-model="newFileForm.vcip" @input="newFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP STATUS" autocapitalize="characters">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
-                                        <input type="text" v-model="newFileForm.mi" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400" placeholder="MI Details">
+                                        <input type="text" v-model="newFileForm.mi" @input="newFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="MI DETAILS" autocapitalize="characters">
                                     </div>
                                 </div>
 
@@ -1058,11 +1058,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">App ID <span class="text-rose-500">*</span></label>
-                                <input type="text" v-model="editFileForm.appId" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold uppercase">
+                                <input type="text" v-model="editFileForm.appId" @input="editFileForm.appId = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold uppercase" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Name <span class="text-rose-500">*</span></label>
-                                <input type="text" v-model="editFileForm.customerName" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-semibold">
+                                <input type="text" v-model="editFileForm.customerName" @input="editFileForm.customerName = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-semibold uppercase" autocapitalize="characters">
                             </div>
                         </div>
 
@@ -1113,11 +1113,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">PPC</label>
-                                <input type="text" v-model="editFileForm.ppc" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <input type="text" v-model="editFileForm.ppc" @input="editFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">SM Name</label>
-                                <input type="text" v-model="editFileForm.smName" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <input type="text" v-model="editFileForm.smName" @input="editFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                         </div>
 
@@ -1125,11 +1125,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
-                                <input type="text" v-model="editFileForm.vcip" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase">
+                                <input type="text" v-model="editFileForm.vcip" @input="editFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
-                                <input type="text" v-model="editFileForm.mi" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium">
+                                <input type="text" v-model="editFileForm.mi" @input="editFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                         </div>
                     </form>
@@ -1156,7 +1156,7 @@
                     <form @submit.prevent="saveNewRo" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
-                            <input v-model="newRoForm.name" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm">
+                            <input v-model="newRoForm.name" @input="newRoForm.name = $event.target.value.toUpperCase()" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm uppercase" autocapitalize="characters">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
@@ -1185,7 +1185,7 @@
                 </div>
                 <div class="p-6">
                     <div class="mb-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                        <p class="text-xs text-slate-500 font-medium">Customer: <strong class="text-slate-900 text-sm font-bold">{{ selectedFile?.customerName }}</strong></p>
+                        <p class="text-xs text-slate-500 font-medium">Customer: <strong class="text-slate-900 text-sm font-bold uppercase">{{ selectedFile?.customerName }}</strong></p>
                         <p class="text-xs text-slate-500 font-medium mt-0.5">Current Status: <strong class="text-[#97144D] font-bold">{{ selectedFile?.status }}</strong></p>
                     </div>
                     
@@ -1202,7 +1202,7 @@
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Add Note (Optional)</label>
-                            <textarea v-model="statusUpdateForm.note" rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm placeholder-slate-400" placeholder="Optional remarks..."></textarea>
+                            <textarea v-model="statusUpdateForm.note" @input="statusUpdateForm.note = $event.target.value.toUpperCase()" rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm placeholder-slate-400 uppercase" placeholder="OPTIONAL REMARKS..." autocapitalize="characters"></textarea>
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
@@ -1220,7 +1220,7 @@
                 <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                     <div>
                         <h3 class="font-bold text-slate-900 text-sm">Customer File Details</h3>
-                        <p class="text-xs text-slate-400 font-medium">#{{ selectedFile?.appId || selectedFile?.id }} • {{ selectedFile?.customerName }}</p>
+                        <p class="text-xs text-slate-400 font-medium uppercase">#{{ selectedFile?.appId || selectedFile?.id }} • {{ selectedFile?.customerName }}</p>
                     </div>
                     <button @click="showViewFileModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
                         <i class="fas fa-times text-xs"></i>
@@ -1246,31 +1246,31 @@
                     <div class="grid grid-cols-2 gap-3.5 text-xs">
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">App ID</p>
-                            <p class="font-bold text-[#97144D] mt-0.5">#{{ selectedFile?.appId || 'N/A' }}</p>
+                            <p class="font-bold text-[#97144D] mt-0.5 uppercase">#{{ selectedFile?.appId || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Category</p>
-                            <p class="font-bold text-slate-800 mt-0.5">{{ selectedFile?.nclUcl || 'N/A' }}</p>
+                            <p class="font-bold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.nclUcl || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">SM Name</p>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.smName || defaultSmName || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">PPC Location</p>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.ppc || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.ppc || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">VCIP</p>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.vcip || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.vcip || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MI</p>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.mi || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.mi || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Logged By (RO)</p>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedFile?.roName || 'N/A' }}</p>
+                            <p class="font-semibold text-slate-800 mt-0.5 uppercase">{{ selectedFile?.roName || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Created Date</p>

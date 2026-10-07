@@ -331,9 +331,9 @@ const app = createApp({
             if (currentUser.value) {
                 const savedSm = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
                 if (savedSm) {
-                    defaultSmName.value = savedSm;
+                    defaultSmName.value = savedSm.toUpperCase();
                     if (!newFileForm.value.smName) {
-                        newFileForm.value.smName = savedSm;
+                        newFileForm.value.smName = savedSm.toUpperCase();
                     }
                 }
             }
@@ -398,10 +398,10 @@ const app = createApp({
             }
             
             await db.addUser({
-                username: newRoForm.value.username,
+                username: (newRoForm.value.username || '').trim(),
                 password: newRoForm.value.password,
                 role: 'ro',
-                name: newRoForm.value.name,
+                name: (newRoForm.value.name || '').trim().toUpperCase(),
                 status: 'active',
                 createdAt: new Date().toISOString()
             });
@@ -426,7 +426,7 @@ const app = createApp({
                 loanAmount: '',
                 status: 'Login',
                 ppc: '',
-                smName: defaultSmName.value || '',
+                smName: (defaultSmName.value || '').toUpperCase(),
                 vcip: '',
                 mi: ''
             };
@@ -435,18 +435,23 @@ const app = createApp({
         const saveNewFile = async () => {
             if (!currentUser.value) return;
             
-            if (newFileForm.value.smName && newFileForm.value.smName.trim()) {
-                defaultSmName.value = newFileForm.value.smName.trim();
+            const rawSm = (newFileForm.value.smName ? newFileForm.value.smName.trim() : (defaultSmName.value || '')).toUpperCase();
+            if (rawSm) {
+                defaultSmName.value = rawSm;
                 localStorage.setItem('axis_default_sm_' + currentUser.value.id, defaultSmName.value);
                 localStorage.setItem('axis_default_sm', defaultSmName.value);
             }
             
-            const smToSave = newFileForm.value.smName ? newFileForm.value.smName.trim() : (defaultSmName.value || '');
-            
             const newFile = {
-                ...newFileForm.value,
+                appId: (newFileForm.value.appId || 'ALA00000').trim().toUpperCase(),
+                customerName: (newFileForm.value.customerName || '').trim().toUpperCase(),
+                nclUcl: (newFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
                 loanAmount: Number(newFileForm.value.loanAmount) || 0,
-                smName: smToSave,
+                status: newFileForm.value.status || 'Login',
+                ppc: (newFileForm.value.ppc || '').trim().toUpperCase(),
+                smName: rawSm,
+                vcip: (newFileForm.value.vcip || '').trim().toUpperCase(),
+                mi: (newFileForm.value.mi || '').trim().toUpperCase(),
                 roId: currentUser.value.id,
                 roName: currentUser.value.name,
                 createdAt: new Date().toISOString(),
@@ -463,15 +468,15 @@ const app = createApp({
         const openEditFileModal = (file) => {
             editFileForm.value = {
                 id: file.id,
-                appId: file.appId || '',
-                customerName: file.customerName || '',
-                nclUcl: file.nclUcl || 'NCL',
+                appId: (file.appId || '').toUpperCase(),
+                customerName: (file.customerName || '').toUpperCase(),
+                nclUcl: (file.nclUcl || 'NCL').toUpperCase(),
                 loanAmount: toLakhs(file.loanAmount),
                 status: file.status || 'Login',
-                ppc: file.ppc || '',
-                smName: file.smName || defaultSmName.value || '',
-                vcip: file.vcip || '',
-                mi: file.mi || ''
+                ppc: (file.ppc || '').toUpperCase(),
+                smName: (file.smName || defaultSmName.value || '').toUpperCase(),
+                vcip: (file.vcip || '').toUpperCase(),
+                mi: (file.mi || '').toUpperCase()
             };
             showEditFileModal.value = true;
         };
@@ -480,15 +485,15 @@ const app = createApp({
             if (!editFileForm.value.id) return;
             
             const updatedData = {
-                appId: editFileForm.value.appId,
-                customerName: editFileForm.value.customerName,
-                nclUcl: editFileForm.value.nclUcl,
+                appId: (editFileForm.value.appId || '').trim().toUpperCase(),
+                customerName: (editFileForm.value.customerName || '').trim().toUpperCase(),
+                nclUcl: (editFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
                 loanAmount: Number(editFileForm.value.loanAmount) || 0,
                 status: editFileForm.value.status,
-                ppc: editFileForm.value.ppc,
-                smName: editFileForm.value.smName,
-                vcip: editFileForm.value.vcip,
-                mi: editFileForm.value.mi,
+                ppc: (editFileForm.value.ppc || '').trim().toUpperCase(),
+                smName: (editFileForm.value.smName || '').trim().toUpperCase(),
+                vcip: (editFileForm.value.vcip || '').trim().toUpperCase(),
+                mi: (editFileForm.value.mi || '').trim().toUpperCase(),
                 updatedAt: new Date().toISOString()
             };
             
@@ -556,6 +561,7 @@ const app = createApp({
             
             await db.updateLoanFile(selectedFile.value.id, {
                 status: statusUpdateForm.value.status,
+                note: (statusUpdateForm.value.note || '').trim().toUpperCase(),
                 updatedAt: new Date().toISOString()
             });
             
