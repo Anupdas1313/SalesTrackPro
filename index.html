@@ -480,292 +480,94 @@
                     <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
                     <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-4 pb-12">
                         
-                        <!-- Filter, Search & Timeline Toolbar (Distraction-Free, Mobile-First UX) -->
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm space-y-2.5">
+                        <!-- Filter, Search & Sort Toolbar (Minimal Desktop-like UX) -->
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5 flex flex-col md:flex-row flex-wrap gap-4 items-start md:items-end">
                             
-                            <!-- Row 1: Search Bar & Filter/Sort Button -->
-                            <div class="flex items-center gap-2">
-                                <!-- Search Input -->
-                                <div class="relative flex-1">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
-                                        <i class="fas fa-search"></i>
-                                    </span>
-                                    <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search customer, App ID, SM..." class="w-full pl-8 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition placeholder-slate-400 uppercase">
-                                    <button v-if="roFilters.search" @click="roFilters.search = ''" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 text-xs">
-                                        <i class="fas fa-times-circle"></i>
-                                    </button>
+                            <!-- Search -->
+                            <div class="flex-1 w-full md:min-w-[200px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Search</label>
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Name, ID, SM..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                 </div>
-
-                                <!-- Filter & Sort Modal Button -->
-                                <button type="button" @click="showMobileFilters = true" :class="[activeFilterCount > 0 ? 'bg-[#97144D] text-white shadow-md shadow-[#97144D]/20 font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold', 'px-3.5 py-2.5 rounded-xl text-xs transition flex items-center gap-2 shrink-0']">
-                                    <i class="fas fa-sliders text-xs"></i>
-                                    <span class="text-xs">Filter & Sort</span>
-                                    <span v-if="activeFilterCount > 0" class="w-5 h-5 rounded-full bg-white text-[#97144D] text-[10px] font-black flex items-center justify-center">{{ activeFilterCount }}</span>
-                                </button>
                             </div>
 
-                            <!-- Row 2: Compact Timeline Pills (Quick Date Switcher) -->
-                            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 hide-scrollbar">
-                                <button type="button" @click="roFilters.timeline = 'today'" :class="[roFilters.timeline === 'today' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0']">
-                                    <span>Today</span>
-                                    <span :class="roFilters.timeline === 'today' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.today }}</span>
-                                </button>
-                                <button type="button" @click="roFilters.timeline = 'yesterday'" :class="[roFilters.timeline === 'yesterday' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0']">
-                                    <span>Yesterday</span>
-                                    <span :class="roFilters.timeline === 'yesterday' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.yesterday }}</span>
-                                </button>
-                                <button type="button" @click="roFilters.timeline = 'this-month'" :class="[roFilters.timeline === 'this-month' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0']">
-                                    <span>This Month</span>
-                                    <span :class="roFilters.timeline === 'this-month' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.thisMonth }}</span>
-                                </button>
-                                <button type="button" @click="roFilters.timeline = 'all'" :class="[roFilters.timeline === 'all' ? 'bg-slate-900 text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-1.5 shrink-0']">
-                                    <span>All Files</span>
-                                    <span :class="roFilters.timeline === 'all' ? 'bg-white/25 text-white' : 'bg-slate-200/80 text-slate-600'" class="px-1.5 py-0.5 rounded-full text-[10px] font-black">{{ timelineCounts.all }}</span>
-                                </button>
+                            <!-- Status Filter -->
+                            <div class="w-full md:w-[130px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Status</label>
+                                <select v-model="roFilters.status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <option value="">All Statuses</option>
+                                    <option value="Lead">Lead</option>
+                                    <option value="FI">FI</option>
+                                    <option value="FCU">FCU</option>
+                                    <option value="UW">UW</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Disbursed">Disbursed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Custom">Custom</option>
+                                </select>
                             </div>
 
-                            <!-- Row 3: Active Filters Tags (Shown only when non-default filters or search are active) -->
-                            <div v-if="activeFilterCount > 0 || roFilters.search" class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-100 text-xs">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Active:</span>
-
-                                <!-- Search tag -->
-                                <span v-if="roFilters.search" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">
-                                    <span>"{{ roFilters.search }}"</span>
-                                    <button type="button" @click="roFilters.search = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Status tag -->
-                                <span v-if="roFilters.status" class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold">
-                                    <span>Status: {{ roFilters.status }}</span>
-                                    <button type="button" @click="roFilters.status = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Category tag -->
-                                <span v-if="roFilters.nclUcl" class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-xs font-semibold">
-                                    <span>Category: {{ roFilters.nclUcl }}</span>
-                                    <button type="button" @click="roFilters.nclUcl = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Sourcing Channel tag -->
-                                <span v-if="roFilters.sourcingChannel" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold">
-                                    <span>Channel: {{ roFilters.sourcingChannel }}</span>
-                                    <button type="button" @click="roFilters.sourcingChannel = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Custom Date tag -->
-                                <span v-if="roFilters.timeline === 'custom'" class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold">
-                                    <span>Date: {{ roFilters.customDate || 'Selected' }}</span>
-                                    <button type="button" @click="roFilters.timeline = 'today'; roFilters.customDate = ''" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Sort tag (if non-default) -->
-                                <span v-if="roFilters.sortBy !== 'newest'" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">
-                                    <span>Sorted: {{ getSortLabel(roFilters.sortBy) }}</span>
-                                    <button type="button" @click="roFilters.sortBy = 'newest'" class="hover:text-rose-600"><i class="fas fa-times text-[10px]"></i></button>
-                                </span>
-
-                                <!-- Clear all button -->
-                                <button type="button" @click="resetRoFilters" class="ml-auto text-xs text-[#97144D] font-bold hover:underline py-0.5">
-                                    Clear all
-                                </button>
+                            <!-- Timeline Filter -->
+                            <div class="w-full md:w-[120px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Timeline</label>
+                                <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="this-week">This Week</option>
+                                    <option value="this-month">This Month</option>
+                                    <option value="custom">Custom Date</option>
+                                </select>
                             </div>
 
-                            <!-- Quiet Files Count Summary -->
-                            <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-1 border-t border-slate-100">
-                                <span>Showing <strong class="text-slate-800">{{ filteredMyFiles.length }}</strong> files for <strong class="text-[#97144D]">{{ getTimelineLabel(roFilters.timeline) }}</strong></span>
-                                <span class="text-slate-400">Sorted by {{ getSortLabel(roFilters.sortBy) }}</span>
+                            <!-- Custom Date Input -->
+                            <div v-if="roFilters.timeline === 'custom'" class="w-full md:w-[120px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Select Date</label>
+                                <input v-model="roFilters.customDate" type="date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                            </div>
+
+                            <!-- Category Filter -->
+                            <div class="w-full md:w-[90px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Category</label>
+                                <select v-model="roFilters.nclUcl" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <option value="">All</option>
+                                    <option value="NCL">NCL</option>
+                                    <option value="UCL">UCL</option>
+                                </select>
+                            </div>
+
+                            <!-- Channel Filter -->
+                            <div class="w-full md:w-[90px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Channel</label>
+                                <select v-model="roFilters.sourcingChannel" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <option value="">All</option>
+                                    <option value="DSA">DSA</option>
+                                    <option value="Branch">Branch</option>
+                                </select>
+                            </div>
+
+                            <!-- Sort By -->
+                            <div class="w-full md:w-[110px]">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Sort</label>
+                                <select v-model="roFilters.sortBy" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                </select>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="w-full md:w-auto flex items-center gap-2 mt-1 md:mt-0">
+                                <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'all' || roFilters.sortBy !== 'newest'" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button @click="exportRoFilesToExcel" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#97144D] text-white rounded-xl hover:bg-[#801140] transition shadow-sm text-xs font-bold">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span>Export</span>
+                                </button>
                             </div>
                         </div>
-
-                        <!-- Filter & Sort Bottom Sheet / Modal (Unified & Clean) -->
-                        <div v-if="showMobileFilters" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-                            <!-- Backdrop -->
-                            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" @click="showMobileFilters = false"></div>
-
-                            <!-- Modal Panel -->
-                            <div class="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col shadow-2xl z-10 overflow-hidden animate-in slide-in-from-bottom duration-200">
-                                <!-- Header -->
-                                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-xl bg-[#97144D]/10 text-[#97144D] flex items-center justify-center">
-                                            <i class="fas fa-sliders text-sm"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-slate-900 text-sm">Filter & Sort Files</h3>
-                                            <p class="text-[11px] text-slate-500">Refine your file tracking list</p>
-                                        </div>
-                                    </div>
-                                    <button type="button" @click="showMobileFilters = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
-                                        <i class="fas fa-times text-xs"></i>
-                                    </button>
-                                </div>
-
-                                <!-- Scrollable Filter Options -->
-                                <div class="overflow-y-auto p-5 space-y-5 flex-1 divide-y divide-slate-100">
-                                    
-                                    <!-- 1. Timeline Section -->
-                                    <div class="space-y-2">
-                                        <label class="block text-xs font-bold text-slate-700 flex items-center justify-between">
-                                            <span><i class="fas fa-calendar-alt text-[#97144D] mr-1.5"></i>Timeline (Date Range)</span>
-                                            <span class="text-[10px] text-slate-400 font-medium">Default: Today</span>
-                                        </label>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <button type="button" @click="roFilters.timeline = 'today'" :class="roFilters.timeline === 'today' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                Today
-                                            </button>
-                                            <button type="button" @click="roFilters.timeline = 'yesterday'" :class="roFilters.timeline === 'yesterday' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                Yesterday
-                                            </button>
-                                            <button type="button" @click="roFilters.timeline = 'this-week'" :class="roFilters.timeline === 'this-week' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                This Week
-                                            </button>
-                                            <button type="button" @click="roFilters.timeline = 'this-month'" :class="roFilters.timeline === 'this-month' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                This Month
-                                            </button>
-                                            <button type="button" @click="roFilters.timeline = 'all'" :class="roFilters.timeline === 'all' ? 'bg-slate-900 text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                All Time
-                                            </button>
-                                            <button type="button" @click="roFilters.timeline = 'custom'" :class="roFilters.timeline === 'custom' ? 'bg-[#97144D] text-white shadow-sm font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-2.5 rounded-xl text-xs transition text-center">
-                                                Custom Date
-                                            </button>
-                                        </div>
-                                        <!-- Custom date picker when 'custom' selected -->
-                                        <div v-if="roFilters.timeline === 'custom'" class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2 mt-2">
-                                            <span class="text-xs font-bold text-slate-600">Select Date:</span>
-                                            <input type="date" v-model="roFilters.customDate" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:border-[#97144D]">
-                                        </div>
-                                    </div>
-
-                                    <!-- 2. Status Section -->
-                                    <div class="pt-4 space-y-2">
-                                        <label class="block text-xs font-bold text-slate-700">
-                                            <i class="fas fa-clipboard-check text-blue-600 mr-1.5"></i>Application Status
-                                        </label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button type="button" @click="roFilters.status = ''" :class="roFilters.status === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                All Statuses
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'FI'" :class="roFilters.status === 'FI' ? 'bg-blue-600 text-white font-bold' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium border border-blue-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                FI
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'FCU'" :class="roFilters.status === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium border border-indigo-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                FCU
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'UW'" :class="roFilters.status === 'UW' ? 'bg-violet-600 text-white font-bold' : 'bg-violet-50 text-violet-700 hover:bg-violet-100 font-medium border border-violet-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                UW
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'Approved'" :class="roFilters.status === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium border border-emerald-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Approved
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'Disbursed'" :class="roFilters.status === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 font-medium border border-purple-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Disbursed
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'Rejected'" :class="roFilters.status === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 font-medium border border-rose-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Rejected
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'Cancelled'" :class="roFilters.status === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 'bg-stone-50 text-stone-700 hover:bg-stone-100 font-medium border border-stone-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Cancelled
-                                            </button>
-                                            <button type="button" @click="roFilters.status = 'Custom'" :class="roFilters.status === 'Custom' ? 'bg-fuchsia-600 text-white font-bold' : 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100 font-medium border border-fuchsia-200'" class="py-2 px-3.5 rounded-xl text-xs transition">
-                                                Custom
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. Category Section -->
-                                    <div class="pt-4 space-y-2">
-                                        <label class="block text-xs font-bold text-slate-700">
-                                            <i class="fas fa-tag text-purple-600 mr-1.5"></i>Category (NCL / UCL)
-                                        </label>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <button type="button" @click="roFilters.nclUcl = ''" :class="roFilters.nclUcl === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                All
-                                            </button>
-                                            <button type="button" @click="roFilters.nclUcl = 'NCL'" :class="roFilters.nclUcl === 'NCL' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                NCL
-                                            </button>
-                                            <button type="button" @click="roFilters.nclUcl = 'UCL'" :class="roFilters.nclUcl === 'UCL' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                UCL
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- 4. Sourcing Channel Section -->
-                                    <div class="pt-4 space-y-2">
-                                        <label class="block text-xs font-bold text-slate-700">
-                                            <i class="fas fa-network-wired text-indigo-600 mr-1.5"></i>Sourcing Channel
-                                        </label>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <button type="button" @click="roFilters.sourcingChannel = ''" :class="roFilters.sourcingChannel === '' ? 'bg-slate-900 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                All
-                                            </button>
-                                            <button type="button" @click="roFilters.sourcingChannel = 'DSA'" :class="roFilters.sourcingChannel === 'DSA' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                DSA
-                                            </button>
-                                            <button type="button" @click="roFilters.sourcingChannel = 'Branch'" :class="roFilters.sourcingChannel === 'Branch' ? 'bg-[#97144D] text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'" class="py-2 px-3 rounded-xl text-xs transition text-center">
-                                                Branch
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- 5. Sort By Section -->
-                                    <div class="pt-4 space-y-2">
-                                        <label class="block text-xs font-bold text-slate-700">
-                                            <i class="fas fa-sort-amount-down text-slate-600 mr-1.5"></i>Sort Files By
-                                        </label>
-                                        <div class="space-y-1.5">
-                                            <label @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-[#97144D]/5 border-[#97144D] text-[#97144D] font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100'" class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition">
-                                                <div class="flex items-center gap-2">
-                                                    <i class="fas fa-clock text-xs"></i>
-                                                    <span>Newest First (Default)</span>
-                                                </div>
-                                                <i v-if="roFilters.sortBy === 'newest'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            </label>
-                                            <label @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-[#97144D]/5 border-[#97144D] text-[#97144D] font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100'" class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition">
-                                                <div class="flex items-center gap-2">
-                                                    <i class="fas fa-history text-xs"></i>
-                                                    <span>Oldest First</span>
-                                                </div>
-                                                <i v-if="roFilters.sortBy === 'oldest'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            </label>
-                                            <label @click="roFilters.sortBy = 'amount-desc'" :class="roFilters.sortBy === 'amount-desc' ? 'bg-[#97144D]/5 border-[#97144D] text-[#97144D] font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100'" class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition">
-                                                <div class="flex items-center gap-2">
-                                                    <i class="fas fa-arrow-down-wide-short text-xs"></i>
-                                                    <span>Loan Amount: High to Low</span>
-                                                </div>
-                                                <i v-if="roFilters.sortBy === 'amount-desc'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            </label>
-                                            <label @click="roFilters.sortBy = 'amount-asc'" :class="roFilters.sortBy === 'amount-asc' ? 'bg-[#97144D]/5 border-[#97144D] text-[#97144D] font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100'" class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition">
-                                                <div class="flex items-center gap-2">
-                                                    <i class="fas fa-arrow-up-short-wide text-xs"></i>
-                                                    <span>Loan Amount: Low to High</span>
-                                                </div>
-                                                <i v-if="roFilters.sortBy === 'amount-asc'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            </label>
-                                            <label @click="roFilters.sortBy = 'name-asc'" :class="roFilters.sortBy === 'name-asc' ? 'bg-[#97144D]/5 border-[#97144D] text-[#97144D] font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100'" class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition">
-                                                <div class="flex items-center gap-2">
-                                                    <i class="fas fa-arrow-down-a-z text-xs"></i>
-                                                    <span>Customer Name: A to Z</span>
-                                                </div>
-                                                <i v-if="roFilters.sortBy === 'name-asc'" class="fas fa-check-circle text-xs text-[#97144D]"></i>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <!-- Sticky Footer -->
-                                <div class="p-4 border-t border-slate-100 bg-white flex items-center gap-3">
-                                    <button type="button" @click="resetRoFilters" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition shrink-0">
-                                        <i class="fas fa-undo mr-1 text-[10px]"></i> Reset
-                                    </button>
-                                    <button type="button" @click="showMobileFilters = false" class="flex-1 py-2.5 bg-[#97144D] text-white rounded-xl font-bold text-xs hover:bg-[#801040] shadow-md shadow-[#97144D]/25 transition text-center">
-                                        Show {{ filteredMyFiles.length }} Files
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Data List Card (Minimal & Clean) -->
                         <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs overflow-hidden">
                             <!-- Desktop Table View -->

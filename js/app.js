@@ -92,9 +92,6 @@ const app = createApp({
             customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
-        const showMobileFilters = ref(false);
-        const showCustomDateInput = ref(false);
-        const mySearch = ref('');
 
         // Helper: Date timeline matching (supports YYYY-MM-DD strings and ISO timestamps)
         const matchesTimeline = (fileDateStr, timeline, customDate) => {
@@ -145,27 +142,7 @@ const app = createApp({
         // --- Computed ---
         const isAdmin = computed(() => currentUser.value?.role === 'admin');
 
-        const activeFilterCount = computed(() => {
-            let count = 0;
-            if (roFilters.value.nclUcl) count++;
-            if (roFilters.value.sourcingChannel) count++;
-            if (roFilters.value.sortBy && roFilters.value.sortBy !== 'newest') count++;
-            if (roFilters.value.timeline && roFilters.value.timeline !== 'today') count++;
-            if (roFilters.value.status) count++;
-            return count;
-        });
 
-        // Timeline File Counts
-        const timelineCounts = computed(() => {
-            const files = myFiles.value;
-            return {
-                today: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'today')).length,
-                yesterday: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'yesterday')).length,
-                thisWeek: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'this-week')).length,
-                thisMonth: files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, 'this-month')).length,
-                all: files.length
-            };
-        });
 
         // Loan Amount in Lakhs normalization and formatters
         const toLakhs = (value) => {
@@ -265,7 +242,7 @@ const app = createApp({
 
         // RO Pipeline & Overview Tracking (with filtering, timeline & sorting)
         const filteredMyFiles = computed(() => {
-            const q = (roFilters.value.search || mySearch.value).trim().toLowerCase();
+            const q = roFilters.value.search.trim().toLowerCase();
             let list = myFiles.value.filter(file => {
                 const matchSearch = !q ||
                     (file.customerName && file.customerName.toLowerCase().includes(q)) ||
@@ -753,7 +730,7 @@ const app = createApp({
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilters, showCustomDateInput, activeFilterCount, timelineCounts, mySearch,
+            showViewFileModal, filters, roFilters,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
