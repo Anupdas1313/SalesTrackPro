@@ -3,6 +3,7 @@ const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const app = createApp({
     setup() {
+        const showMobileFilterDrawer = ref(false);
         // --- State ---
         const currentUser = ref(null);
         const loginForm = ref({ username: '', password: '' });
@@ -730,7 +731,7 @@ const app = createApp({
             isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters,
+            showViewFileModal, filters, roFilters, showMobileFilterDrawer,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,

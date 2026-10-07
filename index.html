@@ -480,23 +480,31 @@
                     <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
                     <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-4 pb-12">
                         
-                        <!-- Filter, Search & Sort Toolbar (Mobile-Optimized Horizontal Scroll UX) -->
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5 flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-end overflow-hidden">
+                        <!-- Filter, Search & Sort Toolbar -->
+                        <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5">
                             
-                            <!-- Search (Full width on mobile) -->
-                            <div class="flex-1 w-full md:min-w-[200px]">
-                                <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider hidden md:block">Search</label>
-                                <div class="relative">
-                                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Name, ID, SM..." class="w-full pl-9 pr-3 py-2 sm:py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                            <!-- Top Row: Search (Full width on mobile) & Filter Trigger -->
+                            <div class="flex items-center gap-2 md:gap-4 mb-0 md:mb-0">
+                                <!-- Search Input -->
+                                <div class="flex-1">
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider hidden md:block">Search</label>
+                                    <div class="relative">
+                                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Name, ID, SM..." class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    </div>
                                 </div>
+                                
+                                <!-- Mobile Filter Trigger -->
+                                <button @click="showMobileFilterDrawer = true" class="md:hidden shrink-0 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-bold text-xs flex items-center justify-center gap-2 h-[42px]">
+                                    <i class="fas fa-sliders text-[#97144D]"></i>
+                                    <span>Filters</span>
+                                </button>
                             </div>
 
-                            <!-- Scrollable Filters Container -->
-                            <div class="flex overflow-x-auto md:flex-wrap gap-2.5 md:gap-4 pb-1 md:pb-0 w-full md:w-auto hide-scrollbar items-end snap-x">
-                                
+                            <!-- Desktop Filters (Hidden on Mobile) -->
+                            <div class="hidden md:flex flex-wrap gap-4 items-end mt-4">
                                 <!-- Status Filter -->
-                                <div class="shrink-0 w-[115px] md:w-[130px] snap-start">
+                                <div class="w-[130px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Status</label>
                                     <select v-model="roFilters.status" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
@@ -513,7 +521,7 @@
                                 </div>
 
                                 <!-- Timeline Filter -->
-                                <div class="shrink-0 w-[110px] md:w-[120px] snap-start">
+                                <div class="w-[120px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Timeline</label>
                                     <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
@@ -526,13 +534,13 @@
                                 </div>
 
                                 <!-- Custom Date Input -->
-                                <div v-if="roFilters.timeline === 'custom'" class="shrink-0 w-[120px] snap-start">
+                                <div v-if="roFilters.timeline === 'custom'" class="w-[120px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Select Date</label>
                                     <input v-model="roFilters.customDate" type="date" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
-                                <div class="shrink-0 w-[85px] md:w-[90px] snap-start">
+                                <div class="w-[90px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Category</label>
                                     <select v-model="roFilters.nclUcl" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
@@ -542,7 +550,7 @@
                                 </div>
 
                                 <!-- Channel Filter -->
-                                <div class="shrink-0 w-[90px] snap-start">
+                                <div class="w-[90px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Channel</label>
                                     <select v-model="roFilters.sourcingChannel" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
@@ -552,7 +560,7 @@
                                 </div>
 
                                 <!-- Sort By -->
-                                <div class="shrink-0 w-[105px] md:w-[110px] snap-start">
+                                <div class="w-[110px]">
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Sort</label>
                                     <select v-model="roFilters.sortBy" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="newest">Newest First</option>
@@ -561,13 +569,112 @@
                                 </div>
 
                                 <!-- Actions -->
-                                <div class="shrink-0 flex items-center gap-2 snap-start">
+                                <div class="flex items-center gap-2">
                                     <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'all' || roFilters.sortBy !== 'newest'" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#97144D] text-white rounded-xl hover:bg-[#801140] transition shadow-sm text-xs font-bold">
                                         <i class="fas fa-file-excel"></i>
                                         <span>Export</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Filter Drawer (Slide from Right, 60% Width) -->
+                        <div v-if="showMobileFilterDrawer" class="fixed inset-0 z-[100] flex justify-end md:hidden">
+                            <!-- Backdrop -->
+                            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" @click="showMobileFilterDrawer = false"></div>
+                            
+                            <!-- Sliding Drawer panel (60% width of screen) -->
+                            <div class="relative w-[60%] h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 z-10">
+                                
+                                <!-- Drawer Header -->
+                                <div class="px-4 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i class="fas fa-sliders text-[#97144D]"></i> Filters</h3>
+                                    <button @click="showMobileFilterDrawer = false" class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Drawer Body (Scrollable) -->
+                                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                                    <!-- Status Filter -->
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Status</label>
+                                        <select v-model="roFilters.status" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                            <option value="">All Statuses</option>
+                                            <option value="Lead">Lead</option>
+                                            <option value="FI">FI</option>
+                                            <option value="FCU">FCU</option>
+                                            <option value="UW">UW</option>
+                                            <option value="Approved">Approved</option>
+                                            <option value="Rejected">Rejected</option>
+                                            <option value="Disbursed">Disbursed</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Custom">Custom</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Timeline Filter -->
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Timeline</label>
+                                        <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                            <option value="all">All Time</option>
+                                            <option value="today">Today</option>
+                                            <option value="yesterday">Yesterday</option>
+                                            <option value="this-week">This Week</option>
+                                            <option value="this-month">This Month</option>
+                                            <option value="custom">Custom Date</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Custom Date Input -->
+                                    <div v-if="roFilters.timeline === 'custom'">
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Select Date</label>
+                                        <input v-model="roFilters.customDate" type="date" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                    </div>
+
+                                    <!-- Category Filter -->
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Category</label>
+                                        <select v-model="roFilters.nclUcl" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                            <option value="">All</option>
+                                            <option value="NCL">NCL</option>
+                                            <option value="UCL">UCL</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Channel Filter -->
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Channel</label>
+                                        <select v-model="roFilters.sourcingChannel" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                            <option value="">All</option>
+                                            <option value="DSA">DSA</option>
+                                            <option value="Branch">Branch</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Sort By -->
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Sort</label>
+                                        <select v-model="roFilters.sortBy" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#97144D]">
+                                            <option value="newest">Newest First</option>
+                                            <option value="oldest">Oldest First</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Drawer Footer Actions -->
+                                <div class="p-4 border-t border-slate-100 bg-white space-y-2">
+                                    <button @click="exportRoFilesToExcel" class="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md">
+                                        <i class="fas fa-file-excel mr-1"></i> Export to Excel
+                                    </button>
+                                    <button @click="showMobileFilterDrawer = false" class="w-full py-2.5 bg-[#97144D] text-white rounded-xl font-bold text-xs shadow-md">
+                                        Apply Filters
+                                    </button>
+                                    <button @click="resetRoFilters" v-if="roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'all' || roFilters.sortBy !== 'newest'" class="w-full py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs border border-slate-200">
+                                        Clear All
                                     </button>
                                 </div>
                             </div>
