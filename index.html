@@ -583,7 +583,7 @@
 
                                 <!-- Actions -->
                                 <div class="flex items-center gap-2">
-                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'all' || roFilters.sortBy !== 'newest'" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#97144D] text-white rounded-xl hover:bg-[#801140] transition shadow-sm text-xs font-bold">
@@ -770,7 +770,7 @@
                                                         <i class="fas fa-globe text-xs"></i>
                                                         <span>View All Time ({{ myFiles.length }} files)</span>
                                                     </button>
-                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                                                         Reset Filters
                                                     </button>
                                                 </div>
@@ -844,7 +844,7 @@
                                             <i class="fas fa-globe text-xs"></i>
                                             <span>View All Time ({{ myFiles.length }} files)</span>
                                         </button>
-                                        <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'today' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                        <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                                             Reset Filters
                                         </button>
                                     </div>

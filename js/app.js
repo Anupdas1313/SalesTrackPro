@@ -89,7 +89,7 @@ const app = createApp({
             status: '',
             nclUcl: '',
             sourcingChannel: '',
-            timeline: 'today', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
+            timeline: 'this-month', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
             customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
@@ -181,7 +181,7 @@ const app = createApp({
         });
 
         // RO Overview State
-        const roOverviewTimeline = ref('all');
+        const roOverviewTimeline = ref('this-month');
         const roOverviewCustomDate = ref('');
 
         // RO Overview KPIs
@@ -341,7 +341,7 @@ const app = createApp({
                 case 'this-month': return 'This Month';
                 case 'custom': return roFilters.value.customDate ? `Date: ${roFilters.value.customDate}` : 'Custom Date';
                 case 'all': return 'All Time';
-                default: return 'Today';
+                default: return 'This Month';
             }
         };
 
@@ -361,7 +361,7 @@ const app = createApp({
                 status: '',
                 nclUcl: '',
                 sourcingChannel: '',
-                timeline: 'today',
+                timeline: 'this-month',
                 customDate: '',
                 sortBy: 'newest'
             };
