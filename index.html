@@ -381,32 +381,29 @@
                                         <tr class="text-slate-600 text-[11px] uppercase tracking-wider">
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap cursor-pointer hover:bg-slate-200">App ID <i class="fas fa-sort ml-1"></i></th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Customer Name</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">NCL/UCL / Channel</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Channel</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-right">Loan Amount</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Status</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">RO / SM</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">RO Name</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">SM Name</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Last Updated</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs">
-                                        <tr v-for="file in filteredFiles" :key="file.id" class="hover:bg-blue-50/50 transition-colors">
+                                        <tr v-for="file in filteredFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
                                             <td class="border border-slate-300 px-3 py-1.5 font-bold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-700 uppercase">
-                                                <span>{{ file.nclUcl || 'N/A' }}</span>
-                                                <span class="text-slate-300 mx-0.5">|</span>
-                                                <span class="text-blue-700">{{ file.sourcingChannel || 'DSA' }}</span>
-                                            </td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 uppercase">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-[#97144D] uppercase">{{ file.sourcingChannel || 'DSA' }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 text-center">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[10px]">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-1.5">
-                                                <div class="font-bold text-slate-800 uppercase">{{ file.roName }}</div>
-                                                <div class="text-[10px] text-slate-500 uppercase font-semibold">SM: {{ file.smName || 'N/A' }}</div>
-                                            </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-600">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.roName }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-500 uppercase">{{ file.smName || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-medium text-slate-600">{{ formatDate(file.updatedAt || file.createdAt) }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 text-center">
                                                 <button @click="openViewFileModal(file)" class="text-slate-500 hover:text-slate-900 p-1" title="View Details">
                                                     <i class="fas fa-eye"></i>
@@ -414,7 +411,7 @@
                                             </td>
                                         </tr>
                                         <tr v-if="filteredFiles.length === 0">
-                                            <td colspan="8" class="border border-slate-300 p-8 text-center text-slate-500 bg-slate-50">
+                                            <td colspan="10" class="border border-slate-300 p-8 text-center text-slate-500 bg-slate-50">
                                                 <i class="fas fa-search text-3xl mb-3 text-slate-300 block"></i>
                                                 No files match your filters.
                                             </td>
@@ -476,7 +473,7 @@
                     <div v-if="currentTab === 'ro-dashboard' && !isAdmin" class="space-y-5 pb-12 max-w-5xl mx-auto">
                         
                         <!-- Dashboard Controls -->
-                        <div class="flex justify-between items-center gap-2 mb-4">
+                        <div class="relative flex justify-between items-center gap-2 mb-4 sm:static">
                             <!-- Left Side (Optional Badges) -->
                             <div class="px-3 py-1.5 bg-white rounded-xl border border-slate-200/70 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                                 <span class="text-slate-400">Approval Rate:</span>
@@ -484,7 +481,7 @@
                             </div>
 
                             <!-- Timeline Filter (Top Right, under logout) -->
-                            <div class="flex flex-wrap justify-end items-center gap-2">
+                            <div class="absolute -top-12 right-0 sm:relative sm:top-auto sm:right-auto flex flex-wrap justify-end items-center gap-2 z-10">
                                 <div class="relative w-[130px]">
                                     <select v-model="roOverviewTimeline" @change="roOverviewTimeline !== 'custom' ? roOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] appearance-none cursor-pointer text-slate-700 shadow-xs">
                                         <option value="all">All Time</option>
@@ -680,37 +677,34 @@
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100 z-10">
                                         <tr class="text-slate-600 text-[11px] uppercase tracking-wider">
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">App ID & Customer</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Category / Channel</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Channel</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-right">Loan Amount</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Status</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">SM / PPC</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">VCIP / MI</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">SM Name</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">PPC</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">VCIP</th>
+                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">MI</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Login Date</th>
                                             <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs">
-                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-blue-50/50 transition-colors">
-                                            <td class="border border-slate-300 px-3 py-1.5">
-                                                <div class="font-bold text-slate-900 uppercase">{{ file.customerName }}</div>
-                                                <div class="text-[10px] font-bold text-[#97144D] mt-0.5 uppercase">#{{ file.appId || 'No ID' }}</div>
-                                            </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-700 uppercase">
-                                                {{ file.nclUcl || '-' }} <span class="text-slate-300 mx-0.5">|</span> <span class="text-blue-700">{{ file.sourcingChannel || 'DSA' }}</span>
-                                            </td>
+                                        <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-900 uppercase">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 uppercase">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-[#97144D] uppercase">{{ file.sourcingChannel || 'DSA' }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5 text-center">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[10px]">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px]">
-                                                <div class="font-bold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</div>
-                                                <div class="text-slate-500 uppercase font-semibold">PPC: {{ file.ppc || '-' }}</div>
-                                            </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-[11px]">
-                                                <div class="font-bold text-slate-800 uppercase">{{ file.vcip || '-' }}</div>
-                                                <div class="text-slate-500 uppercase font-semibold">MI: {{ file.mi || '-' }}</div>
-                                            </td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-500 uppercase">{{ file.ppc || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.vcip || '-' }}</td>
+                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-500 uppercase">{{ file.mi || '-' }}</td>
                                             <td class="border border-slate-300 px-3 py-1.5">
                                                 <div class="font-bold text-slate-800 text-[11px]">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
                                                 <div class="text-[9px] text-slate-400">{{ formatDate(file.createdAt) }}</div>
@@ -730,7 +724,7 @@
                                             </td>
                                         </tr>
                                         <tr v-if="filteredMyFiles.length === 0">
-                                            <td colspan="8" class="border border-slate-300 p-8 text-center text-slate-400 bg-slate-50">
+                                            <td colspan="12" class="border border-slate-300 p-8 text-center text-slate-400 bg-slate-50">
                                                 <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
                                                 <p class="font-bold text-sm text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
                                                 <p class="text-xs text-slate-400 mt-0.5">
