@@ -605,12 +605,12 @@
                                     
                                     <!-- Status Filter -->
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 font-bold mb-3 uppercase tracking-wider"><i class="fas fa-bars-staggered mr-1.5 text-[#97144D]"></i>Status</label>
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Status</label>
                                         <div class="flex flex-wrap gap-2">
                                             <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'FCU', label:'FCU'}, {val:'UW', label:'UW'}, {val:'Approved', label:'Approved'}, {val:'Rejected', label:'Rejected'}, {val:'Disbursed', label:'Disbursed'}, {val:'Cancelled', label:'Cancelled'}, {val:'Custom', label:'Custom'}]" 
                                                     :key="st.val"
                                                     @click="roFilters.status = st.val"
-                                                    :class="roFilters.status === st.val ? 'bg-[#97144D] text-white shadow-md shadow-[#97144D]/20 font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
+                                                    :class="roFilters.status === st.val ? 'bg-slate-800 text-white shadow-md font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
                                                     class="px-3.5 py-2 rounded-xl text-xs border transition-all duration-200">
                                                 {{ st.label }}
                                             </button>
@@ -619,12 +619,12 @@
 
                                     <!-- Timeline Filter -->
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 font-bold mb-3 uppercase tracking-wider"><i class="fas fa-calendar-day mr-1.5 text-[#97144D]"></i>Timeline</label>
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Timeline</label>
                                         <div class="grid grid-cols-2 gap-2">
                                             <button v-for="t in [{val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}, {val:'all', label:'All Time'}, {val:'custom', label:'Custom'}]" 
                                                     :key="t.val"
                                                     @click="roFilters.timeline = t.val; if(t.val !== 'custom') roFilters.customDate = '';"
-                                                    :class="roFilters.timeline === t.val ? 'bg-slate-900 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
+                                                    :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
                                                     class="px-3 py-2 rounded-xl text-xs border transition-all duration-200">
                                                 {{ t.label }}
                                             </button>
@@ -635,51 +635,48 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <!-- Category Filter -->
-                                        <div>
-                                            <label class="block text-[11px] text-slate-400 font-bold mb-3 uppercase tracking-wider"><i class="fas fa-tag mr-1.5 text-indigo-500"></i>Category</label>
-                                            <div class="flex flex-col gap-2">
-                                                <button v-for="cat in [{val:'', label:'All'}, {val:'NCL', label:'NCL'}, {val:'UCL', label:'UCL'}]"
-                                                        :key="cat.val"
-                                                        @click="roFilters.nclUcl = cat.val"
-                                                        :class="roFilters.nclUcl === cat.val ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/20 border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium'"
-                                                        class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
-                                                    {{ cat.label }}
-                                                </button>
-                                            </div>
+                                    <!-- Category Filter -->
+                                    <div>
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Category</label>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <button v-for="cat in [{val:'', label:'All'}, {val:'NCL', label:'NCL'}, {val:'UCL', label:'UCL'}]"
+                                                    :key="cat.val"
+                                                    @click="roFilters.nclUcl = cat.val"
+                                                    :class="roFilters.nclUcl === cat.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
+                                                    class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
+                                                {{ cat.label }}
+                                            </button>
                                         </div>
+                                    </div>
 
-                                        <!-- Channel Filter -->
-                                        <div>
-                                            <label class="block text-[11px] text-slate-400 font-bold mb-3 uppercase tracking-wider"><i class="fas fa-building mr-1.5 text-emerald-500"></i>Channel</label>
-                                            <div class="flex flex-col gap-2">
-                                                <button v-for="ch in [{val:'', label:'All'}, {val:'DSA', label:'DSA'}, {val:'Branch', label:'Branch'}]"
-                                                        :key="ch.val"
-                                                        @click="roFilters.sourcingChannel = ch.val"
-                                                        :class="roFilters.sourcingChannel === ch.val ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20 border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium'"
-                                                        class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
-                                                    {{ ch.label }}
-                                                </button>
-                                            </div>
+                                    <!-- Channel Filter -->
+                                    <div>
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Channel</label>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <button v-for="ch in [{val:'', label:'All'}, {val:'DSA', label:'DSA'}, {val:'Branch', label:'Branch'}]"
+                                                    :key="ch.val"
+                                                    @click="roFilters.sourcingChannel = ch.val"
+                                                    :class="roFilters.sourcingChannel === ch.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
+                                                    class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
+                                                {{ ch.label }}
+                                            </button>
                                         </div>
                                     </div>
 
                                     <!-- Sort By -->
                                     <div>
-                                        <label class="block text-[11px] text-slate-400 font-bold mb-3 uppercase tracking-wider"><i class="fas fa-sort-amount-down mr-1.5 text-[#97144D]"></i>Sort Order</label>
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Sort Order</label>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-slate-900 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
-                                                <i class="fas fa-arrow-down"></i> Newest
+                                            <button @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                                <i class="fas fa-arrow-down text-[10px]"></i> Newest
                                             </button>
-                                            <button @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-slate-900 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
-                                                <i class="fas fa-arrow-up"></i> Oldest
+                                            <button @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                                <i class="fas fa-arrow-up text-[10px]"></i> Oldest
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Drawer Footer Actions -->
+                                                                <!-- Drawer Footer Actions -->
                                 <div class="p-5 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0">
                                     <button @click="resetRoFilters" class="px-4 py-3 bg-white text-slate-700 rounded-xl font-bold text-xs border border-slate-200 shadow-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition shrink-0">
                                         <i class="fas fa-undo text-slate-400"></i>
