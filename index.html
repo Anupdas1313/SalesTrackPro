@@ -962,14 +962,7 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                         <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
-                                                ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
-                                                   st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
-                                                   st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
-                                                   st === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 
-                                                   st === 'FI' ? 'bg-blue-600 text-white font-bold' : 
-                                                   st === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 
-                                                   st === 'UW' ? 'bg-violet-600 text-white font-bold' : 
-                                                   'bg-fuchsia-600 text-white font-bold') 
+                                                ? 'bg-slate-900 text-white font-bold shadow-xs'
                                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
                                             'py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5'
                                         ]">
@@ -1152,16 +1145,9 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
-                                        ? (st === 'Approved' ? 'bg-emerald-600 text-white font-bold' : 
-                                           st === 'Rejected' ? 'bg-rose-600 text-white font-bold' : 
-                                           st === 'Disbursed' ? 'bg-purple-600 text-white font-bold' : 
-                                           st === 'Cancelled' ? 'bg-stone-600 text-white font-bold' : 
-                                           st === 'FI' ? 'bg-blue-600 text-white font-bold' : 
-                                           st === 'FCU' ? 'bg-indigo-600 text-white font-bold' : 
-                                           st === 'UW' ? 'bg-violet-600 text-white font-bold' : 
-                                           'bg-fuchsia-600 text-white font-bold') 
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-                                    'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center font-semibold'
+                                        ? 'bg-slate-900 text-white font-bold shadow-xs'
+                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium',
+                                    'py-2 px-2 rounded-xl text-xs transition flex items-center justify-center'
                                 ]">
                                     <span>{{ st }}</span>
                                 </button>
