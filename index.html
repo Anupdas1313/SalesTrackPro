@@ -584,33 +584,32 @@
                     <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
                     <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-4 pb-12">
                         
-                        <!-- Filter, Search & Sort Toolbar -->
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5">
+                        <!-- Filter, Search & Sort Toolbar (Compact) -->
+                        <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-xs border border-slate-200/80 mb-3">
                             
                             <!-- Top Row: Search (Full width on mobile) & Filter Trigger -->
-                            <div class="flex items-center gap-2 md:gap-4 mb-0 md:mb-0">
+                            <div class="flex items-center gap-2 md:gap-3">
                                 <!-- Search Input -->
                                 <div class="flex-1">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider hidden md:block">Search</label>
                                     <div class="relative">
-                                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Name, ID, SM..." class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                     </div>
                                 </div>
                                 
                                 <!-- Mobile Filter Trigger -->
-                                <button @click="showMobileFilterDrawer = true" class="md:hidden shrink-0 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-bold text-xs flex items-center justify-center gap-2 h-[42px]">
+                                <button @click="showMobileFilterDrawer = true" class="md:hidden shrink-0 px-3.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]">
                                     <i class="fas fa-sliders text-[#97144D]"></i>
                                     <span>Filters</span>
                                 </button>
                             </div>
 
                             <!-- Desktop Filters (Hidden on Mobile) -->
-                            <div class="hidden md:flex flex-wrap gap-4 items-end mt-4">
+                            <div class="hidden md:flex flex-wrap gap-2.5 items-end mt-2.5">
                                 <!-- Status Filter -->
-                                <div class="w-[130px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Status</label>
-                                    <select v-model="roFilters.status" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                <div class="w-[115px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
+                                    <select v-model="roFilters.status" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="Lead">Lead</option>
                                         <option value="FI">FI</option>
@@ -625,9 +624,9 @@
                                 </div>
 
                                 <!-- Timeline Filter -->
-                                <div class="w-[120px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Timeline</label>
-                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                <div class="w-[110px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -638,15 +637,15 @@
                                 </div>
 
                                 <!-- Custom Date Input -->
-                                <div v-if="roFilters.timeline === 'custom'" class="w-[120px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Select Date</label>
-                                    <input v-model="roFilters.customDate" type="date" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                <div v-if="roFilters.timeline === 'custom'" class="w-[115px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
+                                    <input v-model="roFilters.customDate" type="date" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
-                                <div class="w-[90px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Category</label>
-                                    <select v-model="roFilters.nclUcl" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                <div class="w-[80px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
+                                    <select v-model="roFilters.nclUcl" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
@@ -654,9 +653,9 @@
                                 </div>
 
                                 <!-- Channel Filter -->
-                                <div class="w-[90px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Channel</label>
-                                    <select v-model="roFilters.sourcingChannel" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                <div class="w-[80px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
+                                    <select v-model="roFilters.sourcingChannel" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
@@ -664,20 +663,23 @@
                                 </div>
 
                                 <!-- Sort By -->
-                                <div class="w-[110px]">
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1.5 uppercase tracking-wider">Sort</label>
-                                    <select v-model="roFilters.sortBy" class="w-full px-2.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
+                                <div class="w-[100px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
+                                    <select v-model="roFilters.sortBy" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                        <option value="newest">Newest</option>
+                                        <option value="oldest">Oldest</option>
+                                        <option value="amount-desc">Amount &darr;</option>
+                                        <option value="amount-asc">Amount &uarr;</option>
+                                        <option value="name-asc">Name A-Z</option>
                                     </select>
                                 </div>
 
                                 <!-- Actions -->
-                                <div class="flex items-center gap-2">
-                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                <div class="flex items-center gap-1.5 ml-auto">
+                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
-                                    <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-2 px-3 py-2 bg-[#97144D] text-white rounded-xl hover:bg-[#801140] transition shadow-sm text-xs font-bold">
+                                    <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
                                         <i class="fas fa-file-excel"></i>
                                         <span>Export</span>
                                     </button>
@@ -685,46 +687,45 @@
                             </div>
                         </div>
 
-                        <!-- Data List Card (Minimal & Clean) -->
-                        <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs overflow-hidden">
-                            <!-- Desktop Table View -->
-                            <div class="hidden lg:block overflow-x-auto">
-                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
-                                    <thead class="bg-slate-100 z-10">
-                                        <tr class="text-slate-600 text-[11px] uppercase tracking-wider">
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">App ID</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Customer Name</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Category</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Channel</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-right">Loan Amount</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Status</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">SM Name</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">PPC</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">VCIP</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">MI</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap">Login Date</th>
-                                            <th class="border border-slate-300 px-3 py-2 font-bold whitespace-nowrap text-center">Actions</th>
+                        <!-- Data List Card (Minimal & Clean Spreadsheet) -->
+                        <div class="bg-white rounded-xl border border-slate-300 shadow-xs overflow-hidden">
+                            <!-- Desktop Table View (Full width, dense, fits screen) -->
+                            <div class="hidden md:block overflow-x-auto">
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white table-fixed">
+                                    <thead class="bg-slate-100">
+                                        <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
+                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[75px] text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 min-w-[110px]">Customer Name</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[50px] text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[60px] text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[85px] text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[75px] text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[85px] whitespace-nowrap">SM Name</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[65px] text-center whitespace-nowrap">PPC</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[55px] text-center whitespace-nowrap">VCIP</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[45px] text-center whitespace-nowrap">MI</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[75px] text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-1 py-1.5 w-[60px] text-center whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-xs">
+                                    <tbody class="text-[11px]">
                                         <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-[#97144D] uppercase">#{{ file.appId || 'No ID' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-900 uppercase">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 uppercase">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-[#97144D] uppercase">{{ file.sourcingChannel || 'DSA' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-right font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-center">
-                                                <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[10px]">{{ file.status }}</span>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-[#97144D] uppercase text-center text-[10px] truncate" :title="file.appId">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-900 uppercase truncate" :title="file.customerName">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-700 uppercase text-center text-[10px]">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px]">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.smName || defaultSmName || '-' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-500 uppercase">{{ file.ppc || '-' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-bold text-slate-800 uppercase">{{ file.vcip || '-' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5 font-semibold text-slate-500 uppercase">{{ file.mi || '-' }}</td>
-                                            <td class="border border-slate-300 px-3 py-1.5">
-                                                <div class="font-bold text-slate-800 text-[11px]">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
-                                                <div class="text-[9px] text-slate-400">{{ formatDate(file.createdAt) }}</div>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-slate-800 uppercase truncate text-[10px]" :title="file.smName || defaultSmName">{{ file.smName || defaultSmName || '-' }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-500 uppercase text-center truncate text-[10px]" :title="file.ppc">{{ file.ppc || '-' }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 font-bold text-slate-800 uppercase text-center truncate text-[10px]" :title="file.vcip">{{ file.vcip || '-' }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-500 uppercase text-center truncate text-[10px]" :title="file.mi">{{ file.mi || '-' }}</td>
+                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
+                                                {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-1.5 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap">
                                                 <div class="inline-flex items-center gap-1.5">
                                                     <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
                                                         <i class="fas fa-eye"></i>
@@ -739,18 +740,18 @@
                                             </td>
                                         </tr>
                                         <tr v-if="filteredMyFiles.length === 0">
-                                            <td colspan="12" class="border border-slate-300 p-8 text-center text-slate-400 bg-slate-50">
-                                                <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
-                                                <p class="font-bold text-sm text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
-                                                <p class="text-xs text-slate-400 mt-0.5">
+                                            <td colspan="12" class="border border-slate-300 p-6 text-center text-slate-400 bg-slate-50">
+                                                <i class="fas fa-calendar-day text-2xl mb-1.5 text-slate-300 block"></i>
+                                                <p class="font-bold text-xs text-slate-700">No customer files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
+                                                <p class="text-[11px] text-slate-400 mt-0.5">
                                                     {{ roFilters.timeline === 'today' && myFiles.length > 0 ? 'You have files logged on other dates.' : 'Try adjusting your search or filters.' }}
                                                 </p>
-                                                <div class="mt-4 flex items-center justify-center gap-2">
-                                                    <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-3.5 py-1.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
-                                                        <i class="fas fa-globe text-xs"></i>
+                                                <div class="mt-3 flex items-center justify-center gap-2">
+                                                    <button v-if="roFilters.timeline !== 'all' && myFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-3 py-1 bg-slate-900 text-white font-bold rounded-lg text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
+                                                        <i class="fas fa-globe text-[10px]"></i>
                                                         <span>View All Time ({{ myFiles.length }} files)</span>
                                                     </button>
-                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" @click="resetRoFilters" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">
                                                         Reset Filters
                                                     </button>
                                                 </div>
@@ -761,7 +762,7 @@
                             </div>
 
                             <!-- Mobile Card View (Minimal, Clean & Modern) -->
-                            <div class="lg:hidden flex flex-col gap-2.5 p-3 sm:p-4 bg-slate-50/50">
+                            <div class="md:hidden flex flex-col gap-2.5 p-3 sm:p-4 bg-slate-50/50">
                                 <div v-for="file in filteredMyFiles" :key="'mob-'+file.id" class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-2.5">
                                     <!-- Top: ID & Date -->
                                     <div class="flex justify-between items-start mb-1.5">
@@ -1422,7 +1423,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=20261008_04"></script>
+    <script type="module" src="js/app.js?v=20261008_05"></script>
 </body>
 </html>
 
