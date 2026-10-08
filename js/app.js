@@ -920,7 +920,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces,
+            isSuperAdmin, isSM, isRO, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
