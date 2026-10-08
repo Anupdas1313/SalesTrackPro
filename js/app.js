@@ -229,20 +229,45 @@ const app = createApp({
         });
 
         const filteredFiles = computed(() => {
-            const q = filters.value.search.trim().toLowerCase();
-            return allFiles.value.filter(file => {
+            const q = roFilters.value.search.trim().toLowerCase();
+            let list = allFiles.value.filter(file => {
                 const matchSearch = !q || 
                     (file.customerName && file.customerName.toLowerCase().includes(q)) || 
                     (file.appId && file.appId.toLowerCase().includes(q)) ||
                     (file.smName && file.smName.toLowerCase().includes(q)) ||
                     (file.roName && file.roName.toLowerCase().includes(q)) ||
-                    (file.status && file.status.toLowerCase().includes(q));
-                const matchStatus = filters.value.status 
-                    ? (filters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : file.status === filters.value.status) 
+                    (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
+                    (file.status && file.status.toLowerCase().includes(q)) ||
+                    (file.ppc && file.ppc.toLowerCase().includes(q));
+                const matchStatus = roFilters.value.status 
+                    ? (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : file.status === roFilters.value.status) 
                     : true;
+                const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
+                const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
                 const matchRo = filters.value.roId ? file.roId === filters.value.roId : true;
-                return matchSearch && matchStatus && matchRo;
-            }).sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+                const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
+                return matchSearch && matchStatus && matchCategory && matchSourcing && matchRo && matchTime;
+            });
+
+            // Sorting
+            return list.sort((a, b) => {
+                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt);
+                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt);
+                switch (roFilters.value.sortBy) {
+                    case 'newest':
+                        return dateB - dateA;
+                    case 'oldest':
+                        return dateA - dateB;
+                    case 'amount-desc':
+                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
+                    case 'amount-asc':
+                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
+                    case 'name-asc':
+                        return (a.customerName || '').localeCompare(b.customerName || '');
+                    default:
+                        return dateB - dateA;
+                }
+            });
         });
 
         // RO Pipeline & Overview Tracking (with filtering, timeline & sorting)
@@ -365,6 +390,7 @@ const app = createApp({
                 customDate: '',
                 sortBy: 'newest'
             };
+            filters.value.roId = '';
             showCustomDateInput.value = false;
         };
 

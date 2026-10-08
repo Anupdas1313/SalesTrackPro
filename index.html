@@ -415,8 +415,20 @@
                                         </tr>
                                         <tr v-if="filteredFiles.length === 0">
                                             <td colspan="10" class="border border-slate-300 p-8 text-center text-slate-500 bg-slate-50">
-                                                <i class="fas fa-search text-3xl mb-3 text-slate-300 block"></i>
-                                                No files match your filters.
+                                                <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
+                                                <p class="font-bold text-sm text-slate-700">No files found for {{ getTimelineLabel(roFilters.timeline) }}</p>
+                                                <p class="text-xs text-slate-400 mt-0.5">
+                                                    {{ roFilters.timeline === 'today' && allFiles.length > 0 ? 'There are files logged on other dates.' : 'Try adjusting your search, status, or filters.' }}
+                                                </p>
+                                                <div class="mt-4 flex items-center justify-center gap-2">
+                                                    <button v-if="roFilters.timeline !== 'all' && allFiles.length > 0" @click="roFilters.timeline = 'all'" class="px-3.5 py-1.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
+                                                        <i class="fas fa-globe text-xs"></i>
+                                                        <span>View All Time ({{ allFiles.length }} files)</span>
+                                                    </button>
+                                                    <button v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" @click="resetRoFilters(); filters.roId = ''" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                                        Reset Filters
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1427,7 +1439,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=20261008_02"></script>
+    <script type="module" src="js/app.js?v=20261008_03"></script>
 </body>
 </html>
 
