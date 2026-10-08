@@ -689,41 +689,41 @@
                         <div class="bg-white rounded-xl border border-slate-300 shadow-xs overflow-hidden">
                             <!-- Desktop Table View (Full width, dense, fits screen) -->
                             <div class="hidden md:block overflow-x-auto">
-                                <table class="w-full text-left border-collapse border border-slate-300 bg-white table-fixed">
-                                    <thead class="bg-slate-100">
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
+                                    <thead class="bg-slate-100 sticky top-0 z-10">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[75px] text-center whitespace-nowrap">App ID</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 min-w-[110px]">Customer Name</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[50px] text-center whitespace-nowrap">Category</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[60px] text-center whitespace-nowrap">Channel</th>
-                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[85px] text-right whitespace-nowrap">Loan Amount</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[75px] text-center whitespace-nowrap">Status</th>
-                                            <th class="border border-slate-300 px-1.5 py-1.5 w-[85px] whitespace-nowrap">SM Name</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[65px] text-center whitespace-nowrap">PPC</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[55px] text-center whitespace-nowrap">VCIP</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[45px] text-center whitespace-nowrap">MI</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[75px] text-center whitespace-nowrap">Login Date</th>
-                                            <th class="border border-slate-300 px-1 py-1.5 w-[60px] text-center whitespace-nowrap">Actions</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">SM Name</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">PPC</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">VCIP</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">MI</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-[11px]">
                                         <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-[#97144D] uppercase text-center text-[10px] truncate" :title="file.appId">#{{ file.appId || 'No ID' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-900 uppercase truncate" :title="file.customerName">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-700 uppercase text-center text-[10px]">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px]">{{ file.sourcingChannel || 'DSA' }}</td>
-                                            <td class="border border-slate-300 px-1.5 py-1 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-2 py-1 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-slate-800 uppercase truncate text-[10px]" :title="file.smName || defaultSmName">{{ file.smName || defaultSmName || '-' }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-500 uppercase text-center truncate text-[10px]" :title="file.ppc">{{ file.ppc || '-' }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 font-bold text-slate-800 uppercase text-center truncate text-[10px]" :title="file.vcip">{{ file.vcip || '-' }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 font-semibold text-slate-500 uppercase text-center truncate text-[10px]" :title="file.mi">{{ file.mi || '-' }}</td>
-                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
+                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.smName || defaultSmName || '-' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.ppc || '-' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-800 uppercase text-center whitespace-nowrap text-[10px]">{{ file.vcip || '-' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.mi || '-' }}</td>
+                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
                                                 {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
                                             </td>
-                                            <td class="border border-slate-300 px-1 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
                                                 <div class="inline-flex items-center gap-1.5">
                                                     <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
                                                         <i class="fas fa-eye"></i>
@@ -1421,7 +1421,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=20261008_06"></script>
+    <script type="module" src="js/app.js?v=20261008_07"></script>
 </body>
 </html>
 
