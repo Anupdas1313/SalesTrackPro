@@ -408,7 +408,14 @@ const app = createApp({
         };
 
         const loadSmData = async () => {
-            if (!currentUser.value?.tenantId) return;
+            if (!currentUser.value?.tenantId) {
+                // Legacy SM data load (accounts without tenantId)
+                const files = await db.getAllLoanFiles();
+                allFiles.value = files.filter(f => !f.tenantId);
+                const allU = await db.getAllUsers();
+                roUsers.value = allU.filter(u => u.role === 'ro' && !u.tenantId);
+                return;
+            }
             allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
             roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
         };
@@ -539,6 +546,11 @@ const app = createApp({
             localStorage.removeItem('axis_user');
             currentUser.value = null;
             loginForm.value = { username: '', password: '' };
+            allWorkspaces.value = [];
+            roUsers.value = [];
+            allFiles.value = [];
+            myFiles.value = [];
+            currentTab.value = 'dashboard';
         };
 
         // Admin/SM: Users & Workspaces
