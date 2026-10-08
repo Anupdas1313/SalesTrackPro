@@ -484,8 +484,8 @@ const app = createApp({
             loginError.value = '';
             try {
                 // Ensure super_admin exists (for testing/first time)
-                const count = await db.getUsersCount();
-                if (count === 0) {
+                const existingOwner = await db.getUserByUsername('owner');
+                if (!existingOwner) {
                     await db.addUser({
                         username: 'owner',
                         password: 'password123',
