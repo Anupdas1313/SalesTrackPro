@@ -116,46 +116,44 @@
         <!-- Main Application (Logged In) -->
         <div v-else class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
             
-            <!-- Sidebar (Desktop Only) -->
-            <aside class="hidden md:flex w-64 bg-white text-slate-600 flex-col shadow-[1px_0_10px_rgba(0,0,0,0.03)] border-r border-slate-200 z-20 shrink-0 relative">
-                <div class="p-6 border-b border-slate-100 flex items-center justify-center">
-                    <div class="flex items-center text-slate-900">
-                        <i class="fas fa-layer-group text-[#97144D] text-2xl mr-3"></i>
-                        <div>
-                            <h2 class="text-xl font-extrabold tracking-tight leading-tight uppercase">{{ currentUser.role }} Portal</h2>
-                        </div>
+            <!-- Sidebar (Desktop Only - Compact & Space-Saving) -->
+            <aside class="hidden md:flex w-48 lg:w-52 bg-white text-slate-600 flex-col shadow-[1px_0_10px_rgba(0,0,0,0.03)] border-r border-slate-200 z-20 shrink-0 relative">
+                <div class="p-3.5 border-b border-slate-100 flex items-center justify-center">
+                    <div class="flex items-center text-slate-900 truncate">
+                        <i class="fas fa-layer-group text-[#97144D] text-lg mr-2 shrink-0"></i>
+                        <h2 class="text-xs lg:text-sm font-extrabold tracking-tight leading-tight uppercase truncate">{{ currentUser.role }} Portal</h2>
                     </div>
                 </div>
                 
                 <div class="flex-col flex flex-1">
-                    <div class="p-4 text-xs bg-slate-50/70 border-b border-slate-100 text-center font-medium">
-                        Welcome, <strong class="text-[#97144D] text-sm">{{ currentUser.name }}</strong>
+                    <div class="px-3 py-2 text-[10px] bg-slate-50/70 border-b border-slate-100 text-center font-medium truncate">
+                        Welcome, <strong class="text-[#97144D] font-bold">{{ currentUser.name }}</strong>
                     </div>
 
-                    <nav class="flex flex-col py-4 px-3 gap-1.5">
+                    <nav class="flex flex-col py-3 px-2 gap-1">
                         <!-- Admin Navigation -->
                         <template v-if="isAdmin">
-                            <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-chart-pie w-6 text-lg"></i> Global Dashboard
+                            <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-chart-pie w-5 text-sm"></i> Dashboard
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-layer-group w-6 text-lg"></i> Live File Tracking
+                            <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-users-cog w-6 text-lg"></i> User Management
+                            <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-users-cog w-5 text-sm"></i> Users
                             </a>
                         </template>
 
                         <!-- RO Navigation -->
                         <template v-else>
-                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-sm shadow-[#97144D]/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-chart-pie w-6 text-lg"></i> Overview
+                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-chart-pie w-5 text-sm"></i> Overview
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-sm shadow-[#97144D]/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-layer-group w-6 text-lg"></i> File Tracking
+                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-sm shadow-[#97144D]/20' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium']">
-                                <i class="fas fa-plus-circle w-6 text-lg"></i> Add New File
+                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-plus-circle w-5 text-sm"></i> Add New File
                             </a>
                         </template>
                     </nav>
@@ -194,7 +192,7 @@
                 </header>
 
                 <!-- Scrollable Content -->
-                <div class="bg-slate-50 flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
+                <div class="bg-slate-50 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-5 lg:p-6">
                     
                     <!-- ADMIN: DASHBOARD -->
                     <div v-if="currentTab === 'dashboard' && isAdmin">
@@ -1423,7 +1421,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=20261008_05"></script>
+    <script type="module" src="js/app.js?v=20261008_06"></script>
 </body>
 </html>
 
