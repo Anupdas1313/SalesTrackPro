@@ -689,7 +689,7 @@ const app = createApp({
             
             await db.updateLoanFile(editFileForm.value.id, updatedData);
             showEditFileModal.value = false;
-            if (isAdmin.value) {
+            if (isSM.value) {
                 await loadData();
             } else {
                 await loadRoData();
@@ -699,7 +699,7 @@ const app = createApp({
         const deleteFile = async (file) => {
             if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
                 await db.deleteLoanFile(file.id);
-                if (isAdmin.value) {
+                if (isSM.value) {
                     await loadData();
                 } else {
                     await loadRoData();
@@ -801,7 +801,7 @@ const app = createApp({
             });
             
             showUpdateStatusModal.value = false;
-            if (isAdmin.value) {
+            if (isSM.value) {
                 await loadData();
             } else {
                 await loadRoData();

@@ -1255,7 +1255,7 @@
 
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
-                    <template v-if="isAdmin">
+                    <template v-if="isSM">
                         <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Dashboard</span>
@@ -1310,7 +1310,7 @@
                                 <div class="flex-1 overflow-y-auto p-5 space-y-7 custom-scrollbar pb-24">
                                     
                                     <!-- RO Filter (Admin only) -->
-                                    <div v-if="isAdmin">
+                                    <div v-if="isSM">
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Relationship Officer (RO)</label>
                                         <select v-model="filters.roId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] transition">
                                             <option value="">All ROs</option>
