@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -133,7 +133,7 @@
         <div v-else class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
             
             <!-- Sidebar (Desktop Only - Compact & Space-Saving) -->
-            <aside class="hidden md:flex w-48 lg:w-52 bg-white text-slate-600 flex-col shadow-[1px_0_10px_rgba(0,0,0,0.03)] border-r border-slate-200 z-20 shrink-0 relative">
+            <aside class="hidden md:flex w-40 lg:w-48 bg-white text-slate-600 flex-col shadow-[1px_0_10px_rgba(0,0,0,0.03)] border-r border-slate-200 z-20 shrink-0 relative">
                 <div class="p-3.5 border-b border-slate-100 flex items-center justify-center">
                     <div class="flex items-center text-slate-900 truncate">
                         <i class="fas fa-layer-group text-[#97144D] text-lg mr-2 shrink-0"></i>
@@ -142,40 +142,40 @@
                 </div>
                 
                 <div class="flex-col flex flex-1">
-                    <div class="px-3 py-2 text-[10px] bg-slate-50/70 border-b border-slate-100 text-center font-medium truncate">
+                    <div class="px-1.5 py-1 text-[10px] bg-slate-50/70 border-b border-slate-100 text-center font-medium truncate">
                         Welcome, <strong class="text-[#97144D] font-bold">{{ currentUser.name }}</strong>
                     </div>
 
                     <nav class="flex flex-col py-3 px-2 gap-1">
                         <!-- Super Admin Navigation -->
                         <template v-if="isSuperAdmin">
-                            <a href="#" @click.prevent="currentTab = 'super-admin-dashboard'" :class="[currentTab === 'super-admin-dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'super-admin-dashboard'" :class="[currentTab === 'super-admin-dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-server w-5 text-sm"></i> Platform Dashboard
                             </a>
                         </template>
                         
                         <!-- SM Navigation -->
                         <template v-else-if="isSM">
-                            <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-chart-pie w-5 text-sm"></i> Dashboard
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-users-cog w-5 text-sm"></i> Team Users
                             </a>
                         </template>
 
                         <!-- RO Navigation -->
                         <template v-else>
-                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-chart-pie w-5 text-sm"></i> Overview
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-plus-circle w-5 text-sm"></i> Add New File
                             </a>
                         </template>
@@ -272,7 +272,7 @@
                                                 <div class="text-[11px] text-slate-400">ID: {{ workspace.id }}</div>
                                             </td>
                                             <td class="px-5 py-4">
-                                                <span :class="workspace.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'" class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide">
+                                                <span :class="workspace.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'" class="px-1.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide">
                                                     {{ workspace.status }}
                                                 </span>
                                             </td>
@@ -337,22 +337,22 @@
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-300 px-3 py-2">Customer Name</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-right">Loan Amount</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-center">Status</th>
-                                            <th class="border border-slate-300 px-3 py-2">RO Name</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-center">Date</th>
+                                            <th class="border border-slate-300 px-1.5 py-1">Customer Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-right">Loan Amount</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1">RO Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center">Date</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs">
                                         <tr v-for="file in recentFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900 uppercase">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-right font-black text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-center">
+                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-slate-900 uppercase">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-right font-black text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-center">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-800 uppercase">{{ file.roName }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-slate-500 text-center font-medium">{{ formatDate(file.createdAt) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-slate-800 uppercase">{{ file.roName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-slate-500 text-center font-medium">{{ formatDate(file.createdAt) }}</td>
                                         </tr>
                                         <tr v-if="recentFiles.length === 0">
                                             <td colspan="5" class="border border-slate-300 p-8 text-center text-slate-400">No recent activity found.</td>
@@ -415,7 +415,7 @@
                                 <!-- RO Filter (Admin Only) -->
                                 <div class="w-[120px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">RO Filter</label>
-                                    <select v-model="filters.roId" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="filters.roId" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All ROs</option>
                                         <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}</option>
                                     </select>
@@ -424,7 +424,7 @@
                                 <!-- Status Filter -->
                                 <div class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
-                                    <select v-model="roFilters.status" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="Lead">Lead</option>
                                         <option value="FI">FI</option>
@@ -441,7 +441,7 @@
                                 <!-- Timeline Filter -->
                                 <div class="w-[110px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
-                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -454,13 +454,13 @@
                                 <!-- Custom Date Input -->
                                 <div v-if="roFilters.timeline === 'custom'" class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
-                                    <input v-model="roFilters.customDate" type="date" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
-                                    <select v-model="roFilters.nclUcl" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
@@ -470,7 +470,7 @@
                                 <!-- Channel Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
-                                    <select v-model="roFilters.sourcingChannel" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
@@ -480,7 +480,7 @@
                                 <!-- Sort By -->
                                 <div class="w-[100px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
-                                    <select v-model="roFilters.sortBy" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="newest">Newest</option>
                                         <option value="oldest">Oldest</option>
                                         <option value="amount-desc">Amount &darr;</option>
@@ -491,7 +491,7 @@
 
                                 <!-- Actions -->
                                 <div class="flex items-center gap-1.5 ml-auto">
-                                    <button @click="resetRoFilters(); filters.roId = ''" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" class="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                    <button @click="resetRoFilters(); filters.roId = ''" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <button @click="exportToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
@@ -508,38 +508,38 @@
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100 sticky top-0 z-10">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">App ID</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">Customer Name</th>
-                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Category</th>
-                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Channel</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-right whitespace-nowrap">Loan Amount</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Status</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">RO Name</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">SM Name</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Login Date</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Last Updated</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Action</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">RO Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">SM Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Last Updated</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-[11px]">
                                         <tr v-for="file in filteredFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.roName }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-semibold text-slate-500 uppercase whitespace-nowrap text-[10px]">{{ file.smName || '-' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.roName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-semibold text-slate-500 uppercase whitespace-nowrap text-[10px]">{{ file.smName || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
                                                 {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
                                             </td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap font-medium text-slate-600 text-[10px]">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap font-medium text-slate-600 text-[10px]">
                                                 {{ formatDate(file.updatedAt || file.createdAt) }}
                                             </td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <div class="inline-flex items-center gap-1.5">
                                                     <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
                                                         <i class="fas fa-eye"></i>
@@ -642,7 +642,7 @@
                                 </div>
                             </div>
 
-                            <div class="bg-slate-50 px-3 py-2 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center rounded-b-xl">
+                            <div class="bg-slate-50 px-1.5 py-1 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center rounded-b-xl">
                                 <span class="font-semibold text-[11px]">Showing {{ filteredFiles.length }} records</span>
                             </div>
                         </div>
@@ -666,24 +666,24 @@
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100 sticky top-0 z-10">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-300 px-3 py-2">Name</th>
-                                            <th class="border border-slate-300 px-3 py-2">Username</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-center">Status</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-center">Date Added</th>
-                                            <th class="border border-slate-300 px-3 py-2 text-center">Actions</th>
+                                            <th class="border border-slate-300 px-1.5 py-1">Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1">Username</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center">Date Added</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs">
                                         <tr v-for="user in roUsers" :key="user.id" class="border-b hover:bg-slate-50 transition">
-                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900">{{ user.name }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-slate-600 font-medium">{{ user.email }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-center">
+                                            <td class="border border-slate-300 px-1.5 py-1 font-bold text-slate-900">{{ user.name }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-slate-600 font-medium">{{ user.email }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-center">
                                                 <span v-if="user.status === 'active'" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md text-[10px] font-bold">Active</span>
                                                 <span v-else class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md text-[10px] font-bold">Suspended</span>
                                             </td>
-                                            <td class="border border-slate-300 px-3 py-2 text-slate-500 text-center font-medium">{{ formatDate(user.createdAt) }}</td>
-                                            <td class="border border-slate-300 px-3 py-2 text-center">
-                                                <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-50' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition">
+                                            <td class="border border-slate-300 px-1.5 py-1 text-slate-500 text-center font-medium">{{ formatDate(user.createdAt) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 text-center">
+                                                <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-50' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'" class="px-1.5 py-1 rounded-lg text-xs font-bold border transition">
                                                     {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
                                                 </button>
                                             </td>
@@ -854,7 +854,7 @@
                                 <!-- Status Filter -->
                                 <div class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
-                                    <select v-model="roFilters.status" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="Lead">Lead</option>
                                         <option value="FI">FI</option>
@@ -871,7 +871,7 @@
                                 <!-- Timeline Filter -->
                                 <div class="w-[110px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
-                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -884,13 +884,13 @@
                                 <!-- Custom Date Input -->
                                 <div v-if="roFilters.timeline === 'custom'" class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
-                                    <input v-model="roFilters.customDate" type="date" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
-                                    <select v-model="roFilters.nclUcl" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
@@ -900,7 +900,7 @@
                                 <!-- Channel Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
-                                    <select v-model="roFilters.sourcingChannel" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
@@ -910,7 +910,7 @@
                                 <!-- Sort By -->
                                 <div class="w-[100px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
-                                    <select v-model="roFilters.sortBy" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="newest">Newest</option>
                                         <option value="oldest">Oldest</option>
                                         <option value="amount-desc">Amount &darr;</option>
@@ -921,7 +921,7 @@
 
                                 <!-- Actions -->
                                 <div class="flex items-center gap-1.5 ml-auto">
-                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                    <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
@@ -939,38 +939,38 @@
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100 sticky top-0 z-10">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">App ID</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">Customer Name</th>
-                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Category</th>
-                                            <th class="border border-slate-300 px-2.5 py-1.5 text-center whitespace-nowrap">Channel</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-right whitespace-nowrap">Loan Amount</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Status</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 whitespace-nowrap">SM Name</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">PPC</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">VCIP</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">MI</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Login Date</th>
-                                            <th class="border border-slate-300 px-2 py-1.5 text-center whitespace-nowrap">Actions</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">SM Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">PPC</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">VCIP</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">MI</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-[11px]">
                                         <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
-                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-2.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.smName || defaultSmName || '-' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.ppc || '-' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-bold text-slate-800 uppercase text-center whitespace-nowrap text-[10px]">{{ file.vcip || '-' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.mi || '-' }}</td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.smName || defaultSmName || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.ppc || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800 uppercase text-center whitespace-nowrap text-[10px]">{{ file.vcip || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-semibold text-slate-500 uppercase text-center whitespace-nowrap text-[10px]">{{ file.mi || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
                                                 {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
                                             </td>
-                                            <td class="border border-slate-300 px-2 py-1 text-center whitespace-nowrap">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <div class="inline-flex items-center gap-1.5">
                                                     <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
                                                         <i class="fas fa-eye"></i>
@@ -1027,11 +1027,11 @@
 
                                     <!-- Tags Row -->
                                     <div class="flex flex-wrap gap-2 mb-4">
-                                        <span class="px-2 py-1 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase">{{ file.nclUcl || 'NCL' }}</span>
-                                        <span class="px-2 py-1 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                        <span class="px-1.5 py-0.5 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase">{{ file.nclUcl || 'NCL' }}</span>
+                                        <span class="px-1.5 py-0.5 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
                                         
-                                        <span v-if="file.ppc" class="px-2 py-1 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase flex items-center gap-1"><i class="fas fa-file-contract text-[9px] text-slate-400"></i> PPC: {{ file.ppc }}</span>
-                                        <span v-if="file.vcip" class="px-2 py-1 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase flex items-center gap-1"><i class="fas fa-video text-[9px] text-slate-400"></i> VCIP: {{ file.vcip }}</span>
+                                        <span v-if="file.ppc" class="px-1.5 py-0.5 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase flex items-center gap-1"><i class="fas fa-file-contract text-[9px] text-slate-400"></i> PPC: {{ file.ppc }}</span>
+                                        <span v-if="file.vcip" class="px-1.5 py-0.5 bg-slate-50 text-slate-600 rounded-md text-[10px] font-bold border border-slate-100 uppercase flex items-center gap-1"><i class="fas fa-video text-[9px] text-slate-400"></i> VCIP: {{ file.vcip }}</span>
                                     </div>
 
                                     <!-- Bottom: SM & Actions -->
@@ -1095,7 +1095,7 @@
                                         </label>
                                         <div class="relative">
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">#</span>
-                                            <input type="text" v-model="newFileForm.appId" @input="newFileForm.appId = $event.target.value.toUpperCase()" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ALA00000" autocapitalize="characters" required>
+                                            <input type="text" v-model="newFileForm.appId" @input="newFileForm.appId = $event.target.value.toUpperCase()" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="Enter App ID" autocapitalize="characters" required>
                                         </div>
                                     </div>
                                     <div>
@@ -1107,7 +1107,7 @@
                                 </div>
 
                                 <!-- Category (NCL / UCL) & Sourcing Channel (DSA / Branch) -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <div class="grid grid-cols-1 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">
                                             Category <span class="text-rose-500">*</span>
@@ -1321,7 +1321,7 @@
                                                     :key="t.val"
                                                     @click="roFilters.timeline = t.val; if(t.val !== 'custom') roFilters.customDate = '';"
                                                     :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
-                                                    class="px-3 py-2 rounded-xl text-xs border transition-all duration-200">
+                                                    class="px-1.5 py-1 rounded-xl text-xs border transition-all duration-200">
                                                 {{ t.label }}
                                             </button>
                                         </div>
@@ -1339,7 +1339,7 @@
                                                     :key="cat.val"
                                                     @click="roFilters.nclUcl = cat.val"
                                                     :class="roFilters.nclUcl === cat.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
-                                                    class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
+                                                    class="px-1.5 py-1 rounded-xl text-xs border text-center transition-all duration-200">
                                                 {{ cat.label }}
                                             </button>
                                         </div>
@@ -1353,7 +1353,7 @@
                                                     :key="ch.val"
                                                     @click="roFilters.sourcingChannel = ch.val"
                                                     :class="roFilters.sourcingChannel === ch.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
-                                                    class="px-3 py-2 rounded-xl text-xs border text-center transition-all duration-200">
+                                                    class="px-1.5 py-1 rounded-xl text-xs border text-center transition-all duration-200">
                                                 {{ ch.label }}
                                             </button>
                                         </div>
@@ -1363,10 +1363,10 @@
                                     <div>
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Sort Order</label>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                            <button @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
                                                 <i class="fas fa-arrow-down text-[10px]"></i> Newest
                                             </button>
-                                            <button @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-3 py-2.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                            <button @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
                                                 <i class="fas fa-arrow-up text-[10px]"></i> Oldest
                                             </button>
                                         </div>
@@ -1416,7 +1416,7 @@
                         </div>
 
                         <!-- Category (NCL / UCL) & Sourcing Channel (DSA / Branch) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
                                 <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
@@ -1438,10 +1438,6 @@
                             <div>
                                 <div class="flex items-center justify-between mb-1">
                                     <label class="block text-xs font-semibold text-slate-700">Login Date <span class="text-rose-500">*</span></label>
-                                    <div class="flex items-center gap-1">
-                                        <button type="button" @click="editFileForm.loginDate = getTodayDateStr()" :class="editFileForm.loginDate === getTodayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">Today</button>
-                                        <button type="button" @click="editFileForm.loginDate = getYesterdayDateStr()" :class="editFileForm.loginDate === getYesterdayDateStr() ? 'bg-[#97144D] text-white font-bold' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 font-medium'" class="px-2 py-0.5 rounded-md text-[10px] transition">Yesterday</button>
-                                    </div>
                                 </div>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
