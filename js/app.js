@@ -483,21 +483,22 @@ const app = createApp({
         const login = async () => {
             loginError.value = '';
             try {
+                let inputUsername = loginForm.value.username.trim().toLowerCase();
+                let user = await db.getUserByUsername(inputUsername);
+
                 // Ensure super_admin exists (for testing/first time)
-                const existingOwner = await db.getUserByUsername('owner');
-                if (!existingOwner) {
-                    await db.addUser({
+                if (inputUsername === 'owner' && !user) {
+                    const ownerData = {
                         username: 'owner',
                         password: 'password123',
                         role: 'super_admin',
                         name: 'Platform Owner',
                         status: 'active',
                         createdAt: new Date().toISOString()
-                    });
+                    };
+                    await db.addUser(ownerData);
+                    user = ownerData; // use the data directly to bypass query delay
                 }
-
-                const inputUsername = loginForm.value.username.trim().toLowerCase();
-                const user = await db.getUserByUsername(inputUsername);
                 
                 if (user && user.password === loginForm.value.password.trim()) {
                     if (user.status === 'suspended') {
