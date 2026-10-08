@@ -9,7 +9,7 @@ const app = createApp({
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
         const showRegisterMode = ref(false);
-        const registerForm = ref({ username: '', password: '', name: '', workspaceName: '' });
+        const registerForm = ref({ name: '', workspaceName: '' });
         const registerError = ref('');
         const currentTab = ref('');
         const mobileMenuOpen = ref(false);
@@ -22,7 +22,7 @@ const app = createApp({
 
         // Modals & Forms
         const showAddRoModal = ref(false);
-        const newRoForm = ref({ name: '', username: '', password: '' });
+        const newRoForm = ref({ name: '', email: '' });
         const addRoError = ref('');
 
         // Date Helpers
@@ -452,13 +452,17 @@ const app = createApp({
         const registerSM = async () => {
             registerError.value = '';
             try {
-                if (!registerForm.value.username || !registerForm.value.password || !registerForm.value.workspaceName) {
-                    registerError.value = 'Please fill all required fields.';
+                if (!registerForm.value.workspaceName) {
+                    registerError.value = 'Please provide a workspace name.';
                     return;
                 }
-                const existing = await db.getUserByUsername(registerForm.value.username);
+
+                const googleUser = await db.loginWithGoogle();
+                const email = googleUser.email.toLowerCase();
+
+                const existing = await db.getUserByEmail(email);
                 if (existing) {
-                    registerError.value = 'Username already exists.';
+                    registerError.value = 'This Google account is already registered. Please log in normally.';
                     return;
                 }
                 
@@ -469,45 +473,44 @@ const app = createApp({
                 });
 
                 await db.addUser({
-                    username: registerForm.value.username.trim().toLowerCase(),
-                    password: registerForm.value.password.trim(),
+                    email: email,
                     role: 'sm',
-                    name: registerForm.value.name.trim(),
+                    name: registerForm.value.name.trim() || googleUser.displayName || 'Sales Manager',
                     tenantId: workspaceId,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 });
 
-                alert('Account created successfully! You can now log in.');
+                alert('Workspace created successfully! You can now log in.');
                 showRegisterMode.value = false;
-                registerForm.value = { username: '', password: '', name: '', workspaceName: '' };
+                registerForm.value = { name: '', workspaceName: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
-                registerError.value = 'Error creating account.';
+                registerError.value = error.message || 'Error creating account.';
             }
         };
 
         const login = async () => {
             loginError.value = '';
             try {
-                let inputUsername = loginForm.value.username.trim().toLowerCase();
-                let user = await db.getUserByUsername(inputUsername);
+                const googleUser = await db.loginWithGoogle();
+                const email = googleUser.email.toLowerCase();
+                let user = await db.getUserByEmail(email);
 
-                // Ensure super_admin exists (for testing/first time)
-                if (inputUsername === 'superadmin' && !user) {
+                // Ensure super_admin exists (hardcoded mapping)
+                if (email === 'anupdas8354@gmail.com' && !user) {
                     const ownerData = {
-                        username: 'superadmin',
-                        password: 'password123',
+                        email: email,
                         role: 'super_admin',
-                        name: 'Platform Owner',
+                        name: googleUser.displayName || 'Platform Owner',
                         status: 'active',
                         createdAt: new Date().toISOString()
                     };
                     await db.addUser(ownerData);
-                    user = ownerData; // use the data directly to bypass query delay
+                    user = await db.getUserByEmail(email);
                 }
                 
-                if (user && user.password === loginForm.value.password.trim()) {
+                if (user) {
                     if (user.status === 'suspended') {
                         loginError.value = 'Account is suspended. Contact Administrator.';
                         return;
@@ -523,7 +526,7 @@ const app = createApp({
                     }
 
                     // Store user session
-                    const sessionUser = { id: user.id, username: user.username, role: user.role, name: user.name, tenantId: user.tenantId };
+                    const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId };
                     localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                     currentUser.value = sessionUser;
                     initUserSm();
@@ -534,11 +537,11 @@ const app = createApp({
 
                     await loadData();
                 } else {
-                    loginError.value = 'Invalid username or password';
+                    loginError.value = 'Account not found. Ask your manager to invite you.';
                 }
             } catch (error) {
                 console.error("Login Error:", error);
-                loginError.value = 'An error occurred during login. Check console.';
+                loginError.value = error.message;
             }
         };
 
@@ -556,15 +559,20 @@ const app = createApp({
         // Admin/SM: Users & Workspaces
         const saveNewRo = async () => {
             addRoError.value = '';
-            const existing = await db.getUserByUsername(newRoForm.value.username);
+            const email = (newRoForm.value.email || '').trim().toLowerCase();
+            if (!email) {
+                addRoError.value = 'Please provide a valid Gmail address';
+                return;
+            }
+
+            const existing = await db.getUserByEmail(email);
             if (existing) {
-                addRoError.value = 'Username already exists';
+                addRoError.value = 'Email already exists. They are already in the system.';
                 return;
             }
             
             await db.addUser({
-                username: (newRoForm.value.username || '').trim(),
-                password: newRoForm.value.password,
+                email: email,
                 role: 'ro',
                 name: (newRoForm.value.name || '').trim().toUpperCase(),
                 tenantId: currentUser.value.tenantId,
@@ -573,7 +581,7 @@ const app = createApp({
             });
             
             showAddRoModal.value = false;
-            newRoForm.value = { name: '', username: '', password: '' };
+            newRoForm.value = { name: '', email: '' };
             await loadData();
         };
 

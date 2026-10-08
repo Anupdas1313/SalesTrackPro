@@ -54,8 +54,16 @@ export const getAllUsers = async () => {
     return mapSnapshot(snapshot);
 };
 
-export const getUserByUsername = async (username) => {
-    const q = query(usersCol, where('username', '==', username), limit(1));
+import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { auth, googleProvider } from "./firebase-config.js";
+
+export const loginWithGoogle = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+};
+
+export const getUserByEmail = async (email) => {
+    const q = query(usersCol, where('email', '==', email.toLowerCase()), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
