@@ -1,6 +1,7 @@
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
+const workspacesCol = collection(db, 'workspaces');
 const usersCol = collection(db, 'users');
 const filesCol = collection(db, 'loanFiles');
 
@@ -9,19 +10,32 @@ const mapSnapshot = (snapshot) => {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
-export const getAllLoanFiles = async () => {
-    const snapshot = await getDocs(filesCol);
+// --- Workspaces ---
+export const addWorkspace = async (workspaceData) => {
+    const docRef = await addDoc(workspacesCol, workspaceData);
+    return docRef.id;
+};
+
+export const getWorkspace = async (id) => {
+    const docRef = doc(db, 'workspaces', id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return null;
+    return { id: docSnap.id, ...docSnap.data() };
+};
+
+export const getAllWorkspaces = async () => {
+    const snapshot = await getDocs(workspacesCol);
     return mapSnapshot(snapshot);
 };
 
-export const getROUsers = async () => {
-    const q = query(usersCol, where('role', '==', 'ro'));
-    const snapshot = await getDocs(q);
-    return mapSnapshot(snapshot);
+export const updateWorkspace = async (id, updateData) => {
+    const docRef = doc(db, 'workspaces', id);
+    await updateDoc(docRef, updateData);
 };
 
-export const getLoanFilesByRO = async (roId) => {
-    const q = query(filesCol, where('roId', '==', roId));
+// --- Users ---
+export const getROUsersByTenant = async (tenantId) => {
+    const q = query(usersCol, where('role', '==', 'ro'), where('tenantId', '==', tenantId));
     const snapshot = await getDocs(q);
     return mapSnapshot(snapshot);
 };
@@ -50,6 +64,25 @@ export const getUserByUsername = async (username) => {
 export const updateUser = async (id, updateData) => {
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, updateData);
+};
+
+// --- Loan Files ---
+// (Used by Super Admin)
+export const getAllLoanFiles = async () => {
+    const snapshot = await getDocs(filesCol);
+    return mapSnapshot(snapshot);
+};
+
+export const getLoanFilesByTenant = async (tenantId) => {
+    const q = query(filesCol, where('tenantId', '==', tenantId));
+    const snapshot = await getDocs(q);
+    return mapSnapshot(snapshot);
+};
+
+export const getLoanFilesByRO = async (roId) => {
+    const q = query(filesCol, where('roId', '==', roId));
+    const snapshot = await getDocs(q);
+    return mapSnapshot(snapshot);
 };
 
 export const addLoanFile = async (fileData) => {

@@ -68,7 +68,7 @@
                     <p class="text-xs text-slate-500 font-medium mt-1">Daily Login Details & File Tracking Portal</p>
                 </div>
                 
-                <form @submit.prevent="login" class="space-y-4">
+                <form v-if="!showRegisterMode" @submit.prevent="login" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
                         <div class="relative">
@@ -103,10 +103,45 @@
 
                     <!-- Quick helper -->
                     <div class="pt-4 border-t border-slate-100 text-center">
+                        <button type="button" @click="showRegisterMode = true" class="text-xs font-semibold text-[#97144D] hover:text-[#7A0E3C] transition mb-3">
+                            Sales Manager? Create a Workspace
+                        </button>
                         <p class="text-xs text-slate-500 font-medium mb-2">Default Admin Credentials</p>
                         <button type="button" @click="loginForm.username = 'admin'; loginForm.password = 'password123'" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition">
                             <i class="fas fa-key text-[10px] text-slate-500"></i>
                             <span>admin / password123</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Registration Form -->
+                <form v-if="showRegisterMode" @submit.prevent="registerSM" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Workspace Name</label>
+                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" required placeholder="e.g. HDFC Team Alpha">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Your Full Name</label>
+                        <input v-model="registerForm.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" required placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
+                        <input v-model="registerForm.username" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" required placeholder="john.doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                        <input v-model="registerForm.password" type="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" required placeholder="••••••••">
+                    </div>
+                    <div v-if="registerError" class="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-200 flex items-center">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                        <span>{{ registerError }}</span>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#97144D] to-[#BD1E59] hover:from-[#851244] hover:to-[#A71A4F] text-white font-bold rounded-xl shadow-lg shadow-[#97144D]/30 transition transform active:scale-[0.98] text-sm">
+                        Create Workspace
+                    </button>
+                    <div class="text-center mt-4 border-t border-slate-100 pt-4">
+                        <button type="button" @click="showRegisterMode = false" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
+                            Back to Sign In
                         </button>
                     </div>
                 </form>
@@ -131,8 +166,15 @@
                     </div>
 
                     <nav class="flex flex-col py-3 px-2 gap-1">
-                        <!-- Admin Navigation -->
-                        <template v-if="isAdmin">
+                        <!-- Super Admin Navigation -->
+                        <template v-if="isSuperAdmin">
+                            <a href="#" @click.prevent="currentTab = 'super-admin-dashboard'" :class="[currentTab === 'super-admin-dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-server w-5 text-sm"></i> Platform Dashboard
+                            </a>
+                        </template>
+                        
+                        <!-- SM Navigation -->
+                        <template v-else-if="isSM">
                             <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-chart-pie w-5 text-sm"></i> Dashboard
                             </a>
@@ -140,7 +182,7 @@
                                 <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
                             <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-3 py-2 rounded-lg transition-all duration-200 font-semibold text-xs']">
-                                <i class="fas fa-users-cog w-5 text-sm"></i> Users
+                                <i class="fas fa-users-cog w-5 text-sm"></i> Team Users
                             </a>
                         </template>
 
@@ -194,9 +236,85 @@
                 <!-- Scrollable Content -->
                 <div class="bg-slate-50 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-5 lg:p-6">
                     
-                    <!-- ADMIN: DASHBOARD -->
-                    <!-- ADMIN: DASHBOARD -->
-                    <div v-if="currentTab === 'dashboard' && isAdmin" class="space-y-4">
+                    <!-- SUPER ADMIN: DASHBOARD -->
+                    <div v-if="currentTab === 'super-admin-dashboard' && isSuperAdmin" class="space-y-4">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Platform Overview</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Workspaces</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ allWorkspaces.length }}</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ roUsers.length }}</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Files Logged</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ allFiles.length }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Workspaces List -->
+                        <div class="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden mt-6">
+                            <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                                <h3 class="text-sm font-bold text-slate-800">Managed Workspaces (SMs)</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500">
+                                        <tr>
+                                            <th class="px-5 py-3 border-b border-slate-200">Workspace Name</th>
+                                            <th class="px-5 py-3 border-b border-slate-200">Status</th>
+                                            <th class="px-5 py-3 border-b border-slate-200">Created At</th>
+                                            <th class="px-5 py-3 border-b border-slate-200 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 font-medium">
+                                        <tr v-for="workspace in allWorkspaces" :key="workspace.id" class="hover:bg-slate-50 transition">
+                                            <td class="px-5 py-4">
+                                                <div class="text-slate-900 font-bold">{{ workspace.name }}</div>
+                                                <div class="text-[11px] text-slate-400">ID: {{ workspace.id }}</div>
+                                            </td>
+                                            <td class="px-5 py-4">
+                                                <span :class="workspace.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'" class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide">
+                                                    {{ workspace.status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-5 py-4 text-xs text-slate-500">
+                                                {{ formatDate(workspace.createdAt) }}
+                                            </td>
+                                            <td class="px-5 py-4 text-right">
+                                                <button @click="toggleWorkspaceStatus(workspace)" :class="workspace.status === 'active' ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'" class="px-3 py-1.5 border rounded-lg text-xs font-bold transition">
+                                                    {{ workspace.status === 'active' ? 'Freeze' : 'Unfreeze' }}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="allWorkspaces.length === 0">
+                                            <td colspan="4" class="px-5 py-8 text-center text-slate-500 text-sm">No workspaces registered yet.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SM: DASHBOARD -->
+                    <div v-if="currentTab === 'dashboard' && isSM" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                             <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
                                 <div class="w-11 h-11 rounded-xl bg-[#97144D]/10 text-[#97144D] flex items-center justify-center text-lg mr-3.5 shrink-0">
@@ -285,7 +403,7 @@
                     </div>
 
                     <!-- ADMIN: LIVE FILE TRACKING -->
-                    <div v-if="currentTab === 'tracking' && isAdmin" class="flex flex-col h-full">
+                    <div v-if="currentTab === 'tracking' && isSM" class="flex flex-col h-full">
                         <!-- Admin Filter, Search & Sort Toolbar (Compact) -->
                         <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-xs border border-slate-200/80 mb-3">
                             
@@ -550,7 +668,7 @@
                     </div>
 
                     <!-- ADMIN: USER MANAGEMENT -->
-                    <div v-if="currentTab === 'users' && isAdmin" class="space-y-4">
+                    <div v-if="currentTab === 'users' && isSM" class="space-y-4">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-2">
                             <div>
                                 <h3 class="text-base sm:text-lg font-bold text-slate-800">Relationship Officers (ROs)</h3>
@@ -631,7 +749,7 @@
 
 
                     <!-- RO: PURE OVERVIEW DASHBOARD (Minimal & Clean) -->
-                    <div v-if="currentTab === 'ro-dashboard' && !isAdmin" class="space-y-5 pb-12 max-w-5xl mx-auto">
+                    <div v-if="currentTab === 'ro-dashboard' && isRO" class="space-y-5 pb-12 max-w-5xl mx-auto">
                         
                         <!-- Dashboard Controls -->
                         <div class="relative flex justify-between items-center gap-2 mb-4 sm:static">
@@ -728,7 +846,7 @@
 
 
                     <!-- RO: DEDICATED FILE TRACKING & MANAGEMENT PAGE -->
-                    <div v-if="currentTab === 'ro-tracking' && !isAdmin" class="space-y-4 pb-12">
+                    <div v-if="currentTab === 'ro-tracking' && isRO" class="space-y-4 pb-12">
                         
                         <!-- Filter, Search & Sort Toolbar (Compact) -->
                         <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-xs border border-slate-200/80 mb-3">
@@ -978,7 +1096,7 @@
                     </div>
 
                     <!-- RO: ADD NEW FILE (Customer Login Details Entry - Minimal & Clean) -->
-                    <div v-if="currentTab === 'ro-add-file' && !isAdmin" class="max-w-xl mx-auto pb-12">
+                    <div v-if="currentTab === 'ro-add-file' && isRO" class="max-w-xl mx-auto pb-12">
                         <div class="bg-white rounded-2xl border border-slate-200/70 shadow-xs p-5 sm:p-8 space-y-5">
                             <!-- Card Header -->
                             <div class="pb-4 border-b border-slate-100">

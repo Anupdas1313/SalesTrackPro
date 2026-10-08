@@ -8,6 +8,9 @@ const app = createApp({
         const currentUser = ref(null);
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
+        const showRegisterMode = ref(false);
+        const registerForm = ref({ username: '', password: '', name: '', workspaceName: '' });
+        const registerError = ref('');
         const currentTab = ref('');
         const mobileMenuOpen = ref(false);
 
@@ -15,6 +18,7 @@ const app = createApp({
         const roUsers = ref([]);
         const allFiles = ref([]);
         const myFiles = ref([]); // For ROs
+        const allWorkspaces = ref([]); // For Super Admin
 
         // Modals & Forms
         const showAddRoModal = ref(false);
@@ -141,7 +145,9 @@ const app = createApp({
         };
 
         // --- Computed ---
-        const isAdmin = computed(() => currentUser.value?.role === 'admin');
+        const isSuperAdmin = computed(() => currentUser.value?.role === 'super_admin');
+        const isSM = computed(() => currentUser.value?.role === 'sm' || currentUser.value?.role === 'admin'); // fallback for legacy
+        const isRO = computed(() => currentUser.value?.role === 'ro');
 
 
 
@@ -395,9 +401,16 @@ const app = createApp({
         };
 
         // Data Loading
-        const loadAdminData = async () => {
+        const loadSuperAdminData = async () => {
+            allWorkspaces.value = await db.getAllWorkspaces();
+            roUsers.value = await db.getAllUsers();
             allFiles.value = await db.getAllLoanFiles();
-            roUsers.value = await db.getROUsers();
+        };
+
+        const loadSmData = async () => {
+            if (!currentUser.value?.tenantId) return;
+            allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
+            roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
         };
 
         const loadRoData = async () => {
@@ -407,8 +420,10 @@ const app = createApp({
 
         const loadData = async () => {
             if (!currentUser.value) return;
-            if (isAdmin.value) {
-                await loadAdminData();
+            if (isSuperAdmin.value) {
+                await loadSuperAdminData();
+            } else if (isSM.value) {
+                await loadSmData();
             } else {
                 await loadRoData();
             }
@@ -426,39 +441,89 @@ const app = createApp({
             }
         };
 
-        // Auth
+        // Auth & Registration
+        const registerSM = async () => {
+            registerError.value = '';
+            try {
+                if (!registerForm.value.username || !registerForm.value.password || !registerForm.value.workspaceName) {
+                    registerError.value = 'Please fill all required fields.';
+                    return;
+                }
+                const existing = await db.getUserByUsername(registerForm.value.username);
+                if (existing) {
+                    registerError.value = 'Username already exists.';
+                    return;
+                }
+                
+                const workspaceId = await db.addWorkspace({
+                    name: registerForm.value.workspaceName.trim(),
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+
+                await db.addUser({
+                    username: registerForm.value.username.trim().toLowerCase(),
+                    password: registerForm.value.password.trim(),
+                    role: 'sm',
+                    name: registerForm.value.name.trim(),
+                    tenantId: workspaceId,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+
+                alert('Account created successfully! You can now log in.');
+                showRegisterMode.value = false;
+                registerForm.value = { username: '', password: '', name: '', workspaceName: '' };
+            } catch (error) {
+                console.error("Registration Error:", error);
+                registerError.value = 'Error creating account.';
+            }
+        };
+
         const login = async () => {
             loginError.value = '';
             try {
-                // Ensure the database has the admin user (just in case seeding failed earlier)
+                // Ensure super_admin exists (for testing/first time)
                 const count = await db.getUsersCount();
                 if (count === 0) {
                     await db.addUser({
-                        username: 'admin',
+                        username: 'owner',
                         password: 'password123',
-                        role: 'admin',
-                        name: 'System Admin',
+                        role: 'super_admin',
+                        name: 'Platform Owner',
                         status: 'active',
                         createdAt: new Date().toISOString()
                     });
                 }
 
                 const inputUsername = loginForm.value.username.trim().toLowerCase();
-                const allUsers = await db.getAllUsers();
-                const user = allUsers.find(u => u.username.toLowerCase() === inputUsername);
+                const user = await db.getUserByUsername(inputUsername);
                 
                 if (user && user.password === loginForm.value.password.trim()) {
                     if (user.status === 'suspended') {
                         loginError.value = 'Account is suspended. Contact Administrator.';
                         return;
                     }
+
+                    // Check workspace status for SM and RO
+                    if (user.role !== 'super_admin' && user.tenantId) {
+                        const workspace = await db.getWorkspace(user.tenantId);
+                        if (workspace && workspace.status === 'frozen') {
+                            loginError.value = 'Your workspace is currently frozen. Contact support.';
+                            return;
+                        }
+                    }
+
                     // Store user session
-                    const sessionUser = { id: user.id, username: user.username, role: user.role, name: user.name };
+                    const sessionUser = { id: user.id, username: user.username, role: user.role, name: user.name, tenantId: user.tenantId };
                     localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                     currentUser.value = sessionUser;
                     initUserSm();
                     
-                    currentTab.value = isAdmin.value ? 'dashboard' : 'ro-dashboard';
+                    if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
+                    else if (isSM.value) currentTab.value = 'dashboard';
+                    else currentTab.value = 'ro-dashboard';
+
                     await loadData();
                 } else {
                     loginError.value = 'Invalid username or password';
@@ -475,7 +540,7 @@ const app = createApp({
             loginForm.value = { username: '', password: '' };
         };
 
-        // Admin: Users
+        // Admin/SM: Users & Workspaces
         const saveNewRo = async () => {
             addRoError.value = '';
             const existing = await db.getUserByUsername(newRoForm.value.username);
@@ -489,19 +554,26 @@ const app = createApp({
                 password: newRoForm.value.password,
                 role: 'ro',
                 name: (newRoForm.value.name || '').trim().toUpperCase(),
+                tenantId: currentUser.value.tenantId,
                 status: 'active',
                 createdAt: new Date().toISOString()
             });
             
             showAddRoModal.value = false;
             newRoForm.value = { name: '', username: '', password: '' };
-            await loadAdminData();
+            await loadData();
         };
 
         const toggleUserStatus = async (user) => {
             const newStatus = user.status === 'active' ? 'suspended' : 'active';
             await db.updateUser(user.id, { status: newStatus });
-            await loadAdminData();
+            await loadData();
+        };
+
+        const toggleWorkspaceStatus = async (workspace) => {
+            const newStatus = workspace.status === 'active' ? 'frozen' : 'active';
+            await db.updateWorkspace(workspace.id, { status: newStatus });
+            await loadData();
         };
 
         // RO: Add File
@@ -556,6 +628,7 @@ const app = createApp({
                 mi: (newFileForm.value.mi || '').trim().toUpperCase(),
                 roId: currentUser.value.id,
                 roName: currentUser.value.name,
+                tenantId: currentUser.value.tenantId,
                 createdAt: createdAtIso,
                 updatedAt: new Date().toISOString()
             };
@@ -617,7 +690,7 @@ const app = createApp({
             await db.updateLoanFile(editFileForm.value.id, updatedData);
             showEditFileModal.value = false;
             if (isAdmin.value) {
-                await loadAdminData();
+                await loadData();
             } else {
                 await loadRoData();
             }
@@ -627,7 +700,7 @@ const app = createApp({
             if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
                 await db.deleteLoanFile(file.id);
                 if (isAdmin.value) {
-                    await loadAdminData();
+                    await loadData();
                 } else {
                     await loadRoData();
                 }
@@ -729,7 +802,7 @@ const app = createApp({
             
             showUpdateStatusModal.value = false;
             if (isAdmin.value) {
-                await loadAdminData();
+                await loadData();
             } else {
                 await loadRoData();
             }
@@ -816,7 +889,9 @@ const app = createApp({
             if (savedUser) {
                 currentUser.value = JSON.parse(savedUser);
                 initUserSm();
-                currentTab.value = isAdmin.value ? 'dashboard' : 'ro-dashboard';
+                if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
+                else if (isSM.value) currentTab.value = 'dashboard';
+                else currentTab.value = 'ro-dashboard';
                 await loadData();
             }
         });
@@ -824,7 +899,8 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
-            isAdmin, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles,
+            isSuperAdmin, isSM, isRO, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces,
+            showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate,
