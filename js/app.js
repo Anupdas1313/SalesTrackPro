@@ -618,21 +618,55 @@ const app = createApp({
             const exportData = filteredMyFiles.value.map(file => ({
                 'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'App ID': file.appId || '',
-                'Customer Name': file.customerName,
+                'Customer Name': file.customerName || '',
                 'Category': file.nclUcl || '',
                 'Channel': file.sourcingChannel || 'DSA',
                 'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
-                'Status': file.status,
-                'PPC': file.ppc || '',
+                'Status': file.status || '',
                 'SM Name': file.smName || '',
-                'RO Name': file.roName,
+                'PPC': file.ppc || '',
                 'VCIP': file.vcip || '',
                 'MI': file.mi || '',
+                'RO Name': file.roName || '',
                 'Created At': formatDate(file.createdAt),
                 'Last Updated': formatDate(file.updatedAt || file.createdAt)
             }));
 
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const headers = [
+                'Login Date',
+                'App ID',
+                'Customer Name',
+                'Category',
+                'Channel',
+                'Loan Amount (Rs)',
+                'Status',
+                'SM Name',
+                'PPC',
+                'VCIP',
+                'MI',
+                'RO Name',
+                'Created At',
+                'Last Updated'
+            ];
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData, { header: headers });
+            worksheet['!cols'] = [
+                { wch: 14 },
+                { wch: 12 },
+                { wch: 24 },
+                { wch: 10 },
+                { wch: 10 },
+                { wch: 18 },
+                { wch: 14 },
+                { wch: 18 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 18 },
+                { wch: 20 },
+                { wch: 20 }
+            ];
+
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "My_Login_Details");
             
@@ -691,21 +725,55 @@ const app = createApp({
             const exportData = filteredFiles.value.map(file => ({
                 'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
                 'App ID': file.appId || '',
-                'Customer Name': file.customerName,
+                'Customer Name': file.customerName || '',
                 'Category': file.nclUcl || '',
                 'Channel': file.sourcingChannel || 'DSA',
                 'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
-                'Status': file.status,
-                'PPC': file.ppc || '',
+                'Status': file.status || '',
                 'SM Name': file.smName || '',
-                'RO Name': file.roName,
+                'PPC': file.ppc || '',
                 'VCIP': file.vcip || '',
                 'MI': file.mi || '',
+                'RO Name': file.roName || '',
                 'Created At': formatDate(file.createdAt),
                 'Last Updated': formatDate(file.updatedAt || file.createdAt)
             }));
 
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const headers = [
+                'Login Date',
+                'App ID',
+                'Customer Name',
+                'Category',
+                'Channel',
+                'Loan Amount (Rs)',
+                'Status',
+                'SM Name',
+                'PPC',
+                'VCIP',
+                'MI',
+                'RO Name',
+                'Created At',
+                'Last Updated'
+            ];
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData, { header: headers });
+            worksheet['!cols'] = [
+                { wch: 14 },
+                { wch: 12 },
+                { wch: 24 },
+                { wch: 10 },
+                { wch: 10 },
+                { wch: 18 },
+                { wch: 14 },
+                { wch: 18 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 18 },
+                { wch: 20 },
+                { wch: 20 }
+            ];
+
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Files");
             
