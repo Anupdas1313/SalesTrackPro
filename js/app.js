@@ -908,12 +908,24 @@ const app = createApp({
             // Check for existing session
             const savedUser = localStorage.getItem('axis_user');
             if (savedUser) {
-                currentUser.value = JSON.parse(savedUser);
+                const parsedUser = JSON.parse(savedUser);
+                // Clear legacy sessions that don't have an email attached
+                if (!parsedUser.email && parsedUser.role !== 'ro') {
+                    localStorage.removeItem('axis_user');
+                    return;
+                }
+                
+                currentUser.value = parsedUser;
                 initUserSm();
                 if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
                 else if (isSM.value) currentTab.value = 'dashboard';
                 else currentTab.value = 'ro-dashboard';
-                await loadData();
+                
+                try {
+                    await loadData();
+                } catch (e) {
+                    console.error("Failed to load initial data, you may need to re-login:", e);
+                }
             }
         });
 
