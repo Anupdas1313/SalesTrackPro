@@ -487,9 +487,9 @@ const app = createApp({
                 let user = await db.getUserByUsername(inputUsername);
 
                 // Ensure super_admin exists (for testing/first time)
-                if (inputUsername === 'owner' && !user) {
+                if (inputUsername === 'superadmin' && !user) {
                     const ownerData = {
-                        username: 'owner',
+                        username: 'superadmin',
                         password: 'password123',
                         role: 'super_admin',
                         name: 'Platform Owner',
