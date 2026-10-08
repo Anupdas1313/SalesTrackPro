@@ -1,17 +1,37 @@
-﻿import * as db from './db.js';
+import * as db from './db.js';
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const app = createApp({
     setup() {
         const showMobileFilterDrawer = ref(false);
+        const getInitialUser = () => {
+            const savedUser = localStorage.getItem('axis_user');
+            if (savedUser) {
+                try {
+                    const parsed = JSON.parse(savedUser);
+                    if (!parsed.email && parsed.role !== 'ro') return null;
+                    return parsed;
+                } catch(e) {}
+            }
+            return null;
+        };
+        const initialUser = getInitialUser();
+        
         // --- State ---
-        const currentUser = ref(null);
+        const currentUser = ref(initialUser);
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
         const showRegisterMode = ref(false);
         const registerForm = ref({ name: '', workspaceName: '' });
         const registerError = ref('');
-        const currentTab = ref('');
+        
+        const getInitialTab = () => {
+            if (!initialUser) return '';
+            if (initialUser.role === 'super_admin') return 'super-admin-dashboard';
+            if (initialUser.role === 'sm' || initialUser.role === 'admin') return 'dashboard';
+            return 'ro-dashboard';
+        };
+        const currentTab = ref(getInitialTab());
         const mobileMenuOpen = ref(false);
 
         // Data arrays
@@ -906,26 +926,16 @@ const app = createApp({
         // --- Lifecycle ---
         onMounted(async () => {
             // Check for existing session
-            const savedUser = localStorage.getItem('axis_user');
-            if (savedUser) {
-                const parsedUser = JSON.parse(savedUser);
-                // Clear legacy sessions that don't have an email attached
-                if (!parsedUser.email && parsedUser.role !== 'ro') {
-                    localStorage.removeItem('axis_user');
-                    return;
-                }
-                
-                currentUser.value = parsedUser;
+            if (currentUser.value) {
                 initUserSm();
-                if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
-                else if (isSM.value) currentTab.value = 'dashboard';
-                else currentTab.value = 'ro-dashboard';
                 
                 try {
                     await loadData();
                 } catch (e) {
                     console.error("Failed to load initial data, you may need to re-login:", e);
                 }
+            } else {
+                localStorage.removeItem('axis_user');
             }
         });
 
