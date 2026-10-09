@@ -398,6 +398,18 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Mobile Timeline Selector -->
+                                <div class="md:hidden shrink-0 w-[100px]">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer h-[34px]">
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="this-month">This Month</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                                
                                 <!-- Mobile Filter Trigger (Re-using RO drawer logic) -->
                                 <button @click="showMobileFilterDrawer = true" class="md:hidden shrink-0 px-3.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]">
                                     <i class="fas fa-sliders text-[#97144D]"></i>
@@ -840,6 +852,18 @@
                                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
                                     </div>
+                                </div>
+                                
+                                <!-- Mobile Timeline Selector -->
+                                <div class="md:hidden shrink-0 w-[100px]">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-2 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer h-[34px]">
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="this-month">This Month</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
                                 </div>
                                 
                                 <!-- Mobile Filter Trigger -->
