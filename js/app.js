@@ -737,6 +737,26 @@ const app = createApp({
             }
         };
 
+        const shareFileWhatsApp = (file) => {
+            const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
+            const loanAmtStr = formatCurrency(file.loanAmount);
+            
+            let msg = `*Axis Auto Loans - Login Details*\n\n`;
+            msg += `*App ID:* #${file.appId || 'N/A'}\n`;
+            msg += `*Customer Name:* ${file.customerName}\n`;
+            msg += `*Loan Amount:* Rs. ${loanAmtStr}\n`;
+            msg += `*Category:* ${file.nclUcl || 'N/A'}\n`;
+            msg += `*Channel:* ${file.sourcingChannel || 'N/A'}\n`;
+            if (file.ppc) msg += `*PPC:* ${file.ppc}\n`;
+            if (file.vcip) msg += `*VCIP:* ${file.vcip}\n`;
+            if (file.mi) msg += `*MI:* ${file.mi}\n`;
+            msg += `*Status:* ${file.status}\n`;
+            msg += `*Login Date:* ${dateStr}\n`;
+            
+            const encodedMsg = encodeURIComponent(msg);
+            window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+        };
+
         const deleteFile = async (file) => {
             if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
                 await db.deleteLoanFile(file.id);
@@ -950,7 +970,7 @@ const app = createApp({
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
-            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile,
+            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
         };
     }

@@ -978,6 +978,9 @@
                                                     <button @click="openEditFileModal(file)" title="Edit Details" class="text-blue-600 hover:text-blue-900 transition text-[11px]">
                                                         <i class="fas fa-pen-to-square"></i>
                                                     </button>
+                                                    <button @click="shareFileWhatsApp(file)" title="Share on WhatsApp" class="text-green-600 hover:text-green-700 transition text-[12px]">
+                                                        <i class="fab fa-whatsapp"></i>
+                                                    </button>
                                                     <button @click="deleteFile(file)" title="Delete File" class="text-slate-400 hover:text-rose-600 transition text-[11px]">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -1048,6 +1051,9 @@
                                             </button>
                                             <button @click="openEditFileModal(file)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition" title="Edit">
                                                 <i class="fas fa-pen text-xs"></i>
+                                            </button>
+                                            <button @click="shareFileWhatsApp(file)" class="w-8 h-8 flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition" title="Share WhatsApp">
+                                                <i class="fab fa-whatsapp text-xs"></i>
                                             </button>
                                             <button @click="deleteFile(file)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition" title="Delete">
                                                 <i class="fas fa-trash text-xs"></i>
