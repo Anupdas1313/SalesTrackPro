@@ -400,11 +400,26 @@
                                 
                                 <!-- Mobile Action Buttons -->
                                 <div class="flex gap-2 w-full md:hidden">
-                                    <!-- Mobile Timeline Selector (Pills) -->
-                                    <div class="flex-1 flex gap-1.5 overflow-x-auto hide-scrollbar">
-                                        <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" :key="t.val" @click="roFilters.timeline = t.val; roFilters.customDate = ''" :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200'" class="whitespace-nowrap px-3 py-1.5 rounded-lg border text-xs h-[34px] transition-colors shrink-0 shadow-sm">
-                                            {{ t.label }}
+                                    <!-- Mobile Timeline Selector (Custom Dropdown) -->
+                                    <div class="flex-1 relative">
+                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition shadow-sm text-left h-[34px] relative">
+                                            <span class="truncate">{{ getTimelineLabel(roFilters.timeline) || 'All Time' }}</span>
+                                            <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 transition-transform pointer-events-none" :class="roFilters.showMenu ? 'rotate-180' : ''"></i>
                                         </button>
+                                        
+                                        <!-- Backdrop -->
+                                        <div v-if="roFilters.showMenu" @click="roFilters.showMenu = false" class="fixed inset-0 z-[40]"></div>
+                                        
+                                        <!-- Dropdown Menu -->
+                                        <div v-if="roFilters.showMenu" class="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl z-[50] overflow-hidden py-1 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" 
+                                                    :key="t.val" 
+                                                    @click="roFilters.timeline = t.val; roFilters.customDate = ''; roFilters.showMenu = false;"
+                                                    class="w-full text-left px-3 py-2.5 text-xs font-bold transition-colors"
+                                                    :class="roFilters.timeline === t.val ? 'text-[#97144D] bg-[#97144D]/5' : 'text-slate-600 hover:bg-slate-50'">
+                                                {{ t.label }}
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <!-- Mobile Filter Trigger (Re-using RO drawer logic) -->
@@ -854,11 +869,26 @@
                                 
                                 <!-- Mobile Action Buttons -->
                                 <div class="flex gap-2 w-full md:hidden">
-                                    <!-- Mobile Timeline Selector (Pills) -->
-                                    <div class="flex-1 flex gap-1.5 overflow-x-auto hide-scrollbar">
-                                        <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" :key="t.val" @click="roFilters.timeline = t.val; roFilters.customDate = ''" :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200'" class="whitespace-nowrap px-3 py-1.5 rounded-lg border text-xs h-[34px] transition-colors shrink-0 shadow-sm">
-                                            {{ t.label }}
+                                    <!-- Mobile Timeline Selector (Custom Dropdown) -->
+                                    <div class="flex-1 relative">
+                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition shadow-sm text-left h-[34px] relative">
+                                            <span class="truncate">{{ getTimelineLabel(roFilters.timeline) || 'All Time' }}</span>
+                                            <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 transition-transform pointer-events-none" :class="roFilters.showMenu ? 'rotate-180' : ''"></i>
                                         </button>
+                                        
+                                        <!-- Backdrop -->
+                                        <div v-if="roFilters.showMenu" @click="roFilters.showMenu = false" class="fixed inset-0 z-[40]"></div>
+                                        
+                                        <!-- Dropdown Menu -->
+                                        <div v-if="roFilters.showMenu" class="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl z-[50] overflow-hidden py-1 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" 
+                                                    :key="t.val" 
+                                                    @click="roFilters.timeline = t.val; roFilters.customDate = ''; roFilters.showMenu = false;"
+                                                    class="w-full text-left px-3 py-2.5 text-xs font-bold transition-colors"
+                                                    :class="roFilters.timeline === t.val ? 'text-[#97144D] bg-[#97144D]/5' : 'text-slate-600 hover:bg-slate-50'">
+                                                {{ t.label }}
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <!-- Mobile Filter Trigger -->
