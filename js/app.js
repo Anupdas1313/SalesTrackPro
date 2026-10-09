@@ -741,7 +741,7 @@ const app = createApp({
             const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
             const loanAmtStr = formatCurrency(file.loanAmount);
             
-            let msg = `*Axis Auto Loans - Login Details*\n\n`;
+            let msg = `*SalesTrack Pro - Login Details*\n\n`;
             msg += `*App ID:* #${file.appId || 'N/A'}\n`;
             msg += `*Customer Name:* ${file.customerName}\n`;
             msg += `*Loan Amount:* Rs. ${loanAmtStr}\n`;
@@ -760,7 +760,7 @@ const app = createApp({
         const shareBulkWhatsApp = () => {
             if (!filteredMyFiles.value || filteredMyFiles.value.length === 0) return;
             
-            let msg = `*Axis Auto Loans - Bulk Login Details*\n`;
+            let msg = `*SalesTrack Pro - Bulk Login Details*\n`;
             msg += `*Total Files:* ${filteredMyFiles.value.length}\n`;
             msg += `*Date:* ${getTodayDateStr()}\n\n`;
             
@@ -858,7 +858,7 @@ const app = createApp({
             XLSX.utils.book_append_sheet(workbook, worksheet, "My_Login_Details");
             
             const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `AxisAuto_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
+            const filename = `SalesTrackPro_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
@@ -965,7 +965,7 @@ const app = createApp({
             XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Files");
             
             const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `AxisAuto_CRM_Export_${dateStr}.xlsx`;
+            const filename = `SalesTrackPro_Export_${dateStr}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
