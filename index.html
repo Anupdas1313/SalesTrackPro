@@ -847,6 +847,10 @@
                                     <i class="fas fa-sliders text-[#97144D]"></i>
                                     <span>Filters</span>
                                 </button>
+                                <!-- Mobile Bulk Share -->
+                                <button v-if="filteredMyFiles && filteredMyFiles.length > 0" @click="shareBulkWhatsApp" class="md:hidden shrink-0 px-3 py-1.5 bg-green-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]" title="Share Filtered to WhatsApp">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
                             </div>
 
                             <!-- Desktop Filters (Hidden on Mobile) -->
@@ -923,6 +927,10 @@
                                 <div class="flex items-center gap-1.5 ml-auto">
                                     <button @click="resetRoFilters" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest'" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
+                                    </button>
+                                    <button v-if="filteredMyFiles && filteredMyFiles.length > 0" @click="shareBulkWhatsApp" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-xs text-xs font-bold">
+                                        <i class="fab fa-whatsapp"></i>
+                                        <span>Share All</span>
                                     </button>
                                     <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
                                         <i class="fas fa-file-excel"></i>

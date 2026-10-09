@@ -757,6 +757,33 @@ const app = createApp({
             window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
         };
 
+        const shareBulkWhatsApp = () => {
+            if (!filteredMyFiles.value || filteredMyFiles.value.length === 0) return;
+            
+            let msg = `*Axis Auto Loans - Bulk Login Details*\n`;
+            msg += `*Total Files:* ${filteredMyFiles.value.length}\n`;
+            msg += `*Date:* ${getTodayDateStr()}\n\n`;
+            
+            filteredMyFiles.value.forEach((file, index) => {
+                const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
+                const loanAmtStr = formatCurrency(file.loanAmount);
+                
+                msg += `*${index + 1}. Customer:* ${file.customerName} (#${file.appId || 'N/A'})\n`;
+                msg += `   *Amount:* Rs. ${loanAmtStr} | *Category:* ${file.nclUcl || 'N/A'} | *Channel:* ${file.sourcingChannel || 'N/A'}\n`;
+                if (file.ppc || file.vcip || file.mi) {
+                    msg += `   `;
+                    if (file.ppc) msg += `*PPC:* ${file.ppc} `;
+                    if (file.vcip) msg += `*VCIP:* ${file.vcip} `;
+                    if (file.mi) msg += `*MI:* ${file.mi} `;
+                    msg += `\n`;
+                }
+                msg += `   *Status:* ${file.status} | *Login Date:* ${dateStr}\n\n`;
+            });
+            
+            const encodedMsg = encodeURIComponent(msg);
+            window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+        };
+
         const deleteFile = async (file) => {
             if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
                 await db.deleteLoanFile(file.id);
@@ -970,7 +997,7 @@ const app = createApp({
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
-            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp,
+            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
         };
     }
