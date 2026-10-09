@@ -400,17 +400,11 @@
                                 
                                 <!-- Mobile Action Buttons -->
                                 <div class="flex gap-2 w-full md:hidden">
-                                    <!-- Mobile Timeline Selector -->
-                                    <div class="flex-1 relative">
-                                        <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer h-[34px] text-slate-700 shadow-sm">
-                                            <option value="all">All Time</option>
-                                            <option value="today">Today</option>
-                                            <option value="yesterday">Yesterday</option>
-                                            <option value="this-week">This Week</option>
-                                            <option value="this-month">This Month</option>
-                                            <option value="custom">Custom</option>
-                                        </select>
-                                        <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                                    <!-- Mobile Timeline Selector (Pills) -->
+                                    <div class="flex-1 flex gap-1.5 overflow-x-auto hide-scrollbar">
+                                        <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" :key="t.val" @click="roFilters.timeline = t.val; roFilters.customDate = ''" :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200'" class="whitespace-nowrap px-3 py-1.5 rounded-lg border text-xs h-[34px] transition-colors shrink-0 shadow-sm">
+                                            {{ t.label }}
+                                        </button>
                                     </div>
                                     
                                     <!-- Mobile Filter Trigger (Re-using RO drawer logic) -->
@@ -860,17 +854,11 @@
                                 
                                 <!-- Mobile Action Buttons -->
                                 <div class="flex gap-2 w-full md:hidden">
-                                    <!-- Mobile Timeline Selector -->
-                                    <div class="flex-1 relative">
-                                        <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer h-[34px] text-slate-700 shadow-sm">
-                                            <option value="all">All Time</option>
-                                            <option value="today">Today</option>
-                                            <option value="yesterday">Yesterday</option>
-                                            <option value="this-week">This Week</option>
-                                            <option value="this-month">This Month</option>
-                                            <option value="custom">Custom</option>
-                                        </select>
-                                        <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                                    <!-- Mobile Timeline Selector (Pills) -->
+                                    <div class="flex-1 flex gap-1.5 overflow-x-auto hide-scrollbar">
+                                        <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" :key="t.val" @click="roFilters.timeline = t.val; roFilters.customDate = ''" :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200'" class="whitespace-nowrap px-3 py-1.5 rounded-lg border text-xs h-[34px] transition-colors shrink-0 shadow-sm">
+                                            {{ t.label }}
+                                        </button>
                                     </div>
                                     
                                     <!-- Mobile Filter Trigger -->
