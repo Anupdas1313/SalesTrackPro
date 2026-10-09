@@ -54,75 +54,86 @@
     <div id="app" v-cloak class="h-full flex flex-col">
         <!-- Login Screen -->
         <div v-if="!currentUser" class="flex-1 flex items-center justify-center bg-slate-900 px-4 py-8 relative overflow-hidden">
-            <!-- Background Ambient Glow -->
-            <div class="absolute -top-40 -left-40 w-96 h-96 bg-[#97144D]/30 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <!-- Modern Mesh Background Ambient Glow -->
+            <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-[#97144D]/20 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 8s;"></div>
+                <div class="absolute top-[20%] -right-[10%] w-[40%] h-[60%] bg-blue-500/10 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 12s;"></div>
+                <div class="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] bg-purple-500/10 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 10s;"></div>
+            </div>
 
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 sm:p-10 relative z-10 border border-slate-100">
+            <!-- Login Card -->
+            <div class="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.06)] w-full max-w-md p-8 sm:p-10 relative z-10 border border-white/60">
+                
                 <!-- Branding Header -->
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#97144D] to-[#ED1C24] text-white shadow-lg shadow-[#97144D]/30 mb-4">
-                        <i class="fas fa-car text-2xl"></i>
+                <div class="text-center mb-10">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#97144D] via-[#D3183F] to-[#ED1C24] text-white shadow-xl shadow-[#97144D]/20 mb-6 relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                        <i class="fas fa-chart-line text-3xl drop-shadow-md"></i>
                     </div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">SalesTrack Pro</h1>
-                    <p class="text-xs text-slate-500 font-medium mt-1">Daily Login Details & File Tracking Portal</p>
+                    <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-700 tracking-tight mb-2">SalesTrack Pro</h1>
+                    <p class="text-sm text-slate-500 font-medium">Smart File Tracking & CRM</p>
                 </div>
                 
-                <form v-if="!showRegisterMode" @submit.prevent="login" class="space-y-4">
+                <form v-if="!showRegisterMode" @submit.prevent="login" class="space-y-5">
                     <div class="text-center mb-6">
-                        <p class="text-sm text-slate-500 font-medium">Please sign in with your Google account to access your workspace.</p>
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-slate-100/80 border border-slate-200/60 text-xs font-bold text-slate-500 mb-2">Welcome Back</div>
+                        <p class="text-sm text-slate-500 font-medium px-4">Sign in with your Google account to access your workspace.</p>
                     </div>
 
-                    <div v-if="loginError" class="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-200 flex items-center">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                    <div v-if="loginError" class="p-3.5 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-center shadow-sm">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-2.5 text-sm"></i>
                         <span>{{ loginError }}</span>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-sm transition transform active:scale-[0.98] text-sm flex items-center justify-center gap-3">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <button type="submit" class="w-full py-3.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md text-slate-700 font-bold rounded-xl shadow-sm transition-all transform active:scale-[0.98] text-sm flex items-center justify-center gap-3 relative overflow-hidden">
+                        <svg class="w-5 h-5 relative z-10" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                         </svg>
-                        <span>Sign in with Google</span>
+                        <span class="relative z-10">Continue with Google</span>
                     </button>
 
-                    <div class="pt-4 border-t border-slate-100 text-center">
-                        <button type="button" @click="showRegisterMode = true" class="text-xs font-semibold text-[#97144D] hover:text-[#7A0E3C] transition mb-3">
-                            Sales Manager? Create a Workspace
+                    <div class="pt-6 mt-2 text-center relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-white text-slate-400 text-xs font-semibold">OR</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center pt-2">
+                        <button type="button" @click="showRegisterMode = true" class="text-xs font-bold text-[#97144D] hover:text-[#7A0E3C] transition">
+                            Create a Sales Manager Workspace
                         </button>
                     </div>
                 </form>
 
                 <!-- Registration Form -->
-                <form v-if="showRegisterMode" @submit.prevent="registerSM" class="space-y-4">
+                <form v-if="showRegisterMode" @submit.prevent="registerSM" class="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Workspace Name</label>
-                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" required placeholder="e.g. HDFC Team Alpha">
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Workspace Name</label>
+                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400 shadow-sm" required placeholder="e.g. Acme Sales Team">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Your Full Name (Optional)</label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-medium text-slate-900 placeholder-slate-400" placeholder="John Doe">
-                        <p class="text-[10px] text-slate-400 mt-1">If left blank, we'll use your Google account name.</p>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Your Full Name (Optional)</label>
+                        <input v-model="registerForm.name" type="text" class="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400 shadow-sm" placeholder="e.g. John Doe">
+                        <p class="text-[10px] text-slate-400 mt-2 ml-1 font-medium">If blank, we'll use your Google profile name.</p>
                     </div>
 
-                    <div v-if="registerError" class="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-200 flex items-center">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                    <div v-if="registerError" class="p-3.5 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-center shadow-sm">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-2.5 text-sm"></i>
                         <span>{{ registerError }}</span>
                     </div>
-                    <button type="submit" class="w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-sm transition transform active:scale-[0.98] text-sm flex items-center justify-center gap-3">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        <span>Create Workspace & Sign in with Google</span>
+                    <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 transition-all transform active:scale-[0.98] text-sm flex items-center justify-center gap-3 mt-2">
+                        <span>Create & Sign In</span>
+                        <i class="fas fa-arrow-right text-xs"></i>
                     </button>
-                    <div class="text-center mt-4 border-t border-slate-100 pt-4">
-                        <button type="button" @click="showRegisterMode = false" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
-                            Back to Sign In
+                    <div class="text-center mt-6">
+                        <button type="button" @click="showRegisterMode = false" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 w-full">
+                            <i class="fas fa-arrow-left"></i> Back to Sign In
                         </button>
                     </div>
                 </form>
