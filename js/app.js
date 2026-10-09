@@ -113,7 +113,7 @@ const app = createApp({
             status: '',
             nclUcl: '',
             sourcingChannel: '',
-            timeline: 'this-month', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
+            timeline: 'today', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
             customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
@@ -207,7 +207,7 @@ const app = createApp({
         });
 
         // RO Overview State
-        const roOverviewTimeline = ref('this-month');
+        const roOverviewTimeline = ref('today');
         const roOverviewCustomDate = ref('');
 
         // RO Overview KPIs
@@ -412,7 +412,7 @@ const app = createApp({
                 status: '',
                 nclUcl: '',
                 sourcingChannel: '',
-                timeline: 'this-month',
+                timeline: 'today',
                 customDate: '',
                 sortBy: 'newest'
             };
