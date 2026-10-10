@@ -641,6 +641,170 @@ const app = createApp({
         const myEods = ref([]);
         const smEods = ref([]);
         
+        const smEodSummary = computed(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const currentMonth = today.substring(0, 7); // YYYY-MM
+
+            const summaryMap = {};
+            roUsers.value.forEach(ro => {
+                summaryMap[ro.id] = {
+                    id: ro.id,
+                    name: ro.name,
+                    submittedToday: false,
+                    ftd: {
+                        loginOpenMarket: { count: 0, amount: 0 },
+                        loginBranch: { count: 0, amount: 0 },
+                        loginBranchSanction: { count: 0, amount: 0 },
+                        loginUsedCar: { count: 0, amount: 0 },
+                        disbOpenMarket: { count: 0, amount: 0 },
+                        disbBranch: { count: 0, amount: 0 },
+                        disbUsedCar: { count: 0, amount: 0 },
+                        vicpCrm: { count: 0 }, td: { count: 0 },
+                        marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
+                    },
+                    mtd: {
+                        loginOpenMarket: { count: 0, amount: 0 },
+                        loginBranch: { count: 0, amount: 0 },
+                        loginBranchSanction: { count: 0, amount: 0 },
+                        loginUsedCar: { count: 0, amount: 0 },
+                        disbOpenMarket: { count: 0, amount: 0 },
+                        disbBranch: { count: 0, amount: 0 },
+                        disbUsedCar: { count: 0, amount: 0 },
+                        vicpCrm: { count: 0 }, td: { count: 0 },
+                        marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
+                    }
+                };
+            });
+
+            smEods.value.forEach(eod => {
+                if (!summaryMap[eod.userId]) return;
+                const isToday = eod.date === today;
+                const isCurrentMonth = eod.date.startsWith(currentMonth);
+
+                if (!isCurrentMonth) return;
+
+                if (isToday) summaryMap[eod.userId].submittedToday = true;
+
+                // Sum metrics
+                Object.keys(eod.metrics).forEach(key => {
+                    const m = eod.metrics[key];
+                    if (isToday) {
+                        summaryMap[eod.userId].ftd[key].count += (m.count || 0);
+                        if (m.amount !== undefined) summaryMap[eod.userId].ftd[key].amount += (m.amount || 0);
+                    }
+                    summaryMap[eod.userId].mtd[key].count += (m.count || 0);
+                    if (m.amount !== undefined) summaryMap[eod.userId].mtd[key].amount += (m.amount || 0);
+                });
+            });
+
+            return Object.values(summaryMap);
+        });
+
+        const missingEods = computed(() => {
+            return smEodSummary.value.filter(s => !s.submittedToday);
+        });
+
+        const generateEodWhatsApp = () => {
+            const today = new Date().toLocaleDateString('en-IN');
+            let text = `*Daily EOD Summary - ${today}*\n\n`;
+
+            let totalFtdLogin = { count: 0, amount: 0 };
+            let totalMtdLogin = { count: 0, amount: 0 };
+            let totalFtdDisb = { count: 0, amount: 0 };
+            let totalMtdDisb = { count: 0, amount: 0 };
+
+            smEodSummary.value.forEach(s => {
+                const fl = s.ftd.loginOpenMarket.count + s.ftd.loginBranch.count + s.ftd.loginUsedCar.count;
+                const fla = s.ftd.loginOpenMarket.amount + s.ftd.loginBranch.amount + s.ftd.loginUsedCar.amount;
+                const ml = s.mtd.loginOpenMarket.count + s.mtd.loginBranch.count + s.mtd.loginUsedCar.count;
+                const mla = s.mtd.loginOpenMarket.amount + s.mtd.loginBranch.amount + s.mtd.loginUsedCar.amount;
+                
+                totalFtdLogin.count += fl; totalFtdLogin.amount += fla;
+                totalMtdLogin.count += ml; totalMtdLogin.amount += mla;
+
+                const fd = s.ftd.disbOpenMarket.count + s.ftd.disbBranch.count + s.ftd.disbUsedCar.count;
+                const fda = s.ftd.disbOpenMarket.amount + s.ftd.disbBranch.amount + s.ftd.disbUsedCar.amount;
+                const md = s.mtd.disbOpenMarket.count + s.mtd.disbBranch.count + s.mtd.disbUsedCar.count;
+                const mda = s.mtd.disbOpenMarket.amount + s.mtd.disbBranch.amount + s.mtd.disbUsedCar.amount;
+
+                totalFtdDisb.count += fd; totalFtdDisb.amount += fda;
+                totalMtdDisb.count += md; totalMtdDisb.amount += mda;
+            });
+
+            text += `*Logins:*\nFTD: ${totalFtdLogin.count} (${totalFtdLogin.amount.toFixed(2)}L)\nMTD: ${totalMtdLogin.count} (${totalMtdLogin.amount.toFixed(2)}L)\n\n`;
+            text += `*Disb:*\nFTD: ${totalFtdDisb.count} (${totalFtdDisb.amount.toFixed(2)}L)\nMTD: ${totalMtdDisb.count} (${totalMtdDisb.amount.toFixed(2)}L)\n\n`;
+            
+            text += `*RO Breakdown (FTD/MTD)*\n`;
+            smEodSummary.value.forEach(s => {
+                const fl = s.ftd.loginOpenMarket.count + s.ftd.loginBranch.count + s.ftd.loginUsedCar.count;
+                const ml = s.mtd.loginOpenMarket.count + s.mtd.loginBranch.count + s.mtd.loginUsedCar.count;
+                const fd = s.ftd.disbOpenMarket.count + s.ftd.disbBranch.count + s.ftd.disbUsedCar.count;
+                const md = s.mtd.disbOpenMarket.count + s.mtd.disbBranch.count + s.mtd.disbUsedCar.count;
+                
+                text += `${s.name} - L: ${fl}/${ml} | D: ${fd}/${md}\n`;
+            });
+
+            return encodeURIComponent(text);
+        };
+        
+        const autoFillEOD = () => {
+            const today = new Date().toISOString().split('T')[0];
+            resetEodForm();
+            
+            const loginsToday = myFiles.value.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
+            loginsToday.forEach(f => {
+                const amt = toLakhs(f.loanAmount) || 0;
+                if (f.nclUcl === 'UCL') {
+                    eodForm.value.loginUsedCar.count += 1;
+                    eodForm.value.loginUsedCar.amount += amt;
+                } else if (f.sourcingChannel === 'Branch') {
+                    eodForm.value.loginBranch.count += 1;
+                    eodForm.value.loginBranch.amount += amt;
+                } else {
+                    eodForm.value.loginOpenMarket.count += 1;
+                    eodForm.value.loginOpenMarket.amount += amt;
+                }
+
+                if (f.vcip && f.vcip.toLowerCase() !== 'no' && f.vcip.toLowerCase() !== 'n/a') {
+                    eodForm.value.vicpCrm.count += 1;
+                }
+                if (f.mi && f.mi.toLowerCase() !== 'no' && f.mi.toLowerCase() !== 'n/a') {
+                    eodForm.value.mi.count += 1;
+                }
+            });
+
+            const disbToday = myFiles.value.filter(f => f.status === 'Disbursed' && f.updatedAt && f.updatedAt.startsWith(today));
+            disbToday.forEach(f => {
+                const amt = toLakhs(f.loanAmount) || 0;
+                if (f.nclUcl === 'UCL') {
+                    eodForm.value.disbUsedCar.count += 1;
+                    eodForm.value.disbUsedCar.amount += amt;
+                } else if (f.sourcingChannel === 'Branch') {
+                    eodForm.value.disbBranch.count += 1;
+                    eodForm.value.disbBranch.amount += amt;
+                } else {
+                    eodForm.value.disbOpenMarket.count += 1;
+                    eodForm.value.disbOpenMarket.amount += amt;
+                }
+            });
+            
+            Object.keys(eodForm.value).forEach(k => {
+                if (eodForm.value[k].amount !== undefined) {
+                    eodForm.value[k].amount = parseFloat(eodForm.value[k].amount.toFixed(2));
+                }
+            });
+        };
+
+        watch(currentTab, (newTab) => {
+            if (newTab === 'ro-eod' && isRO.value) {
+                const today = new Date().toISOString().split('T')[0];
+                const alreadySubmitted = myEods.value.some(e => e.date === today);
+                if (!alreadySubmitted) {
+                    autoFillEOD();
+                }
+            }
+        });
+
         const resetEodForm = () => {
             eodForm.value = {
                 loginOpenMarket: { count: 0, amount: 0 },
@@ -1396,7 +1560,8 @@ const app = createApp({
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
-            eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD
+            eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD,
+            smEodSummary, missingEods, generateEodWhatsApp
         };
     }
 });
