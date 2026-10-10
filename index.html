@@ -1639,36 +1639,50 @@
 
 
                     <!-- RO: DAILY EOD SUBMISSION -->
-                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-3xl mx-auto pb-12 space-y-5">
-                        <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-4xl mx-auto pb-12 space-y-8 animate-fade-in">
+                        
+                        <!-- Header -->
+                        <div class="flex justify-between items-end border-b border-slate-200 pb-4">
                             <div>
-                                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Submit Daily EOD</h3>
-                                <p class="text-sm text-slate-500 font-medium mt-1">Review your auto-calculated metrics for today.</p>
+                                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Daily EOD</h3>
+                                <p class="text-sm text-slate-500 font-medium mt-1">Review and submit your end-of-day reports.</p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right hidden sm:block">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</p>
                                 <p class="text-sm font-bold text-[#97144D]">{{ new Date().toLocaleDateString() }}</p>
                             </div>
                         </div>
                         
-                        <div v-if="eodSubmitSuccess" class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm animate-fade-in">
-                            <i class="fas fa-check-circle text-lg"></i> EOD Report submitted successfully!
+                        <!-- Submission Success / Already Submitted Banner -->
+                        <div v-if="hasSubmittedToday || eodSubmitSuccess" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 shadow-sm flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-black text-emerald-800 mb-1">You're all set for today!</h4>
+                                <p class="text-sm text-emerald-700 font-medium">Your End of Day report has been successfully submitted to your SM. Great job today!</p>
+                            </div>
                         </div>
-                        <div v-if="eodSubmitError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm animate-fade-in">
+
+                        <div v-if="eodSubmitError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm">
                             <i class="fas fa-exclamation-triangle text-lg"></i> {{ eodSubmitError }}
                         </div>
 
-                        <form @submit.prevent="submitEOD" class="space-y-6">
+                        <!-- Active Submission Form (Only if not submitted) -->
+                        <form v-if="!hasSubmittedToday" @submit.prevent="submitEOD" class="space-y-6">
                             
                             <!-- Logins Card -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm shadow-inner">
-                                        <i class="fas fa-file-import"></i>
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm shadow-inner">
+                                            <i class="fas fa-file-import"></i>
+                                        </div>
+                                        <h4 class="font-bold text-slate-700 text-lg">Logins (FTD)</h4>
                                     </div>
-                                    <h4 class="font-bold text-slate-700 text-lg">Logins (FTD)</h4>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Auto-Calculated</span>
                                 </div>
-                                <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white">
+                                <div class="p-5 grid grid-cols-2 lg:grid-cols-4 gap-4 bg-white">
                                     <!-- Open Market -->
                                     <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
                                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">Open Market</label>
@@ -1730,13 +1744,16 @@
 
                             <!-- Disbursements Card -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-inner">
-                                        <i class="fas fa-hand-holding-usd"></i>
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-inner">
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </div>
+                                        <h4 class="font-bold text-slate-700 text-lg">Disbursements (FTD)</h4>
                                     </div>
-                                    <h4 class="font-bold text-slate-700 text-lg">Disbursements (FTD)</h4>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Auto-Calculated</span>
                                 </div>
-                                <div class="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white">
+                                <div class="p-5 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-white">
                                     <!-- Open Market -->
                                     <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
                                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-600 transition">Open Market</label>
@@ -1784,11 +1801,14 @@
 
                             <!-- Other Metrics Card -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm shadow-inner">
-                                        <i class="fas fa-chart-bar"></i>
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm shadow-inner">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </div>
+                                        <h4 class="font-bold text-slate-700 text-lg">Other Metrics (FTD)</h4>
                                     </div>
-                                    <h4 class="font-bold text-slate-700 text-lg">Other Metrics (FTD)</h4>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Auto-Calculated</span>
                                 </div>
                                 <div class="p-5 grid grid-cols-2 sm:grid-cols-5 gap-4 bg-white">
                                     <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
@@ -1814,14 +1834,56 @@
                                 </div>
                             </div>
 
-                            <div class="pt-4 flex justify-end">
+                            <div class="pt-2 flex justify-end">
                                 <button type="submit" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
                                     <i class="fas fa-paper-plane"></i>
                                     <span>Submit Final EOD Report</span>
                                 </button>
                             </div>
                         </form>
+
+                        <!-- Past Submissions History Table -->
+                        <div class="mt-12 pt-8 border-t border-slate-200">
+                            <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <i class="fas fa-history text-slate-400"></i> Your Submission History
+                            </h4>
+                            <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm text-slate-600">
+                                        <thead class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
+                                            <tr>
+                                                <th class="px-4 py-3">Date</th>
+                                                <th class="px-4 py-3 text-center">Total Logins</th>
+                                                <th class="px-4 py-3 text-center">Total Disb</th>
+                                                <th class="px-4 py-3 text-center">Branch Sanc</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-50 font-medium">
+                                            <tr v-for="eod in myEods" :key="eod.id" class="hover:bg-slate-50 transition">
+                                                <td class="px-4 py-3 text-slate-800 font-bold">{{ new Date(eod.date).toLocaleDateString() }}</td>
+                                                <td class="px-4 py-3 text-center">
+                                                    {{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }} / 
+                                                    {{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(2) }}L
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    {{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }} / 
+                                                    {{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(2) }}L
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    {{ eod.metrics.loginBranchSanction.count || 0 }} / {{ (eod.metrics.loginBranchSanction.amount || 0).toFixed(2) }}L
+                                                </td>
+                                            </tr>
+                                            <tr v-if="myEods.length === 0">
+                                                <td colspan="4" class="px-4 py-8 text-center text-slate-400">You haven't submitted any EOD reports yet.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+
 
 
                     <!-- SM: EOD REPORTS DIRECTORY -->
@@ -2348,9 +2410,11 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-3"></script>
+    <script type="module" src="js/app.js?v=force-update-4"></script>
 </body>
 </html>
+
+
 
 
 

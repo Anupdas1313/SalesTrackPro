@@ -641,6 +641,11 @@ const app = createApp({
         const myEods = ref([]);
         const smEods = ref([]);
         
+        const hasSubmittedToday = computed(() => {
+            const today = new Date().toISOString().split('T')[0];
+            return myEods.value.some(e => e.date === today);
+        });
+
         const smEodSummary = computed(() => {
             const today = new Date().toISOString().split('T')[0];
             const currentMonth = today.substring(0, 7); // YYYY-MM
@@ -1570,7 +1575,7 @@ const app = createApp({
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
             eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD,
-            smEodSummary, missingEods, generateEodWhatsApp
+            smEodSummary, missingEods, generateEodWhatsApp, hasSubmittedToday
         };
     }
 });
