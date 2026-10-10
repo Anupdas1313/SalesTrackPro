@@ -894,6 +894,7 @@ const app = createApp({
         };
 
         const submitEOD = async () => {
+            console.log("Submit EOD button clicked!");
             eodSubmitError.value = '';
             eodSubmitSuccess.value = false;
             try {
@@ -918,8 +919,8 @@ const app = createApp({
                 eodSubmitSuccess.value = true;
                 myEods.value.unshift({ ...report, id: Date.now().toString() }); // Optimistic
             } catch (e) {
-                console.error(e);
-                eodSubmitError.value = 'Failed to submit EOD. Please try again.';
+                console.error('Submit EOD Error:', e);
+                eodSubmitError.value = 'Error: ' + (e.message || 'Failed to submit EOD. Please try again.');
             }
         };
 
