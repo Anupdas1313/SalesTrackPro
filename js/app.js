@@ -300,7 +300,7 @@ const app = createApp({
         });
 
         const groupedUsers = computed(() => {
-            const allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin');
+            const allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin' && u.email !== 'anupdas8354@gmail.com');
             const systemUsers = allPlatformUsers.filter(u => !u.tenantId);
             
             const grouped = allWorkspaces.value.map(workspace => {
