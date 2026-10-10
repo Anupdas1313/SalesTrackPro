@@ -646,6 +646,16 @@ const app = createApp({
             return myEods.value.some(e => e.date === today);
         });
 
+        const eodTotals = computed(() => {
+            const f = eodForm.value;
+            return {
+                loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginBranchSanction.count||0) + (f.loginUsedCar.count||0),
+                loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginBranchSanction.amount||0) + (f.loginUsedCar.amount||0),
+                disbCount: (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0),
+                disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0)
+            };
+        });
+
         const smEodSummary = computed(() => {
             const today = new Date().toISOString().split('T')[0];
             const currentMonth = today.substring(0, 7); // YYYY-MM
@@ -748,6 +758,51 @@ const app = createApp({
                 
                 text += `${s.name} - L: ${fl}/${ml} | D: ${fd}/${md}\n`;
             });
+
+            return encodeURIComponent(text);
+        };
+
+        const generateRoWhatsApp = (eod) => {
+            if (!eod || !eod.metrics) return '';
+            const roSummary = smEodSummary.value.find(s => s.id === eod.userId);
+            if (!roSummary) return '';
+            
+            const formatVal = (count, amt) => {
+                if (!count && !amt) return '0';
+                if (!amt) return `${count}`;
+                return `${count}(${amt.toFixed(2)}L)`;
+            };
+            const f = eod.metrics;
+            const m = roSummary.mtd;
+            const tDay = new Date(eod.date).toLocaleDateString('en-GB');
+
+            const tlFtd = (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0);
+            const tlaFtd = (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0);
+            const tlMtd = (m.loginOpenMarket.count||0) + (m.loginBranch.count||0) + (m.loginUsedCar.count||0);
+            const tlaMtd = (m.loginOpenMarket.amount||0) + (m.loginBranch.amount||0) + (m.loginUsedCar.amount||0);
+
+            const tdFtd = (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0);
+            const tdaFtd = (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0);
+            const tdMtd = (m.disbOpenMarket.count||0) + (m.disbBranch.count||0) + (m.disbUsedCar.count||0);
+            const tdaMtd = (m.disbOpenMarket.amount||0) + (m.disbBranch.amount||0) + (m.disbUsedCar.amount||0);
+
+            let text = `${tDay}\n`;
+            text += `*Login :*\n*Open Market :*\nFTD :${formatVal(f.loginOpenMarket.count, f.loginOpenMarket.amount)}\nMTD:${formatVal(m.loginOpenMarket.count, m.loginOpenMarket.amount)}\n`;
+            text += `*Branch*\nFTD :${formatVal(f.loginBranch.count, f.loginBranch.amount)}\nMTD:${formatVal(m.loginBranch.count, m.loginBranch.amount)}\n`;
+            text += `Sanction: ${formatVal(f.loginBranchSanction.count, f.loginBranchSanction.amount)}\nMTD sanction:${formatVal(m.loginBranchSanction.count, m.loginBranchSanction.amount)}\n`;
+            text += `*Used Car*\nFTD - ${formatVal(f.loginUsedCar.count, f.loginUsedCar.amount)}\nMTD -${formatVal(m.loginUsedCar.count, m.loginUsedCar.amount)}\n\n`;
+            text += `Total FTD :  ${formatVal(tlFtd, tlaFtd)}\nTotal MTD: ${formatVal(tlMtd, tlaMtd)}\n\n`;
+
+            text += `*Disb :*\n*Open market :*\nFTD :${formatVal(f.disbOpenMarket.count, f.disbOpenMarket.amount)}\nMTD:${formatVal(m.disbOpenMarket.count, m.disbOpenMarket.amount)}\n`;
+            text += `*Branch :*\nFTD :${formatVal(f.disbBranch.count, f.disbBranch.amount)}\nMTD:${formatVal(m.disbBranch.count, m.disbBranch.amount)}\n`;
+            text += `*Used :*\nFTD : ${formatVal(f.disbUsedCar.count, f.disbUsedCar.amount)}\nMTD: ${formatVal(m.disbUsedCar.count, m.disbUsedCar.amount)}\n\n`;
+            text += `Total FTD :${formatVal(tdFtd, tdaFtd)}\nTotal MTD: ${formatVal(tdMtd, tdaMtd)}\n\n`;
+
+            text += `FTD vicp/CRM: ${f.vicpCrm?.count||0}\nMTD vicp/CRM: ${m.vicpCrm?.count||0}\n`;
+            text += `FTD TD : ${f.td?.count||0}\nMTD TD : ${m.td?.count||0}\n\n`;
+            text += `*Maruti*\nLogin FTD/MTD-${formatVal(f.marutiLogin?.count, f.marutiLogin?.amount)}/${formatVal(m.marutiLogin?.count, m.marutiLogin?.amount)}\n`;
+            text += `Disb Ftd /Mtd  :  ${formatVal(f.marutiDisb?.count, f.marutiDisb?.amount)}/${formatVal(m.marutiDisb?.count, m.marutiDisb?.amount)}\n\n`;
+            text += `MI FTD -${f.mi?.count||0}\nMI MTD-${m.mi?.count||0}`;
 
             return encodeURIComponent(text);
         };
@@ -1575,7 +1630,7 @@ const app = createApp({
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
             eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD,
-            smEodSummary, missingEods, generateEodWhatsApp, hasSubmittedToday
+            smEodSummary, missingEods, generateEodWhatsApp, generateRoWhatsApp, hasSubmittedToday, eodTotals
         };
     }
 });
