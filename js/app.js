@@ -754,10 +754,13 @@ const app = createApp({
             const loginsToday = myFiles.value.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
             loginsToday.forEach(f => {
                 const amt = toLakhs(f.loanAmount) || 0;
-                if (f.nclUcl === 'UCL') {
+                const chan = (f.sourcingChannel || '').toUpperCase();
+                const cat = (f.nclUcl || '').toUpperCase();
+
+                if (cat === 'UCL') {
                     eodForm.value.loginUsedCar.count += 1;
                     eodForm.value.loginUsedCar.amount += amt;
-                } else if (f.sourcingChannel === 'Branch') {
+                } else if (chan === 'BRANCH') {
                     eodForm.value.loginBranch.count += 1;
                     eodForm.value.loginBranch.amount += amt;
                 } else {
@@ -765,10 +768,13 @@ const app = createApp({
                     eodForm.value.loginOpenMarket.amount += amt;
                 }
 
-                if (f.vcip && f.vcip.toLowerCase() !== 'no' && f.vcip.toLowerCase() !== 'n/a') {
+                let vcipVal = f.vcip ? String(f.vcip).trim().toLowerCase() : '';
+                if (vcipVal && vcipVal !== '0' && vcipVal !== 'no' && vcipVal !== 'n/a' && vcipVal !== 'false') {
                     eodForm.value.vicpCrm.count += 1;
                 }
-                if (f.mi && f.mi.toLowerCase() !== 'no' && f.mi.toLowerCase() !== 'n/a') {
+                
+                let miVal = f.mi ? String(f.mi).trim().toLowerCase() : '';
+                if (miVal && miVal !== '0' && miVal !== 'no' && miVal !== 'n/a' && miVal !== 'false') {
                     eodForm.value.mi.count += 1;
                 }
             });
@@ -776,10 +782,13 @@ const app = createApp({
             const disbToday = myFiles.value.filter(f => f.status === 'Disbursed' && f.updatedAt && f.updatedAt.startsWith(today));
             disbToday.forEach(f => {
                 const amt = toLakhs(f.loanAmount) || 0;
-                if (f.nclUcl === 'UCL') {
+                const chan = (f.sourcingChannel || '').toUpperCase();
+                const cat = (f.nclUcl || '').toUpperCase();
+
+                if (cat === 'UCL') {
                     eodForm.value.disbUsedCar.count += 1;
                     eodForm.value.disbUsedCar.amount += amt;
-                } else if (f.sourcingChannel === 'Branch') {
+                } else if (chan === 'BRANCH') {
                     eodForm.value.disbBranch.count += 1;
                     eodForm.value.disbBranch.amount += amt;
                 } else {
