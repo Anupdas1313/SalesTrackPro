@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 const workspacesCol = collection(db, 'workspaces');
@@ -105,4 +105,17 @@ export const updateLoanFile = async (id, updateData) => {
 export const deleteLoanFile = async (id) => {
     const docRef = doc(db, 'loanFiles', id);
     await deleteDoc(docRef);
+};
+
+// --- System ---
+export const getAnnouncement = async () => {
+    const docRef = doc(db, 'system', 'announcement');
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return '';
+    return docSnap.data().text || '';
+};
+
+export const setAnnouncement = async (text) => {
+    const docRef = doc(db, 'system', 'announcement');
+    await setDoc(docRef, { text, updatedAt: new Date().toISOString() });
 };

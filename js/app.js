@@ -549,6 +549,44 @@ const app = createApp({
             }
         };
 
+        const originalUser = ref(null);
+
+        const impersonateUser = async (user) => {
+            if (!originalUser.value && currentUser.value.role === 'super_admin') {
+                originalUser.value = { ...currentUser.value };
+            }
+            
+            const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId || user.id }; // Workspaces use id as tenantId
+            localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+            currentUser.value = sessionUser;
+            
+            allWorkspaces.value = [];
+            roUsers.value = [];
+            allFiles.value = [];
+            myFiles.value = [];
+            
+            await loadData();
+            
+            if (sessionUser.role === 'sm') currentTab.value = 'dashboard';
+            else if (sessionUser.role === 'ro') currentTab.value = 'ro-dashboard';
+        };
+
+        const stopImpersonation = async () => {
+            if (originalUser.value) {
+                localStorage.setItem('axis_user', JSON.stringify(originalUser.value));
+                currentUser.value = originalUser.value;
+                originalUser.value = null;
+                
+                allWorkspaces.value = [];
+                roUsers.value = [];
+                allFiles.value = [];
+                myFiles.value = [];
+                
+                await loadData();
+                currentTab.value = 'super-admin-dashboard';
+            }
+        };
+
         const initUserSm = () => {
             if (currentUser.value) {
                 const savedSm = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
@@ -558,6 +596,20 @@ const app = createApp({
                         newFileForm.value.smName = savedSm.toUpperCase();
                     }
                 }
+            }
+        };
+
+        const systemAnnouncement = ref('');
+        const adminAnnouncementInput = ref('');
+        
+        const saveAnnouncement = async () => {
+            try {
+                await db.setAnnouncement(adminAnnouncementInput.value);
+                systemAnnouncement.value = adminAnnouncementInput.value;
+                alert('Announcement updated successfully!');
+            } catch(e) {
+                console.error("Error saving announcement", e);
+                alert("Failed to save announcement");
             }
         };
 
@@ -1063,8 +1115,76 @@ const app = createApp({
         };
 
 
+        let growthChartInstance = null;
+
+        const renderGrowthChart = () => {
+            if (!isSuperAdmin.value || currentTab.value !== 'super-admin-dashboard') return;
+            
+            // Wait for DOM
+            setTimeout(() => {
+                const ctx = document.getElementById('saasGrowthChart');
+                if (!ctx) return;
+                
+                // Prepare data: count files by date for last 30 days
+                const last30Days = [...Array(30)].map((_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (29 - i));
+                    return d.toISOString().split('T')[0];
+                });
+                
+                const fileCounts = last30Days.map(dateStr => {
+                    return allFiles.value.filter(f => {
+                        const d = f.createdAt || f.updatedAt;
+                        return d && d.startsWith(dateStr);
+                    }).length;
+                });
+                
+                if (growthChartInstance) {
+                    growthChartInstance.destroy();
+                }
+                
+                // Only create if Chart is defined (loaded via CDN)
+                if (typeof window.Chart !== 'undefined') {
+                    growthChartInstance = new window.Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: last30Days.map(d => d.substring(5)), // MM-DD
+                            datasets: [{
+                                label: 'New Files',
+                                data: fileCounts,
+                                borderColor: '#97144D',
+                                backgroundColor: 'rgba(151, 20, 77, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#97144D'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        };
+
+        watch([allFiles, currentTab], renderGrowthChart);
+
         // --- Lifecycle ---
         onMounted(async () => {
+            try {
+                systemAnnouncement.value = await db.getAnnouncement();
+                adminAnnouncementInput.value = systemAnnouncement.value;
+            } catch(e) { console.error(e); }
+
             // Check for existing session
             if (currentUser.value) {
                 initUserSm();
@@ -1091,6 +1211,8 @@ const app = createApp({
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
+            originalUser, impersonateUser, stopImpersonation,
+            systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
         };
     }
