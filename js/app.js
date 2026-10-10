@@ -857,13 +857,13 @@ const app = createApp({
                     tenantId: currentUser.value.tenantId,
                     date: today,
                     createdAt: new Date().toISOString(),
-                    metrics: eodForm.value
+                    metrics: JSON.parse(JSON.stringify(eodForm.value))
                 };
                 await db.addEODReport(report);
                 eodSubmitSuccess.value = true;
                 myEods.value.unshift({ ...report, id: Date.now().toString() }); // Optimistic
-                setTimeout(() => { resetEodForm(); currentTab.value = 'ro-dashboard'; }, 2000);
             } catch (e) {
+                console.error(e);
                 eodSubmitError.value = 'Failed to submit EOD. Please try again.';
             }
         };
