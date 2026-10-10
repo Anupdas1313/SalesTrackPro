@@ -256,6 +256,49 @@ const app = createApp({
             }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
         });
 
+        // SaaS Owner (Super Admin) Overview State
+        const saasOverviewTimeline = ref('this-month');
+        const saasOverviewCustomDate = ref('');
+
+        const saasStats = computed(() => {
+            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, saasOverviewTimeline.value, saasOverviewCustomDate.value));
+            
+            // To calculate Active Users in the selected timeframe, we find unique roIds in the files logged in that timeframe.
+            const activeUserIds = new Set(files.filter(f => f.roId).map(f => f.roId));
+            
+            // Workspaces created in the selected timeframe
+            const newWorkspaces = allWorkspaces.value.filter(w => matchesTimeline(w.createdAt, saasOverviewTimeline.value, saasOverviewCustomDate.value));
+            
+            return {
+                totalWorkspaces: allWorkspaces.value.length,
+                newWorkspaces: newWorkspaces.length,
+                totalUsers: roUsers.value.length,
+                activeUsers: activeUserIds.size,
+                totalFiles: files.length,
+                filesAllTime: allFiles.value.length
+            };
+        });
+
+        const tenantHealthList = computed(() => {
+            return allWorkspaces.value.map(workspace => {
+                const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id);
+                const wFiles = allFiles.value.filter(f => f.tenantId === workspace.id || (!f.tenantId && f.smName === workspace.id));
+                
+                let lastActive = null;
+                if (wFiles.length > 0) {
+                    const sortedFiles = [...wFiles].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    lastActive = sortedFiles[0].createdAt;
+                }
+                
+                return {
+                    ...workspace,
+                    roCount: wUsers.length,
+                    fileCount: wFiles.length,
+                    lastActive
+                };
+            }).sort((a, b) => b.fileCount - a.fileCount);
+        });
+
         // RO Overview State
         const roOverviewTimeline = ref('today');
         const roOverviewCustomDate = ref('');
@@ -1039,7 +1082,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
