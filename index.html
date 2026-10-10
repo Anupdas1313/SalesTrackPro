@@ -307,33 +307,122 @@
                     
                     <!-- SM: DASHBOARD -->
                     <div v-if="currentTab === 'dashboard' && isSM" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h2 class="text-lg font-bold text-slate-800">Overview Dashboard</h2>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="relative w-[130px]">
+                                    <select v-model="smOverviewTimeline" @change="smOverviewTimeline !== 'custom' ? smOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] appearance-none cursor-pointer text-slate-700 shadow-xs">
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="this-month">This Month</option>
+                                        <option value="custom">Custom Date</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                                </div>
+                                <input v-if="smOverviewTimeline === 'custom'" v-model="smOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <!-- Total Files -->
                             <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
-                                <div class="w-11 h-11 rounded-xl bg-[#97144D]/10 text-[#97144D] flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
                                     <i class="fas fa-folder-open"></i>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Files</p>
                                     <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.totalFiles }}</p>
+                                    <p class="text-[10px] font-bold text-slate-500">₹{{ formatCurrency(stats.totalValue) }}</p>
                                 </div>
                             </div>
+                            <!-- Approved -->
                             <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
                                 <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Approved Files</p>
-                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.approvedFiles }}</p>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Approved</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.approvedCount }}</p>
+                                    <p class="text-[10px] font-bold text-emerald-600">₹{{ formatCurrency(stats.approvedAmount) }}</p>
                                 </div>
                             </div>
+                            <!-- Disbursed -->
                             <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
-                                <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
-                                    <i class="fas fa-rupee-sign"></i>
+                                <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-money-bill-wave"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Pipeline Value</p>
-                                    <p class="text-2xl font-black text-slate-900 leading-tight">₹{{ formatCurrency(stats.totalValue) }}</p>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Disbursed</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.disbursedCount }}</p>
+                                    <p class="text-[10px] font-bold text-blue-600">₹{{ formatCurrency(stats.disbursedAmount) }}</p>
                                 </div>
+                            </div>
+                            <!-- In Process -->
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">In Process (FI)</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.loginCount }}</p>
+                                    <p class="text-[10px] font-bold text-amber-600">₹{{ formatCurrency(stats.loginAmount) }}</p>
+                                </div>
+                            </div>
+                            <!-- Rejected -->
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Rejected</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.rejectedCount }}</p>
+                                    <p class="text-[10px] font-bold text-red-600">₹{{ formatCurrency(stats.rejectedAmount) }}</p>
+                                </div>
+                            </div>
+                            <!-- Approval Rate -->
+                            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex items-center">
+                                <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg mr-3.5 shrink-0">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Approval Rate</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight">{{ stats.approvalRate }}%</p>
+                                    <p class="text-[10px] font-bold text-slate-500">Apprv. + Disb.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- RO Performance Leaderboard -->
+                        <div class="bg-white rounded-xl border border-slate-300 shadow-xs overflow-hidden mb-4 sm:mb-6">
+                            <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/80">
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">RO Performance Leaderboard</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
+                                    <thead class="bg-slate-100">
+                                        <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
+                                            <th class="border border-slate-300 px-3 py-2">RO Name</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-center">Total Files</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-center">Approved/Disbursed</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-right">Total Pipeline</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-right">Disbursed Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-xs">
+                                        <tr v-for="ro in smLeaderboard" :key="ro.id" class="hover:bg-slate-50 transition-colors">
+                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900 uppercase">{{ ro.name }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-center font-bold">{{ ro.totalFiles }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-center font-bold text-emerald-600">{{ ro.approvedFiles }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-right font-medium text-slate-700">₹{{ formatCurrency(ro.totalAmount) }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-right font-black text-slate-900">₹{{ formatCurrency(ro.disbursedAmount) }}</td>
+                                        </tr>
+                                        <tr v-if="smLeaderboard.length === 0">
+                                            <td colspan="5" class="border border-slate-300 p-8 text-center text-slate-400">No RO data available.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 

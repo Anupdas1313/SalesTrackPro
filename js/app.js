@@ -195,15 +195,65 @@ const app = createApp({
             return '₹' + rupees.toLocaleString('en-IN');
         };
 
+        // SM Overview State
+        const smOverviewTimeline = ref('this-month');
+        const smOverviewCustomDate = ref('');
+
         // Admin Stats
         const stats = computed(() => {
-            const files = allFiles.value;
+            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, smOverviewTimeline.value, smOverviewCustomDate.value));
             const approved = files.filter(f => f.status === 'Approved');
+            const disbursed = files.filter(f => f.status === 'Disbursed');
+            const login = files.filter(f => f.status === 'FI');
+            const rejected = files.filter(f => f.status === 'Rejected');
+            
+            const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const disbursedAmount = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const loginAmount = login.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const rejectedAmount = rejected.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+
+            const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
+
             return {
                 totalFiles: files.length,
+                totalValue: totalAmount,
                 approvedFiles: approved.length,
-                totalValue: files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0)
+                approvedCount: approved.length,
+                approvedAmount,
+                disbursedCount: disbursed.length,
+                disbursedAmount,
+                loginCount: login.length,
+                loginAmount,
+                rejectedCount: rejected.length,
+                rejectedAmount,
+                approvalRate
             };
+        });
+
+        // SM Leaderboard
+        const smLeaderboard = computed(() => {
+            if (!roUsers.value || roUsers.value.length === 0) return [];
+            
+            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, smOverviewTimeline.value, smOverviewCustomDate.value));
+            
+            return roUsers.value.map(ro => {
+                const roFiles = files.filter(f => f.roId === ro.id);
+                const approvedFiles = roFiles.filter(f => f.status === 'Approved' || f.status === 'Disbursed');
+                const disbursedFiles = roFiles.filter(f => f.status === 'Disbursed');
+                
+                const totalAmount = roFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                const disbursedAmount = disbursedFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                
+                return {
+                    id: ro.id,
+                    name: ro.name,
+                    totalFiles: roFiles.length,
+                    totalAmount,
+                    approvedFiles: approvedFiles.length,
+                    disbursedAmount
+                };
+            }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
         });
 
         // RO Overview State
@@ -989,11 +1039,11 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate,
+            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, logout, saveNewRo, toggleUserStatus,
