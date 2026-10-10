@@ -299,6 +299,29 @@ const app = createApp({
             }).sort((a, b) => b.fileCount - a.fileCount);
         });
 
+        const groupedUsers = computed(() => {
+            const systemUsers = roUsers.value.filter(u => !u.tenantId);
+            
+            const grouped = allWorkspaces.value.map(workspace => {
+                const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id);
+                return {
+                    workspace,
+                    smUsers: wUsers.filter(u => u.role === 'sm'),
+                    roUsers: wUsers.filter(u => u.role === 'ro')
+                };
+            }).sort((a, b) => a.workspace.name.localeCompare(b.workspace.name));
+            
+            if (systemUsers.length > 0) {
+                grouped.push({
+                    workspace: { id: 'system', name: 'System / Unassigned', status: 'active' },
+                    smUsers: systemUsers.filter(u => u.role === 'super_admin' || u.role === 'sm'),
+                    roUsers: systemUsers.filter(u => u.role === 'ro' || (!['super_admin','sm'].includes(u.role)))
+                });
+            }
+            
+            return grouped;
+        });
+
         // RO Overview State
         const roOverviewTimeline = ref('today');
         const roOverviewCustomDate = ref('');
@@ -1202,7 +1225,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
