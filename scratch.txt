@@ -1,0 +1,184 @@
+                    <!-- RO: DAILY EOD SUBMISSION -->
+                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-3xl mx-auto pb-12 space-y-5">
+                        <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                            <div>
+                                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Submit Daily EOD</h3>
+                                <p class="text-sm text-slate-500 font-medium mt-1">Review your auto-calculated metrics for today.</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</p>
+                                <p class="text-sm font-bold text-[#97144D]">{{ new Date().toLocaleDateString() }}</p>
+                            </div>
+                        </div>
+                        
+                        <div v-if="eodSubmitSuccess" class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm animate-fade-in">
+                            <i class="fas fa-check-circle text-lg"></i> EOD Report submitted successfully!
+                        </div>
+                        <div v-if="eodSubmitError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm animate-fade-in">
+                            <i class="fas fa-exclamation-triangle text-lg"></i> {{ eodSubmitError }}
+                        </div>
+
+                        <form @submit.prevent="submitEOD" class="space-y-6">
+                            
+                            <!-- Logins Card -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm shadow-inner">
+                                        <i class="fas fa-file-import"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-700 text-lg">Logins (FTD)</h4>
+                                </div>
+                                <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white">
+                                    <!-- Open Market -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">Open Market</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.loginOpenMarket.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.loginOpenMarket.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Branch -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">Branch</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.loginBranch.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.loginBranch.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Branch Sanction -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">Branch Sanction</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.loginBranchSanction.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.loginBranchSanction.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Used Car -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">Used Car</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.loginUsedCar.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.loginUsedCar.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Disbursements Card -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-inner">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-700 text-lg">Disbursements (FTD)</h4>
+                                </div>
+                                <div class="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white">
+                                    <!-- Open Market -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-600 transition">Open Market</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.disbOpenMarket.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.disbOpenMarket.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Branch -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-600 transition">Branch</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.disbBranch.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.disbBranch.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Used Car -->
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-600 transition">Used Car</label>
+                                        <div class="flex gap-2">
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
+                                                <input type="number" v-model.number="eodForm.disbUsedCar.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
+                                                <input type="number" v-model.number="eodForm.disbUsedCar.amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Other Metrics Card -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm shadow-inner">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-700 text-lg">Other Metrics (FTD)</h4>
+                                </div>
+                                <div class="p-5 grid grid-cols-2 sm:grid-cols-5 gap-4 bg-white">
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center">VICP / CRM</label>
+                                        <input type="number" v-model.number="eodForm.vicpCrm.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center">TD</label>
+                                        <input type="number" v-model.number="eodForm.td.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center text-nowrap">Maruti Login</label>
+                                        <input type="number" v-model.number="eodForm.marutiLogin.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center text-nowrap">Maruti Disb</label>
+                                        <input type="number" v-model.number="eodForm.marutiDisb.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center">MI</label>
+                                        <input type="number" v-model.number="eodForm.mi.count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex justify-end">
+                                <button type="submit" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Submit Final EOD Report</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
