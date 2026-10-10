@@ -621,6 +621,46 @@ const app = createApp({
         };
 
         // --- EOD Logic ---
+        const metricsConfig = [
+            { label: 'Open Market', key: 'loginOpenMarket', category: 'Login', type: 'both' },
+            { label: 'Branch', key: 'loginBranch', category: 'Login', type: 'both' },
+            { label: 'Branch Sanction', key: 'loginBranchSanction', category: 'Login', type: 'both' },
+            { label: 'Used Car', key: 'loginUsedCar', category: 'Login', type: 'both' },
+            { label: 'Open Market', key: 'disbOpenMarket', category: 'Disbursement', type: 'both' },
+            { label: 'Branch', key: 'disbBranch', category: 'Disbursement', type: 'both' },
+            { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
+            { label: 'VICP/CRM', key: 'vicpCrm', category: 'Other', type: 'count' },
+            { label: 'TD', key: 'td', category: 'Other', type: 'count' },
+            { label: 'MI', key: 'mi', category: 'Other', type: 'count' },
+            { label: 'Maruti Login', key: 'marutiLogin', category: 'Other', type: 'both' },
+            { label: 'Maruti Disb', key: 'marutiDisb', category: 'Other', type: 'both' }
+        ];
+
+        const validateEOD = (metrics) => {
+            const errs = [];
+            const keys = Object.keys(metrics);
+            keys.forEach(k => {
+                const m = metrics[k];
+                if (m?.count !== undefined && (m.count < 0 || !Number.isFinite(m.count))) {
+                    errs.push(`${k} count must be a non-negative number`);
+                }
+                if (m?.amount !== undefined) {
+                    if (m.amount < 0 || isNaN(Number(m.amount))) {
+                        errs.push(`${k} amount must be a non-negative number`);
+                    }
+                    if (!Number.isInteger(m.amount * 100)) {
+                        errs.push(`${k} amount must have at most 2 decimal places`);
+                    }
+                }
+            });
+            const anyFilled = keys.some(k => {
+                const m = metrics[k];
+                return (m?.count && m.count > 0) || (m?.amount && m.amount > 0);
+            });
+            if (!anyFilled) errs.push('Enter at least one metric before submitting');
+            return errs;
+        };
+
         const eodForm = ref({
             loginOpenMarket: { count: 0, amount: 0 },
             loginBranch: { count: 0, amount: 0 },
@@ -638,6 +678,7 @@ const app = createApp({
         
         const eodSubmitError = ref('');
         const eodSubmitSuccess = ref(false);
+        const submitting = ref(false);
         const myEods = ref([]);
         const smEods = ref([]);
         
@@ -652,7 +693,12 @@ const app = createApp({
                 loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginBranchSanction.count||0) + (f.loginUsedCar.count||0),
                 loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginBranchSanction.amount||0) + (f.loginUsedCar.amount||0),
                 disbCount: (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0),
-                disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0)
+                disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0),
+                sanctionCount: (f.loginBranchSanction?.count || 0),
+                sanctionAmt: (f.loginBranchSanction?.amount || 0),
+                vcipCount: (f.vicpCrm?.count || 0),
+                tdCount: (f.td?.count || 0),
+                miCount: (f.mi?.count || 0)
             };
         });
 
@@ -897,6 +943,19 @@ const app = createApp({
             console.log("Submit EOD button clicked!");
             eodSubmitError.value = '';
             eodSubmitSuccess.value = false;
+            
+            if (!currentUser.value?.id) {
+                eodSubmitError.value = 'You must be logged in to submit an EOD report.';
+                return;
+            }
+
+            const validationErrors = validateEOD(eodForm.value);
+            if (validationErrors.length) {
+                eodSubmitError.value = validationErrors.join(' | ');
+                return;
+            }
+
+            submitting.value = true;
             try {
                 const today = new Date().toISOString().split('T')[0];
                 
@@ -921,6 +980,8 @@ const app = createApp({
             } catch (e) {
                 console.error('Submit EOD Error:', e);
                 eodSubmitError.value = 'Error: ' + (e.message || 'Failed to submit EOD. Please try again.');
+            } finally {
+                submitting.value = false;
             }
         };
 
@@ -1630,7 +1691,7 @@ const app = createApp({
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
-            eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD,
+            eodForm, eodSubmitError, eodSubmitSuccess, submitting, metricsConfig, validateEOD, myEods, smEods, submitEOD,
             smEodSummary, missingEods, generateEodWhatsApp, generateRoWhatsApp, hasSubmittedToday, eodTotals
         };
     }
