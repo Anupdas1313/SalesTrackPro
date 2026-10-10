@@ -299,29 +299,112 @@ const app = createApp({
             }).sort((a, b) => b.fileCount - a.fileCount);
         });
 
+        const userSearchQuery = ref('');
+        const userFilterStatus = ref('all');
+        const expandedWorkspaces = ref([]);
+        
+        const toggleWorkspaceExpansion = (workspaceId) => {
+            const index = expandedWorkspaces.value.indexOf(workspaceId);
+            if (index > -1) expandedWorkspaces.value.splice(index, 1);
+            else expandedWorkspaces.value.push(workspaceId);
+        };
+        
+        const expandAllWorkspaces = () => {
+            expandedWorkspaces.value = allWorkspaces.value.map(w => w.id);
+            expandedWorkspaces.value.push('system');
+        };
+        
+        const collapseAllWorkspaces = () => {
+            expandedWorkspaces.value = [];
+        };
+
+        watch(allWorkspaces, (newVal) => {
+            if (expandedWorkspaces.value.length === 0 && newVal.length > 0) {
+                expandAllWorkspaces();
+            }
+        }, { immediate: true });
+
         const groupedUsers = computed(() => {
-            const allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin' && u.email !== 'anupdas8354@gmail.com');
+            let allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin' && u.email !== 'anupdas8354@gmail.com');
+            
+            if (userFilterStatus.value !== 'all') {
+                allPlatformUsers = allPlatformUsers.filter(u => (u.status || 'active') === userFilterStatus.value);
+            }
+            if (userSearchQuery.value) {
+                const q = userSearchQuery.value.toLowerCase();
+                allPlatformUsers = allPlatformUsers.filter(u => 
+                    u.name.toLowerCase().includes(q) || 
+                    (u.email && u.email.toLowerCase().includes(q))
+                );
+            }
+
             const systemUsers = allPlatformUsers.filter(u => !u.tenantId);
             
             const grouped = allWorkspaces.value.map(workspace => {
                 const wUsers = allPlatformUsers.filter(u => u.tenantId === workspace.id);
+                
+                const enhancedUsers = wUsers.map(u => {
+                    const uFiles = allFiles.value.filter(f => f.userId === u.id);
+                    let lastActive = null;
+                    if (uFiles.length > 0) {
+                        lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
+                    }
+                    return { ...u, fileCount: uFiles.length, lastActive };
+                });
+                
                 return {
                     workspace,
-                    smUsers: wUsers.filter(u => u.role === 'sm'),
-                    roUsers: wUsers.filter(u => u.role === 'ro')
+                    isExpanded: expandedWorkspaces.value.includes(workspace.id),
+                    smUsers: enhancedUsers.filter(u => u.role === 'sm'),
+                    roUsers: enhancedUsers.filter(u => u.role === 'ro' || u.role !== 'sm') // Catch-all for non-sm
                 };
-            }).sort((a, b) => a.workspace.name.localeCompare(b.workspace.name));
+            }).filter(group => group.smUsers.length > 0 || group.roUsers.length > 0)
+              .sort((a, b) => a.workspace.name.localeCompare(b.workspace.name));
             
             if (systemUsers.length > 0) {
+                const enhancedSystem = systemUsers.map(u => {
+                    const uFiles = allFiles.value.filter(f => f.userId === u.id);
+                    let lastActive = null;
+                    if (uFiles.length > 0) {
+                        lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
+                    }
+                    return { ...u, fileCount: uFiles.length, lastActive };
+                });
                 grouped.push({
                     workspace: { id: 'system', name: 'System / Unassigned', status: 'active' },
-                    smUsers: systemUsers.filter(u => u.role === 'sm'),
-                    roUsers: systemUsers.filter(u => u.role !== 'sm')
+                    isExpanded: expandedWorkspaces.value.includes('system'),
+                    smUsers: enhancedSystem.filter(u => u.role === 'sm'),
+                    roUsers: enhancedSystem.filter(u => u.role !== 'sm')
                 });
             }
             
             return grouped;
         });
+
+        const showEditUserModal = ref(false);
+        const editUserForm = ref({ id: '', name: '', email: '', tenantId: '', role: '' });
+
+        const openEditUserModal = (user) => {
+            editUserForm.value = { ...user };
+            showEditUserModal.value = true;
+        };
+
+        const saveUserEdit = async () => {
+            try {
+                await db.updateUser(editUserForm.value.id, {
+                    name: editUserForm.value.name,
+                    tenantId: editUserForm.value.tenantId,
+                    role: editUserForm.value.role
+                });
+                const index = roUsers.value.findIndex(u => u.id === editUserForm.value.id);
+                if (index !== -1) {
+                    roUsers.value[index] = { ...roUsers.value[index], ...editUserForm.value };
+                }
+                showEditUserModal.value = false;
+            } catch (error) {
+                console.error("Error saving user edit", error);
+            }
+        };
 
         // RO Overview State
         const roOverviewTimeline = ref('today');
@@ -1227,6 +1310,7 @@ const app = createApp({
         return {
             currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
+            userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,

@@ -393,34 +393,59 @@
                     </div>
 
                     <!-- SUPER ADMIN: USER DIRECTORY -->
+                    <!-- SUPER ADMIN: USER DIRECTORY -->
                     <div v-if="currentTab === 'super-admin-users' && isSuperAdmin" class="space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                             <h3 class="text-xl font-bold text-slate-800 mb-0">Global User Directory</h3>
+                            
+                            <!-- Search & Filters -->
+                            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <div class="relative flex-1 md:w-64">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input v-model="userSearchQuery" type="text" placeholder="Search name or email..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs outline-none focus:border-[#97144D] shadow-xs transition">
+                                </div>
+                                <select v-model="userFilterStatus" class="px-2 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-[#97144D] shadow-xs cursor-pointer">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="suspended">Frozen Only</option>
+                                </select>
+                                <button @click="expandAllWorkspaces" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition shadow-xs" title="Expand All"><i class="fas fa-expand-alt"></i></button>
+                                <button @click="collapseAllWorkspaces" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition shadow-xs" title="Collapse All"><i class="fas fa-compress-alt"></i></button>
+                            </div>
                         </div>
 
-                        <div class="space-y-6">
+                        <div class="space-y-4">
+                            <div v-if="groupedUsers.length === 0" class="text-center py-10 bg-white rounded-xl shadow-xs border border-slate-200/80 text-slate-500 text-sm font-medium">
+                                <i class="fas fa-users-slash text-2xl text-slate-300 mb-2 block"></i>
+                                No users found matching your filters.
+                            </div>
+                            
                             <div v-for="group in groupedUsers" :key="group.workspace.id" class="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
-                                <!-- Workspace Header -->
-                                <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                                    <div class="flex items-center gap-2">
+                                <!-- Workspace Header (Collapsible) -->
+                                <div @click="toggleWorkspaceExpansion(group.workspace.id)" class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition select-none">
+                                    <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-[#97144D]/10 text-[#97144D] flex items-center justify-center font-bold text-xs shadow-xs">
                                             <i class="fas fa-building"></i>
                                         </div>
                                         <div>
                                             <h4 class="text-sm font-bold text-slate-800 uppercase">{{ group.workspace.name }}</h4>
-                                            <p class="text-[10px] text-slate-500 font-mono">Tenant ID: {{ group.workspace.id }}</p>
+                                            <p class="text-[10px] text-slate-500 font-mono">Tenant ID: {{ group.workspace.id }} <span class="mx-1">&bull;</span> Users: {{ group.smUsers.length + group.roUsers.length }}</p>
                                         </div>
+                                    </div>
+                                    <div class="text-slate-400 w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-200 transition">
+                                        <i class="fas" :class="group.isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="overflow-x-auto">
+                                <div v-show="group.isExpanded" class="overflow-x-auto">
                                     <table class="w-full text-left text-sm text-slate-600">
-                                        <thead class="bg-slate-50/50 text-xs uppercase font-bold text-slate-500 border-b border-slate-100">
+                                        <thead class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
                                             <tr>
                                                 <th class="px-4 py-2">Name / Email</th>
-                                                <th class="px-4 py-2 text-center w-32">Role</th>
-                                                <th class="px-4 py-2 text-center w-24">Status</th>
-                                                <th class="px-4 py-2 text-right w-48">Actions</th>
+                                                <th class="px-4 py-2 text-center w-24">Role</th>
+                                                <th class="px-4 py-2 text-center w-32">Performance</th>
+                                                <th class="px-4 py-2 text-center w-20">Status</th>
+                                                <th class="px-4 py-2 text-right w-56">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-50 font-medium">
@@ -431,16 +456,23 @@
                                                     <div class="text-[10px] text-slate-400">{{ user.email || 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
-                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase">Sales Mgr (SM)</span>
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase">Sales Mgr</span>
+                                                </td>
+                                                <td class="px-4 py-2 text-center">
+                                                    <div class="text-[10px] font-bold text-slate-700">{{ user.fileCount || 0 }} Files</div>
+                                                    <div class="text-[9px] text-slate-400">{{ user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'Never Active' }}</div>
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
                                                     <span :class="user.status === 'active' ? 'text-emerald-600' : 'text-red-600'" class="text-[10px] font-bold uppercase">{{ user.status || 'ACTIVE' }}</span>
                                                 </td>
-                                                <td class="px-4 py-2 text-right">
+                                                <td class="px-4 py-2 text-right space-x-1">
+                                                    <button @click="openEditUserModal(user)" class="px-2 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded text-[10px] font-bold transition" title="Edit User">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
                                                     <button v-if="user.role !== 'super_admin'" @click="impersonateUser(user)" class="px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded text-[10px] font-bold transition">
                                                         <i class="fas fa-user-secret mr-1"></i> Login
                                                     </button>
-                                                    <button v-if="user.role !== 'super_admin'" @click="toggleUserStatus(user)" class="ml-1 px-2 py-1 border rounded text-[10px] font-bold transition" :class="user.status === 'active' || !user.status ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'">
+                                                    <button v-if="user.role !== 'super_admin'" @click="toggleUserStatus(user)" class="px-2 py-1 border rounded text-[10px] font-bold transition" :class="user.status === 'active' || !user.status ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'">
                                                         {{ user.status === 'active' || !user.status ? 'Freeze' : 'Unfreeze' }}
                                                     </button>
                                                 </td>
@@ -455,22 +487,26 @@
                                                     <div class="text-[10px] text-slate-400">{{ user.email || 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
-                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold uppercase">{{ user.role === 'super_admin' ? 'Super Admin' : 'Officer (RO)' }}</span>
+                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold uppercase">Officer (RO)</span>
+                                                </td>
+                                                <td class="px-4 py-2 text-center">
+                                                    <div class="text-[10px] font-bold text-slate-700">{{ user.fileCount || 0 }} Files</div>
+                                                    <div class="text-[9px] text-slate-400">{{ user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'Never Active' }}</div>
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
                                                     <span :class="user.status === 'active' ? 'text-emerald-600' : 'text-red-600'" class="text-[10px] font-bold uppercase">{{ user.status || 'ACTIVE' }}</span>
                                                 </td>
-                                                <td class="px-4 py-2 text-right">
+                                                <td class="px-4 py-2 text-right space-x-1">
+                                                    <button @click="openEditUserModal(user)" class="px-2 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded text-[10px] font-bold transition" title="Edit / Transfer User">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
                                                     <button v-if="user.role !== 'super_admin'" @click="impersonateUser(user)" class="px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded text-[10px] font-bold transition">
                                                         <i class="fas fa-user-secret mr-1"></i> Login
                                                     </button>
-                                                    <button v-if="user.role !== 'super_admin'" @click="toggleUserStatus(user)" class="ml-1 px-2 py-1 border rounded text-[10px] font-bold transition" :class="user.status === 'active' || !user.status ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'">
+                                                    <button v-if="user.role !== 'super_admin'" @click="toggleUserStatus(user)" class="px-2 py-1 border rounded text-[10px] font-bold transition" :class="user.status === 'active' || !user.status ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'">
                                                         {{ user.status === 'active' || !user.status ? 'Freeze' : 'Unfreeze' }}
                                                     </button>
                                                 </td>
-                                            </tr>
-                                            <tr v-if="group.smUsers.length === 0 && group.roUsers.length === 0">
-                                                <td colspan="4" class="px-4 py-4 text-center text-xs text-slate-400">No users in this workspace.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -2026,6 +2062,42 @@
                 </div>
                 <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end">
                     <button @click="showViewFileModal = false" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit / Transfer User Modal -->
+        <div v-if="showEditUserModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+            <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-white/20">
+                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
+                    <h3 class="font-bold text-slate-800"><i class="fas fa-user-edit text-[#97144D] mr-2"></i>Edit User</h3>
+                    <button @click="showEditUserModal = false" class="text-slate-400 hover:text-slate-600 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                        <input v-model="editUserForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Role</label>
+                        <select v-model="editUserForm.role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition">
+                            <option value="sm">Sales Manager (SM)</option>
+                            <option value="ro">Officer (RO)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Workspace (Tenant)</label>
+                        <select v-model="editUserForm.tenantId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition">
+                            <option value="">System / Unassigned</option>
+                            <option v-for="w in allWorkspaces" :key="w.id" :value="w.id">{{ w.name }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-end gap-2">
+                    <button @click="showEditUserModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-bold rounded-xl text-xs transition">Cancel</button>
+                    <button @click="saveUserEdit" class="px-4 py-2 bg-[#97144D] hover:bg-axisMaroonDark text-white font-bold rounded-xl text-xs shadow-xs transition">Save Changes</button>
                 </div>
             </div>
         </div>
