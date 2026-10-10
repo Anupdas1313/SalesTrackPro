@@ -399,7 +399,8 @@
                             <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/80">
                                 <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">RO Performance Leaderboard</h3>
                             </div>
-                            <div class="overflow-x-auto">
+                            <!-- Desktop Table View -->
+                            <div class="hidden md:block overflow-x-auto">
                                 <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
@@ -423,6 +424,29 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- Mobile Card View -->
+                            <div class="md:hidden flex flex-col divide-y divide-slate-100">
+                                <div v-for="(ro, index) in smLeaderboard" :key="'mob-ro-'+ro.id" class="p-3.5 space-y-2">
+                                    <div class="flex justify-between items-baseline gap-2 min-w-0">
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <span class="text-[10px] font-black text-slate-400 shrink-0">#{{ index + 1 }}</span>
+                                            <h4 class="font-extrabold text-slate-900 text-xs uppercase truncate">{{ ro.name }}</h4>
+                                        </div>
+                                        <div class="text-xs font-black text-[#97144D] shrink-0">₹{{ formatCurrency(ro.disbursedAmount) }}</div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px]">
+                                        <div class="flex gap-3 shrink-0">
+                                            <span class="text-slate-600"><i class="fas fa-folder text-slate-400"></i> {{ ro.totalFiles }}</span>
+                                            <span class="text-emerald-600 font-bold"><i class="fas fa-check-circle"></i> {{ ro.approvedFiles }}</span>
+                                        </div>
+                                        <span class="text-slate-500 font-medium truncate ml-2">Pipe: ₹{{ formatCurrency(ro.totalAmount) }}</span>
+                                    </div>
+                                </div>
+                                <div v-if="smLeaderboard.length === 0" class="p-6 text-center text-slate-400 text-xs">
+                                    No RO data available.
+                                </div>
                             </div>
                         </div>
 
@@ -464,16 +488,16 @@
                             <!-- Mobile Card View (100% Screen Fit) -->
                             <div class="md:hidden flex flex-col divide-y divide-slate-100">
                                 <div v-for="file in recentFiles" :key="'mob-rec-'+file.id" class="p-3.5 space-y-2">
-                                    <div class="flex justify-between items-baseline gap-2">
+                                    <div class="flex justify-between items-baseline gap-2 min-w-0">
                                         <h4 class="font-extrabold text-slate-900 text-xs uppercase truncate">{{ file.customerName }}</h4>
                                         <div class="text-xs font-black text-slate-900 shrink-0">₹{{ formatCurrency(file.loanAmount) }}</div>
                                     </div>
-                                    <div class="flex items-center justify-between text-[10px]">
-                                        <div class="flex items-center gap-2">
-                                            <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
-                                            <span class="text-slate-600 font-bold uppercase"><i class="fas fa-user text-[9px] text-slate-400 mr-0.5"></i> {{ file.roName }}</span>
+                                    <div class="flex items-center justify-between text-[10px] min-w-0 gap-2">
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold shrink-0">{{ file.status }}</span>
+                                            <span class="text-slate-600 font-bold uppercase truncate"><i class="fas fa-user text-[9px] text-slate-400 mr-0.5"></i> {{ file.roName }}</span>
                                         </div>
-                                        <span class="text-slate-400 font-medium">{{ formatDate(file.createdAt) }}</span>
+                                        <span class="text-slate-400 font-medium shrink-0">{{ formatDate(file.createdAt) }}</span>
                                     </div>
                                 </div>
                                 <div v-if="recentFiles.length === 0" class="p-6 text-center text-slate-400 text-xs">
