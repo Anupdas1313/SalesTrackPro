@@ -300,10 +300,11 @@ const app = createApp({
         });
 
         const groupedUsers = computed(() => {
-            const systemUsers = roUsers.value.filter(u => !u.tenantId);
+            const allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin');
+            const systemUsers = allPlatformUsers.filter(u => !u.tenantId);
             
             const grouped = allWorkspaces.value.map(workspace => {
-                const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id);
+                const wUsers = allPlatformUsers.filter(u => u.tenantId === workspace.id);
                 return {
                     workspace,
                     smUsers: wUsers.filter(u => u.role === 'sm'),
@@ -314,8 +315,8 @@ const app = createApp({
             if (systemUsers.length > 0) {
                 grouped.push({
                     workspace: { id: 'system', name: 'System / Unassigned', status: 'active' },
-                    smUsers: systemUsers.filter(u => u.role === 'super_admin' || u.role === 'sm'),
-                    roUsers: systemUsers.filter(u => u.role === 'ro' || (!['super_admin','sm'].includes(u.role)))
+                    smUsers: systemUsers.filter(u => u.role === 'sm'),
+                    roUsers: systemUsers.filter(u => u.role !== 'sm')
                 });
             }
             
