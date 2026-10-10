@@ -119,3 +119,23 @@ export const setAnnouncement = async (text) => {
     const docRef = doc(db, 'system', 'announcement');
     await setDoc(docRef, { text, updatedAt: new Date().toISOString() });
 };
+export const addEODReport = async (reportData) => {
+    try {
+        const docRef = await addDoc(collection(db, 'eod_reports'), reportData);
+        return docRef.id;
+    } catch (e) {
+        console.error('Error adding EOD report: ', e);
+        throw e;
+    }
+};
+
+export const getEODReportsByTenant = async (tenantId) => {
+    try {
+        const q = query(collection(db, 'eod_reports'), where('tenantId', '==', tenantId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+        console.error('Error getting EOD reports: ', e);
+        return [];
+    }
+};

@@ -194,6 +194,9 @@
                             <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-users-cog w-5 text-sm"></i> Team Users
                             </a>
+                            <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1']">
+                                <i class="fas fa-clipboard-check w-5 text-sm"></i> RO Daily EODs
+                            </a>
                         </template>
 
                         <!-- RO Navigation -->
@@ -206,6 +209,9 @@
                             </a>
                             <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-plus-circle w-5 text-sm"></i> Add New File
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1']">
+                                <i class="fas fa-clipboard-list w-5 text-sm"></i> Daily EOD
                             </a>
                         </template>
                     </nav>
@@ -1633,34 +1639,174 @@
 
                 </div>
 
+                    <!-- RO: DAILY EOD SUBMISSION -->
+                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-2xl mx-auto pb-12 space-y-4">
+                        <h3 class="text-xl font-bold text-slate-800 mb-0">Submit Daily EOD</h3>
+                        <p class="text-xs text-slate-500 mb-4">Date: {{ new Date().toLocaleDateString() }}</p>
+                        
+                        <div v-if="eodSubmitSuccess" class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i> EOD Report submitted successfully!
+                        </div>
+                        <div v-if="eodSubmitError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i> {{ eodSubmitError }}
+                        </div>
+
+                        <form @submit.prevent="submitEOD" class="space-y-6">
+                            <!-- Logins -->
+                            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
+                                <h4 class="font-bold text-slate-700 mb-3 border-b pb-2">Logins (FTD)</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Open Market</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.loginOpenMarket.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.loginOpenMarket.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Branch</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.loginBranch.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.loginBranch.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Branch Sanction</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.loginBranchSanction.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.loginBranchSanction.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Used Car</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.loginUsedCar.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.loginUsedCar.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Disbursements -->
+                            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
+                                <h4 class="font-bold text-slate-700 mb-3 border-b pb-2">Disbursements (FTD)</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Open Market</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.disbOpenMarket.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.disbOpenMarket.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Branch</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.disbBranch.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.disbBranch.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Used Car</label>
+                                        <div class="flex gap-1"><input type="number" v-model.number="eodForm.disbUsedCar.count" placeholder="No." class="w-1/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0"><input type="number" v-model.number="eodForm.disbUsedCar.amount" placeholder="Amt (L)" class="w-2/3 px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0" step="0.01"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Others -->
+                            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4">
+                                <h4 class="font-bold text-slate-700 mb-3 border-b pb-2">Other Metrics (FTD)</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">VICP / CRM</label>
+                                        <input type="number" v-model.number="eodForm.vicpCrm.count" placeholder="Count" class="w-full px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">TD</label>
+                                        <input type="number" v-model.number="eodForm.td.count" placeholder="Count" class="w-full px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Maruti Login</label>
+                                        <input type="number" v-model.number="eodForm.marutiLogin.count" placeholder="Count" class="w-full px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Maruti Disb</label>
+                                        <input type="number" v-model.number="eodForm.marutiDisb.count" placeholder="Count" class="w-full px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase">MI</label>
+                                        <input type="number" v-model.number="eodForm.mi.count" placeholder="Count" class="w-full px-2 py-1.5 border rounded-lg text-xs outline-none focus:border-[#97144D]" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="w-full py-3 bg-[#97144D] hover:bg-[#801040] text-white font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 text-sm">
+                                <i class="fas fa-paper-plane"></i> Submit Daily EOD
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- SM: EOD REPORTS DIRECTORY -->
+                    <div v-if="currentTab === 'sm-eod' && isSM" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-slate-800 mb-0">RO Daily EOD Submissions</h3>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-2">Date</th>
+                                            <th class="px-4 py-2">RO Name</th>
+                                            <th class="px-4 py-2 text-center">Total Logins (FTD)</th>
+                                            <th class="px-4 py-2 text-center">Total Disb (FTD)</th>
+                                            <th class="px-4 py-2 text-center">Branch Sanc</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50 font-medium">
+                                        <tr v-for="eod in smEods" :key="eod.id" class="hover:bg-slate-50 transition">
+                                            <td class="px-4 py-3 text-slate-800 font-bold">{{ new Date(eod.date).toLocaleDateString() }}</td>
+                                            <td class="px-4 py-3 uppercase text-xs">{{ eod.userName }}</td>
+                                            <td class="px-4 py-3 text-center">
+                                                {{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }} / 
+                                                {{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(2) }}L
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                {{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }} / 
+                                                {{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(2) }}L
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                {{ eod.metrics.loginBranchSanction.count || 0 }} / {{ (eod.metrics.loginBranchSanction.amount || 0).toFixed(2) }}L
+                                            </td>
+                                        </tr>
+                                        <tr v-if="smEods.length === 0">
+                                            <td colspan="5" class="px-4 py-6 text-center text-slate-400">No EOD reports submitted yet.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isSM">
                         <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Dashboard</span>
+                            <span class="text-[10px]">Home</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Tracking</span>
+                            <span class="text-[10px]">Track</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-users-cog text-lg mb-0.5"></i>
                             <span class="text-[10px]">Users</span>
                         </a>
+                        <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
+                            <span class="text-[10px]">EODs</span>
+                        </a>
                     </template>
                     <template v-else>
                         <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Overview</span>
+                            <span class="text-[10px]">Home</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Tracking</span>
+                            <span class="text-[10px]">Track</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-plus-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">New Entry</span>
+                            <span class="text-[10px]">Add</span>
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-clipboard-list text-lg mb-0.5"></i>
+                            <span class="text-[10px]">EOD</span>
                         </a>
                     </template>
                 </nav>

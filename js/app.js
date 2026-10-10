@@ -620,6 +620,76 @@ const app = createApp({
             showCustomDateInput.value = false;
         };
 
+        // --- EOD Logic ---
+        const eodForm = ref({
+            loginOpenMarket: { count: 0, amount: 0 },
+            loginBranch: { count: 0, amount: 0 },
+            loginBranchSanction: { count: 0, amount: 0 },
+            loginUsedCar: { count: 0, amount: 0 },
+            disbOpenMarket: { count: 0, amount: 0 },
+            disbBranch: { count: 0, amount: 0 },
+            disbUsedCar: { count: 0, amount: 0 },
+            vicpCrm: { count: 0 },
+            td: { count: 0 },
+            marutiLogin: { count: 0, amount: 0 },
+            marutiDisb: { count: 0, amount: 0 },
+            mi: { count: 0 }
+        });
+        
+        const eodSubmitError = ref('');
+        const eodSubmitSuccess = ref(false);
+        const myEods = ref([]);
+        const smEods = ref([]);
+        
+        const resetEodForm = () => {
+            eodForm.value = {
+                loginOpenMarket: { count: 0, amount: 0 },
+                loginBranch: { count: 0, amount: 0 },
+                loginBranchSanction: { count: 0, amount: 0 },
+                loginUsedCar: { count: 0, amount: 0 },
+                disbOpenMarket: { count: 0, amount: 0 },
+                disbBranch: { count: 0, amount: 0 },
+                disbUsedCar: { count: 0, amount: 0 },
+                vicpCrm: { count: 0 },
+                td: { count: 0 },
+                marutiLogin: { count: 0, amount: 0 },
+                marutiDisb: { count: 0, amount: 0 },
+                mi: { count: 0 }
+            };
+            eodSubmitError.value = '';
+            eodSubmitSuccess.value = false;
+        };
+
+        const submitEOD = async () => {
+            eodSubmitError.value = '';
+            eodSubmitSuccess.value = false;
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Check if already submitted today
+                const alreadySubmitted = myEods.value.some(e => e.date === today);
+                if (alreadySubmitted) {
+                    eodSubmitError.value = 'You have already submitted your EOD report for today.';
+                    return;
+                }
+
+                const report = {
+                    userId: currentUser.value.id,
+                    userName: currentUser.value.name,
+                    tenantId: currentUser.value.tenantId,
+                    date: today,
+                    createdAt: new Date().toISOString(),
+                    metrics: eodForm.value
+                };
+                await db.addEODReport(report);
+                eodSubmitSuccess.value = true;
+                myEods.value.unshift({ ...report, id: Date.now().toString() }); // Optimistic
+                setTimeout(() => { resetEodForm(); currentTab.value = 'ro-dashboard'; }, 2000);
+            } catch (e) {
+                eodSubmitError.value = 'Failed to submit EOD. Please try again.';
+            }
+        };
+
         // Data Loading
         const loadSuperAdminData = async () => {
             allWorkspaces.value = await db.getAllWorkspaces();
@@ -634,15 +704,19 @@ const app = createApp({
                 allFiles.value = files.filter(f => !f.tenantId);
                 const allU = await db.getAllUsers();
                 roUsers.value = allU.filter(u => u.role === 'ro' && !u.tenantId);
+                smEods.value = [];
                 return;
             }
             allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
             roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
+            smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
         };
 
         const loadRoData = async () => {
             if (!currentUser.value) return;
             myFiles.value = await db.getLoanFilesByRO(currentUser.value.id);
+            const tenantEods = await db.getEODReportsByTenant(currentUser.value.tenantId);
+            myEods.value = tenantEods.filter(e => e.userId === currentUser.value.id);
         };
 
         const loadData = async () => {
@@ -1321,7 +1395,8 @@ const app = createApp({
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
-            openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel
+            openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
+            eodForm, eodSubmitError, eodSubmitSuccess, myEods, smEods, submitEOD
         };
     }
 });
