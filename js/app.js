@@ -22,7 +22,9 @@ const app = createApp({
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
         const isLoggingIn = ref(false);
+        const loginStage = ref(''); // '' | 'selecting' | 'verifying'
         const isRegistering = ref(false);
+        const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
         const registerForm = ref({ name: '', region: '', phone: '' });
         const registerError = ref('');
@@ -1483,8 +1485,10 @@ const app = createApp({
             const wsName = `${smRegion} Hub`;
 
             isRegistering.value = true;
+            registerStage.value = 'selecting';
             try {
                 const googleUser = await db.loginWithGoogle();
+                registerStage.value = 'setting_up';
                 const email = googleUser.email.toLowerCase();
 
                 const existing = await db.getUserByEmail(email);
@@ -1532,9 +1536,14 @@ const app = createApp({
                 registerForm.value = { name: '', region: '', phone: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
+                if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
+                    // User closed popup without selecting an account
+                    return;
+                }
                 registerError.value = error.message || 'Error creating account.';
             } finally {
                 isRegistering.value = false;
+                registerStage.value = '';
             }
         };
 
@@ -1542,8 +1551,10 @@ const app = createApp({
             if (isLoggingIn.value) return;
             loginError.value = '';
             isLoggingIn.value = true;
+            loginStage.value = 'selecting';
             try {
                 const googleUser = await db.loginWithGoogle();
+                loginStage.value = 'verifying';
                 const email = googleUser.email.toLowerCase();
                 let user = await db.getUserByEmail(email);
 
@@ -1591,9 +1602,14 @@ const app = createApp({
                 }
             } catch (error) {
                 console.error("Login Error:", error);
+                if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
+                    // User closed popup without selecting an account
+                    return;
+                }
                 loginError.value = error.message;
             } finally {
                 isLoggingIn.value = false;
+                loginStage.value = '';
             }
         };
 
@@ -2088,7 +2104,7 @@ const app = createApp({
 
         // Return everything needed by the template
         return {
-            currentUser, loginForm, loginError, isLoggingIn, isRegistering, currentTab, mobileMenuOpen, defaultSmName,
+            currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
