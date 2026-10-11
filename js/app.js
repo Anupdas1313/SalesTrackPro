@@ -380,15 +380,15 @@ const app = createApp({
 
             let msg = '';
             if (type === 'eod_pending') {
-                msg = `*URGENT: Daily EOD Pending*\n\nHi ${roName},\nYour Daily EOD report for today (${today}) is still pending on SalesTrack Pro.\n\nPlease log in and submit your final login/disbursement numbers and tomorrow's commitment as soon as possible.\n\n— Sales Manager`;
+                msg = `*URGENT: Daily EOD Pending*\n\nHi ${roName},\nYour Daily EOD report for today (${today}) is still pending on Sales Link.\n\nPlease log in and submit your final login/disbursement numbers and tomorrow's commitment as soon as possible.\n\n— Sales Manager`;
             } else if (type === 'stalled_cases') {
-                msg = `*ALERT: Stalled Pipeline Cases*\n\nHi ${roName},\nYou currently have ${a.stalledFiles.length} file(s) pending movement in Underwriting/Approval on SalesTrack Pro:\n`;
+                msg = `*ALERT: Stalled Pipeline Cases*\n\nHi ${roName},\nYou currently have ${a.stalledFiles.length} file(s) pending movement in Underwriting/Approval on Sales Link:\n`;
                 a.stalledFiles.slice(0, 5).forEach((f, i) => {
                     msg += `${i+1}. ${f.customerName} (#${f.appId || 'NoID'}) - Rs.${formatCurrency(f.loanAmount)} (${f.status}, ${f.daysStalled || 3}d stuck)\n`;
                 });
                 msg += `\nPlease coordinate with credit and dealers today to get these approved/disbursed.\n\n— Sales Manager`;
             } else if (type === 'performance_review') {
-                msg = `*SalesTrack Pro: Performance Check*\n\nHi ${roName},\nHere is your MTD performance snapshot:\n• Logins MTD: ${a.mtdCount} (Rs.${formatCurrency(a.mtdVolume)})\n• Disbursed MTD: ${a.mtdDisbCount} (Rs.${formatCurrency(a.mtdDisbVolume)})\n• Conversion Rate: ${a.conversionRate}%\n• Active Pipeline: ${a.activePipelineFiles.length} files\n\nLet's push hard on pending cases before month-end!\n\n— Sales Manager`;
+                msg = `*Sales Link: Performance Check*\n\nHi ${roName},\nHere is your MTD performance snapshot:\n• Logins MTD: ${a.mtdCount} (Rs.${formatCurrency(a.mtdVolume)})\n• Disbursed MTD: ${a.mtdDisbCount} (Rs.${formatCurrency(a.mtdDisbVolume)})\n• Conversion Rate: ${a.conversionRate}%\n• Active Pipeline: ${a.activePipelineFiles.length} files\n\nLet's push hard on pending cases before month-end!\n\n— Sales Manager`;
             } else if (type === 'kudos') {
                 msg = `*Great Job Today! 🌟*\n\nKudos ${roName}!\nAwesome performance today with ${a.todayLoginsCount} logins (Rs.${formatCurrency(a.todayLoginsVolume)}) and ${a.todayDisbCount} disbursement(s).\nKeep leading from the front! 🚀\n\n— Sales Manager`;
             }
@@ -1151,7 +1151,7 @@ const app = createApp({
             }
 
             text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-            text += `_Powered by SalesTrack Pro_`;
+            text += `_Powered by Sales Link_`;
             return text;
         };
 
@@ -1733,7 +1733,7 @@ const app = createApp({
             const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
             const loanAmtStr = formatCurrency(file.loanAmount);
             
-            let msg = `*SalesTrack Pro - Login Details*\n\n`;
+            let msg = `*Sales Link - Login Details*\n\n`;
             msg += `*App ID:* #${file.appId || 'N/A'}\n`;
             msg += `*Customer Name:* ${file.customerName}\n`;
             msg += `*Loan Amount:* Rs. ${loanAmtStr}\n`;
@@ -1752,7 +1752,7 @@ const app = createApp({
         const shareBulkWhatsApp = () => {
             if (!filteredMyFiles.value || filteredMyFiles.value.length === 0) return;
             
-            let msg = `*SalesTrack Pro - Bulk Login Details*\n`;
+            let msg = `*Sales Link - Bulk Login Details*\n`;
             msg += `*Total Files:* ${filteredMyFiles.value.length}\n`;
             msg += `*Date:* ${getTodayDateStr()}\n\n`;
             
@@ -1850,7 +1850,7 @@ const app = createApp({
             XLSX.utils.book_append_sheet(workbook, worksheet, "My_Login_Details");
             
             const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `SalesTrackPro_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
+            const filename = `SalesLink_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
@@ -1957,7 +1957,7 @@ const app = createApp({
             XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Files");
             
             const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `SalesTrackPro_Export_${dateStr}.xlsx`;
+            const filename = `SalesLink_Export_${dateStr}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
