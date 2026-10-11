@@ -46,7 +46,8 @@ export const getUsersCount = async () => {
 };
 
 export const addUser = async (userData) => {
-    await addDoc(usersCol, userData);
+    const docRef = await addDoc(usersCol, userData);
+    return docRef.id;
 };
 
 export const getAllUsers = async () => {

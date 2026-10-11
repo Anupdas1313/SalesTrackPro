@@ -24,7 +24,7 @@ const app = createApp({
         const isLoggingIn = ref(false);
         const isRegistering = ref(false);
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', workspaceName: '' });
+        const registerForm = ref({ name: '', workspaceName: '', region: '', phone: '' });
         const registerError = ref('');
         
         const getInitialTab = () => {
@@ -1466,40 +1466,73 @@ const app = createApp({
         const registerSM = async () => {
             if (isRegistering.value) return;
             registerError.value = '';
+
+            const smName = registerForm.value.name?.trim();
+            const wsName = registerForm.value.workspaceName?.trim();
+            const smRegion = registerForm.value.region?.trim();
+            const smPhone = registerForm.value.phone?.trim() || '';
+
+            if (!smName) {
+                registerError.value = 'Sales Manager Name is mandatory.';
+                return;
+            }
+            if (!wsName) {
+                registerError.value = 'Workspace / Team Name is mandatory.';
+                return;
+            }
+            if (!smRegion) {
+                registerError.value = 'Operating Region / Zone is mandatory.';
+                return;
+            }
+
             isRegistering.value = true;
             try {
-                if (!registerForm.value.workspaceName) {
-                    registerError.value = 'Please provide a workspace name.';
-                    return;
-                }
-
                 const googleUser = await db.loginWithGoogle();
                 const email = googleUser.email.toLowerCase();
 
                 const existing = await db.getUserByEmail(email);
                 if (existing) {
-                    registerError.value = 'This Google account is already registered. Please log in normally.';
+                    registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
                     return;
                 }
                 
                 const workspaceId = await db.addWorkspace({
-                    name: registerForm.value.workspaceName.trim(),
+                    name: wsName,
+                    region: smRegion,
+                    managerName: smName,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 });
 
-                await db.addUser({
+                const newUserId = await db.addUser({
                     email: email,
                     role: 'sm',
-                    name: registerForm.value.name.trim() || googleUser.displayName || 'Sales Manager',
+                    name: smName,
+                    region: smRegion,
+                    phone: smPhone,
                     tenantId: workspaceId,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 });
 
-                alert('Workspace created successfully! You can now log in.');
+                // Auto sign-in new Sales Manager
+                const sessionUser = {
+                    id: newUserId || email,
+                    email: email,
+                    username: smName,
+                    role: 'sm',
+                    name: smName,
+                    region: smRegion,
+                    tenantId: workspaceId
+                };
+                localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+                currentUser.value = sessionUser;
+                initUserSm();
+                currentTab.value = 'dashboard';
+                await loadData();
+
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', workspaceName: '' };
+                registerForm.value = { name: '', workspaceName: '', region: '', phone: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 registerError.value = error.message || 'Error creating account.';

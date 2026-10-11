@@ -69,7 +69,7 @@
 
         <!-- Ultra-Clean, Distraction-Free Login -->
         <div v-if="!currentUser" class="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 font-sans">
-            <div class="w-full max-w-sm bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 space-y-6">
+            <div class="w-full max-w-sm bg-white rounded-2xl border border-slate-200/80 shadow-sm p-7 space-y-5">
                 
                 <!-- Brand Header -->
                 <div class="text-center space-y-2">
@@ -79,9 +79,20 @@
                     <div>
                         <h1 class="text-xl font-black text-slate-900 tracking-tight">Sales Link</h1>
                         <p class="text-xs text-slate-500 font-medium mt-0.5">
-                            {{ showRegisterMode ? 'Create Sales Manager Workspace' : 'Sign in to your workspace' }}
+                            {{ showRegisterMode ? 'Sales Manager Setup' : 'Sign in to your workspace' }}
                         </p>
                     </div>
+                </div>
+
+                <!-- Explicit Manager Alert in Registration Mode -->
+                <div v-if="showRegisterMode" class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                    <div class="flex items-center justify-center gap-1.5 text-amber-800 text-xs font-bold">
+                        <i class="fas fa-shield-halved text-amber-600"></i>
+                        <span>Sales Managers Only</span>
+                    </div>
+                    <p class="text-[10px] text-amber-700 mt-0.5 leading-tight">
+                        Relationship Officers (ROs): Do not create a workspace. Please sign in after your manager invites you.
+                    </p>
                 </div>
 
                 <!-- Error Message -->
@@ -111,33 +122,43 @@
                         </template>
                     </button>
 
-                    <div class="text-center pt-2">
-                        <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-xs font-semibold text-[#97144D] hover:underline transition cursor-pointer">
-                            Create a Sales Manager Workspace
+                    <div class="text-center pt-2 border-t border-slate-100">
+                        <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-xs font-bold text-[#97144D] hover:underline transition cursor-pointer">
+                            Sales Manager? Create Workspace
                         </button>
                     </div>
                 </div>
 
-                <!-- Workspace Registration View -->
-                <form v-else @submit.prevent="registerSM" class="space-y-3.5">
+                <!-- Sales Manager Workspace Registration View -->
+                <form v-else @submit.prevent="registerSM" class="space-y-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Workspace Name</label>
-                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Acme Sales Team">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Sales Manager Name <span class="text-rose-500">*</span></label>
+                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Rahul Sharma">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Your Name (Optional)</label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. John Doe">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Workspace / Hub Name <span class="text-rose-500">*</span></label>
+                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Mumbai West Auto Finance">
                     </div>
 
-                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#97144D] hover:bg-[#801140] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
-                        <span v-if="isRegistering">Creating...</span>
-                        <span v-else>Create & Sign In</span>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Operating Region / Zone <span class="text-rose-500">*</span></label>
+                        <input v-model="registerForm.region" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. North Zone / Delhi NCR">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contact / Phone (Optional)</label>
+                        <input v-model="registerForm.phone" type="tel" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. 9876543210">
+                    </div>
+
+                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#97144D] hover:bg-[#801140] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 mt-1">
+                        <span v-if="isRegistering">Connecting Google & Setting Up...</span>
+                        <span v-else>Register Sales Manager Workspace</span>
                     </button>
 
                     <div class="text-center pt-1">
                         <button type="button" @click="showRegisterMode = false; registerError = ''" class="text-xs text-slate-400 hover:text-slate-600 font-medium transition cursor-pointer">
-                            Back to Sign In
+                            ← Back to Sign In
                         </button>
                     </div>
                 </form>
@@ -2954,7 +2975,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-13"></script>
+    <script type="module" src="js/app.js?v=force-update-14"></script>
 </body>
 </html>
 
