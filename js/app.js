@@ -24,7 +24,7 @@ const app = createApp({
         const isLoggingIn = ref(false);
         const isRegistering = ref(false);
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', workspaceName: '', region: '', phone: '' });
+        const registerForm = ref({ name: '', region: '', phone: '' });
         const registerError = ref('');
         
         const getInitialTab = () => {
@@ -1468,7 +1468,6 @@ const app = createApp({
             registerError.value = '';
 
             const smName = registerForm.value.name?.trim();
-            const wsName = registerForm.value.workspaceName?.trim();
             const smRegion = registerForm.value.region?.trim();
             const smPhone = registerForm.value.phone?.trim() || '';
 
@@ -1476,14 +1475,12 @@ const app = createApp({
                 registerError.value = 'Sales Manager Name is mandatory.';
                 return;
             }
-            if (!wsName) {
-                registerError.value = 'Workspace / Team Name is mandatory.';
-                return;
-            }
             if (!smRegion) {
                 registerError.value = 'Operating Region / Zone is mandatory.';
                 return;
             }
+
+            const wsName = `${smRegion} Hub`;
 
             isRegistering.value = true;
             try {
@@ -1532,7 +1529,7 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', workspaceName: '', region: '', phone: '' };
+                registerForm.value = { name: '', region: '', phone: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 registerError.value = error.message || 'Error creating account.';
