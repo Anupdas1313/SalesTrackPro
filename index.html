@@ -8,6 +8,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
+    <!-- Automatic HTTPS upgrade for secure Google OAuth handshake -->
+    <script>
+        if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+        }
+    </script>
+    
     <!-- Google Fonts (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3007,7 +3014,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-16"></script>
+    <script type="module" src="js/app.js?v=force-update-17"></script>
 </body>
 </html>
 

@@ -59,7 +59,19 @@ import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.11.0/fire
 import { auth, googleProvider } from "./firebase-config.js";
 
 export const loginWithGoogle = async () => {
-    const result = await signInWithPopup(auth, googleProvider);
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    
+    // Safety timeout after 40 seconds to prevent indefinite UI hang if browser blocks popup handshake
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(new Error("Sign-in timed out. Please make sure you are on https://saleslink.in (with https) and allow popup windows in your browser."));
+        }, 40000);
+    });
+
+    const result = await Promise.race([
+        signInWithPopup(auth, googleProvider),
+        timeoutPromise
+    ]);
     return result.user;
 };
 
