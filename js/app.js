@@ -248,13 +248,159 @@ const app = createApp({
                 return {
                     id: ro.id,
                     name: ro.name,
+                    email: ro.email,
+                    user: ro,
                     totalFiles: roFiles.length,
                     totalAmount,
                     approvedFiles: approvedFiles.length,
-                    disbursedAmount
+                    disbursedAmount,
+                    conversionRate: roFiles.length > 0 ? Math.round((disbursedFiles.length / roFiles.length) * 100) : 0
                 };
             }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
         });
+
+        // RO 360 Inspector Drawer State & Logic (For SM Monitoring)
+        const selectedRoForInspection = ref(null);
+        const showRoInspectorDrawer = ref(false);
+        const roInspectorActiveTab = ref('overview'); // 'overview' | 'pipeline' | 'stalled'
+
+        const openRoInspector = (ro) => {
+            const roUser = roUsers.value.find(u => u.id === (ro.id || ro)) || ro;
+            selectedRoForInspection.value = roUser;
+            roInspectorActiveTab.value = 'overview';
+            showRoInspectorDrawer.value = true;
+        };
+
+        const closeRoInspector = () => {
+            showRoInspectorDrawer.value = false;
+            selectedRoForInspection.value = null;
+        };
+
+        const selectedRoAnalytics = computed(() => {
+            if (!selectedRoForInspection.value) return null;
+            const ro = selectedRoForInspection.value;
+            const roId = ro.id;
+            const roName = (ro.name || '').trim().toUpperCase();
+
+            // All files for this RO across entire tenant
+            const roAllFiles = allFiles.value.filter(f => f.roId === roId || (f.roName && f.roName.trim().toUpperCase() === roName));
+            
+            // Today's files
+            const today = new Date().toISOString().split('T')[0];
+            const todayLogins = roAllFiles.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
+            const todayDisb = roAllFiles.filter(f => f.status === 'Disbursed' && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
+            const todayLoginsCount = todayLogins.length;
+            const todayLoginsVolume = todayLogins.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const todayDisbCount = todayDisb.length;
+            const todayDisbVolume = todayDisb.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+
+            // Today's EOD Report for this RO
+            const todayEod = smEods.value.find(e => e.userId === roId && e.date === today);
+            const hasSubmittedToday = Boolean(todayEod);
+
+            // MTD Files (Current Month)
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentYearMonth = `${currentYear}-${currentMonth}`;
+
+            const mtdFiles = roAllFiles.filter(f => {
+                const d = f.loginDate || f.createdAt;
+                return d && d.startsWith(currentYearMonth);
+            });
+
+            const mtdCount = mtdFiles.length;
+            const mtdVolume = mtdFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const mtdApproved = mtdFiles.filter(f => f.status === 'Approved');
+            const mtdApprovedCount = mtdApproved.length;
+            const mtdApprovedVolume = mtdApproved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const mtdDisbursed = mtdFiles.filter(f => f.status === 'Disbursed');
+            const mtdDisbCount = mtdDisbursed.length;
+            const mtdDisbVolume = mtdDisbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+
+            // Conversion rate: Disbursed / Total MTD Logins
+            const conversionRate = mtdCount > 0 ? Math.round((mtdDisbCount / mtdCount) * 100) : 0;
+            const approvalRate = mtdCount > 0 ? Math.round(((mtdApprovedCount + mtdDisbCount) / mtdCount) * 100) : 0;
+
+            // NCL vs UCL split
+            const nclFiles = mtdFiles.filter(f => (f.nclUcl || '').toUpperCase() === 'NCL');
+            const uclFiles = mtdFiles.filter(f => (f.nclUcl || '').toUpperCase() === 'UCL');
+            const nclCount = nclFiles.length;
+            const uclCount = uclFiles.length;
+            const nclVolume = nclFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const uclVolume = uclFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+
+            // Active / Open Pipeline (Not Disbursed, Cancelled, Rejected)
+            const activePipelineFiles = roAllFiles.filter(f => !['Disbursed', 'Cancelled', 'Rejected'].includes(f.status));
+
+            // Stalled / Attention cases for this RO (> 3 days in Lead/FI/UW or > 4 days in Approved)
+            const stalledFiles = roAllFiles.filter(f => {
+                if (['Cancelled', 'Rejected', 'Disbursed'].includes(f.status)) return false;
+                const updatedTime = new Date(f.updatedAt || f.createdAt || Date.now());
+                const diffDays = Math.floor((now - updatedTime) / (1000 * 60 * 60 * 24));
+                if (f.status === 'Approved' && diffDays >= 4) return true;
+                if (['Lead', 'FI', 'FCU', 'UW'].includes(f.status) && diffDays >= 3) return true;
+                return false;
+            }).map(f => {
+                const updatedTime = new Date(f.updatedAt || f.createdAt || Date.now());
+                const daysStalled = Math.max(1, Math.floor((now - updatedTime) / (1000 * 60 * 60 * 24)));
+                return { ...f, daysStalled };
+            });
+
+            return {
+                ro,
+                todayLoginsCount,
+                todayLoginsVolume,
+                todayDisbCount,
+                todayDisbVolume,
+                hasSubmittedToday,
+                todayEod,
+                mtdCount,
+                mtdVolume,
+                mtdApprovedCount,
+                mtdApprovedVolume,
+                mtdDisbCount,
+                mtdDisbVolume,
+                conversionRate,
+                approvalRate,
+                nclCount,
+                uclCount,
+                nclVolume,
+                uclVolume,
+                activePipelineFiles,
+                stalledFiles
+            };
+        });
+
+        const generateSmNudgeWhatsApp = (type) => {
+            if (!selectedRoAnalytics.value) return '';
+            const a = selectedRoAnalytics.value;
+            const roName = a.ro.name || 'RO';
+            const today = new Date().toLocaleDateString('en-GB');
+
+            let msg = '';
+            if (type === 'eod_pending') {
+                msg = `*URGENT: Daily EOD Pending*\n\nHi ${roName},\nYour Daily EOD report for today (${today}) is still pending on SalesTrack Pro.\n\nPlease log in and submit your final login/disbursement numbers and tomorrow's commitment as soon as possible.\n\n— Sales Manager`;
+            } else if (type === 'stalled_cases') {
+                msg = `*ALERT: Stalled Pipeline Cases*\n\nHi ${roName},\nYou currently have ${a.stalledFiles.length} file(s) pending movement in Underwriting/Approval on SalesTrack Pro:\n`;
+                a.stalledFiles.slice(0, 5).forEach((f, i) => {
+                    msg += `${i+1}. ${f.customerName} (#${f.appId || 'NoID'}) - Rs.${formatCurrency(f.loanAmount)} (${f.status}, ${f.daysStalled || 3}d stuck)\n`;
+                });
+                msg += `\nPlease coordinate with credit and dealers today to get these approved/disbursed.\n\n— Sales Manager`;
+            } else if (type === 'performance_review') {
+                msg = `*SalesTrack Pro: Performance Check*\n\nHi ${roName},\nHere is your MTD performance snapshot:\n• Logins MTD: ${a.mtdCount} (Rs.${formatCurrency(a.mtdVolume)})\n• Disbursed MTD: ${a.mtdDisbCount} (Rs.${formatCurrency(a.mtdDisbVolume)})\n• Conversion Rate: ${a.conversionRate}%\n• Active Pipeline: ${a.activePipelineFiles.length} files\n\nLet's push hard on pending cases before month-end!\n\n— Sales Manager`;
+            } else if (type === 'kudos') {
+                msg = `*Great Job Today! 🌟*\n\nKudos ${roName}!\nAwesome performance today with ${a.todayLoginsCount} logins (Rs.${formatCurrency(a.todayLoginsVolume)}) and ${a.todayDisbCount} disbursement(s).\nKeep leading from the front! 🚀\n\n— Sales Manager`;
+            }
+            return encodeURIComponent(msg);
+        };
+
+        const generateFileAlertWhatsApp = (file) => {
+            if (!file || !selectedRoAnalytics.value) return '';
+            const roName = selectedRoAnalytics.value.ro.name || 'RO';
+            const msg = `*Urgent File Movement Alert*\n\nHi ${roName},\nCase #${file.appId || 'NoID'} for ${file.customerName} (Rs.${formatCurrency(file.loanAmount)}) has been stuck in ${file.status} for ${file.daysStalled || 3} days.\n\nPlease check immediately with credit and update status.\n\n— Sales Manager`;
+            return encodeURIComponent(msg);
+        };
 
         // SaaS Owner (Super Admin) Overview State
         const saasOverviewTimeline = ref('this-month');
@@ -1923,7 +2069,8 @@ const app = createApp({
             showTodayFilesBreakdown, todayLoginsFiles, todayDisbFiles,
             eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
-            roNeedsAttentionFiles
+            roNeedsAttentionFiles,
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp
         };
     }
 });

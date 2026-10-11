@@ -613,7 +613,15 @@
                         <!-- RO Performance Leaderboard -->
                         <div class="bg-white rounded-xl border border-slate-300 shadow-xs overflow-hidden mb-4 sm:mb-6">
                             <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/80">
-                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">RO Performance Leaderboard</h3>
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 w-full">
+                                    <div>
+                                        <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">RO Performance Leaderboard</h3>
+                                        <p class="text-[11px] text-slate-400 font-medium">Click any RO to open their 360° Cockpit and 1-tap WhatsApp nudges.</p>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-[#97144D] bg-[#97144D]/5 px-2.5 py-1 rounded-full border border-[#97144D]/20">
+                                        Interactive 360° Cockpit
+                                    </span>
+                                </div>
                             </div>
                             <!-- Desktop Table View -->
                             <div class="hidden md:block overflow-x-auto">
@@ -623,20 +631,40 @@
                                             <th class="border border-slate-300 px-3 py-2">RO Name</th>
                                             <th class="border border-slate-300 px-3 py-2 text-center">Total Files</th>
                                             <th class="border border-slate-300 px-3 py-2 text-center">Approved/Disbursed</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-center">Conversion</th>
                                             <th class="border border-slate-300 px-3 py-2 text-right">Total Pipeline</th>
                                             <th class="border border-slate-300 px-3 py-2 text-right">Disbursed Amount</th>
+                                            <th class="border border-slate-300 px-3 py-2 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs">
-                                        <tr v-for="ro in smLeaderboard" :key="ro.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900 uppercase">{{ ro.name }}</td>
+                                        <tr v-for="ro in smLeaderboard" :key="ro.id" @click="openRoInspector(ro)" class="hover:bg-slate-50 cursor-pointer transition-colors group">
+                                            <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900 uppercase">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded-full bg-[#97144D]/10 text-[#97144D] font-black text-[10px] flex items-center justify-center shrink-0">
+                                                        {{ ro.name ? ro.name.charAt(0).toUpperCase() : 'R' }}
+                                                    </div>
+                                                    <span class="group-hover:text-[#97144D] transition-colors">{{ ro.name }}</span>
+                                                </div>
+                                            </td>
                                             <td class="border border-slate-300 px-3 py-2 text-center font-bold">{{ ro.totalFiles }}</td>
                                             <td class="border border-slate-300 px-3 py-2 text-center font-bold text-emerald-600">{{ ro.approvedFiles }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-center">
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="ro.conversionRate >= 50 ? 'bg-emerald-100 text-emerald-800' : (ro.conversionRate >= 25 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600')">
+                                                    {{ ro.conversionRate }}%
+                                                </span>
+                                            </td>
                                             <td class="border border-slate-300 px-3 py-2 text-right font-medium text-slate-700">₹{{ formatCurrency(ro.totalAmount) }}</td>
                                             <td class="border border-slate-300 px-3 py-2 text-right font-black text-slate-900">₹{{ formatCurrency(ro.disbursedAmount) }}</td>
+                                            <td class="border border-slate-300 px-3 py-2 text-center">
+                                                <button @click.stop="openRoInspector(ro)" class="px-2.5 py-1 bg-[#97144D]/10 hover:bg-[#97144D] text-[#97144D] hover:text-white font-bold text-[11px] rounded-lg transition-colors inline-flex items-center gap-1 mx-auto">
+                                                    <i class="fas fa-eye text-[10px]"></i>
+                                                    <span>Inspect 360°</span>
+                                                </button>
+                                            </td>
                                         </tr>
                                         <tr v-if="smLeaderboard.length === 0">
-                                            <td colspan="5" class="border border-slate-300 p-8 text-center text-slate-400">No RO data available.</td>
+                                            <td colspan="7" class="border border-slate-300 p-8 text-center text-slate-400">No RO data available.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -644,11 +672,14 @@
                             
                             <!-- Mobile Card View -->
                             <div class="md:hidden flex flex-col divide-y divide-slate-100">
-                                <div v-for="(ro, index) in smLeaderboard" :key="'mob-ro-'+ro.id" class="p-3.5 space-y-2">
+                                <div v-for="(ro, index) in smLeaderboard" :key="'mob-ro-'+ro.id" @click="openRoInspector(ro)" class="p-3.5 space-y-2 cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition">
                                     <div class="flex justify-between items-baseline gap-2 min-w-0">
                                         <div class="flex items-center gap-1.5 min-w-0">
                                             <span class="text-[10px] font-black text-slate-400 shrink-0">#{{ index + 1 }}</span>
                                             <h4 class="font-extrabold text-slate-900 text-xs uppercase truncate">{{ ro.name }}</h4>
+                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0" :class="ro.conversionRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'">
+                                                {{ ro.conversionRate }}% Conv
+                                            </span>
                                         </div>
                                         <div class="text-xs font-black text-[#97144D] shrink-0">₹{{ formatCurrency(ro.disbursedAmount) }}</div>
                                     </div>
@@ -657,7 +688,13 @@
                                             <span class="text-slate-600"><i class="fas fa-folder text-slate-400"></i> {{ ro.totalFiles }}</span>
                                             <span class="text-emerald-600 font-bold"><i class="fas fa-check-circle"></i> {{ ro.approvedFiles }}</span>
                                         </div>
-                                        <span class="text-slate-500 font-medium truncate ml-2">Pipe: ₹{{ formatCurrency(ro.totalAmount) }}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-slate-500 font-medium truncate">Pipe: ₹{{ formatCurrency(ro.totalAmount) }}</span>
+                                            <span class="text-[#97144D] font-bold flex items-center gap-0.5">
+                                                <span>360°</span>
+                                                <i class="fas fa-chevron-right text-[8px]"></i>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div v-if="smLeaderboard.length === 0" class="p-6 text-center text-slate-400 text-xs">
@@ -1048,9 +1085,14 @@
                                             </td>
                                             <td class="border border-slate-300 px-1.5 py-1 text-slate-500 text-center font-medium">{{ formatDate(user.createdAt) }}</td>
                                             <td class="border border-slate-300 px-1.5 py-1 text-center">
-                                                <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-50' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'" class="px-1.5 py-1 rounded-lg text-xs font-bold border transition">
-                                                    {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
-                                                </button>
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <button @click="openRoInspector(user)" class="px-2 py-1 bg-[#97144D]/10 hover:bg-[#97144D] text-[#97144D] hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                                        <i class="fas fa-eye text-[10px]"></i> Cockpit
+                                                    </button>
+                                                    <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-50' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'" class="px-1.5 py-1 rounded-lg text-xs font-bold border transition">
+                                                        {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         <tr v-if="roUsers.length === 0">
@@ -1077,9 +1119,11 @@
                                         <span v-else class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md text-[10px] font-bold">Suspended</span>
                                     </div>
 
-                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                                        <span class="text-[10px] text-slate-400 font-medium">Added: {{ formatDate(user.createdAt) }}</span>
-                                        <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 bg-rose-50 hover:bg-rose-100 border-rose-200' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'" class="px-3 py-1 rounded-lg text-xs font-bold border transition">
+                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs gap-2">
+                                        <button @click="openRoInspector(user)" class="px-3 py-1 bg-[#97144D]/10 text-[#97144D] font-bold rounded-lg text-xs transition flex items-center gap-1">
+                                            <i class="fas fa-eye text-[10px]"></i> Cockpit 360°
+                                        </button>
+                                        <button @click="toggleUserStatus(user)" :class="user.status === 'active' ? 'text-rose-600 bg-rose-50 hover:bg-rose-100 border-rose-200' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'" class="px-3 py-1 rounded-lg text-xs font-bold border transition ml-auto">
                                             {{ user.status === 'active' ? 'Suspend' : 'Activate' }}
                                         </button>
                                     </div>
@@ -2624,6 +2668,292 @@
             </div>
         </div>
 
+        <!-- RO 360° Inspector Slide-Over Cockpit Drawer -->
+        <div v-if="showRoInspectorDrawer && selectedRoAnalytics" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-end z-[110] animate-in fade-in duration-200" @click.self="closeRoInspector">
+            <div class="h-full w-full max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-300 overflow-hidden">
+                
+                <!-- Drawer Header -->
+                <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-[#97144D] text-white flex items-center justify-between shadow-md shrink-0">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-black flex items-center justify-center text-lg shadow-inner">
+                            {{ (selectedRoAnalytics.ro.name || 'RO').charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-lg font-black tracking-tight text-white leading-tight">{{ selectedRoAnalytics.ro.name }}</h2>
+                                <span :class="selectedRoAnalytics.ro.status === 'inactive' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'" class="px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider">
+                                    {{ selectedRoAnalytics.ro.status || 'Active' }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-300 font-medium flex items-center gap-2 mt-0.5">
+                                <span><i class="fas fa-envelope text-[10px] opacity-70 mr-1"></i>{{ selectedRoAnalytics.ro.email }}</span>
+                                <span v-if="selectedRoAnalytics.ro.phone"><i class="fas fa-phone text-[10px] opacity-70 mr-1"></i>{{ selectedRoAnalytics.ro.phone }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="closeRoInspector" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition" title="Close Drawer">
+                        <i class="fas fa-times text-base"></i>
+                    </button>
+                </div>
+
+                <!-- Manager 1-Tap WhatsApp Actions Bar -->
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center gap-2 overflow-x-auto shrink-0">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap mr-1">Quick Nudges:</span>
+                    
+                    <!-- EOD Pending Nudge -->
+                    <a v-if="!selectedRoAnalytics.hasSubmittedToday" 
+                       :href="'https://wa.me/?text=' + generateSmNudgeWhatsApp('eod_pending')" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition border border-amber-300 whitespace-nowrap shadow-2xs">
+                        <i class="fab fa-whatsapp text-amber-600"></i>
+                        <span>Remind EOD</span>
+                    </a>
+
+                    <!-- Stalled Cases Nudge -->
+                    <a v-if="selectedRoAnalytics.stalledFiles.length > 0" 
+                       :href="'https://wa.me/?text=' + generateSmNudgeWhatsApp('stalled_cases')" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition border border-rose-300 whitespace-nowrap shadow-2xs">
+                        <i class="fab fa-whatsapp text-rose-600"></i>
+                        <span>Nudge Stalled ({{ selectedRoAnalytics.stalledFiles.length }})</span>
+                    </a>
+
+                    <!-- Performance Snapshot Review -->
+                    <a :href="'https://wa.me/?text=' + generateSmNudgeWhatsApp('performance_review')" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition border border-indigo-200 whitespace-nowrap shadow-2xs">
+                        <i class="fab fa-whatsapp text-indigo-600"></i>
+                        <span>Share Snapshot</span>
+                    </a>
+
+                    <!-- Send Kudos -->
+                    <a :href="'https://wa.me/?text=' + generateSmNudgeWhatsApp('kudos')" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition border border-emerald-200 whitespace-nowrap shadow-2xs">
+                        <i class="fab fa-whatsapp text-emerald-600"></i>
+                        <span>Send Kudos 👏</span>
+                    </a>
+                </div>
+
+                <!-- Scrollable Body Content -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-5">
+                    
+                    <!-- Section 1: Today's Process & Field Accountability Pulse -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full" :class="selectedRoAnalytics.hasSubmittedToday ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                                <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Today's Execution & EOD Pulse</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span v-if="selectedRoAnalytics.hasSubmittedToday" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <i class="fas fa-check-circle text-emerald-600"></i> EOD Submitted
+                                    <span v-if="selectedRoAnalytics.todayEod?.isRevised" class="text-[9px] bg-emerald-200 px-1 rounded ml-1">Revised</span>
+                                </span>
+                                <span v-else class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                    <i class="fas fa-clock text-amber-600"></i> EOD Pending
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 4-Grid Today Execution Stats -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Logins</span>
+                                <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.todayLoginsCount }}</span>
+                                <span class="text-[10px] font-semibold text-[#97144D] block">₹{{ selectedRoAnalytics.todayLoginsVolume.toFixed(2) }} L</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Disb</span>
+                                <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.todayDisbCount }}</span>
+                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ selectedRoAnalytics.todayDisbVolume.toFixed(2) }} L</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Dealer Visits</span>
+                                <span class="text-base font-black text-indigo-700 block mt-0.5">{{ selectedRoAnalytics.todayEod?.dealerVisits || '0' }}</span>
+                                <span class="text-[10px] font-semibold text-slate-400 block">Field Touchpoints</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Tomorrow Target</span>
+                                <span class="text-xs font-black text-slate-800 block mt-1">
+                                    {{ selectedRoAnalytics.todayEod?.tomorrowLogins || '0' }}L / {{ selectedRoAnalytics.todayEod?.tomorrowDisb || '0' }}D
+                                </span>
+                                <span class="text-[10px] font-semibold text-slate-400 block">Commitment</span>
+                            </div>
+                        </div>
+
+                        <!-- EOD Remarks / Obstacles Notice -->
+                        <div v-if="selectedRoAnalytics.todayEod?.remarks" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+                            <i class="fas fa-comment-dots text-amber-600 mt-0.5"></i>
+                            <div>
+                                <strong class="font-bold block text-[10px] uppercase tracking-wider text-amber-800">RO Field Notes & Hold Remarks:</strong>
+                                <p class="mt-0.5 font-medium leading-relaxed">{{ selectedRoAnalytics.todayEod.remarks }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: MTD Performance & Conversion Engine -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3.5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                <i class="fas fa-chart-line text-[#97144D]"></i>
+                                MTD Conversion & Sourcing Quality
+                            </h3>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">This Month</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">Total Logins</span>
+                                <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.mtdCount }}</span>
+                                <span class="text-[10px] font-semibold text-slate-600 block">₹{{ selectedRoAnalytics.mtdVolume.toFixed(2) }} L</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">Disbursed</span>
+                                <span class="text-base font-black text-emerald-700 block mt-0.5">{{ selectedRoAnalytics.mtdDisbCount }}</span>
+                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ selectedRoAnalytics.mtdDisbVolume.toFixed(2) }} L</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">Conversion %</span>
+                                <span class="text-base font-black block mt-0.5" :class="selectedRoAnalytics.conversionRate >= 50 ? 'text-emerald-700' : 'text-amber-600'">
+                                    {{ selectedRoAnalytics.conversionRate }}%
+                                </span>
+                                <span class="text-[10px] font-semibold text-slate-400 block">Disb / Login</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block">Approval Rate</span>
+                                <span class="text-base font-black text-indigo-700 block mt-0.5">{{ selectedRoAnalytics.approvalRate }}%</span>
+                                <span class="text-[10px] font-semibold text-slate-400 block">Pass Ratio</span>
+                            </div>
+                        </div>
+
+                        <!-- NCL vs UCL Proportional Bar -->
+                        <div class="pt-1">
+                            <div class="flex justify-between text-[11px] font-bold text-slate-700 mb-1.5">
+                                <span>NCL: {{ selectedRoAnalytics.nclCount }} (₹{{ selectedRoAnalytics.nclVolume.toFixed(1) }}L)</span>
+                                <span>UCL: {{ selectedRoAnalytics.uclCount }} (₹{{ selectedRoAnalytics.uclVolume.toFixed(1) }}L)</span>
+                            </div>
+                            <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                                <div :style="{ width: ((selectedRoAnalytics.nclCount / Math.max(1, selectedRoAnalytics.mtdCount)) * 100) + '%' }" 
+                                     class="h-full bg-[#97144D] transition-all duration-500" title="NCL Volume"></div>
+                                <div :style="{ width: ((selectedRoAnalytics.uclCount / Math.max(1, selectedRoAnalytics.mtdCount)) * 100) + '%' }" 
+                                     class="h-full bg-blue-500 transition-all duration-500" title="UCL Volume"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] text-slate-400 mt-1">
+                                <span><span class="inline-block w-2 h-2 rounded-full bg-[#97144D] mr-1"></span>New Car Loan</span>
+                                <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Used Car Loan</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Detailed Pipeline & Stalled Cases Tabs -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                        <!-- Tab Switcher -->
+                        <div class="flex border-b border-slate-200 bg-slate-50">
+                            <button @click="roInspectorActiveTab = 'pipeline'"
+                                    :class="roInspectorActiveTab === 'pipeline' ? 'border-b-2 border-[#97144D] text-[#97144D] bg-white font-black' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                    class="flex-1 py-3 px-4 text-xs flex items-center justify-center gap-2 transition">
+                                <i class="fas fa-folder-open"></i>
+                                <span>Active Pipeline</span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-800 font-bold">
+                                    {{ selectedRoAnalytics.activePipelineFiles.length }}
+                                </span>
+                            </button>
+                            <button @click="roInspectorActiveTab = 'stalled'"
+                                    :class="roInspectorActiveTab === 'stalled' ? 'border-b-2 border-rose-600 text-rose-700 bg-white font-black' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                    class="flex-1 py-3 px-4 text-xs flex items-center justify-center gap-2 transition">
+                                <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                                <span>Stalled Radar (&gt;3d)</span>
+                                <span :class="selectedRoAnalytics.stalledFiles.length > 0 ? 'bg-rose-100 text-rose-700 font-black' : 'bg-slate-200 text-slate-600 font-bold'" class="px-1.5 py-0.5 rounded-full text-[10px]">
+                                    {{ selectedRoAnalytics.stalledFiles.length }}
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Active Pipeline Tab Content -->
+                        <div v-if="roInspectorActiveTab === 'pipeline'" class="p-3 divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                            <div v-if="selectedRoAnalytics.activePipelineFiles.length === 0" class="p-8 text-center text-slate-400">
+                                <i class="fas fa-folder-open text-3xl mb-2 text-slate-300"></i>
+                                <p class="text-xs font-bold text-slate-600">No active cases in pipeline currently</p>
+                            </div>
+                            <div v-for="file in selectedRoAnalytics.activePipelineFiles" :key="file.id"
+                                 @click="openViewFileModal(file)"
+                                 class="p-2.5 hover:bg-slate-50 rounded-xl transition cursor-pointer flex items-center justify-between gap-3 group">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold text-[#97144D] bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 uppercase">#{{ file.appId || 'NoID' }}</span>
+                                        <h4 class="text-xs font-bold text-slate-900 truncate group-hover:text-[#97144D] transition-colors">{{ file.customerName }}</h4>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
+                                        <span class="font-bold text-slate-700">{{ file.nclUcl || '-' }}</span>
+                                        <span>•</span>
+                                        <span>{{ file.sourcingChannel || 'DSA' }}</span>
+                                        <span>•</span>
+                                        <span>{{ formatDateOnly(file.loginDate || file.createdAt) }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black text-slate-900 block">₹{{ formatCurrency(file.loanAmount) }}</span>
+                                    <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold mt-1 inline-block">{{ file.status }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stalled Radar Tab Content -->
+                        <div v-if="roInspectorActiveTab === 'stalled'" class="p-3 divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                            <div v-if="selectedRoAnalytics.stalledFiles.length === 0" class="p-8 text-center">
+                                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center text-xl mb-2">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-emerald-800">Zero Stalled Cases!</h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">All files are moving through stages without delays.</p>
+                            </div>
+                            <div v-for="file in selectedRoAnalytics.stalledFiles" :key="file.id"
+                                 class="p-3 hover:bg-rose-50/40 rounded-xl transition flex items-center justify-between gap-3 border border-transparent hover:border-rose-100">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
+                                            ⚠️ {{ file.daysStalled }}d stuck in {{ file.status }}
+                                        </span>
+                                        <span class="text-[10px] font-bold text-slate-500">#{{ file.appId || 'NoID' }}</span>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900 mt-1 truncate">{{ file.customerName }}</h4>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                        <span>Amount: <strong class="text-slate-800">₹{{ formatCurrency(file.loanAmount) }}</strong></span>
+                                        <span>•</span>
+                                        <span>{{ file.sourcingChannel || 'DSA' }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button @click="openViewFileModal(file)" type="button" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition" title="Inspect File Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a :href="'https://wa.me/?text=' + generateFileAlertWhatsApp(file)"
+                                       target="_blank"
+                                       class="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition shadow-2xs" title="Send WhatsApp Alert">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Drawer Footer -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                    <span class="text-xs text-slate-500 font-semibold">
+                        Showing live metrics for <strong class="text-slate-800">{{ selectedRoAnalytics.ro.name }}</strong>
+                    </span>
+                    <button @click="closeRoInspector" type="button" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition">
+                        Done Inspecting
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
         <!-- Mobile Quick-Add Floating Action Button (FAB) -->
         <div v-if="isRO && currentTab !== 'ro-add-file'" class="fixed bottom-20 right-4 md:hidden z-40">
             <button @click="currentTab = 'ro-add-file'" type="button" class="w-13 h-13 rounded-full bg-gradient-to-tr from-[#97144D] to-[#ED1C24] text-white shadow-lg shadow-[#97144D]/30 flex items-center justify-center text-xl active:scale-95 transition-transform" title="Quick Add New Customer Login">
@@ -2634,7 +2964,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-8"></script>
+    <script type="module" src="js/app.js?v=force-update-9"></script>
 </body>
 </html>
 
