@@ -1122,6 +1122,80 @@
                                 <input v-if="roOverviewTimeline === 'custom'" v-model="roOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
                             </div>
                         </div>
+                        <!-- Attention Radar Banner (Stale Files Flag) -->
+                        <div v-if="roNeedsAttentionFiles.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                                    <i class="fas fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-amber-900 flex items-center gap-2">
+                                        <span>Attention Radar: {{ roNeedsAttentionFiles.length }} Case(s) Need Movement</span>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-800">Pending Action</span>
+                                    </h4>
+                                    <p class="text-[11px] text-amber-700 font-medium mt-0.5">
+                                        Cases resting in FI/UW (>3 days) or Approved without disbursal (>4 days).
+                                    </p>
+                                </div>
+                            </div>
+                            <button @click="currentTab = 'ro-tracking'; roFilters.timeline = 'all';" type="button" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                                <span>Review Cases</span>
+                                <i class="fas fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <!-- Target & Run-Rate Pacing Card -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-slate-900 text-sm">Monthly Target & Run-Rate</h3>
+                                        <span :class="roTargetPacing.paceColorClass" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border">
+                                            {{ roTargetPacing.paceBadgeText }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400">Pacing for {{ new Date().toLocaleString('default', { month: 'long', year: 'numeric' }) }} &bull; {{ roTargetPacing.daysRemaining }} day(s) left</p>
+                                </div>
+                                <button @click="openEditTargetModal" type="button" class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex items-center gap-1.5">
+                                    <i class="fas fa-sliders text-[#97144D]"></i>
+                                    <span>Set Target ({{ roTargetFiles }} Files / ₹{{ roTargetVolume }}L)</span>
+                                </button>
+                            </div>
+
+                            <!-- Two target tracks: Files & Volume -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Files Target -->
+                                <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-700">Files Logged (MTD)</span>
+                                        <span class="font-black text-slate-900">{{ roTargetPacing.mtdFilesCount }} / {{ roTargetPacing.targetFiles }} <span class="text-slate-400 font-normal">({{ roTargetPacing.filesPercent }}%)</span></span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                        <div :style="{ width: roTargetPacing.filesPercent + '%' }" class="bg-[#97144D] h-full transition-all duration-500 rounded-full"></div>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] text-slate-500 font-medium">
+                                        <span>Remaining: <b>{{ roTargetPacing.filesRemaining }} files</b></span>
+                                        <span>Daily Run-Rate: <b class="text-[#97144D]">{{ roTargetPacing.requiredDailyFiles }} files/day</b></span>
+                                    </div>
+                                </div>
+
+                                <!-- Volume Target -->
+                                <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-700">Volume Achieved (MTD)</span>
+                                        <span class="font-black text-slate-900">₹{{ roTargetPacing.mtdVolumeLakhs.toFixed(2) }}L / ₹{{ roTargetPacing.targetVolume }}L <span class="text-slate-400 font-normal">({{ roTargetPacing.volumePercent }}%)</span></span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                        <div :style="{ width: roTargetPacing.volumePercent + '%' }" class="bg-emerald-600 h-full transition-all duration-500 rounded-full"></div>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] text-slate-500 font-medium">
+                                        <span>Remaining: <b>₹{{ roTargetPacing.volumeRemaining.toFixed(2) }}L</b></span>
+                                        <span>Daily Run-Rate: <b class="text-emerald-700">₹{{ roTargetPacing.requiredDailyVolume }}L/day</b></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Top KPI Cards -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <!-- Total Files -->
@@ -1639,49 +1713,168 @@
 
 
                     <!-- RO: DAILY EOD SUBMISSION -->
-                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-4xl mx-auto pb-12 space-y-8 animate-fade-in">
+                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-4xl mx-auto pb-12 space-y-6 animate-fade-in relative">
                         
+                        <!-- Floating Toast Notification for Copied Clipboard -->
+                        <div v-if="eodCopiedToast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold border border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-200">
+                            <i class="fas fa-check-circle text-emerald-400 text-base"></i>
+                            <span>Formatted EOD copied to clipboard! Paste directly into WhatsApp.</span>
+                        </div>
+
                         <!-- Header -->
-                        <div class="flex justify-between items-end border-b border-slate-200 pb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 pb-4 gap-3">
                             <div>
-                                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Daily EOD</h3>
-                                <p class="text-sm text-slate-500 font-medium mt-1">Review and submit your end-of-day reports.</p>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Daily EOD</h3>
+                                    <span v-if="hasSubmittedToday && !isEditingTodayEod" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        Submitted Today
+                                    </span>
+                                    <span v-else-if="isEditingTodayEod" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse">
+                                        Revising Today's Report
+                                    </span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">Audit today's logged cases, plan commitments, and file your official EOD.</p>
                             </div>
-                            <div class="text-right hidden sm:block">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</p>
-                                <p class="text-sm font-bold text-[#97144D]">{{ new Date().toLocaleDateString() }}</p>
+                            <div class="flex items-center gap-2 self-end sm:self-auto">
+                                <button v-if="!hasSubmittedToday || isEditingTodayEod" @click="triggerResyncEod" type="button" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition flex items-center gap-1.5" title="Re-sync from today's saved files">
+                                    <i class="fas fa-rotate" :class="eodResyncSuccess ? 'fa-spin text-[#97144D]' : ''"></i>
+                                    <span>{{ eodResyncSuccess ? 'Re-synced!' : 'Re-sync Files' }}</span>
+                                </button>
+                                <div class="text-right pl-2 border-l border-slate-200">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Date</p>
+                                    <p class="text-xs sm:text-sm font-bold text-[#97144D]">{{ new Date().toLocaleDateString('en-IN') }}</p>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Submission Success / Already Submitted Banner -->
-                        <div v-if="hasSubmittedToday || eodSubmitSuccess" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 shadow-sm flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
-                                <i class="fas fa-check-circle"></i>
+                        <div v-if="hasSubmittedToday && !isEditingTodayEod" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                                        <h4 class="text-lg font-black text-emerald-900">You're all set for today!</h4>
+                                        <span v-if="myEods[0]?.isRevised" class="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full border border-amber-200">Revised</span>
+                                    </div>
+                                    <p class="text-xs sm:text-sm text-emerald-700 font-medium">Your End of Day report has been filed with your SM. Great job today! You can share it to your WhatsApp group, copy the raw text, or revise it if any late-evening updates happen.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="text-lg font-black text-emerald-800 mb-1">You're all set for today!</h4>
-                                <p class="text-sm text-emerald-700 font-medium mb-3">Your End of Day report has been successfully submitted to your SM. Great job today!</p>
-                                <a :href="`https://wa.me/?text=${generateRoWhatsApp(myEods[0])}`" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#1ebd59] text-white text-xs font-bold rounded-lg shadow-sm transition">
-                                    <i class="fab fa-whatsapp text-sm"></i> Share to WhatsApp Group
+
+                            <!-- Action Buttons on Success -->
+                            <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-emerald-100">
+                                <a :href="`https://wa.me/?text=${generateRoWhatsApp(myEods[0])}`" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1ebd59] text-white text-xs font-bold rounded-xl shadow-xs transition">
+                                    <i class="fab fa-whatsapp text-sm"></i> Share to WhatsApp
                                 </a>
+                                <button @click="copyRoEodToClipboard(myEods[0])" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl shadow-xs transition">
+                                    <i class="fas fa-clipboard text-sm"></i> Copy Text
+                                </button>
+                                <button @click="startReviseTodayEod" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-xs transition sm:ml-auto">
+                                    <i class="fas fa-pen-to-square text-xs"></i> Revise Today's EOD
+                                </button>
                             </div>
                         </div>
 
-                        <div v-if="eodSubmitError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm">
-                            <i class="fas fa-exclamation-triangle text-lg"></i> {{ eodSubmitError }}
+                        <!-- Revising Banner (When editing submitted EOD) -->
+                        <div v-if="isEditingTodayEod" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-pen text-sm"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-xs sm:text-sm font-bold text-amber-900">Revising Today's Report</h5>
+                                    <p class="text-[11px] text-amber-700 font-medium">Make updates or click "Re-sync Files" to pull any newly logged cases, then submit your updated EOD.</p>
+                                </div>
+                            </div>
+                            <button @click="cancelReviseTodayEod" type="button" class="px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition shrink-0">
+                                Cancel
+                            </button>
                         </div>
 
-                        <!-- Active Submission Form (Only if not submitted) -->
-                                                <!-- Error Banner for EOD Form -->
-                        <div v-if="eodSubmitError" class="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 shadow-sm mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <!-- Live File Audit Collapsible Tray (Always accessible in EOD tab) -->
+                        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+                            <div class="flex items-center justify-between cursor-pointer select-none" @click="showTodayFilesBreakdown = !showTodayFilesBreakdown">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs">
+                                        <i class="fas fa-list-check"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                                            <span>Files Included in Today's EOD</span>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                                {{ todayLoginsFiles.length }} Logins &bull; {{ todayDisbFiles.length }} Disb
+                                            </span>
+                                        </h5>
+                                        <p class="text-[11px] text-slate-400 font-medium">Verify exact customer cases that back up today's numbers.</p>
+                                    </div>
+                                </div>
+                                <button type="button" class="text-xs font-bold text-[#97144D] flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-pink-50 transition">
+                                    <span>{{ showTodayFilesBreakdown ? 'Hide Cases' : 'Audit Cases' }}</span>
+                                    <i class="fas" :class="showTodayFilesBreakdown ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                            </div>
+
+                            <!-- Tray Content -->
+                            <div v-if="showTodayFilesBreakdown" class="mt-4 pt-4 border-t border-slate-100 space-y-4 animate-in fade-in duration-200">
+                                <!-- Logins Grid -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h6 class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's Logins ({{ todayLoginsFiles.length }})</h6>
+                                        <span class="text-[10px] text-slate-400 font-medium">Auto-aggregated into Open Market, Branch & UCL</span>
+                                    </div>
+                                    <div v-if="todayLoginsFiles.length === 0" class="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl text-center">
+                                        No files logged for today's date yet.
+                                    </div>
+                                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div v-for="f in todayLoginsFiles" :key="'eod-log-'+f.id" class="p-2.5 bg-slate-50/70 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                                            <div class="truncate mr-2">
+                                                <span class="font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
+                                                <span class="text-[10px] text-slate-400">#{{ f.appId || 'No ID' }} &bull; {{ f.nclUcl || 'NCL' }} &bull; {{ f.sourcingChannel || 'DSA' }}</span>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <span class="font-black text-[#97144D] block">₹{{ formatCurrency(f.loanAmount) }}</span>
+                                                <span :class="getStatusBadgeClass(f.status)" class="!px-1.5 !py-0.2 !text-[9px] font-bold">{{ f.status }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disbursements Grid -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h6 class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's Disbursements ({{ todayDisbFiles.length }})</h6>
+                                    </div>
+                                    <div v-if="todayDisbFiles.length === 0" class="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl text-center">
+                                        No files marked Disbursed today.
+                                    </div>
+                                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div v-for="f in todayDisbFiles" :key="'eod-disb-'+f.id" class="p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center justify-between text-xs">
+                                            <div class="truncate mr-2">
+                                                <span class="font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
+                                                <span class="text-[10px] text-emerald-600 font-bold">#{{ f.appId || 'No ID' }} &bull; {{ f.nclUcl || 'NCL' }}</span>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <span class="font-black text-emerald-700 block">₹{{ formatCurrency(f.loanAmount) }}</span>
+                                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Disbursed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Banner for EOD Form -->
+                        <div v-if="eodSubmitError" class="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 shadow-xs animate-in fade-in slide-in-from-top-4 duration-300">
                             <i class="fas fa-exclamation-circle text-rose-500 mt-0.5"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-rose-800">Submission Failed</h4>
+                                <h4 class="text-sm font-bold text-rose-800">Submission Notice</h4>
                                 <p class="text-xs font-medium text-rose-600 mt-1">{{ eodSubmitError }}</p>
                             </div>
                         </div>
 
-                        <form v-if="!hasSubmittedToday" class="space-y-6">
+                        <!-- Active Submission Form (Shown if not submitted OR revising) -->
+                        <form v-if="!hasSubmittedToday || isEditingTodayEod" class="space-y-6">
                             <!-- Logins Card -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                                 <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -1770,11 +1963,48 @@
                                 </div>
                             </div>
 
-                            <div class="pt-2 flex justify-end">
-                                <button type="button" @click.prevent="submitEOD" :disabled="submitting" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <!-- Planning & Field Activity Card (Card 4) -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm shadow-inner">
+                                            <i class="fas fa-location-dot"></i>
+                                        </div>
+                                        <h4 class="font-bold text-slate-700 text-lg">Planning & Field Activities</h4>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Optional</span>
+                                </div>
+                                <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white">
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Dealer Visits Today</label>
+                                        <input type="number" v-model.number="dealerVisitsInput" min="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 3">
+                                        <p class="text-[10px] text-slate-400 mt-1">Showrooms / partner visits done today</p>
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Tomorrow Login Commit</label>
+                                        <input type="text" v-model="tomorrowLoginsInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 2 Files (18.50 L)">
+                                        <p class="text-[10px] text-slate-400 mt-1">Expected logins tomorrow</p>
+                                    </div>
+                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Tomorrow Disb Commit</label>
+                                        <input type="text" v-model="tomorrowDisbInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 1 File (9.00 L)">
+                                        <p class="text-[10px] text-slate-400 mt-1">Expected delivery/disbursal</p>
+                                    </div>
+                                    <div class="sm:col-span-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Remarks / Hold Reasons</label>
+                                        <input type="text" v-model="remarksInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 1 file approved, delivery scheduled tomorrow at 11 AM">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 flex flex-col sm:flex-row justify-end gap-3">
+                                <button v-if="isEditingTodayEod" @click="cancelReviseTodayEod" type="button" class="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition">
+                                    Cancel Revision
+                                </button>
+                                <button type="button" @click.prevent="submitEOD(isEditingTodayEod)" :disabled="submitting" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
-                                    <i v-else class="fas fa-paper-plane"></i>
-                                    <span>{{ submitting ? 'Submitting...' : 'Submit Final EOD Report' }}</span>
+                                    <i v-else :class="isEditingTodayEod ? 'fas fa-pen-to-square' : 'fas fa-paper-plane'"></i>
+                                    <span>{{ submitting ? 'Submitting...' : (isEditingTodayEod ? 'Update & Resubmit EOD' : 'Submit Final EOD Report') }}</span>
                                 </button>
                             </div>
                         </form>
@@ -1798,22 +2028,30 @@
                                         </thead>
                                         <tbody class="divide-y divide-slate-50 font-medium">
                                             <tr v-for="eod in myEods" :key="eod.id" class="hover:bg-slate-50 transition">
-                                                <td class="px-4 py-3 text-slate-800 font-bold">{{ new Date(eod.date).toLocaleDateString() }}</td>
-                                                <td class="px-4 py-3 text-center">
+                                                <td class="px-4 py-3 text-slate-800 font-bold whitespace-nowrap">
+                                                    <span>{{ new Date(eod.date).toLocaleDateString() }}</span>
+                                                    <span v-if="eod.isRevised" class="ml-1.5 px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded">Revised</span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center whitespace-nowrap font-bold text-slate-800">
                                                     {{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }} / 
                                                     {{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(2) }}L
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
+                                                <td class="px-4 py-3 text-center whitespace-nowrap font-bold text-emerald-600">
                                                     {{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }} / 
                                                     {{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(2) }}L
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    {{ eod.metrics.loginBranchSanction.count || 0 }} / {{ (eod.metrics.loginBranchSanction.amount || 0).toFixed(2) }}L
+                                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                                    {{ eod.metrics.loginBranchSanction?.count || 0 }} / {{ (eod.metrics.loginBranchSanction?.amount || 0).toFixed(2) }}L
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] hover:text-[#1ebd59] transition text-lg" title="Share to WhatsApp">
-                                                        <i class="fab fa-whatsapp"></i>
-                                                    </a>
+                                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                                    <div class="inline-flex items-center gap-3">
+                                                        <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] hover:text-[#1ebd59] transition text-base" title="Share to WhatsApp">
+                                                            <i class="fab fa-whatsapp"></i>
+                                                        </a>
+                                                        <button @click="copyRoEodToClipboard(eod)" type="button" class="text-slate-400 hover:text-slate-700 transition text-base" title="Copy formatted text to clipboard">
+                                                            <i class="fas fa-clipboard"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <tr v-if="myEods.length === 0">
@@ -2355,10 +2593,48 @@
             </div>
         </div>
 
+        <!-- Edit RO Monthly Target Modal -->
+        <div v-if="showEditTargetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200">
+            <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-black text-slate-800">Set Monthly Target</h3>
+                    <button @click="showEditTargetModal = false" class="text-slate-400 hover:text-slate-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500">Define your monthly login targets to automatically track your daily run-rate pace.</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Files / Month</label>
+                        <input type="number" v-model.number="targetInputFiles" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#97144D] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Volume (In Lakhs)</label>
+                        <input type="number" v-model.number="targetInputVolume" min="1" step="0.5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#97144D] outline-none">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button @click="showEditTargetModal = false" type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        Cancel
+                    </button>
+                    <button @click="saveRoTarget" type="button" class="flex-1 py-2.5 bg-[#97144D] hover:bg-axisMaroonDark text-white font-bold rounded-xl text-xs transition shadow-xs">
+                        Save Target
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Quick-Add Floating Action Button (FAB) -->
+        <div v-if="isRO && currentTab !== 'ro-add-file'" class="fixed bottom-20 right-4 md:hidden z-40">
+            <button @click="currentTab = 'ro-add-file'" type="button" class="w-13 h-13 rounded-full bg-gradient-to-tr from-[#97144D] to-[#ED1C24] text-white shadow-lg shadow-[#97144D]/30 flex items-center justify-center text-xl active:scale-95 transition-transform" title="Quick Add New Customer Login">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-7"></script>
+    <script type="module" src="js/app.js?v=force-update-8"></script>
 </body>
 </html>
 

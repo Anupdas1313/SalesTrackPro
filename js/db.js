@@ -129,6 +129,16 @@ export const addEODReport = async (reportData) => {
     }
 };
 
+export const updateEODReport = async (id, reportData) => {
+    try {
+        const docRef = doc(db, 'eod_reports', id);
+        await updateDoc(docRef, reportData);
+    } catch (e) {
+        console.error('Error updating EOD report: ', e);
+        throw e;
+    }
+};
+
 export const getEODReportsByTenant = async (tenantId) => {
     try {
         const q = query(collection(db, 'eod_reports'), where('tenantId', '==', tenantId));
