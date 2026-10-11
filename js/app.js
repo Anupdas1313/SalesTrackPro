@@ -21,6 +21,8 @@ const app = createApp({
         const currentUser = ref(initialUser);
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
+        const isLoggingIn = ref(false);
+        const isRegistering = ref(false);
         const showRegisterMode = ref(false);
         const registerForm = ref({ name: '', workspaceName: '' });
         const registerError = ref('');
@@ -1462,7 +1464,9 @@ const app = createApp({
 
         // Auth & Registration
         const registerSM = async () => {
+            if (isRegistering.value) return;
             registerError.value = '';
+            isRegistering.value = true;
             try {
                 if (!registerForm.value.workspaceName) {
                     registerError.value = 'Please provide a workspace name.';
@@ -1499,11 +1503,15 @@ const app = createApp({
             } catch (error) {
                 console.error("Registration Error:", error);
                 registerError.value = error.message || 'Error creating account.';
+            } finally {
+                isRegistering.value = false;
             }
         };
 
         const login = async () => {
+            if (isLoggingIn.value) return;
             loginError.value = '';
+            isLoggingIn.value = true;
             try {
                 const googleUser = await db.loginWithGoogle();
                 const email = googleUser.email.toLowerCase();
@@ -1554,6 +1562,8 @@ const app = createApp({
             } catch (error) {
                 console.error("Login Error:", error);
                 loginError.value = error.message;
+            } finally {
+                isLoggingIn.value = false;
             }
         };
 
@@ -2048,7 +2058,7 @@ const app = createApp({
 
         // Return everything needed by the template
         return {
-            currentUser, loginForm, loginError, currentTab, mobileMenuOpen, defaultSmName,
+            currentUser, loginForm, loginError, isLoggingIn, isRegistering, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,

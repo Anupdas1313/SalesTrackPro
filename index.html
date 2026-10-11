@@ -67,92 +67,274 @@
             <button @click="stopImpersonation" class="ml-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded border border-white/30 transition">End Session</button>
         </div>
 
-        <!-- Login Screen -->
-        <div v-if="!currentUser" class="flex-1 flex items-center justify-center bg-slate-900 px-4 py-8 relative overflow-hidden">
-            <!-- Modern Mesh Background Ambient Glow -->
-            <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-[#97144D]/20 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 8s;"></div>
-                <div class="absolute top-[20%] -right-[10%] w-[40%] h-[60%] bg-blue-500/10 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 12s;"></div>
-                <div class="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] bg-purple-500/10 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style="animation-duration: 10s;"></div>
+        <!-- Modern Fintech Enterprise Split-Screen Login -->
+        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 overflow-y-auto lg:overflow-hidden select-none font-sans">
+            
+            <!-- Left Side: Product Showcase & Brand Value Pillars (Desktop & Tablet) -->
+            <div class="relative w-full lg:w-[52%] xl:w-[55%] bg-gradient-to-br from-slate-950 via-[#150f1d] to-[#36081e] text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden shrink-0">
+                
+                <!-- Ambient Glow Background Blobs -->
+                <div class="absolute -top-[15%] -left-[10%] w-[55%] h-[55%] bg-[#97144D]/30 rounded-full blur-[120px] pointer-events-none"></div>
+                <div class="absolute top-[40%] -right-[15%] w-[45%] h-[55%] bg-indigo-600/20 rounded-full blur-[130px] pointer-events-none"></div>
+                <div class="absolute -bottom-[20%] left-[25%] w-[50%] h-[50%] bg-[#ED1C24]/15 rounded-full blur-[110px] pointer-events-none"></div>
+                
+                <!-- Grid Overlay Effect -->
+                <div class="absolute inset-0 bg-[radial-gradient(#ffffff0d_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+
+                <!-- Top Header: Brand Identity -->
+                <div class="relative z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#97144D] via-[#D3183F] to-[#ED1C24] text-white flex items-center justify-center text-xl shadow-lg shadow-[#97144D]/40 border border-white/20">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <span class="text-xl sm:text-2xl font-black tracking-tight text-white block leading-none">SALES LINK</span>
+                            <span class="text-[10px] font-bold text-pink-300/80 tracking-widest uppercase block mt-1">Lending Sales Operations</span>
+                        </div>
+                    </div>
+                    <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/10 text-pink-200 border border-white/15 backdrop-blur-md">
+                        <i class="fas fa-shield-halved text-xs text-pink-400"></i> Enterprise Edition
+                    </span>
+                </div>
+
+                <!-- Middle Content: Hero Pitch & Value Pillars -->
+                <div class="relative z-10 my-10 lg:my-auto max-w-xl space-y-8">
+                    <div class="space-y-3">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-300 text-xs font-bold tracking-wide">
+                            <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span>
+                            Frontline Lending & LOS Operating System
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
+                            Close More Loans.<br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-rose-300 to-amber-200">Zero Pipeline Friction.</span>
+                        </h2>
+                        <p class="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
+                            Empowering retail lending officers and sales managers with real-time file stage tracking, daily field accountability, and 1-tap WhatsApp syncing.
+                        </p>
+                    </div>
+
+                    <!-- 4 Interactive Feature Highlights -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div class="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md hover:bg-white/[0.07] transition group">
+                            <div class="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-300 flex items-center justify-center text-sm mb-2.5 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white">Daily Field Discipline</h4>
+                            <p class="text-[11px] text-slate-400 mt-1 leading-snug">Automated EOD submissions, dealer visits & tomorrow commitments.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md hover:bg-white/[0.07] transition group">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-sm mb-2.5 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white">Stalled Cases Radar</h4>
+                            <p class="text-[11px] text-slate-400 mt-1 leading-snug">Instant alerts on files delayed &gt;3 days in credit, FI or approval.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md hover:bg-white/[0.07] transition group">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-sm mb-2.5 group-hover:scale-110 transition-transform">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white">1-Tap WhatsApp Sync</h4>
+                            <p class="text-[11px] text-slate-400 mt-1 leading-snug">Share customer files, bulk rosters & manager nudges frictionlessly.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md hover:bg-white/[0.07] transition group">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-sm mb-2.5 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-compass"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white">360° Officer Cockpit</h4>
+                            <p class="text-[11px] text-slate-400 mt-1 leading-snug">Conversion ratios, run-rate pacing & live performance leaderboards.</p>
+                        </div>
+                    </div>
+
+                    <!-- Live KPI Pulse Mini Card -->
+                    <div class="p-4 rounded-2xl bg-white/[0.05] border border-white/15 backdrop-blur-xl shadow-xl flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base shrink-0">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Operating Benchmark</span>
+                                <span class="text-xs font-bold text-white">High-Velocity LOS Execution</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 text-right">
+                            <div>
+                                <span class="text-xs font-black text-emerald-400 block">100%</span>
+                                <span class="text-[9px] text-slate-400 uppercase font-semibold">EOD Compliance</span>
+                            </div>
+                            <div class="w-px h-6 bg-white/15"></div>
+                            <div>
+                                <span class="text-xs font-black text-pink-300 block">Real-Time</span>
+                                <span class="text-[9px] text-slate-400 uppercase font-semibold">Cloud Sync</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Trust Badges -->
+                <div class="relative z-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400 font-medium">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center gap-1.5"><i class="fas fa-lock text-pink-400 text-[11px]"></i> 256-Bit OAuth</span>
+                        <span>•</span>
+                        <span class="flex items-center gap-1.5"><i class="fas fa-cloud text-pink-400 text-[11px]"></i> Firebase Realtime</span>
+                        <span>•</span>
+                        <span class="flex items-center gap-1.5"><i class="fas fa-user-shield text-pink-400 text-[11px]"></i> Multi-Tenant RBAC</span>
+                    </div>
+                    <span class="text-slate-500 text-[11px]">Sales Link v2.5</span>
+                </div>
             </div>
 
-            <!-- Login Card -->
-            <div class="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.06)] w-full max-w-md p-8 sm:p-10 relative z-10 border border-white/60">
+            <!-- Right Side: Clean High-Conversion Auth Card -->
+            <div class="w-full lg:w-[48%] xl:w-[45%] bg-white flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-16 relative z-10 overflow-y-auto">
                 
-                <!-- Branding Header -->
-                <div class="text-center mb-10">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#97144D] via-[#D3183F] to-[#ED1C24] text-white shadow-xl shadow-[#97144D]/20 mb-6 relative overflow-hidden group">
-                        <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                        <i class="fas fa-chart-line text-3xl drop-shadow-md"></i>
-                    </div>
-                    <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-700 tracking-tight mb-2">Sales Link</h1>
-                    <p class="text-sm text-slate-500 font-medium">Smart File Tracking & CRM</p>
-                </div>
-                
-                <form v-if="!showRegisterMode" @submit.prevent="login" class="space-y-5">
-                    <div class="text-center mb-6">
-                        <div class="inline-block px-4 py-1.5 rounded-full bg-slate-100/80 border border-slate-200/60 text-xs font-bold text-slate-500 mb-2">Welcome Back</div>
-                        <p class="text-sm text-slate-500 font-medium px-4">Sign in with your Google account to access your workspace.</p>
-                    </div>
-
-                    <div v-if="loginError" class="p-3.5 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-center shadow-sm">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-2.5 text-sm"></i>
-                        <span>{{ loginError }}</span>
-                    </div>
-
-                    <button type="submit" class="w-full py-3.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md text-slate-700 font-bold rounded-xl shadow-sm transition-all transform active:scale-[0.98] text-sm flex items-center justify-center gap-3 relative overflow-hidden">
-                        <svg class="w-5 h-5 relative z-10" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        <span class="relative z-10">Continue with Google</span>
-                    </button>
-
-                    <div class="pt-6 mt-2 text-center relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-slate-200"></div>
+                <!-- Right Top Navigation / Status Header -->
+                <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+                    <!-- Mobile Logo (shown only on small screens) -->
+                    <div class="flex lg:hidden items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-[#97144D] text-white flex items-center justify-center text-sm font-black shadow-xs">
+                            SL
                         </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-4 bg-white text-slate-400 text-xs font-semibold">OR</span>
-                        </div>
+                        <span class="font-black text-slate-900 tracking-tight text-base">SALES LINK</span>
                     </div>
                     
-                    <div class="text-center pt-2">
-                        <button type="button" @click="showRegisterMode = true" class="text-xs font-bold text-[#97144D] hover:text-[#7A0E3C] transition">
-                            Create a Sales Manager Workspace
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Registration Form -->
-                <form v-if="showRegisterMode" @submit.prevent="registerSM" class="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Workspace Name</label>
-                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400 shadow-sm" required placeholder="e.g. Acme Sales Team">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Your Full Name (Optional)</label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-semibold text-slate-900 placeholder-slate-400 shadow-sm" placeholder="e.g. John Doe">
-                        <p class="text-[10px] text-slate-400 mt-2 ml-1 font-medium">If blank, we'll use your Google profile name.</p>
+                    <div class="hidden lg:block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Secure Access Portal
                     </div>
 
-                    <div v-if="registerError" class="p-3.5 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-100 flex items-center shadow-sm">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-2.5 text-sm"></i>
-                        <span>{{ registerError }}</span>
+                    <!-- Live System Pulse -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Systems Online</span>
                     </div>
-                    <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 transition-all transform active:scale-[0.98] text-sm flex items-center justify-center gap-3 mt-2">
-                        <span>Create & Sign In</span>
-                        <i class="fas fa-arrow-right text-xs"></i>
-                    </button>
-                    <div class="text-center mt-6">
-                        <button type="button" @click="showRegisterMode = false" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 w-full">
-                            <i class="fas fa-arrow-left"></i> Back to Sign In
+                </div>
+
+                <!-- Main Auth Action Area -->
+                <div class="max-w-md w-full mx-auto my-8 sm:my-12 space-y-6">
+                    
+                    <!-- Title Area -->
+                    <div class="text-left space-y-1.5">
+                        <div v-if="!showRegisterMode">
+                            <span class="text-xs font-black uppercase tracking-wider text-[#97144D] block mb-1">Welcome Back</span>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Sign In to Workspace</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">Access your loan pipeline, daily EOD records, and performance cockpit.</p>
+                        </div>
+                        <div v-else>
+                            <span class="text-xs font-black uppercase tracking-wider text-[#97144D] block mb-1">Manager Onboarding</span>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Create Sales Workspace</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">Set up your sales manager tenant in seconds and invite your team.</p>
+                        </div>
+                    </div>
+
+                    <!-- Role Matching Notice Pill -->
+                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-600 flex items-start gap-3 shadow-2xs">
+                        <div class="w-6 h-6 rounded-lg bg-[#97144D]/10 text-[#97144D] flex items-center justify-center shrink-0 mt-0.5">
+                            <i class="fas fa-info-circle text-xs"></i>
+                        </div>
+                        <div class="space-y-0.5">
+                            <p class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Automated Role Routing</p>
+                            <p class="text-[11px] leading-relaxed text-slate-500">Sign in with your registered Google email. Relationship Officers and Managers are automatically routed to their dedicated dashboard.</p>
+                        </div>
+                    </div>
+
+                    <!-- Error Alert -->
+                    <div v-if="loginError || registerError" class="p-4 bg-rose-50 text-rose-800 text-xs font-semibold rounded-2xl border border-rose-200 flex items-start gap-3 shadow-sm animate-in fade-in duration-200">
+                        <i class="fas fa-circle-exclamation text-rose-500 text-base shrink-0 mt-0.5"></i>
+                        <div class="flex-1">
+                            <strong class="font-bold block text-rose-900">Authentication Alert:</strong>
+                            <span class="leading-relaxed mt-0.5 block">{{ loginError || registerError }}</span>
+                        </div>
+                    </div>
+
+                    <!-- SIGN IN MODE -->
+                    <div v-if="!showRegisterMode" class="space-y-5">
+                        
+                        <!-- Primary Google Button -->
+                        <button type="button" @click="login" :disabled="isLoggingIn" class="w-full py-4 px-6 bg-white border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-800 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 relative text-sm sm:text-base group disabled:opacity-70 disabled:pointer-events-none cursor-pointer">
+                            <!-- Spinner if loading -->
+                            <template v-if="isLoggingIn">
+                                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-[#97144D]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="font-extrabold text-[#97144D]">Authenticating with Google...</span>
+                            </template>
+                            
+                            <!-- Standard Google Button -->
+                            <template v-else>
+                                <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                <span class="font-extrabold group-hover:text-slate-900 transition-colors">Continue with Google</span>
+                                <i class="fas fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 group-hover:text-slate-900 transition-all ml-1"></i>
+                            </template>
+                        </button>
+
+                        <!-- Subtle Divider -->
+                        <div class="relative flex items-center justify-center py-2">
+                            <div class="w-full border-t border-slate-200"></div>
+                            <span class="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Workspace Management</span>
+                        </div>
+
+                        <!-- Create SM Workspace Button -->
+                        <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="w-full py-3.5 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 transition flex items-center justify-center gap-2 group cursor-pointer">
+                            <i class="fas fa-briefcase text-[#97144D] group-hover:scale-110 transition-transform"></i>
+                            <span>Create New Sales Manager Workspace</span>
                         </button>
                     </div>
-                </form>
+
+                    <!-- REGISTRATION MODE -->
+                    <form v-else @submit.prevent="registerSM" class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">Sales Workspace / Hub Name</label>
+                            <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 shadow-2xs" required placeholder="e.g. Mumbai West Auto Finance Team">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">Your Full Name (Optional)</label>
+                            <input v-model="registerForm.name" type="text" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 shadow-2xs" placeholder="e.g. Rahul Sharma">
+                            <p class="text-[10px] text-slate-400 mt-1.5 ml-1">If blank, your Google profile name will be used.</p>
+                        </div>
+
+                        <button type="submit" :disabled="isRegistering" class="w-full py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-[#97144D] hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-slate-900/20 transition-all transform active:scale-[0.99] text-sm flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:pointer-events-none cursor-pointer">
+                            <template v-if="isRegistering">
+                                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Creating Workspace...</span>
+                            </template>
+                            <template v-else>
+                                <span>Create & Connect Google</span>
+                                <i class="fas fa-arrow-right text-xs"></i>
+                            </template>
+                        </button>
+
+                        <div class="text-center pt-2">
+                            <button type="button" @click="showRegisterMode = false; registerError = ''" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 mx-auto cursor-pointer">
+                                <i class="fas fa-arrow-left text-[10px]"></i> Back to Sign In
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+
+                <!-- Right Bottom Footer Bar -->
+                <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-medium">
+                    <span class="flex items-center gap-1.5 text-center sm:text-left">
+                        <i class="fas fa-shield-alt text-[#97144D]"></i> Retail Lending Security Protocol
+                    </span>
+                    <span class="text-slate-500 text-[11px]">
+                        Need help? Contact your Sales Manager
+                    </span>
+                </div>
+
             </div>
+
         </div>
 
         <!-- Main Application (Logged In) -->
@@ -2964,7 +3146,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-10"></script>
+    <script type="module" src="js/app.js?v=force-update-11"></script>
 </body>
 </html>
 
