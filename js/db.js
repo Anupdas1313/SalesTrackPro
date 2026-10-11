@@ -55,17 +55,17 @@ export const getAllUsers = async () => {
     return mapSnapshot(snapshot);
 };
 
-import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
 
 export const loginWithGoogle = async () => {
     googleProvider.setCustomParameters({ prompt: 'select_account' });
     
-    // Safety timeout after 40 seconds to prevent indefinite UI hang if browser blocks popup handshake
+    // Safety timeout after 120 seconds to prevent indefinite UI hang while giving ample time
     const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => {
-            reject(new Error("Sign-in timed out. Please make sure you are on https://saleslink.in (with https) and allow popup windows in your browser."));
-        }, 40000);
+            reject(new Error("Sign-in timed out. If your desktop browser blocks Google popups, please use the Direct Sign-In option below."));
+        }, 120000);
     });
 
     const result = await Promise.race([
@@ -73,6 +73,21 @@ export const loginWithGoogle = async () => {
         timeoutPromise
     ]);
     return result.user;
+};
+
+export const loginWithRedirect = async () => {
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    await signInWithRedirect(auth, googleProvider);
+};
+
+export const checkRedirectResult = async () => {
+    try {
+        const result = await getRedirectResult(auth);
+        return result?.user || null;
+    } catch (e) {
+        console.warn("Redirect check error:", e);
+        return null;
+    }
 };
 
 export const getUserByEmail = async (email) => {

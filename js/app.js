@@ -1547,6 +1547,54 @@ const app = createApp({
             }
         };
 
+        const processUserLogin = async (googleUser) => {
+            const email = googleUser.email.toLowerCase();
+            let user = await db.getUserByEmail(email);
+
+            // Ensure super_admin exists (hardcoded mapping)
+            if (email === 'anupdas8354@gmail.com' && !user) {
+                const ownerData = {
+                    email: email,
+                    role: 'super_admin',
+                    name: googleUser.displayName || 'Platform Owner',
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                };
+                await db.addUser(ownerData);
+                user = await db.getUserByEmail(email);
+            }
+            
+            if (user) {
+                if (user.status === 'suspended') {
+                    loginError.value = 'Account is suspended. Contact Administrator.';
+                    return;
+                }
+
+                // Check workspace status for SM and RO
+                if (user.role !== 'super_admin' && user.tenantId) {
+                    const workspace = await db.getWorkspace(user.tenantId);
+                    if (workspace && workspace.status === 'frozen') {
+                        loginError.value = 'Your workspace is currently frozen. Contact support.';
+                        return;
+                    }
+                }
+
+                // Store user session
+                const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId };
+                localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+                currentUser.value = sessionUser;
+                initUserSm();
+                
+                if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
+                else if (isSM.value) currentTab.value = 'dashboard';
+                else currentTab.value = 'ro-dashboard';
+
+                await loadData();
+            } else {
+                loginError.value = 'Account not found. Ask your manager to invite you.';
+            }
+        };
+
         const login = async () => {
             if (isLoggingIn.value) return;
             loginError.value = '';
@@ -1555,51 +1603,7 @@ const app = createApp({
             try {
                 const googleUser = await db.loginWithGoogle();
                 loginStage.value = 'verifying';
-                const email = googleUser.email.toLowerCase();
-                let user = await db.getUserByEmail(email);
-
-                // Ensure super_admin exists (hardcoded mapping)
-                if (email === 'anupdas8354@gmail.com' && !user) {
-                    const ownerData = {
-                        email: email,
-                        role: 'super_admin',
-                        name: googleUser.displayName || 'Platform Owner',
-                        status: 'active',
-                        createdAt: new Date().toISOString()
-                    };
-                    await db.addUser(ownerData);
-                    user = await db.getUserByEmail(email);
-                }
-                
-                if (user) {
-                    if (user.status === 'suspended') {
-                        loginError.value = 'Account is suspended. Contact Administrator.';
-                        return;
-                    }
-
-                    // Check workspace status for SM and RO
-                    if (user.role !== 'super_admin' && user.tenantId) {
-                        const workspace = await db.getWorkspace(user.tenantId);
-                        if (workspace && workspace.status === 'frozen') {
-                            loginError.value = 'Your workspace is currently frozen. Contact support.';
-                            return;
-                        }
-                    }
-
-                    // Store user session
-                    const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId };
-                    localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                    currentUser.value = sessionUser;
-                    initUserSm();
-                    
-                    if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
-                    else if (isSM.value) currentTab.value = 'dashboard';
-                    else currentTab.value = 'ro-dashboard';
-
-                    await loadData();
-                } else {
-                    loginError.value = 'Account not found. Ask your manager to invite you.';
-                }
+                await processUserLogin(googleUser);
             } catch (error) {
                 console.error("Login Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -1608,6 +1612,20 @@ const app = createApp({
                 }
                 loginError.value = error.message;
             } finally {
+                isLoggingIn.value = false;
+                loginStage.value = '';
+            }
+        };
+
+        const loginRedirect = async () => {
+            loginError.value = '';
+            isLoggingIn.value = true;
+            loginStage.value = 'redirecting';
+            try {
+                await db.loginWithRedirect();
+            } catch (error) {
+                console.error("Redirect Login Error:", error);
+                loginError.value = error.message;
                 isLoggingIn.value = false;
                 loginStage.value = '';
             }
@@ -2088,6 +2106,23 @@ const app = createApp({
                 adminAnnouncementInput.value = systemAnnouncement.value;
             } catch(e) { console.error(e); }
 
+            // Check if returning from Direct Sign-In (Redirect)
+            try {
+                const redirectUser = await db.checkRedirectResult();
+                if (redirectUser) {
+                    isLoggingIn.value = true;
+                    loginStage.value = 'verifying';
+                    await processUserLogin(redirectUser);
+                    isLoggingIn.value = false;
+                    loginStage.value = '';
+                }
+            } catch (e) {
+                console.error("Redirect login processing error:", e);
+                loginError.value = e.message;
+                isLoggingIn.value = false;
+                loginStage.value = '';
+            }
+
             // Check for existing session
             if (currentUser.value) {
                 initUserSm();
@@ -2113,7 +2148,7 @@ const app = createApp({
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
-            login, logout, saveNewRo, toggleUserStatus,
+            login, loginRedirect, logout, saveNewRo, toggleUserStatus,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
