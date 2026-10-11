@@ -67,154 +67,82 @@
             <button @click="stopImpersonation" class="ml-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded border border-white/30 transition">End Session</button>
         </div>
 
-        <!-- Focused Modern Auth Screen -->
-        <div v-if="!currentUser" class="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-slate-950 relative overflow-hidden font-sans select-none">
-            
-            <!-- Ambient Glow Background Blobs -->
-            <div class="absolute -top-[15%] -left-[10%] w-[50%] h-[50%] bg-[#97144D]/25 rounded-full blur-[120px] pointer-events-none"></div>
-            <div class="absolute top-[30%] -right-[15%] w-[45%] h-[55%] bg-indigo-600/15 rounded-full blur-[130px] pointer-events-none"></div>
-            <div class="absolute -bottom-[20%] left-[20%] w-[55%] h-[50%] bg-[#ED1C24]/10 rounded-full blur-[110px] pointer-events-none"></div>
-            <div class="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
-
-            <!-- Centered Auth Card -->
-            <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-9 relative z-10 border border-slate-100/80 flex flex-col space-y-6">
+        <!-- Ultra-Clean, Distraction-Free Login -->
+        <div v-if="!currentUser" class="min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 font-sans">
+            <div class="w-full max-w-sm bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 space-y-6">
                 
-                <!-- Card Header: Brand Identity & Status -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#97144D] via-[#D3183F] to-[#ED1C24] text-white flex items-center justify-center text-lg shadow-md shadow-[#97144D]/30 border border-white/20">
-                            <i class="fas fa-layer-group"></i>
-                        </div>
-                        <div>
-                            <span class="text-lg font-black tracking-tight text-slate-900 block leading-tight">SALES LINK</span>
-                            <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">Lending Sales Operations</span>
-                        </div>
+                <!-- Brand Header -->
+                <div class="text-center space-y-2">
+                    <div class="w-12 h-12 rounded-xl bg-[#97144D] text-white flex items-center justify-center text-xl mx-auto shadow-sm">
+                        <i class="fas fa-layer-group"></i>
                     </div>
-                    
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Online</span>
+                    <div>
+                        <h1 class="text-xl font-black text-slate-900 tracking-tight">Sales Link</h1>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">
+                            {{ showRegisterMode ? 'Create Sales Manager Workspace' : 'Sign in to your workspace' }}
+                        </p>
                     </div>
                 </div>
 
-                <!-- Title & Context -->
-                <div class="text-left space-y-1">
-                    <div v-if="!showRegisterMode">
-                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#97144D] block">Welcome Back</span>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Sign In to Workspace</h2>
-                        <p class="text-xs text-slate-500 font-medium">Access your loan pipeline, daily EOD records, and performance cockpit.</p>
-                    </div>
-                    <div v-else>
-                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#97144D] block">Manager Onboarding</span>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Create Sales Workspace</h2>
-                        <p class="text-xs text-slate-500 font-medium">Set up your sales manager tenant in seconds and invite your team.</p>
-                    </div>
+                <!-- Error Message -->
+                <div v-if="loginError || registerError" class="p-3 bg-rose-50 text-rose-700 text-xs font-semibold rounded-xl border border-rose-100 flex items-center gap-2">
+                    <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0"></i>
+                    <span>{{ loginError || registerError }}</span>
                 </div>
 
-                <!-- Role Matching Explainer Pill -->
-                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs text-slate-600 flex items-start gap-2.5">
-                    <div class="w-5 h-5 rounded-md bg-[#97144D]/10 text-[#97144D] flex items-center justify-center shrink-0 mt-0.5">
-                        <i class="fas fa-info-circle text-[11px]"></i>
-                    </div>
-                    <p class="text-[11px] leading-relaxed text-slate-500 font-medium">
-                        <strong class="text-slate-800">Automated Role Routing:</strong> Sign in with your registered Google email. Relationship Officers and Managers are automatically routed to their workspace.
-                    </p>
-                </div>
-
-                <!-- Error Alert -->
-                <div v-if="loginError || registerError" class="p-3.5 bg-rose-50 text-rose-800 text-xs font-semibold rounded-2xl border border-rose-200 flex items-start gap-2.5 shadow-sm animate-in fade-in duration-200">
-                    <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
-                    <div class="flex-1">
-                        <span class="leading-relaxed block">{{ loginError || registerError }}</span>
-                    </div>
-                </div>
-
-                <!-- SIGN IN MODE -->
-                <div v-if="!showRegisterMode" class="space-y-4 pt-1">
-                    
-                    <!-- Primary Google Button -->
-                    <button type="button" @click="login" :disabled="isLoggingIn" class="w-full py-3.5 px-5 bg-white border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-800 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 relative text-sm group disabled:opacity-70 disabled:pointer-events-none cursor-pointer">
-                        <!-- Spinner if loading -->
+                <!-- Sign In View -->
+                <div v-if="!showRegisterMode" class="space-y-4">
+                    <button type="button" @click="login" :disabled="isLoggingIn" class="w-full py-3 px-4 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-2xs transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-sm cursor-pointer disabled:opacity-60">
                         <template v-if="isLoggingIn">
-                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-[#97144D]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin h-4 w-4 text-[#97144D]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span class="font-extrabold text-[#97144D]">Authenticating with Google...</span>
+                            <span class="text-xs">Signing in...</span>
                         </template>
-                        
-                        <!-- Standard Google Button -->
                         <template v-else>
-                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
-                            <span class="font-extrabold group-hover:text-slate-900 transition-colors">Continue with Google</span>
-                            <i class="fas fa-arrow-right text-xs text-slate-400 group-hover:translate-x-1 group-hover:text-slate-900 transition-all ml-1"></i>
+                            <span>Continue with Google</span>
                         </template>
                     </button>
 
-                    <!-- Divider -->
-                    <div class="relative flex items-center justify-center py-1">
-                        <div class="w-full border-t border-slate-200"></div>
-                        <span class="absolute bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Workspace Management</span>
+                    <div class="text-center pt-2">
+                        <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-xs font-semibold text-[#97144D] hover:underline transition cursor-pointer">
+                            Create a Sales Manager Workspace
+                        </button>
                     </div>
-
-                    <!-- Create SM Workspace Button -->
-                    <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 transition flex items-center justify-center gap-2 group cursor-pointer">
-                        <i class="fas fa-briefcase text-[#97144D] group-hover:scale-110 transition-transform"></i>
-                        <span>Create New Sales Manager Workspace</span>
-                    </button>
                 </div>
 
-                <!-- REGISTRATION MODE -->
-                <form v-else @submit.prevent="registerSM" class="space-y-3.5 pt-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <!-- Workspace Registration View -->
+                <form v-else @submit.prevent="registerSM" class="space-y-3.5">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">Sales Workspace / Hub Name</label>
-                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 shadow-2xs" required placeholder="e.g. Mumbai West Auto Finance Team">
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Workspace Name</label>
+                        <input v-model="registerForm.workspaceName" type="text" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Acme Sales Team">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">Your Full Name (Optional)</label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-[#97144D] focus:ring-4 focus:ring-[#97144D]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 shadow-2xs" placeholder="e.g. Rahul Sharma">
-                        <p class="text-[10px] text-slate-400 mt-1 ml-1">If blank, your Google profile name will be used.</p>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Your Name (Optional)</label>
+                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. John Doe">
                     </div>
 
-                    <button type="submit" :disabled="isRegistering" class="w-full py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-[#97144D] hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-slate-900/20 transition-all transform active:scale-[0.99] text-sm flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:pointer-events-none cursor-pointer">
-                        <template v-if="isRegistering">
-                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Creating Workspace...</span>
-                        </template>
-                        <template v-else>
-                            <span>Create & Connect Google</span>
-                            <i class="fas fa-arrow-right text-xs"></i>
-                        </template>
+                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#97144D] hover:bg-[#801140] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                        <span v-if="isRegistering">Creating...</span>
+                        <span v-else>Create & Sign In</span>
                     </button>
 
                     <div class="text-center pt-1">
-                        <button type="button" @click="showRegisterMode = false; registerError = ''" class="text-xs font-bold text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5 mx-auto cursor-pointer">
-                            <i class="fas fa-arrow-left text-[10px]"></i> Back to Sign In
+                        <button type="button" @click="showRegisterMode = false; registerError = ''" class="text-xs text-slate-400 hover:text-slate-600 font-medium transition cursor-pointer">
+                            Back to Sign In
                         </button>
                     </div>
                 </form>
 
-                <!-- Footer Security & Support -->
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                    <span class="flex items-center gap-1">
-                        <i class="fas fa-lock text-[#97144D] text-[10px]"></i> 256-Bit OAuth
-                    </span>
-                    <span class="text-slate-500">
-                        Need help? Contact your SM
-                    </span>
-                </div>
-
             </div>
-
         </div>
 
         <!-- Main Application (Logged In) -->
@@ -3026,7 +2954,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-12"></script>
+    <script type="module" src="js/app.js?v=force-update-13"></script>
 </body>
 </html>
 
