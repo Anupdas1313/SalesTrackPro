@@ -26,7 +26,128 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', region: '', phone: '', passcode: '' });
+        const registerForm = ref({ name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '' });
+        const bankOptions = {
+            private: [
+                'HDFC Bank',
+                'ICICI Bank',
+                'Kotak Mahindra Bank',
+                'IndusInd Bank',
+                'Yes Bank',
+                'IDFC FIRST Bank',
+                'Federal Bank',
+                'Bandhan Bank',
+                'RBL Bank',
+                'South Indian Bank',
+                'City Union Bank',
+                'Karur Vysya Bank',
+                'Karnataka Bank',
+                'Tamilnad Mercantile Bank',
+                'CSB Bank',
+                'DCB Bank',
+                'Jammu & Kashmir Bank',
+                'Dhanlaxmi Bank',
+                'Nainital Bank'
+            ],
+            public: [
+                'State Bank of India (SBI)',
+                'Punjab National Bank (PNB)',
+                'Bank of Baroda (BOB)',
+                'Canara Bank',
+                'Union Bank of India',
+                'Bank of India (BOI)',
+                'Indian Bank',
+                'Central Bank of India',
+                'Indian Overseas Bank (IOB)',
+                'UCO Bank',
+                'Bank of Maharashtra',
+                'Punjab & Sind Bank'
+            ],
+            sfb: [
+                'AU Small Finance Bank',
+                'Equitas Small Finance Bank',
+                'Ujjivan Small Finance Bank',
+                'Jana Small Finance Bank',
+                'Capital Small Finance Bank',
+                'ESAF Small Finance Bank',
+                'Suryoday Small Finance Bank',
+                'Utkarsh Small Finance Bank',
+                'Unity Small Finance Bank',
+                'Shivalik Small Finance Bank',
+                'Fincare Small Finance Bank',
+                'North East Small Finance Bank'
+            ],
+            nbfc: [
+                'Bajaj Finance Ltd',
+                'Tata Capital',
+                'Mahindra & Mahindra Financial Services (Mahindra Finance)',
+                'Cholamandalam Investment and Finance (Chola)',
+                'Shriram Finance Ltd',
+                'Muthoot Finance',
+                'Manappuram Finance',
+                'Sundaram Finance',
+                'L&T Finance Holdings',
+                'Poonawalla Fincorp',
+                'Aditya Birla Finance',
+                'Piramal Capital & Housing Finance',
+                'Hero FinCorp',
+                'HDB Financial Services',
+                'TVS Credit Services',
+                'SMFG India Credit (Fullerton India)',
+                'IIFL Finance',
+                'InCred Financial Services',
+                'DMI Finance',
+                'Clix Capital',
+                'Capri Global Capital',
+                'Fedbank Financial Services (Fedfina)',
+                'Five-Star Business Finance',
+                'SK Finance',
+                'Kogta Financial',
+                'MAS Financial Services',
+                'Northern Arc Capital',
+                'Navi Finserv',
+                'KreditBee / KrazyBee',
+                'Moneyview (Whizdm Innovations)',
+                'Protium Finance',
+                'Oxyzo Financial Services',
+                'Vivriti Capital',
+                'Aye Finance',
+                'Kinara Capital',
+                'NeoGrowth Credit',
+                'Lendingkart Finance',
+                'Avanse Financial Services',
+                'Auxilo Finserve',
+                'Hiranandani Financial Services'
+            ],
+            hfc: [
+                'LIC Housing Finance',
+                'PNB Housing Finance',
+                'Can Fin Homes',
+                'Aavas Financiers',
+                'Home First Finance Company (HFFC)',
+                'Aptus Value Housing Finance',
+                'Repco Home Finance',
+                'GIC Housing Finance',
+                'Vastu Housing Finance',
+                'Shubham Housing Development Finance',
+                'Grihum Housing Finance',
+                'India Shelter Finance Corporation',
+                'Svatantra Housing Finance',
+                'Star Housing Finance'
+            ],
+            foreign: [
+                'Standard Chartered Bank',
+                'Citibank India',
+                'HSBC Bank India',
+                'Barclays Bank',
+                'Deutsche Bank',
+                'DBS Bank India',
+                'Bank of America',
+                'JP Morgan Chase Bank',
+                'BNP Paribas',
+                'State Bank of Mauritius (SBM Bank India)'
+            ]
+        };
         const registerError = ref('');
         
         const getInitialTab = () => {
@@ -451,6 +572,7 @@ const app = createApp({
                 
                 return {
                     ...workspace,
+                    bankName: workspace.bankName || 'Axis Bank',
                     roCount: wUsers.length,
                     fileCount: wFiles.length,
                     lastActive
@@ -1518,7 +1640,15 @@ const app = createApp({
             const smRegion = registerForm.value.region?.trim();
             const smPhone = registerForm.value.phone?.trim() || '';
             const smPasscode = registerForm.value.passcode?.trim();
+            let smBank = registerForm.value.bankName?.trim() || 'Axis Bank';
+            if (smBank === 'Other') {
+                smBank = registerForm.value.customBankName?.trim();
+            }
 
+            if (!smBank) {
+                registerError.value = 'Please select or specify your Bank or Financial Institution.';
+                return;
+            }
             if (!smName) {
                 registerError.value = 'Sales Manager Name is mandatory.';
                 return;
@@ -1532,7 +1662,7 @@ const app = createApp({
                 return;
             }
 
-            const wsName = `${smRegion} Hub`;
+            const wsName = smBank === 'Axis Bank' ? `${smRegion} Hub` : `${smBank} - ${smRegion} Hub`;
 
             isRegistering.value = true;
             registerStage.value = 'selecting';
@@ -1553,6 +1683,7 @@ const app = createApp({
                 
                 const workspaceId = await db.addWorkspace({
                     name: wsName,
+                    bankName: smBank,
                     region: smRegion,
                     managerName: smName,
                     status: 'active',
@@ -1563,6 +1694,7 @@ const app = createApp({
                     email: email,
                     role: 'sm',
                     name: smName,
+                    bankName: smBank,
                     region: smRegion,
                     phone: smPhone,
                     tenantId: workspaceId,
@@ -1577,6 +1709,7 @@ const app = createApp({
                     username: smName,
                     role: 'sm',
                     name: smName,
+                    bankName: smBank,
                     region: smRegion,
                     tenantId: workspaceId
                 };
@@ -1587,7 +1720,7 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', region: '', phone: '', passcode: '' };
+                registerForm.value = { name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -2246,7 +2379,7 @@ const app = createApp({
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus, deleteWorkspace,
+            showRegisterMode, registerForm, registerError, registerSM, bankOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
