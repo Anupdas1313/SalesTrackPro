@@ -26,7 +26,7 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', region: '', phone: '' });
+        const registerForm = ref({ name: '', region: '', phone: '', passcode: '' });
         const registerError = ref('');
         
         const getInitialTab = () => {
@@ -1517,6 +1517,7 @@ const app = createApp({
             const smName = registerForm.value.name?.trim();
             const smRegion = registerForm.value.region?.trim();
             const smPhone = registerForm.value.phone?.trim() || '';
+            const smPasscode = registerForm.value.passcode?.trim();
 
             if (!smName) {
                 registerError.value = 'Sales Manager Name is mandatory.';
@@ -1524,6 +1525,10 @@ const app = createApp({
             }
             if (!smRegion) {
                 registerError.value = 'Operating Region / Zone is mandatory.';
+                return;
+            }
+            if (!smPasscode || smPasscode.toUpperCase() !== 'AXIS-MGR-2026') {
+                registerError.value = 'Invalid Manager Security Key. If you are an RO, please click "Back to Sign In" and sign in with Google.';
                 return;
             }
 
@@ -1582,7 +1587,7 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', region: '', phone: '' };
+                registerForm.value = { name: '', region: '', phone: '', passcode: '' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -1756,6 +1761,30 @@ const app = createApp({
             const newStatus = workspace.status === 'active' ? 'frozen' : 'active';
             await db.updateWorkspace(workspace.id, { status: newStatus });
             await loadData();
+        };
+
+        const deleteWorkspace = async (workspace) => {
+            if (!workspace || !workspace.id) return;
+            if (workspace.id === 'default-tenant') {
+                alert("The default system workspace cannot be deleted.");
+                return;
+            }
+
+            let confirmMsg = `Are you sure you want to permanently delete workspace "${workspace.name}" (ID: ${workspace.id})?`;
+            if ((workspace.fileCount && workspace.fileCount > 0) || (workspace.roCount && workspace.roCount > 0)) {
+                confirmMsg += `\n\n⚠️ Caution: This workspace currently contains ${workspace.roCount || 0} user(s) and ${workspace.fileCount || 0} file(s). Please ensure any real users have been reassigned in Global User Directory before deleting.`;
+            }
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                await db.deleteWorkspace(workspace.id);
+                allWorkspaces.value = allWorkspaces.value.filter(w => w.id !== workspace.id);
+                await loadData();
+                alert(`Workspace "${workspace.name}" has been permanently deleted.`);
+            } catch (err) {
+                console.error("Error deleting workspace:", err);
+                alert("Failed to delete workspace: " + (err.message || err));
+            }
         };
 
         // RO: Add File
@@ -2217,7 +2246,7 @@ const app = createApp({
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
+            showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,

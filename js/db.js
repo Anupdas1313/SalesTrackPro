@@ -33,6 +33,11 @@ export const updateWorkspace = async (id, updateData) => {
     await updateDoc(docRef, updateData);
 };
 
+export const deleteWorkspace = async (id) => {
+    const docRef = doc(db, 'workspaces', id);
+    await deleteDoc(docRef);
+};
+
 // --- Users ---
 export const getROUsersByTenant = async (tenantId) => {
     const q = query(usersCol, where('role', '==', 'ro'), where('tenantId', '==', tenantId));

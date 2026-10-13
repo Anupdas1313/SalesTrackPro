@@ -105,6 +105,13 @@
 
                 <!-- VIEW 1: Sign In View (Primary / Default Screen for ROs & SMs) -->
                 <div v-if="!showRegisterMode" class="space-y-4">
+                    <div class="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-center">
+                        <p class="text-[11px] text-blue-800 font-semibold flex items-center justify-center gap-1.5">
+                            <i class="fas fa-id-badge text-blue-600"></i>
+                            <span>Relationship Officers (ROs): Click below to sign in</span>
+                        </p>
+                    </div>
+
                     <div class="text-center space-y-1">
                         <p class="text-xs text-slate-600 font-medium">
                             Continue with your authorized Google work account
@@ -168,9 +175,9 @@
                     <!-- Manager Setup Secondary Access (Kept at bottom so ROs won't accidentally click it) -->
                     <div class="pt-3 border-t border-slate-100 text-center">
                         <p class="text-[11px] text-slate-500">
-                            Sales Manager setting up a new branch?
+                            Sales Manager onboarding a new branch?
                             <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-[#97144D] font-bold hover:underline ml-1 cursor-pointer">
-                                Register Workspace →
+                                Register Workspace (Key Required) →
                             </button>
                         </p>
                     </div>
@@ -195,6 +202,15 @@
                         <p class="text-[11px] text-amber-800 leading-snug">
                             <strong>Relationship Officers (ROs):</strong> Do <u>NOT</u> register here. Your Sales Manager must invite you first. Please click <strong>Back to Sign In</strong> above.
                         </p>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Manager Security Key <span class="text-rose-500">*</span></label>
+                            <span class="text-[10px] text-slate-400 font-mono">Issued by Super Admin</span>
+                        </div>
+                        <input v-model="registerForm.passcode" type="password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="Enter Manager Security Passcode">
+                        <p class="text-[10px] text-slate-400 mt-1">ROs do not have a passcode. Click 'Back to Sign In' above.</p>
                     </div>
 
                     <div>
@@ -467,9 +483,12 @@
                                             <td class="px-4 py-3 text-xs text-slate-500">
                                                 {{ workspace.lastActive ? formatDate(workspace.lastActive) : 'Never' }}
                                             </td>
-                                            <td class="px-4 py-3 text-right">
-                                                <button @click="toggleWorkspaceStatus(workspace)" :class="workspace.status === 'active' ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'" class="px-3 py-1.5 border rounded-lg text-xs font-bold transition">
+                                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                                <button @click="toggleWorkspaceStatus(workspace)" :class="workspace.status === 'active' ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 border-orange-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'" class="px-2.5 py-1.5 border rounded-lg text-xs font-bold transition mr-1.5">
                                                     {{ workspace.status === 'active' ? 'Freeze' : 'Unfreeze' }}
+                                                </button>
+                                                <button @click="deleteWorkspace(workspace)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-800 border border-rose-200 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer" title="Delete Workspace Permanently">
+                                                    <i class="fas fa-trash-alt text-[11px]"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -3225,7 +3244,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-22"></script>
+    <script type="module" src="js/app.js?v=force-update-23"></script>
 </body>
 </html>
 
