@@ -1728,7 +1728,17 @@ const app = createApp({
 
         const deleteRoUser = async (user) => {
             if (!user || !user.id) return;
-            const confirmMsg = `Are you sure you want to delete "${user.name || 'User'}" (${user.email})?\n\nThis will remove their profile and login access immediately. This action cannot be undone.`;
+
+            // Check if this RO has historical logged files
+            const filesCount = (allFiles.value || []).filter(f => f.roId === user.id || (f.roName && f.roName.trim().toUpperCase() === (user.name || '').trim().toUpperCase())).length;
+
+            let confirmMsg = '';
+            if (filesCount > 0) {
+                confirmMsg = `⚠️ IMPORTANT RESIGNATION ADVICE:\n\nOfficer "${user.name || 'User'}" has ${filesCount} loan file(s) logged in the branch pipeline!\n\n👉 If this officer has RESIGNED or left the company, please click CANCEL and use "SUSPEND" instead!\nSuspending locks their login immediately while safely preserving their loan history, disbursals, and Cockpit performance for audits.\n\nOnly use "DELETE" if this was an accidental typo or duplicate profile.\n\nDo you still wish to permanently delete this profile?`;
+            } else {
+                confirmMsg = `Are you sure you want to permanently delete profile "${user.name || 'User'}" (${user.email})?\n\nThis will remove their profile and login access immediately. This action cannot be undone.`;
+            }
+
             if (!confirm(confirmMsg)) return;
 
             try {

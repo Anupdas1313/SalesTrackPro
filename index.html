@@ -919,7 +919,7 @@
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">RO Filter</label>
                                     <select v-model="filters.roId" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
                                         <option value="">All ROs</option>
-                                        <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}</option>
+                                        <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}{{ user.status === 'suspended' ? ' (Suspended)' : '' }}</option>
                                     </select>
                                 </div>
 
@@ -2485,7 +2485,7 @@
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Relationship Officer (RO)</label>
                                         <select v-model="filters.roId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] transition">
                                             <option value="">All ROs</option>
-                                            <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}</option>
+                                            <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}{{ user.status === 'suspended' ? ' (Suspended)' : '' }}</option>
                                         </select>
                                     </div>
 
@@ -3225,7 +3225,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-21"></script>
+    <script type="module" src="js/app.js?v=force-update-22"></script>
 </body>
 </html>
 
