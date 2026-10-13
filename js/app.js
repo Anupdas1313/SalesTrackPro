@@ -263,6 +263,15 @@ const app = createApp({
             }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
         });
 
+        // Split active and suspended ROs for clear visual separation
+        const activeRoUsers = computed(() => {
+            return (roUsers.value || []).filter(u => u.status !== 'suspended');
+        });
+
+        const suspendedRoUsers = computed(() => {
+            return (roUsers.value || []).filter(u => u.status === 'suspended');
+        });
+
         // RO 360 Inspector Drawer State & Logic (For SM Monitoring)
         const selectedRoForInspection = ref(null);
         const showRoInspectorDrawer = ref(false);
@@ -2196,7 +2205,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, toggleWorkspaceStatus,
             showAddRoModal, newRoForm, addRoError,
