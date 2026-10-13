@@ -102,6 +102,11 @@ export const updateUser = async (id, updateData) => {
     await updateDoc(docRef, updateData);
 };
 
+export const deleteUser = async (id) => {
+    const docRef = doc(db, 'users', id);
+    await deleteDoc(docRef);
+};
+
 // --- Loan Files ---
 // (Used by Super Admin)
 export const getAllLoanFiles = async () => {

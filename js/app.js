@@ -535,24 +535,60 @@ const app = createApp({
         const editUserForm = ref({ id: '', name: '', email: '', tenantId: '', role: '' });
 
         const openEditUserModal = (user) => {
-            editUserForm.value = { ...user };
+            editUserForm.value = {
+                id: user.id || '',
+                name: user.name || '',
+                email: user.email || '',
+                tenantId: user.tenantId || '',
+                role: user.role || 'ro'
+            };
             showEditUserModal.value = true;
         };
 
         const saveUserEdit = async () => {
             try {
-                await db.updateUser(editUserForm.value.id, {
-                    name: editUserForm.value.name,
-                    tenantId: editUserForm.value.tenantId,
-                    role: editUserForm.value.role
-                });
+                const cleanedName = (editUserForm.value.name || '').trim();
+                const cleanedEmail = (editUserForm.value.email || '').trim().toLowerCase();
+
+                if (!cleanedName) {
+                    alert("User full name is required.");
+                    return;
+                }
+                if (!cleanedEmail) {
+                    alert("A valid Google Email address is required.");
+                    return;
+                }
+
+                const updatePayload = {
+                    name: cleanedName,
+                    email: cleanedEmail
+                };
+                if (editUserForm.value.role) {
+                    updatePayload.role = editUserForm.value.role;
+                }
+                if (editUserForm.value.tenantId !== undefined) {
+                    updatePayload.tenantId = editUserForm.value.tenantId;
+                }
+
+                await db.updateUser(editUserForm.value.id, updatePayload);
+
                 const index = roUsers.value.findIndex(u => u.id === editUserForm.value.id);
                 if (index !== -1) {
-                    roUsers.value[index] = { ...roUsers.value[index], ...editUserForm.value };
+                    roUsers.value[index] = {
+                        ...roUsers.value[index],
+                        name: cleanedName,
+                        email: cleanedEmail,
+                        role: updatePayload.role || roUsers.value[index].role,
+                        tenantId: updatePayload.tenantId !== undefined ? updatePayload.tenantId : roUsers.value[index].tenantId
+                    };
                 }
+
+                await loadData();
                 showEditUserModal.value = false;
+                alert('User details updated successfully!');
             } catch (error) {
                 console.error("Error saving user edit", error);
+                alert("Failed to save user changes: " + (error.message || error));
             }
         };
 
@@ -1493,7 +1529,11 @@ const app = createApp({
 
                 const existing = await db.getUserByEmail(email);
                 if (existing) {
-                    registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
+                    if (existing.role === 'ro') {
+                        registerError.value = `This account (${email}) is already registered as a Relationship Officer (RO). Please switch back to "Sign In" to access your workspace.`;
+                    } else {
+                        registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
+                    }
                     return;
                 }
                 
@@ -1675,6 +1715,22 @@ const app = createApp({
             const newStatus = user.status === 'active' ? 'suspended' : 'active';
             await db.updateUser(user.id, { status: newStatus });
             await loadData();
+        };
+
+        const deleteRoUser = async (user) => {
+            if (!user || !user.id) return;
+            const confirmMsg = `Are you sure you want to delete "${user.name || 'User'}" (${user.email})?\n\nThis will remove their profile and login access immediately. This action cannot be undone.`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                await db.deleteUser(user.id);
+                roUsers.value = roUsers.value.filter(u => u.id !== user.id);
+                await loadData();
+                alert(`User ${user.name || user.email} was successfully deleted.`);
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Failed to delete user: " + (error.message || error));
+            }
         };
 
         const toggleWorkspaceStatus = async (workspace) => {
@@ -2148,7 +2204,7 @@ const app = createApp({
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
-            login, loginRedirect, logout, saveNewRo, toggleUserStatus,
+            login, loginRedirect, logout, saveNewRo, toggleUserStatus, deleteRoUser,
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
