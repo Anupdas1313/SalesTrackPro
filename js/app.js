@@ -26,7 +26,17 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '' });
+        const registerForm = ref({ name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+        const divisionOptions = [
+            'Auto Loans (Car Loans)',
+            'Personal Loans (PL)',
+            'Home Loans & LAP (Mortgage)',
+            'Business Loans & SME Finance',
+            'Commercial Vehicle & CE (CV/CE)',
+            'Two-Wheeler Loans (2W)',
+            'Gold Loans',
+            'General Retail Assets'
+        ];
         const bankOptions = {
             private: [
                 'HDFC Bank',
@@ -573,6 +583,7 @@ const app = createApp({
                 return {
                     ...workspace,
                     bankName: workspace.bankName || 'Axis Bank',
+                    division: workspace.division || 'Auto Loans (Car Loans)',
                     roCount: wUsers.length,
                     fileCount: wFiles.length,
                     lastActive
@@ -1644,9 +1655,14 @@ const app = createApp({
             if (smBank === 'Other') {
                 smBank = registerForm.value.customBankName?.trim();
             }
+            const smDivision = registerForm.value.division?.trim() || 'Auto Loans (Car Loans)';
 
             if (!smBank) {
                 registerError.value = 'Please select or specify your Bank or Financial Institution.';
+                return;
+            }
+            if (!smDivision) {
+                registerError.value = 'Please select your Sales Division / Asset Vertical.';
                 return;
             }
             if (!smName) {
@@ -1684,6 +1700,7 @@ const app = createApp({
                 const workspaceId = await db.addWorkspace({
                     name: wsName,
                     bankName: smBank,
+                    division: smDivision,
                     region: smRegion,
                     managerName: smName,
                     status: 'active',
@@ -1695,6 +1712,7 @@ const app = createApp({
                     role: 'sm',
                     name: smName,
                     bankName: smBank,
+                    division: smDivision,
                     region: smRegion,
                     phone: smPhone,
                     tenantId: workspaceId,
@@ -1710,6 +1728,7 @@ const app = createApp({
                     role: 'sm',
                     name: smName,
                     bankName: smBank,
+                    division: smDivision,
                     region: smRegion,
                     tenantId: workspaceId
                 };
@@ -1720,7 +1739,7 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '' };
+                registerForm.value = { name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -2379,7 +2398,7 @@ const app = createApp({
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, myFiles, allWorkspaces, allFiles,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            showRegisterMode, registerForm, registerError, registerSM, bankOptions, toggleWorkspaceStatus, deleteWorkspace,
+            showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
