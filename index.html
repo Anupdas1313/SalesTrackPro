@@ -33,10 +33,14 @@
                         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
                     },
                     colors: {
-                        axisMaroon: '#97144D',
-                        axisMaroonDark: '#7A0E3C',
-                        axisRed: '#ED1C24',
-                        axisBlue: '#002E6E'
+                        brand: '#4F46E5',
+                        brandDark: '#4338CA',
+                        brandLight: '#EEF2FF',
+                        brandGradient: '#6366F1',
+                        axisMaroon: '#4F46E5',
+                        axisMaroonDark: '#4338CA',
+                        axisRed: '#EF4444',
+                        axisBlue: '#3B82F6'
                     }
                 }
             }
@@ -83,11 +87,11 @@
                 
                 <!-- Brand Header -->
                 <div class="text-center space-y-3">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#97144D] to-[#B31857] text-white flex items-center justify-center text-2xl mx-auto shadow-md shadow-[#97144D]/25 ring-4 ring-[#97144D]/10">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#4F46E5] to-[#B31857] text-white flex items-center justify-center text-2xl mx-auto shadow-md shadow-[#4F46E5]/25 ring-4 ring-[#4F46E5]/10">
                         <i class="fas fa-layer-group"></i>
                     </div>
                     <div>
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#97144D]/10 text-[#97144D] text-[10px] font-extrabold uppercase tracking-wider mb-1.5">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] text-[10px] font-extrabold uppercase tracking-wider mb-1.5">
                             Retail Asset Operations
                         </div>
                         <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sales Link</h1>
@@ -121,7 +125,7 @@
                     <button type="button" @click="login" :disabled="isLoggingIn" class="w-full py-3 px-4 bg-white hover:bg-slate-50/80 border border-slate-200 hover:border-slate-300 text-slate-800 font-bold rounded-xl shadow-xs transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
                         <!-- Phase 2: Account chosen, verifying session & routing -->
                         <template v-if="loginStage === 'verifying'">
-                            <svg class="animate-spin h-4 w-4 text-[#97144D]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -161,7 +165,7 @@
                             <span class="leading-tight"><strong>Relationship Officers:</strong> Sign in using the Google account invited by your Sales Manager.</span>
                         </div>
                         <div class="flex items-start gap-2">
-                            <span class="px-1.5 py-0.5 rounded bg-[#97144D]/10 text-[#97144D] font-extrabold text-[9px] shrink-0 mt-0.5">SM</span>
+                            <span class="px-1.5 py-0.5 rounded bg-[#4F46E5]/10 text-[#4F46E5] font-extrabold text-[9px] shrink-0 mt-0.5">SM</span>
                             <span class="leading-tight"><strong>Sales Managers:</strong> Sign in to monitor file tracking, team EODs, and pacing targets.</span>
                         </div>
                     </div>
@@ -176,7 +180,7 @@
                     <div class="pt-3 border-t border-slate-100 text-center">
                         <p class="text-[11px] text-slate-500">
                             Sales Manager onboarding a new branch?
-                            <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-[#97144D] font-bold hover:underline ml-1 cursor-pointer">
+                            <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-[#4F46E5] font-bold hover:underline ml-1 cursor-pointer">
                                 Register Workspace (Key Required) →
                             </button>
                         </p>
@@ -190,7 +194,7 @@
                         <button type="button" @click="showRegisterMode = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-bold cursor-pointer">
                             <i class="fas fa-arrow-left text-[11px]"></i> Back to Sign In
                         </button>
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#97144D]/10 text-[#97144D] rounded-full">SM Only</span>
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full">SM Only</span>
                     </div>
 
                     <!-- Explicit Manager Alert in Registration Mode -->
@@ -209,7 +213,7 @@
                             <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Manager Security Key <span class="text-rose-500">*</span></label>
                             <span class="text-[10px] text-slate-400 font-mono">Issued by Super Admin</span>
                         </div>
-                        <input v-model="registerForm.passcode" type="password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="Enter Manager Security Passcode">
+                        <input v-model="registerForm.passcode" type="password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="Enter Manager Security Passcode">
                         <p class="text-[10px] text-slate-400 mt-1">ROs do not have a passcode. Click 'Back to Sign In' above.</p>
                     </div>
 
@@ -218,7 +222,7 @@
                             <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Institution / Bank Name <span class="text-rose-500">*</span></label>
                             <span class="text-[10px] text-emerald-600 font-bold">Mandatory</span>
                         </div>
-                        <select v-model="registerForm.bankName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
+                        <select v-model="registerForm.bankName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
                             <optgroup label="Default Primary Institution">
                                 <option value="Axis Bank">Axis Bank (Default)</option>
                             </optgroup>
@@ -249,7 +253,7 @@
                     <!-- Custom Bank Name input if "Other" is chosen -->
                     <div v-if="registerForm.bankName === 'Other'">
                         <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Specify Bank / NBFC Name <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.customBankName" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Kerala Gramin Bank / Northern Arc">
+                        <input v-model="registerForm.customBankName" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Kerala Gramin Bank / Northern Arc">
                     </div>
 
                     <div>
@@ -257,27 +261,27 @@
                             <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sales Division / Asset Vertical <span class="text-rose-500">*</span></label>
                             <span class="text-[10px] text-emerald-600 font-bold">Mandatory</span>
                         </div>
-                        <select v-model="registerForm.division" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
+                        <select v-model="registerForm.division" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
                             <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
                         </select>
                     </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Sales Manager Name <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Rahul Sharma">
+                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Rahul Sharma">
                     </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Operating Region / Zone <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.region" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. North Zone / Delhi NCR">
+                        <input v-model="registerForm.region" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. North Zone / Delhi NCR">
                     </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contact / Phone (Optional)</label>
-                        <input v-model="registerForm.phone" type="tel" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. 9876543210">
+                        <input v-model="registerForm.phone" type="tel" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. 9876543210">
                     </div>
 
-                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#97144D] hover:bg-[#801140] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-75 flex items-center justify-center gap-2 shadow-xs mt-1">
+                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-75 flex items-center justify-center gap-2 shadow-xs mt-1">
                         <template v-if="registerStage === 'setting_up'">
                             <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -321,14 +325,14 @@
             <aside class="hidden md:flex w-40 lg:w-48 bg-white text-slate-600 flex-col shadow-[1px_0_10px_rgba(0,0,0,0.03)] border-r border-slate-200 z-20 shrink-0 relative">
                 <div class="p-3.5 border-b border-slate-100 flex items-center justify-center">
                     <div class="flex items-center text-slate-900 truncate">
-                        <i class="fas fa-layer-group text-[#97144D] text-lg mr-2 shrink-0"></i>
+                        <i class="fas fa-layer-group text-[#4F46E5] text-lg mr-2 shrink-0"></i>
                         <h2 class="text-xs lg:text-sm font-extrabold tracking-tight leading-tight uppercase truncate">{{ currentUser.role }} Portal</h2>
                     </div>
                 </div>
                 
                 <div class="flex-col flex flex-1">
                     <div class="px-1.5 py-1 text-[10px] bg-slate-50/70 border-b border-slate-100 text-center font-medium truncate">
-                        Welcome, <strong class="text-[#97144D] font-bold">{{ currentUser.name }}</strong>
+                        Welcome, <strong class="text-[#4F46E5] font-bold">{{ currentUser.name }}</strong>
                     </div>
 
                     <nav class="flex flex-col py-3 px-2 gap-1">
@@ -360,16 +364,16 @@
 
                         <!-- RO Navigation -->
                         <template v-else>
-                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-chart-pie w-5 text-sm"></i> Overview
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                            <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-plus-circle w-5 text-sm"></i> Add New File
                             </a>
-                            <a href="#" @click.prevent="goToTab('ro-eod')" :class="[currentTab === 'ro-eod' ? 'bg-[#97144D] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer select-none']">
+                            <a href="#" @click.prevent="goToTab('ro-eod')" :class="[currentTab === 'ro-eod' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer select-none']">
                                 <i class="fas fa-clipboard-list w-5 text-sm"></i> Daily EOD
                             </a>
                         </template>
@@ -382,7 +386,7 @@
                 <!-- Clean Minimal Header -->
                 <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-4 md:px-8 py-3 flex justify-between items-center z-10 sticky top-0">
                     <div class="flex items-center gap-2.5">
-                        <div class="md:hidden w-8 h-8 rounded-lg bg-[#97144D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        <div class="md:hidden w-8 h-8 rounded-lg bg-[#4F46E5] text-white flex items-center justify-center font-bold text-xs shadow-xs">
                             SL
                         </div>
                         <div>
@@ -396,7 +400,7 @@
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
                         <div class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs">
-                            <span class="w-7 h-7 rounded-full bg-[#97144D]/10 text-[#97144D] font-bold flex items-center justify-center text-xs">
+                            <span class="w-7 h-7 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] font-bold flex items-center justify-center text-xs">
                                 {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
                             </span>
                             <span class="font-semibold text-slate-700">{{ currentUser?.name }}</span>
@@ -417,7 +421,7 @@
                             <h3 class="text-xl font-bold text-slate-800 mb-0">Platform Overview</h3>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="relative w-[130px]">
-                                    <select v-model="saasOverviewTimeline" @change="saasOverviewTimeline !== 'custom' ? saasOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] appearance-none cursor-pointer text-slate-700 shadow-xs">
+                                    <select v-model="saasOverviewTimeline" @change="saasOverviewTimeline !== 'custom' ? saasOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#4F46E5] appearance-none cursor-pointer text-slate-700 shadow-xs">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -427,7 +431,7 @@
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                                 </div>
-                                <input v-if="saasOverviewTimeline === 'custom'" v-model="saasOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
+                                <input v-if="saasOverviewTimeline === 'custom'" v-model="saasOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#4F46E5] shadow-xs text-slate-700">
                             </div>
                         </div>
 
@@ -616,9 +620,9 @@
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <div class="relative flex-1 md:w-64">
                                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input v-model="userSearchQuery" type="text" placeholder="Search name or email..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs outline-none focus:border-[#97144D] shadow-xs transition">
+                                    <input v-model="userSearchQuery" type="text" placeholder="Search name or email..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs outline-none focus:border-[#4F46E5] shadow-xs transition">
                                 </div>
-                                <select v-model="userFilterStatus" class="px-2 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-[#97144D] shadow-xs cursor-pointer">
+                                <select v-model="userFilterStatus" class="px-2 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-[#4F46E5] shadow-xs cursor-pointer">
                                     <option value="all">All Status</option>
                                     <option value="active">Active Only</option>
                                     <option value="suspended">Frozen Only</option>
@@ -638,7 +642,7 @@
                                 <!-- Workspace Header (Collapsible) -->
                                 <div @click="toggleWorkspaceExpansion(group.workspace.id)" class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition select-none">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-[#97144D]/10 text-[#97144D] flex items-center justify-center font-bold text-xs shadow-xs">
+                                        <div class="w-8 h-8 rounded-lg bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center font-bold text-xs shadow-xs">
                                             <i class="fas fa-building"></i>
                                         </div>
                                         <div>
@@ -741,7 +745,7 @@
                             <h2 class="text-lg font-bold text-slate-800">Overview Dashboard</h2>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="relative w-[130px]">
-                                    <select v-model="smOverviewTimeline" @change="smOverviewTimeline !== 'custom' ? smOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] appearance-none cursor-pointer text-slate-700 shadow-xs">
+                                    <select v-model="smOverviewTimeline" @change="smOverviewTimeline !== 'custom' ? smOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#4F46E5] appearance-none cursor-pointer text-slate-700 shadow-xs">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -751,7 +755,7 @@
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                                 </div>
-                                <input v-if="smOverviewTimeline === 'custom'" v-model="smOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
+                                <input v-if="smOverviewTimeline === 'custom'" v-model="smOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#4F46E5] shadow-xs text-slate-700">
                             </div>
                         </div>
 
@@ -832,7 +836,7 @@
                                         <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">RO Performance Leaderboard</h3>
                                         <p class="text-[11px] text-slate-400 font-medium">Click any RO to open their 360° Cockpit and 1-tap WhatsApp nudges.</p>
                                     </div>
-                                    <span class="text-[10px] font-bold text-[#97144D] bg-[#97144D]/5 px-2.5 py-1 rounded-full border border-[#97144D]/20">
+                                    <span class="text-[10px] font-bold text-[#4F46E5] bg-[#4F46E5]/5 px-2.5 py-1 rounded-full border border-[#4F46E5]/20">
                                         Interactive 360° Cockpit
                                     </span>
                                 </div>
@@ -855,10 +859,10 @@
                                         <tr v-for="ro in smLeaderboard" :key="ro.id" @click="openRoInspector(ro)" class="hover:bg-slate-50 cursor-pointer transition-colors group">
                                             <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900 uppercase">
                                                 <div class="flex items-center gap-2">
-                                                    <div class="w-6 h-6 rounded-full bg-[#97144D]/10 text-[#97144D] font-black text-[10px] flex items-center justify-center shrink-0">
+                                                    <div class="w-6 h-6 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] font-black text-[10px] flex items-center justify-center shrink-0">
                                                         {{ ro.name ? ro.name.charAt(0).toUpperCase() : 'R' }}
                                                     </div>
-                                                    <span class="group-hover:text-[#97144D] transition-colors">{{ ro.name }}</span>
+                                                    <span class="group-hover:text-[#4F46E5] transition-colors">{{ ro.name }}</span>
                                                 </div>
                                             </td>
                                             <td class="border border-slate-300 px-3 py-2 text-center font-bold">{{ ro.totalFiles }}</td>
@@ -871,7 +875,7 @@
                                             <td class="border border-slate-300 px-3 py-2 text-right font-medium text-slate-700">₹{{ formatCurrency(ro.totalAmount) }}</td>
                                             <td class="border border-slate-300 px-3 py-2 text-right font-black text-slate-900">₹{{ formatCurrency(ro.disbursedAmount) }}</td>
                                             <td class="border border-slate-300 px-3 py-2 text-center">
-                                                <button @click.stop="openRoInspector(ro)" class="px-2.5 py-1 bg-[#97144D]/10 hover:bg-[#97144D] text-[#97144D] hover:text-white font-bold text-[11px] rounded-lg transition-colors inline-flex items-center gap-1 mx-auto">
+                                                <button @click.stop="openRoInspector(ro)" class="px-2.5 py-1 bg-[#4F46E5]/10 hover:bg-[#4F46E5] text-[#4F46E5] hover:text-white font-bold text-[11px] rounded-lg transition-colors inline-flex items-center gap-1 mx-auto">
                                                     <i class="fas fa-eye text-[10px]"></i>
                                                     <span>Inspect 360°</span>
                                                 </button>
@@ -895,7 +899,7 @@
                                                 {{ ro.conversionRate }}% Conv
                                             </span>
                                         </div>
-                                        <div class="text-xs font-black text-[#97144D] shrink-0">₹{{ formatCurrency(ro.disbursedAmount) }}</div>
+                                        <div class="text-xs font-black text-[#4F46E5] shrink-0">₹{{ formatCurrency(ro.disbursedAmount) }}</div>
                                     </div>
                                     <div class="flex items-center justify-between text-[10px]">
                                         <div class="flex gap-3 shrink-0">
@@ -904,7 +908,7 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-slate-500 font-medium truncate">Pipe: ₹{{ formatCurrency(ro.totalAmount) }}</span>
-                                            <span class="text-[#97144D] font-bold flex items-center gap-0.5">
+                                            <span class="text-[#4F46E5] font-bold flex items-center gap-0.5">
                                                 <span>360°</span>
                                                 <i class="fas fa-chevron-right text-[8px]"></i>
                                             </span>
@@ -985,7 +989,7 @@
                                 <div class="w-full md:flex-1">
                                     <div class="relative">
                                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
                                     </div>
                                 </div>
                                 
@@ -993,7 +997,7 @@
                                 <div class="flex gap-2 w-full md:hidden">
                                     <!-- Mobile Timeline Selector (Custom Dropdown) -->
                                     <div class="flex-1 relative">
-                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition shadow-sm text-left h-[34px] relative">
+                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-sm text-left h-[34px] relative">
                                             <span class="truncate">{{ getTimelineLabel(roFilters.timeline) || 'All Time' }}</span>
                                             <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 transition-transform pointer-events-none" :class="roFilters.showMenu ? 'rotate-180' : ''"></i>
                                         </button>
@@ -1007,7 +1011,7 @@
                                                     :key="t.val" 
                                                     @click="roFilters.timeline = t.val; roFilters.customDate = ''; roFilters.showMenu = false;"
                                                     class="w-full text-left px-3 py-2.5 text-xs font-bold transition-colors"
-                                                    :class="roFilters.timeline === t.val ? 'text-[#97144D] bg-[#97144D]/5' : 'text-slate-600 hover:bg-slate-50'">
+                                                    :class="roFilters.timeline === t.val ? 'text-[#4F46E5] bg-[#4F46E5]/5' : 'text-slate-600 hover:bg-slate-50'">
                                                 {{ t.label }}
                                             </button>
                                         </div>
@@ -1015,12 +1019,12 @@
                                     
                                     <!-- Mobile Filter Trigger (Re-using RO drawer logic) -->
                                     <button @click="showMobileFilterDrawer = true" class="shrink-0 px-3.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]">
-                                        <i class="fas fa-sliders text-[#97144D]"></i>
+                                        <i class="fas fa-sliders text-[#4F46E5]"></i>
                                         <span>Filters</span>
                                     </button>
                                     
                                     <!-- Mobile Export Button -->
-                                    <button @click="exportToExcel" class="shrink-0 px-3 py-1.5 bg-[#97144D] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]" title="Export to Excel">
+                                    <button @click="exportToExcel" class="shrink-0 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]" title="Export to Excel">
                                         <i class="fas fa-file-excel"></i>
                                     </button>
                                 </div>
@@ -1031,7 +1035,7 @@
                                 <!-- RO Filter (Admin Only) -->
                                 <div class="w-[120px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">RO Filter</label>
-                                    <select v-model="filters.roId" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="filters.roId" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All ROs</option>
                                         <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}{{ user.status === 'suspended' ? ' (Suspended)' : '' }}</option>
                                     </select>
@@ -1040,7 +1044,7 @@
                                 <!-- Status Filter -->
                                 <div class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
-                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="Lead">Lead</option>
                                         <option value="FI">FI</option>
@@ -1057,7 +1061,7 @@
                                 <!-- Timeline Filter -->
                                 <div class="w-[110px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
-                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -1070,13 +1074,13 @@
                                 <!-- Custom Date Input -->
                                 <div v-if="roFilters.timeline === 'custom'" class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
-                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
-                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
@@ -1086,7 +1090,7 @@
                                 <!-- Channel Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
-                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
@@ -1096,7 +1100,7 @@
                                 <!-- Sort By -->
                                 <div class="w-[100px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
-                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="newest">Newest</option>
                                         <option value="oldest">Oldest</option>
                                         <option value="amount-desc">Amount &darr;</option>
@@ -1110,7 +1114,7 @@
                                     <button @click="resetRoFilters(); filters.roId = ''" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
-                                    <button @click="exportToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
+                                    <button @click="exportToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4338CA] transition shadow-xs text-xs font-bold">
                                         <i class="fas fa-file-excel"></i>
                                         <span>Export</span>
                                     </button>
@@ -1139,10 +1143,10 @@
                                     </thead>
                                     <tbody class="text-[11px]">
                                         <tr v-for="file in filteredFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
                                             <td class="border border-slate-300 px-1.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
@@ -1197,7 +1201,7 @@
                                     <!-- Top: App ID & Date & Status Badge -->
                                     <div class="flex justify-between items-center">
                                         <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                            <span class="text-[#97144D]">#{{ file.appId || 'NO ID' }}</span>
+                                            <span class="text-[#4F46E5]">#{{ file.appId || 'NO ID' }}</span>
                                             <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                                             <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
                                         </div>
@@ -1213,7 +1217,7 @@
                                     <!-- Tags Row: Category, Channel, RO & SM -->
                                     <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
                                         <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200/60 uppercase">{{ file.nclUcl || '-' }}</span>
-                                        <span class="px-2 py-0.5 bg-slate-100 text-[#97144D] rounded-md border border-slate-200/60 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                        <span class="px-2 py-0.5 bg-slate-100 text-[#4F46E5] rounded-md border border-slate-200/60 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
                                         <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
                                             <i class="fas fa-user text-[9px] text-slate-400"></i> RO: {{ file.roName }}
                                         </span>
@@ -1282,7 +1286,7 @@
                                 </div>
                                 <p class="text-xs text-slate-400 font-medium mt-0.5">Manage RO branch team access, Google logins, and account status</p>
                             </div>
-                            <button @click="showAddRoModal = true" class="bg-[#97144D] hover:bg-[#801040] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-2 transition self-start sm:self-auto cursor-pointer">
+                            <button @click="showAddRoModal = true" class="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-2 transition self-start sm:self-auto cursor-pointer">
                                 <i class="fas fa-user-plus text-xs"></i> Add New RO
                             </button>
                         </div>
@@ -1331,7 +1335,7 @@
                                                 <td class="border border-slate-300 px-1.5 py-1 text-slate-500 text-center font-medium">{{ formatDate(user.createdAt) }}</td>
                                                 <td class="border border-slate-300 px-1.5 py-1 text-center">
                                                     <div class="flex items-center justify-center gap-1.5">
-                                                        <button @click="openRoInspector(user)" class="px-2 py-1 bg-[#97144D]/10 hover:bg-[#97144D] text-[#97144D] hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="View RO Performance">
+                                                        <button @click="openRoInspector(user)" class="px-2 py-1 bg-[#4F46E5]/10 hover:bg-[#4F46E5] text-[#4F46E5] hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="View RO Performance">
                                                             <i class="fas fa-eye text-[10px]"></i> Cockpit
                                                         </button>
                                                         <button @click="openEditUserModal(user)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Edit RO Name or Gmail">
@@ -1374,7 +1378,7 @@
 
                                         <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs gap-1.5 flex-wrap">
                                             <div class="flex items-center gap-1.5">
-                                                <button @click="openRoInspector(user)" class="px-2.5 py-1 bg-[#97144D]/10 text-[#97144D] font-bold rounded-lg text-xs transition flex items-center gap-1">
+                                                <button @click="openRoInspector(user)" class="px-2.5 py-1 bg-[#4F46E5]/10 text-[#4F46E5] font-bold rounded-lg text-xs transition flex items-center gap-1">
                                                     <i class="fas fa-eye text-[10px]"></i> Cockpit
                                                 </button>
                                                 <button @click="openEditUserModal(user)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition flex items-center gap-1 border border-slate-200">
@@ -1515,7 +1519,7 @@
                         <!-- Top Welcome & Timeframe Header -->
                         <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
                             <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-2xl bg-[#97144D]/10 text-[#97144D] flex items-center justify-center text-lg font-black shrink-0 shadow-inner">
+                                <div class="w-11 h-11 rounded-2xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center text-lg font-black shrink-0 shadow-inner">
                                     {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'R' }}
                                 </div>
                                 <div>
@@ -1537,7 +1541,7 @@
                                 </div>
 
                                 <div class="relative min-w-[130px]">
-                                    <select v-model="roOverviewTimeline" @change="roOverviewTimeline !== 'custom' ? roOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer text-slate-700 shadow-xs">
+                                    <select v-model="roOverviewTimeline" @change="roOverviewTimeline !== 'custom' ? roOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer text-slate-700 shadow-xs">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -1547,7 +1551,7 @@
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                                 </div>
-                                <input v-if="roOverviewTimeline === 'custom'" v-model="roOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
+                                <input v-if="roOverviewTimeline === 'custom'" v-model="roOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#4F46E5] shadow-xs text-slate-700">
                             </div>
                         </div>
 
@@ -1560,14 +1564,14 @@
                         <!-- Core KPI Metrics Cards (Interactive & Clickable) -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <!-- Card 1: Total Portfolio -->
-                            <div @click="navigateRoStatusFilter('')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#97144D]/30 hover:shadow-sm transition cursor-pointer group">
+                            <div @click="navigateRoStatusFilter('')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/30 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Portfolio</span>
-                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#97144D]/10 text-slate-600 group-hover:text-[#97144D] flex items-center justify-center text-xs transition">
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-600 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
                                         <i class="fas fa-folder-open"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#97144D] transition">{{ roStats.totalFiles }}</div>
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#4F46E5] transition">{{ roStats.totalFiles }}</div>
                                 <div class="text-[11px] text-slate-500 font-bold mt-1 truncate">
                                     &#x20B9;{{ formatCurrency(roStats.totalAmount) }} <span class="text-slate-400 font-normal">pipeline</span>
                                 </div>
@@ -1621,12 +1625,12 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="fas fa-filter text-[#97144D]"></i>
+                                        <i class="fas fa-filter text-[#4F46E5]"></i>
                                         <span>Pipeline Stage Breakdown</span>
                                     </h3>
                                     <p class="text-[11px] text-slate-400 font-medium">Click any stage to filter your tracking list</p>
                                 </div>
-                                <button @click="navigateRoStatusFilter('')" type="button" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                <button @click="navigateRoStatusFilter('')" type="button" class="text-[11px] font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
                                     <span>View All</span>
                                     <i class="fas fa-arrow-right text-[9px]"></i>
                                 </button>
@@ -1636,7 +1640,7 @@
                                 <!-- Lead -->
                                 <button @click="navigateRoStatusFilter('Lead')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
                                     <span class="text-[10px] font-bold text-slate-500 uppercase block">Lead</span>
-                                    <span class="text-base font-black text-slate-800 group-hover:text-[#97144D] transition block mt-0.5">{{ roStats.stages?.Lead || 0 }}</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.Lead || 0 }}</span>
                                 </button>
 
                                 <!-- FI -->
@@ -1689,7 +1693,7 @@
                                     </h3>
                                     <p class="text-[11px] text-slate-400 font-medium">Latest customer logins by you</p>
                                 </div>
-                                <button @click="currentTab = 'ro-tracking'" type="button" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                <button @click="currentTab = 'ro-tracking'" type="button" class="text-[11px] font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
                                     <span>All Cases ({{ myFiles.length }})</span>
                                     <i class="fas fa-arrow-right text-[9px]"></i>
                                 </button>
@@ -1720,7 +1724,7 @@
                             <div v-else class="p-8 text-center text-slate-400 space-y-2">
                                 <i class="fas fa-folder-open text-2xl text-slate-300"></i>
                                 <p class="text-xs font-semibold">No customer files logged yet.</p>
-                                <button @click="currentTab = 'ro-add-file'" type="button" class="px-3.5 py-1.5 bg-[#97144D] text-white text-xs font-bold rounded-xl shadow-xs">
+                                <button @click="currentTab = 'ro-add-file'" type="button" class="px-3.5 py-1.5 bg-[#4F46E5] text-white text-xs font-bold rounded-xl shadow-xs">
                                     + Add Your First File
                                 </button>
                             </div>
@@ -1738,14 +1742,14 @@
 
                             <!-- Proportional Progress Bar -->
                             <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
-                                <div :style="{ width: (roStats.totalFiles ? (roStats.nclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-[#97144D] h-full transition-all duration-500" title="NCL"></div>
+                                <div :style="{ width: (roStats.totalFiles ? (roStats.nclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-[#4F46E5] h-full transition-all duration-500" title="NCL"></div>
                                 <div :style="{ width: (roStats.totalFiles ? (roStats.uclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-slate-700 h-full transition-all duration-500" title="UCL"></div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4 pt-1">
                                 <div class="p-4 bg-slate-50/70 rounded-xl border border-slate-100">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-[#97144D]"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></span>
                                         <span class="text-xs font-bold text-slate-700">NCL (New Car)</span>
                                     </div>
                                     <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">{{ roStats.nclCount }} <span class="text-xs text-slate-400 font-normal">files</span></div>
@@ -1777,7 +1781,7 @@
                                 <div class="w-full md:flex-1">
                                     <div class="relative">
                                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                        <input v-model="roFilters.search" @input="roFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, SM..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
                                     </div>
                                 </div>
                                 
@@ -1785,7 +1789,7 @@
                                 <div class="flex gap-2 w-full md:hidden">
                                     <!-- Mobile Timeline Selector (Custom Dropdown) -->
                                     <div class="flex-1 relative">
-                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition shadow-sm text-left h-[34px] relative">
+                                        <button @click="roFilters.showMenu = !roFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-sm text-left h-[34px] relative">
                                             <span class="truncate">{{ getTimelineLabel(roFilters.timeline) || 'All Time' }}</span>
                                             <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 transition-transform pointer-events-none" :class="roFilters.showMenu ? 'rotate-180' : ''"></i>
                                         </button>
@@ -1799,7 +1803,7 @@
                                                     :key="t.val" 
                                                     @click="roFilters.timeline = t.val; roFilters.customDate = ''; roFilters.showMenu = false;"
                                                     class="w-full text-left px-3 py-2.5 text-xs font-bold transition-colors"
-                                                    :class="roFilters.timeline === t.val ? 'text-[#97144D] bg-[#97144D]/5' : 'text-slate-600 hover:bg-slate-50'">
+                                                    :class="roFilters.timeline === t.val ? 'text-[#4F46E5] bg-[#4F46E5]/5' : 'text-slate-600 hover:bg-slate-50'">
                                                 {{ t.label }}
                                             </button>
                                         </div>
@@ -1807,7 +1811,7 @@
                                     
                                     <!-- Mobile Filter Trigger -->
                                     <button @click="showMobileFilterDrawer = true" class="shrink-0 px-3.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]">
-                                        <i class="fas fa-sliders text-[#97144D]"></i>
+                                        <i class="fas fa-sliders text-[#4F46E5]"></i>
                                         <span>Filters</span>
                                     </button>
                                     
@@ -1823,7 +1827,7 @@
                                 <!-- Status Filter -->
                                 <div class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
-                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="Lead">Lead</option>
                                         <option value="FI">FI</option>
@@ -1840,7 +1844,7 @@
                                 <!-- Timeline Filter -->
                                 <div class="w-[110px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
-                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.timeline" @change="roFilters.timeline !== 'custom' ? roFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -1853,13 +1857,13 @@
                                 <!-- Custom Date Input -->
                                 <div v-if="roFilters.timeline === 'custom'" class="w-[115px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
-                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition">
+                                    <input v-model="roFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
                                 </div>
 
                                 <!-- Category Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
-                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
@@ -1869,7 +1873,7 @@
                                 <!-- Channel Filter -->
                                 <div class="w-[80px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
-                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
@@ -1879,7 +1883,7 @@
                                 <!-- Sort By -->
                                 <div class="w-[100px]">
                                     <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
-                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer">
+                                    <select v-model="roFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="newest">Newest</option>
                                         <option value="oldest">Oldest</option>
                                         <option value="amount-desc">Amount &darr;</option>
@@ -1897,7 +1901,7 @@
                                         <i class="fab fa-whatsapp"></i>
                                         <span>Share All</span>
                                     </button>
-                                    <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#97144D] text-white rounded-lg hover:bg-[#801140] transition shadow-xs text-xs font-bold">
+                                    <button @click="exportRoFilesToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4338CA] transition shadow-xs text-xs font-bold">
                                         <i class="fas fa-file-excel"></i>
                                         <span>Export</span>
                                     </button>
@@ -1928,10 +1932,10 @@
                                     </thead>
                                     <tbody class="text-[11px]">
                                         <tr v-for="file in filteredMyFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
-                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
                                             <td class="border border-slate-300 px-1.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
-                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#97144D] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
                                             <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
                                                 <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
@@ -1988,7 +1992,7 @@
                                     <!-- Top: ID & Date -->
                                     <div class="flex justify-between items-start mb-1.5">
                                         <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                            <span class="text-[#97144D]">#{{ file.appId || 'NO ID' }}</span>
+                                            <span class="text-[#4F46E5]">#{{ file.appId || 'NO ID' }}</span>
                                             <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                                             <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
                                         </div>
@@ -2075,14 +2079,14 @@
                                         </div>
                                         <div class="relative">
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">#</span>
-                                            <input type="text" v-model="newFileForm.appId" @input="newFileForm.appId = $event.target.value.toUpperCase()" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase font-mono tracking-wide" placeholder="ALA00000" autocapitalize="characters" required>
+                                            <input type="text" v-model="newFileForm.appId" @input="newFileForm.appId = $event.target.value.toUpperCase()" class="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase font-mono tracking-wide" placeholder="ALA00000" autocapitalize="characters" required>
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">
                                             Customer Name <span class="text-rose-500">*</span>
                                         </label>
-                                        <input type="text" v-model="newFileForm.customerName" @input="newFileForm.customerName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-semibold text-slate-900 placeholder-slate-400 uppercase" placeholder="FULL CUSTOMER NAME" autocapitalize="characters" required>
+                                        <input type="text" v-model="newFileForm.customerName" @input="newFileForm.customerName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-semibold text-slate-900 placeholder-slate-400 uppercase" placeholder="FULL CUSTOMER NAME" autocapitalize="characters" required>
                                     </div>
                                 </div>
 
@@ -2093,10 +2097,10 @@
                                             Category <span class="text-rose-500">*</span>
                                         </label>
                                         <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                            <button type="button" @click="newFileForm.nclUcl = 'NCL'" :class="newFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                            <button type="button" @click="newFileForm.nclUcl = 'NCL'" :class="newFileForm.nclUcl === 'NCL' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
                                                 NCL
                                             </button>
-                                            <button type="button" @click="newFileForm.nclUcl = 'UCL'" :class="newFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                            <button type="button" @click="newFileForm.nclUcl = 'UCL'" :class="newFileForm.nclUcl === 'UCL' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
                                                 UCL
                                             </button>
                                         </div>
@@ -2107,10 +2111,10 @@
                                             Sourcing Channel <span class="text-rose-500">*</span>
                                         </label>
                                         <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                            <button type="button" @click="newFileForm.sourcingChannel = 'DSA'" :class="newFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                            <button type="button" @click="newFileForm.sourcingChannel = 'DSA'" :class="newFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
                                                 DSA
                                             </button>
-                                            <button type="button" @click="newFileForm.sourcingChannel = 'Branch'" :class="newFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
+                                            <button type="button" @click="newFileForm.sourcingChannel = 'Branch'" :class="newFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium hover:text-slate-900'" class="py-2 rounded-lg text-xs transition text-center">
                                                 Branch
                                             </button>
                                         </div>
@@ -2127,7 +2131,7 @@
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
                                                 <i class="fas fa-calendar-day"></i>
                                             </span>
-                                            <input type="date" v-model="newFileForm.loginDate" class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900" required>
+                                            <input type="date" v-model="newFileForm.loginDate" class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900" required>
                                         </div>
                                     </div>
 
@@ -2136,13 +2140,13 @@
                                             <label class="block text-xs font-semibold text-slate-700">
                                                 Loan Amount (in Lakhs) <span class="text-rose-500">*</span>
                                             </label>
-                                            <span v-if="newFileForm.loanAmount" class="text-[11px] font-bold text-[#97144D]">
+                                            <span v-if="newFileForm.loanAmount" class="text-[11px] font-bold text-[#4F46E5]">
                                                 {{ formatLakhsToRupees(newFileForm.loanAmount) }}
                                             </span>
                                         </div>
                                         <div class="relative">
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">₹</span>
-                                            <input type="number" step="0.01" min="0" v-model.number="newFileForm.loanAmount" class="w-full pl-8 pr-16 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400" placeholder="e.g. 5.50" required>
+                                            <input type="number" step="0.01" min="0" v-model.number="newFileForm.loanAmount" class="w-full pl-8 pr-16 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400" placeholder="e.g. 5.50" required>
                                             <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 font-bold text-[11px] pointer-events-none">Lakhs</span>
                                         </div>
                                         <p class="text-[10px] text-slate-400 mt-1">Enter in Lakhs (e.g. 5.5 = ₹5.50 L / ₹5,50,000)</p>
@@ -2157,7 +2161,7 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
                                         <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
-                                                ? 'bg-white text-[#97144D] font-bold shadow-xs'
+                                                ? 'bg-white text-[#4F46E5] font-bold shadow-xs'
                                                 : 'text-slate-600 font-medium hover:text-slate-900',
                                             'py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 text-center'
                                         ]">
@@ -2165,7 +2169,7 @@
                                         </button>
                                     </div>
                                     <div v-if="newFileForm.status === 'Custom'" class="mt-3 relative">
-                                        <input type="text" v-model="newFileForm.customStatus" @input="newFileForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
+                                        <input type="text" v-model="newFileForm.customStatus" @input="newFileForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
                                     </div>
                                 </div>
 
@@ -2173,7 +2177,7 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">PPC</label>
-                                        <input type="text" v-model="newFileForm.ppc" @input="newFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="PPC STATUS" autocapitalize="characters">
+                                        <input type="text" v-model="newFileForm.ppc" @input="newFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="PPC STATUS" autocapitalize="characters">
                                     </div>
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
@@ -2182,7 +2186,7 @@
                                                 <i class="fas fa-check-circle text-[9px]"></i> Auto-Filled
                                             </span>
                                         </div>
-                                        <input type="text" v-model="newFileForm.smName" @input="newFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="SALES MANAGER NAME" autocapitalize="characters">
+                                        <input type="text" v-model="newFileForm.smName" @input="newFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="SALES MANAGER NAME" autocapitalize="characters">
                                     </div>
                                 </div>
 
@@ -2190,11 +2194,11 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
-                                        <input type="text" v-model="newFileForm.vcip" @input="newFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP STATUS" autocapitalize="characters">
+                                        <input type="text" v-model="newFileForm.vcip" @input="newFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="VCIP STATUS" autocapitalize="characters">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
-                                        <input type="text" v-model="newFileForm.mi" @input="newFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="MI DETAILS" autocapitalize="characters">
+                                        <input type="text" v-model="newFileForm.mi" @input="newFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-medium text-slate-900 placeholder-slate-400 uppercase" placeholder="MI DETAILS" autocapitalize="characters">
                                     </div>
                                 </div>
 
@@ -2208,7 +2212,7 @@
                                     <button type="button" @click="resetNewFileForm" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition text-xs">
                                         Clear
                                     </button>
-                                    <button type="submit" class="flex-1 py-2.5 bg-[#97144D] hover:bg-[#801040] text-white font-bold rounded-xl transition shadow-xs text-xs flex items-center justify-center gap-1.5">
+                                    <button type="submit" class="flex-1 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl transition shadow-xs text-xs flex items-center justify-center gap-1.5">
                                         <i class="fas fa-check-circle text-xs"></i>
                                         <span>Save Customer File</span>
                                     </button>
@@ -2232,7 +2236,7 @@
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <h3 class="text-lg font-black text-slate-800 tracking-tight whitespace-nowrap">Daily EOD</h3>
                                 <span class="text-xs font-bold text-slate-400 hidden sm:inline">&middot;</span>
-                                <span class="text-xs font-bold text-[#97144D] whitespace-nowrap">{{ new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+                                <span class="text-xs font-bold text-[#4F46E5] whitespace-nowrap">{{ new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
                                 <span v-if="hasSubmittedToday && !isEditingTodayEod" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
                                     <i class="fas fa-check text-[8px] mr-0.5"></i> Submitted
                                 </span>
@@ -2242,7 +2246,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <button v-if="!hasSubmittedToday || isEditingTodayEod" @click="triggerResyncEod" type="button" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition" title="Re-sync from today's files">
-                                    <i class="fas fa-rotate text-xs" :class="eodResyncSuccess ? 'fa-spin text-[#97144D]' : ''"></i>
+                                    <i class="fas fa-rotate text-xs" :class="eodResyncSuccess ? 'fa-spin text-[#4F46E5]' : ''"></i>
                                 </button>
                             </div>
                         </div>
@@ -2300,16 +2304,16 @@
 
                         <!-- Sub-Tab Navigation Pills -->
                         <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl mb-4 sticky top-0 z-20">
-                            <button @click="eodSubTab = 'form'" :class="eodSubTab === 'form' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                            <button @click="eodSubTab = 'form'" :class="eodSubTab === 'form' ? 'bg-white text-[#4F46E5] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-edit text-[11px]"></i>
                                 <span>Form</span>
                             </button>
-                            <button @click="eodSubTab = 'audit'" :class="eodSubTab === 'audit' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                            <button @click="eodSubTab = 'audit'" :class="eodSubTab === 'audit' ? 'bg-white text-[#4F46E5] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-list-check text-[11px]"></i>
                                 <span>Audit</span>
                                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 ml-0.5">{{ todayLoginsFiles.length + todayDisbFiles.length }}</span>
                             </button>
-                            <button @click="eodSubTab = 'history'" :class="eodSubTab === 'history' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                            <button @click="eodSubTab = 'history'" :class="eodSubTab === 'history' ? 'bg-white text-[#4F46E5] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-clock-rotate-left text-[11px]"></i>
                                 <span>History</span>
                                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 ml-0.5">{{ myEods.length }}</span>
@@ -2347,11 +2351,11 @@
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Login')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
                                         <label class="text-[11px] font-bold text-slate-700 truncate pr-1">{{ m.label }}</label>
                                         <div v-if="m.type === 'both' || m.type === 'count'">
-                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#97144D] focus:bg-white outline-none text-center transition" min="0">
+                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#4F46E5] focus:bg-white outline-none text-center transition" min="0">
                                         </div>
                                         <div v-else></div>
                                         <div v-if="m.type === 'both' || m.type === 'amount'">
-                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#97144D] focus:bg-white outline-none text-center transition" min="0" step="0.01">
+                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#4F46E5] focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
                                         <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
@@ -2594,7 +2598,7 @@
                                         <button v-if="isEditingTodayEod" @click="cancelReviseTodayEod" type="button" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                                             Cancel Revision
                                         </button>
-                                        <button type="button" @click.prevent="submitEOD(isEditingTodayEod)" :disabled="submitting" class="w-full px-6 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <button type="button" @click.prevent="submitEOD(isEditingTodayEod)" :disabled="submitting" class="w-full px-6 py-3.5 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#312E81] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
                                             <i v-else :class="isEditingTodayEod ? 'fas fa-pen-to-square' : 'fas fa-paper-plane'"></i>
                                             <span>{{ submitting ? 'Submitting...' : (isEditingTodayEod ? 'Update & Resubmit EOD' : 'Submit Final EOD') }}</span>
@@ -2636,7 +2640,7 @@
                                             <span class="text-[10px] text-slate-400 font-medium">#{{ f.appId || 'No ID' }} &middot; {{ f.nclUcl || 'NCL' }} &middot; {{ f.sourcingChannel || 'DSA' }}</span>
                                         </div>
                                         <div class="text-right shrink-0">
-                                            <span class="text-[11px] font-black text-[#97144D] block">&#x20B9;{{ formatCurrency(f.loanAmount) }}</span>
+                                            <span class="text-[11px] font-black text-[#4F46E5] block">&#x20B9;{{ formatCurrency(f.loanAmount) }}</span>
                                             <span :class="getStatusBadgeClass(f.status)" class="!px-1.5 !py-0 !text-[9px] font-bold">{{ f.status }}</span>
                                         </div>
                                     </div>
@@ -2673,7 +2677,7 @@
                             <!-- Quick summary -->
                             <div class="bg-slate-50 rounded-xl border border-slate-200 p-3 flex items-center justify-between">
                                 <span class="text-[11px] font-bold text-slate-500">Auto-aggregated into your EOD form</span>
-                                <button @click="eodSubTab = 'form'" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                <button @click="eodSubTab = 'form'" class="text-[11px] font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
                                     <i class="fas fa-arrow-left text-[9px]"></i> Go to Form
                                 </button>
                             </div>
@@ -2788,37 +2792,37 @@
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isSM">
-                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Home</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-users-cog text-lg mb-0.5"></i>
                             <span class="text-[10px]">Users</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
                     </template>
                     <template v-else>
-                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Home</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-plus-circle text-lg mb-0.5"></i>
                             <span class="text-[10px]">Add</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'text-[#97144D] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-list text-lg mb-0.5"></i>
                             <span class="text-[10px]">EOD</span>
                         </a>
@@ -2852,7 +2856,7 @@
                                     <!-- RO Filter (Admin only) -->
                                     <div v-if="isSM">
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Relationship Officer (RO)</label>
-                                        <select v-model="filters.roId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] transition">
+                                        <select v-model="filters.roId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] transition">
                                             <option value="">All ROs</option>
                                             <option v-for="user in roUsers" :key="user.id" :value="user.id">{{ user.name }}{{ user.status === 'suspended' ? ' (Suspended)' : '' }}</option>
                                         </select>
@@ -2886,7 +2890,7 @@
                                         </div>
                                         <!-- Custom Date Input -->
                                         <div v-if="roFilters.timeline === 'custom'" class="mt-3 relative animate-in fade-in zoom-in-95 duration-200">
-                                            <input v-model="roFilters.customDate" type="date" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition shadow-inner">
+                                            <input v-model="roFilters.customDate" type="date" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-inner">
                                         </div>
                                     </div>
 
@@ -2936,7 +2940,7 @@
                                     <button @click="resetRoFilters(); filters.roId = ''" class="px-4 py-3 bg-white text-slate-700 rounded-xl font-bold text-xs border border-slate-200 shadow-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition shrink-0">
                                         <i class="fas fa-undo text-slate-400"></i>
                                     </button>
-                                    <button @click="showMobileFilterDrawer = false" class="flex-1 py-3 bg-[#97144D] text-white rounded-xl font-bold text-xs shadow-lg shadow-[#97144D]/25 hover:bg-[#801040] transition">
+                                    <button @click="showMobileFilterDrawer = false" class="flex-1 py-3 bg-[#4F46E5] text-white rounded-xl font-bold text-xs shadow-lg shadow-[#4F46E5]/25 hover:bg-[#4338CA] transition">
                                         Apply Filters
                                     </button>
                                 </div>
@@ -2966,11 +2970,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">App ID <span class="text-rose-500">*</span></label>
-                                <input type="text" v-model="editFileForm.appId" @input="editFileForm.appId = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold uppercase" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.appId" @input="editFileForm.appId = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-bold uppercase" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Name <span class="text-rose-500">*</span></label>
-                                <input type="text" v-model="editFileForm.customerName" @input="editFileForm.customerName = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-semibold uppercase" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.customerName" @input="editFileForm.customerName = $event.target.value.toUpperCase()" required class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-semibold uppercase" autocapitalize="characters">
                             </div>
                         </div>
 
@@ -2979,15 +2983,15 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
                                 <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                    <button type="button" @click="editFileForm.nclUcl = 'NCL'" :class="editFileForm.nclUcl === 'NCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
-                                    <button type="button" @click="editFileForm.nclUcl = 'UCL'" :class="editFileForm.nclUcl === 'UCL' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
+                                    <button type="button" @click="editFileForm.nclUcl = 'NCL'" :class="editFileForm.nclUcl === 'NCL' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">NCL</button>
+                                    <button type="button" @click="editFileForm.nclUcl = 'UCL'" :class="editFileForm.nclUcl === 'UCL' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">UCL</button>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Sourcing Channel <span class="text-rose-500">*</span></label>
                                 <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                    <button type="button" @click="editFileForm.sourcingChannel = 'DSA'" :class="editFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">DSA</button>
-                                    <button type="button" @click="editFileForm.sourcingChannel = 'Branch'" :class="editFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#97144D] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">Branch</button>
+                                    <button type="button" @click="editFileForm.sourcingChannel = 'DSA'" :class="editFileForm.sourcingChannel === 'DSA' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">DSA</button>
+                                    <button type="button" @click="editFileForm.sourcingChannel = 'Branch'" :class="editFileForm.sourcingChannel === 'Branch' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium'" class="py-1.5 rounded-lg text-xs transition">Branch</button>
                                 </div>
                             </div>
                         </div>
@@ -3002,19 +3006,19 @@
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
                                         <i class="fas fa-calendar-day"></i>
                                     </span>
-                                    <input type="date" v-model="editFileForm.loginDate" required class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold text-slate-900">
+                                    <input type="date" v-model="editFileForm.loginDate" required class="w-full pl-8 pr-3 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-bold text-slate-900">
                                 </div>
                             </div>
                             <div>
                                 <div class="flex items-center justify-between mb-1">
                                     <label class="block text-xs font-semibold text-slate-700">Loan Amount (in Lakhs) <span class="text-rose-500">*</span></label>
-                                    <span v-if="editFileForm.loanAmount" class="text-[11px] font-bold text-[#97144D]">
+                                    <span v-if="editFileForm.loanAmount" class="text-[11px] font-bold text-[#4F46E5]">
                                         {{ formatLakhsToRupees(editFileForm.loanAmount) }}
                                     </span>
                                 </div>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold text-xs">₹</span>
-                                    <input type="number" step="0.01" min="0" v-model.number="editFileForm.loanAmount" required class="w-full pl-8 pr-16 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-bold text-slate-900 placeholder-slate-400" placeholder="e.g. 5.50">
+                                    <input type="number" step="0.01" min="0" v-model.number="editFileForm.loanAmount" required class="w-full pl-8 pr-16 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-bold text-slate-900 placeholder-slate-400" placeholder="e.g. 5.50">
                                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 font-bold text-[11px] pointer-events-none">Lakhs</span>
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-1">Enter in Lakhs (e.g. 5.5 = ₹5.50 L)</p>
@@ -3027,7 +3031,7 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
                                 <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
-                                        ? 'bg-white text-[#97144D] font-bold shadow-xs' 
+                                        ? 'bg-white text-[#4F46E5] font-bold shadow-xs' 
                                         : 'text-slate-600 font-medium hover:text-slate-900',
                                     'py-1.5 px-2 rounded-lg text-xs transition flex items-center justify-center'
                                 ]">
@@ -3035,7 +3039,7 @@
                                 </button>
                             </div>
                             <div v-if="editFileForm.status === 'Custom'" class="mt-3 relative">
-                                <input type="text" v-model="editFileForm.customStatus" @input="editFileForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
+                                <input type="text" v-model="editFileForm.customStatus" @input="editFileForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-xs font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
                             </div>
                         </div>
 
@@ -3043,11 +3047,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">PPC</label>
-                                <input type="text" v-model="editFileForm.ppc" @input="editFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase placeholder-slate-400" placeholder="PPC STATUS" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.ppc" @input="editFileForm.ppc = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-medium uppercase placeholder-slate-400" placeholder="PPC STATUS" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">SM Name</label>
-                                <input type="text" v-model="editFileForm.smName" @input="editFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.smName" @input="editFileForm.smName = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                         </div>
 
@@ -3055,11 +3059,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">VCIP</label>
-                                <input type="text" v-model="editFileForm.vcip" @input="editFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.vcip" @input="editFileForm.vcip = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">MI</label>
-                                <input type="text" v-model="editFileForm.mi" @input="editFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-xs font-medium uppercase" autocapitalize="characters">
+                                <input type="text" v-model="editFileForm.mi" @input="editFileForm.mi = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2 bg-slate-50/60 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-xs font-medium uppercase" autocapitalize="characters">
                             </div>
                         </div>
                     </form>
@@ -3067,7 +3071,7 @@
 
                 <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/60 flex justify-end gap-2 shrink-0">
                     <button type="button" @click="showEditFileModal = false" class="px-3.5 py-2 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-semibold transition">Cancel</button>
-                    <button type="submit" form="editFileFormEl" class="px-4 py-2 bg-[#97144D] hover:bg-[#801040] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                    <button type="submit" form="editFileFormEl" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
                         <i class="fas fa-check text-xs"></i>
                         <span>Save Changes</span>
                     </button>
@@ -3078,7 +3082,7 @@
         <!-- Add RO Modal (Admin only) -->
         <div v-if="showAddRoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
-                <div class="px-6 py-4 bg-gradient-to-r from-[#97144D] to-[#BD1E59] text-white flex justify-between items-center">
+                <div class="px-6 py-4 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-center">
                     <h3 class="font-bold text-base">Add New Relationship Officer</h3>
                     <button @click="showAddRoModal = false" class="text-white/70 hover:text-white"><i class="fas fa-times"></i></button>
                 </div>
@@ -3086,17 +3090,17 @@
                     <form @submit.prevent="saveNewRo" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
-                            <input v-model="newRoForm.name" @input="newRoForm.name = $event.target.value.toUpperCase()" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm uppercase" autocapitalize="characters">
+                            <input v-model="newRoForm.name" @input="newRoForm.name = $event.target.value.toUpperCase()" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-sm uppercase" autocapitalize="characters">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Gmail Address</label>
-                            <input v-model="newRoForm.email" type="email" required placeholder="their.name@gmail.com" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm">
+                            <input v-model="newRoForm.email" type="email" required placeholder="their.name@gmail.com" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-sm">
                             <p class="text-[10px] text-slate-400 mt-1">They will use this Google account to log in.</p>
                         </div>
                         <div v-if="addRoError" class="p-2.5 bg-red-50 text-red-600 text-xs rounded-xl font-semibold">{{ addRoError }}</div>
                         <div class="flex justify-end gap-2 pt-2">
                             <button type="button" @click="showAddRoModal = false" class="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition">Cancel</button>
-                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#97144D] to-[#BD1E59] hover:from-[#851244] hover:to-[#A71A4F] text-white rounded-xl text-xs font-bold shadow-md shadow-[#97144D]/25 transition">Invite RO</button>
+                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:from-[#3730A3] hover:to-[#4F46E5] text-white rounded-xl text-xs font-bold shadow-md shadow-[#4F46E5]/25 transition">Invite RO</button>
                         </div>
                     </form>
                 </div>
@@ -3113,13 +3117,13 @@
                 <div class="p-6">
                     <div class="mb-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
                         <p class="text-xs text-slate-500 font-medium">Customer: <strong class="text-slate-900 text-sm font-bold uppercase">{{ selectedFile?.customerName }}</strong></p>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Current Status: <strong class="text-[#97144D] font-bold">{{ selectedFile?.status }}</strong></p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">Current Status: <strong class="text-[#4F46E5] font-bold">{{ selectedFile?.status }}</strong></p>
                     </div>
                     
                     <form @submit.prevent="saveFileStatus" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">New Status</label>
-                            <select v-model="statusUpdateForm.status" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm font-semibold">
+                            <select v-model="statusUpdateForm.status" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-sm font-semibold">
                                 <option value="FI">FI</option>
                                 <option value="FCU">FCU</option>
                                 <option value="UW">UW</option>
@@ -3131,18 +3135,18 @@
                                 <option value="Custom">Custom</option>
                             </select>
                             <div v-if="statusUpdateForm.status === 'Custom'" class="mt-3 relative">
-                                <input type="text" v-model="statusUpdateForm.customStatus" @input="statusUpdateForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
+                                <input type="text" v-model="statusUpdateForm.customStatus" @input="statusUpdateForm.customStatus = $event.target.value.toUpperCase()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 outline-none transition text-sm font-bold text-slate-900 placeholder-slate-400 uppercase" placeholder="ENTER CUSTOM STATUS" autocapitalize="characters" required>
                             </div>
                         </div>
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Add Note (Optional)</label>
-                            <textarea v-model="statusUpdateForm.note" @input="statusUpdateForm.note = $event.target.value.toUpperCase()" rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 text-sm placeholder-slate-400 uppercase" placeholder="OPTIONAL REMARKS..." autocapitalize="characters"></textarea>
+                            <textarea v-model="statusUpdateForm.note" @input="statusUpdateForm.note = $event.target.value.toUpperCase()" rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 text-sm placeholder-slate-400 uppercase" placeholder="OPTIONAL REMARKS..." autocapitalize="characters"></textarea>
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
                             <button type="button" @click="showUpdateStatusModal = false" class="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition">Cancel</button>
-                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#97144D] to-[#BD1E59] hover:from-[#851244] hover:to-[#A71A4F] text-white rounded-xl text-xs font-bold shadow-md shadow-[#97144D]/25 transition">Save Status</button>
+                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:from-[#3730A3] hover:to-[#4F46E5] text-white rounded-xl text-xs font-bold shadow-md shadow-[#4F46E5]/25 transition">Save Status</button>
                         </div>
                     </form>
                 </div>
@@ -3181,7 +3185,7 @@
                     <div class="grid grid-cols-2 gap-3.5 text-xs">
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">App ID</p>
-                            <p class="font-bold text-[#97144D] mt-0.5 uppercase">#{{ selectedFile?.appId || 'N/A' }}</p>
+                            <p class="font-bold text-[#4F46E5] mt-0.5 uppercase">#{{ selectedFile?.appId || 'N/A' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Category</p>
@@ -3189,7 +3193,7 @@
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Sourcing Channel</p>
-                            <p class="font-bold text-[#97144D] mt-0.5 uppercase">{{ selectedFile?.sourcingChannel || 'DSA' }}</p>
+                            <p class="font-bold text-[#4F46E5] mt-0.5 uppercase">{{ selectedFile?.sourcingChannel || 'DSA' }}</p>
                         </div>
                         <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Login Date</p>
@@ -3231,7 +3235,7 @@
         <div v-if="showEditUserModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
             <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-white/20">
                 <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/60">
-                    <h3 class="font-bold text-slate-800"><i class="fas fa-user-edit text-[#97144D] mr-2"></i>Edit User</h3>
+                    <h3 class="font-bold text-slate-800"><i class="fas fa-user-edit text-[#4F46E5] mr-2"></i>Edit User</h3>
                     <button @click="showEditUserModal = false" class="text-slate-400 hover:text-slate-600 transition">
                         <i class="fas fa-times"></i>
                     </button>
@@ -3239,23 +3243,23 @@
                 <div class="p-5 space-y-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name <span class="text-rose-500">*</span></label>
-                        <input v-model="editUserForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition" placeholder="e.g. Rahul Sharma" required>
+                        <input v-model="editUserForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-sm font-semibold text-slate-800 transition" placeholder="e.g. Rahul Sharma" required>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Google Email / Gmail <span class="text-rose-500">*</span></label>
-                        <input v-model="editUserForm.email" type="email" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition" placeholder="e.g. user@gmail.com" required>
+                        <input v-model="editUserForm.email" type="email" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-sm font-semibold text-slate-800 transition" placeholder="e.g. user@gmail.com" required>
                         <p class="text-[10px] text-slate-400 mt-1">Make sure this matches the RO's exact Google email to fix sign-in typos.</p>
                     </div>
                     <div v-if="isSuperAdmin">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Role</label>
-                        <select v-model="editUserForm.role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition">
+                        <select v-model="editUserForm.role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-sm font-semibold text-slate-800 transition">
                             <option value="sm">Sales Manager (SM)</option>
                             <option value="ro">Officer (RO)</option>
                         </select>
                     </div>
                     <div v-if="isSuperAdmin">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Workspace (Tenant)</label>
-                        <select v-model="editUserForm.tenantId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#97144D] text-sm font-semibold text-slate-800 transition">
+                        <select v-model="editUserForm.tenantId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-sm font-semibold text-slate-800 transition">
                             <option value="">System / Unassigned</option>
                             <option v-for="w in allWorkspaces" :key="w.id" :value="w.id">{{ w.name }}</option>
                         </select>
@@ -3263,7 +3267,7 @@
                 </div>
                 <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-end gap-2">
                     <button @click="showEditUserModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-bold rounded-xl text-xs transition">Cancel</button>
-                    <button @click="saveUserEdit" class="px-4 py-2 bg-[#97144D] hover:bg-[#801040] text-white font-bold rounded-xl text-xs shadow-xs transition">Save Changes</button>
+                    <button @click="saveUserEdit" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs shadow-xs transition">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -3281,18 +3285,18 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Files / Month</label>
-                        <input type="number" v-model.number="targetInputFiles" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#97144D] outline-none">
+                        <input type="number" v-model.number="targetInputFiles" min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Volume (In Lakhs)</label>
-                        <input type="number" v-model.number="targetInputVolume" min="1" step="0.5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#97144D] outline-none">
+                        <input type="number" v-model.number="targetInputVolume" min="1" step="0.5" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
                     </div>
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button @click="showEditTargetModal = false" type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
                         Cancel
                     </button>
-                    <button @click="saveRoTarget" type="button" class="flex-1 py-2.5 bg-[#97144D] hover:bg-axisMaroonDark text-white font-bold rounded-xl text-xs transition shadow-xs">
+                    <button @click="saveRoTarget" type="button" class="flex-1 py-2.5 bg-[#4F46E5] hover:bg-axisMaroonDark text-white font-bold rounded-xl text-xs transition shadow-xs">
                         Save Target
                     </button>
                 </div>
@@ -3304,7 +3308,7 @@
             <div class="h-full w-full max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-300 overflow-hidden">
                 
                 <!-- Drawer Header -->
-                <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-[#97144D] text-white flex items-center justify-between shadow-md shrink-0">
+                <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-[#4F46E5] text-white flex items-center justify-between shadow-md shrink-0">
                     <div class="flex items-center gap-3.5">
                         <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-black flex items-center justify-center text-lg shadow-inner">
                             {{ (selectedRoAnalytics.ro.name || 'RO').charAt(0).toUpperCase() }}
@@ -3392,7 +3396,7 @@
                             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Logins</span>
                                 <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.todayLoginsCount }}</span>
-                                <span class="text-[10px] font-semibold text-[#97144D] block">₹{{ selectedRoAnalytics.todayLoginsVolume.toFixed(2) }} L</span>
+                                <span class="text-[10px] font-semibold text-[#4F46E5] block">₹{{ selectedRoAnalytics.todayLoginsVolume.toFixed(2) }} L</span>
                             </div>
                             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Disb</span>
@@ -3427,7 +3431,7 @@
                     <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3.5">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                                <i class="fas fa-chart-line text-[#97144D]"></i>
+                                <i class="fas fa-chart-line text-[#4F46E5]"></i>
                                 MTD Conversion & Sourcing Quality
                             </h3>
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">This Month</span>
@@ -3466,12 +3470,12 @@
                             </div>
                             <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
                                 <div :style="{ width: ((selectedRoAnalytics.nclCount / Math.max(1, selectedRoAnalytics.mtdCount)) * 100) + '%' }" 
-                                     class="h-full bg-[#97144D] transition-all duration-500" title="NCL Volume"></div>
+                                     class="h-full bg-[#4F46E5] transition-all duration-500" title="NCL Volume"></div>
                                 <div :style="{ width: ((selectedRoAnalytics.uclCount / Math.max(1, selectedRoAnalytics.mtdCount)) * 100) + '%' }" 
                                      class="h-full bg-blue-500 transition-all duration-500" title="UCL Volume"></div>
                             </div>
                             <div class="flex justify-between text-[9px] text-slate-400 mt-1">
-                                <span><span class="inline-block w-2 h-2 rounded-full bg-[#97144D] mr-1"></span>New Car Loan</span>
+                                <span><span class="inline-block w-2 h-2 rounded-full bg-[#4F46E5] mr-1"></span>New Car Loan</span>
                                 <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Used Car Loan</span>
                             </div>
                         </div>
@@ -3482,7 +3486,7 @@
                         <!-- Tab Switcher -->
                         <div class="flex border-b border-slate-200 bg-slate-50">
                             <button @click="roInspectorActiveTab = 'pipeline'"
-                                    :class="roInspectorActiveTab === 'pipeline' ? 'border-b-2 border-[#97144D] text-[#97144D] bg-white font-black' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                    :class="roInspectorActiveTab === 'pipeline' ? 'border-b-2 border-[#4F46E5] text-[#4F46E5] bg-white font-black' : 'text-slate-500 hover:text-slate-800 font-bold'"
                                     class="flex-1 py-3 px-4 text-xs flex items-center justify-center gap-2 transition">
                                 <i class="fas fa-folder-open"></i>
                                 <span>Active Pipeline</span>
@@ -3512,8 +3516,8 @@
                                  class="p-2.5 hover:bg-slate-50 rounded-xl transition cursor-pointer flex items-center justify-between gap-3 group">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[10px] font-bold text-[#97144D] bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 uppercase">#{{ file.appId || 'NoID' }}</span>
-                                        <h4 class="text-xs font-bold text-slate-900 truncate group-hover:text-[#97144D] transition-colors">{{ file.customerName }}</h4>
+                                        <span class="text-[10px] font-bold text-[#4F46E5] bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 uppercase">#{{ file.appId || 'NoID' }}</span>
+                                        <h4 class="text-xs font-bold text-slate-900 truncate group-hover:text-[#4F46E5] transition-colors">{{ file.customerName }}</h4>
                                     </div>
                                     <div class="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
                                         <span class="font-bold text-slate-700">{{ file.nclUcl || '-' }}</span>
@@ -3587,7 +3591,7 @@
 
         <!-- Mobile Quick-Add Floating Action Button (FAB) -->
         <div v-if="isRO && currentTab !== 'ro-add-file'" class="fixed bottom-20 right-4 md:hidden z-40">
-            <button @click="currentTab = 'ro-add-file'" type="button" class="w-13 h-13 rounded-full bg-gradient-to-tr from-[#97144D] to-[#ED1C24] text-white shadow-lg shadow-[#97144D]/30 flex items-center justify-center text-xl active:scale-95 transition-transform" title="Quick Add New Customer Login">
+            <button @click="currentTab = 'ro-add-file'" type="button" class="w-13 h-13 rounded-full bg-gradient-to-tr from-[#4F46E5] to-[#ED1C24] text-white shadow-lg shadow-[#4F46E5]/30 flex items-center justify-center text-xl active:scale-95 transition-transform" title="Quick Add New Customer Login">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
@@ -3595,7 +3599,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-45"></script>
+    <script type="module" src="js/app.js?v=force-update-46"></script>
 </body>
 </html>
 

@@ -2681,12 +2681,12 @@ const app = createApp({
                             datasets: [{
                                 label: 'New Files',
                                 data: fileCounts,
-                                borderColor: '#97144D',
-                                backgroundColor: 'rgba(151, 20, 77, 0.1)',
+                                borderColor: '#4F46E5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
                                 borderWidth: 2,
                                 fill: true,
                                 tension: 0.4,
-                                pointBackgroundColor: '#97144D'
+                                pointBackgroundColor: '#4F46E5'
                             }]
                         },
                         options: {
