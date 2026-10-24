@@ -1535,8 +1535,8 @@
 
                             <!-- Controls: Conversion Rate Pill & Timeline Select -->
                             <div class="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                                <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
-                                    <i class="fas fa-chart-line text-emerald-600 text-xs"></i>
+                                <div class="px-3 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                                    <i class="fas fa-chart-line text-[#4F46E5] text-xs"></i>
                                     <span>{{ roStats.approvalRate }}% Conversion</span>
                                 </div>
 
@@ -1561,13 +1561,13 @@
 
 
 
-                        <!-- Core KPI Metrics Cards (Interactive & Clickable) -->
+                        <!-- Core KPI Metrics Cards (Interactive & Clickable - Clean Monochromatic) -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <!-- Card 1: Total Portfolio -->
-                            <div @click="navigateRoStatusFilter('')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/30 hover:shadow-sm transition cursor-pointer group">
+                            <div @click="navigateRoStatusFilter('')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Portfolio</span>
-                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-600 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Total Portfolio</span>
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-500 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
                                         <i class="fas fa-folder-open"></i>
                                     </div>
                                 </div>
@@ -1578,43 +1578,43 @@
                             </div>
 
                             <!-- Card 2: Disbursed (Done) -->
-                            <div @click="navigateRoStatusFilter('Disbursed')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-purple-300 hover:shadow-sm transition cursor-pointer group">
+                            <div @click="navigateRoStatusFilter('Disbursed')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] sm:text-xs font-bold text-purple-600 uppercase tracking-wider">Disbursed</span>
-                                    <div class="w-7 h-7 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Disbursed</span>
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-500 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
                                         <i class="fas fa-money-bill-wave"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black text-purple-600">{{ roStats.disbursedCount }}</div>
-                                <div class="text-[11px] text-purple-700 font-bold mt-1 truncate">
-                                    &#x20B9;{{ formatCurrency(roStats.disbursedAmount) }}
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#4F46E5] transition">{{ roStats.disbursedCount }}</div>
+                                <div class="text-[11px] text-slate-500 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.disbursedAmount) }} <span class="text-slate-400 font-normal">volume</span>
                                 </div>
                             </div>
 
                             <!-- Card 3: Sanctions -->
-                            <div @click="navigateRoStatusFilter('Sanction')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-300 hover:shadow-sm transition cursor-pointer group">
+                            <div @click="navigateRoStatusFilter('Sanction')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Sanction</span>
-                                    <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Sanction</span>
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-500 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black text-emerald-600">{{ roStats.sanctionCount || roStats.approvedCount }}</div>
-                                <div class="text-[11px] text-emerald-700 font-bold mt-1 truncate">
-                                    &#x20B9;{{ formatCurrency(roStats.sanctionAmount || roStats.approvedAmount) }}
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#4F46E5] transition">{{ roStats.sanctionCount || roStats.approvedCount }}</div>
+                                <div class="text-[11px] text-slate-500 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.sanctionAmount || roStats.approvedAmount) }} <span class="text-slate-400 font-normal">approved</span>
                                 </div>
                             </div>
 
                             <!-- Card 4: In Process / UW -->
-                            <div @click="navigateRoStatusFilter('FI')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-amber-300 hover:shadow-sm transition cursor-pointer group">
+                            <div @click="navigateRoStatusFilter('FI')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] sm:text-xs font-bold text-amber-600 uppercase tracking-wider">In Process</span>
-                                    <div class="w-7 h-7 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">In Process</span>
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#4F46E5]/10 text-slate-500 group-hover:text-[#4F46E5] flex items-center justify-center text-xs transition">
                                         <i class="fas fa-spinner"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black text-amber-600">{{ roStats.inProcessCount }}</div>
-                                <div class="text-[11px] text-amber-700 font-bold mt-1 truncate">
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#4F46E5] transition">{{ roStats.inProcessCount }}</div>
+                                <div class="text-[11px] text-slate-500 font-bold mt-1 truncate">
                                     &#x20B9;{{ formatCurrency(roStats.inProcessAmount) }} <span class="text-slate-400 font-normal">UW/FI</span>
                                 </div>
                             </div>
@@ -1644,39 +1644,39 @@
                                 </button>
 
                                 <!-- FI -->
-                                <button @click="navigateRoStatusFilter('FI')" type="button" class="p-2.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-blue-600 uppercase block">FI</span>
-                                    <span class="text-base font-black text-blue-900 block mt-0.5">{{ roStats.stages?.FI || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('FI')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">FI</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.FI || 0 }}</span>
                                 </button>
 
                                 <!-- FCU -->
-                                <button @click="navigateRoStatusFilter('FCU')" type="button" class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-indigo-600 uppercase block">FCU</span>
-                                    <span class="text-base font-black text-indigo-900 block mt-0.5">{{ roStats.stages?.FCU || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('FCU')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">FCU</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.FCU || 0 }}</span>
                                 </button>
 
                                 <!-- UW -->
-                                <button @click="navigateRoStatusFilter('UW')" type="button" class="p-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-amber-600 uppercase block">UW</span>
-                                    <span class="text-base font-black text-amber-900 block mt-0.5">{{ roStats.stages?.UW || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('UW')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">UW</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.UW || 0 }}</span>
                                 </button>
 
                                 <!-- Sanction -->
-                                <button @click="navigateRoStatusFilter('Sanction')" type="button" class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Sanction</span>
-                                    <span class="text-base font-black text-emerald-900 block mt-0.5">{{ roStats.stages?.Sanction || roStats.stages?.Approved || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('Sanction')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">Sanction</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.Sanction || roStats.stages?.Approved || 0 }}</span>
                                 </button>
 
                                 <!-- Disbursed -->
-                                <button @click="navigateRoStatusFilter('Disbursed')" type="button" class="p-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-purple-600 uppercase block">Disbursed</span>
-                                    <span class="text-base font-black text-purple-900 block mt-0.5">{{ roStats.stages?.Disbursed || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('Disbursed')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">Disbursed</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.Disbursed || 0 }}</span>
                                 </button>
 
                                 <!-- Rejected -->
-                                <button @click="navigateRoStatusFilter('Rejected')" type="button" class="p-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-rose-600 uppercase block">Rejected</span>
-                                    <span class="text-base font-black text-rose-900 block mt-0.5">{{ roStats.stages?.Rejected || 0 }}</span>
+                                <button @click="navigateRoStatusFilter('Rejected')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">Rejected</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#4F46E5] transition block mt-0.5">{{ roStats.stages?.Rejected || 0 }}</span>
                                 </button>
                             </div>
                         </div>
@@ -3599,7 +3599,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-46"></script>
+    <script type="module" src="js/app.js?v=force-update-47"></script>
 </body>
 </html>
 
