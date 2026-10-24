@@ -157,6 +157,23 @@ export const setAnnouncement = async (text) => {
     const docRef = doc(db, 'system', 'announcement');
     await setDoc(docRef, { text, updatedAt: new Date().toISOString() });
 };
+
+export const getManagerSecurityKey = async () => {
+    try {
+        const docRef = doc(db, 'system', 'security');
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists() || !docSnap.data().managerKey) return 'AXIS-MGR-2026';
+        return docSnap.data().managerKey;
+    } catch (e) {
+        console.warn('Could not fetch manager key, fallback to default', e);
+        return 'AXIS-MGR-2026';
+    }
+};
+
+export const setManagerSecurityKey = async (managerKey) => {
+    const docRef = doc(db, 'system', 'security');
+    await setDoc(docRef, { managerKey, updatedAt: new Date().toISOString() }, { merge: true });
+};
 export const addEODReport = async (reportData) => {
     try {
         const docRef = await addDoc(collection(db, 'eod_reports'), reportData);

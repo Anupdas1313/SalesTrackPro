@@ -201,7 +201,7 @@ const app = createApp({
         const STANDARD_STATUSES = ['Lead', 'FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled'];
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
         const newFileForm = ref({
-            appId: '',
+            appId: 'ALA00000',
             customerName: '',
             nclUcl: 'NCL',
             sourcingChannel: 'DSA',
@@ -210,7 +210,7 @@ const app = createApp({
             status: 'FI',
             customStatus: '',
             ppc: '',
-            smName: '',
+            smName: defaultSmName.value || '',
             vcip: '',
             mi: ''
         });
@@ -228,7 +228,7 @@ const app = createApp({
             status: 'FI',
             customStatus: '',
             ppc: '',
-            smName: '',
+            smName: defaultSmName.value || '',
             vcip: '',
             mi: ''
         });
@@ -1448,12 +1448,19 @@ const app = createApp({
             });
         };
 
-        watch(currentTab, (newTab) => {
+        watch(currentTab, async (newTab) => {
             if (newTab === 'ro-eod' && isRO.value) {
                 const today = new Date().toISOString().split('T')[0];
                 const alreadySubmitted = myEods.value.some(e => e.date === today);
                 if (!alreadySubmitted) {
                     autoFillEOD();
+                }
+            } else if (newTab === 'ro-add-file' && isRO.value) {
+                if (!newFileForm.value.appId) {
+                    newFileForm.value.appId = 'ALA00000';
+                }
+                if (!newFileForm.value.smName) {
+                    await initUserSm();
                 }
             }
         });
@@ -1562,6 +1569,7 @@ const app = createApp({
 
         const loadRoData = async () => {
             if (!currentUser.value) return;
+            await initUserSm();
             myFiles.value = await db.getLoanFilesByRO(currentUser.value.id);
             const tenantEods = await db.getEODReportsByTenant(currentUser.value.tenantId);
             myEods.value = tenantEods.filter(e => e.userId === currentUser.value.id);
@@ -1616,15 +1624,50 @@ const app = createApp({
             }
         };
 
-        const initUserSm = () => {
-            if (currentUser.value) {
-                const savedSm = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
-                if (savedSm) {
-                    defaultSmName.value = savedSm.toUpperCase();
-                    if (!newFileForm.value.smName) {
-                        newFileForm.value.smName = savedSm.toUpperCase();
+        const initUserSm = async () => {
+            if (!currentUser.value) return;
+
+            let smName = '';
+
+            // 1. If SM or Admin, their own name is the SM Name
+            if (isSM.value) {
+                smName = currentUser.value.name || currentUser.value.username || '';
+            } else if (currentUser.value.tenantId) {
+                // 2. Fetch from Workspace (managerName)
+                try {
+                    const ws = await db.getWorkspace(currentUser.value.tenantId);
+                    if (ws && ws.managerName) {
+                        smName = ws.managerName.trim();
+                    }
+                } catch (e) {
+                    console.warn("Could not fetch workspace managerName:", e);
+                }
+
+                // 3. Fallback: Search SM in users of same workspace
+                if (!smName) {
+                    try {
+                        const allUsers = await db.getAllUsers();
+                        const smUser = allUsers.find(u => u.tenantId === currentUser.value.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                        if (smUser && smUser.name) {
+                            smName = smUser.name.trim();
+                        }
+                    } catch (e) {
+                        console.warn("Could not fetch SM user for tenant:", e);
                     }
                 }
+            }
+
+            // 4. Fallback to localStorage if still not found
+            if (!smName) {
+                smName = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
+            }
+
+            if (smName) {
+                const upperSm = smName.toUpperCase();
+                defaultSmName.value = upperSm;
+                newFileForm.value.smName = upperSm;
+                localStorage.setItem('axis_default_sm_' + currentUser.value.id, upperSm);
+                localStorage.setItem('axis_default_sm', upperSm);
             }
         };
 
@@ -1639,6 +1682,45 @@ const app = createApp({
             } catch(e) {
                 console.error("Error saving announcement", e);
                 alert("Failed to save announcement");
+            }
+        };
+
+        // Manager Security Key Access Control
+        const activeManagerPasscode = ref('AXIS-MGR-2026');
+        const managerPasscodeInput = ref('AXIS-MGR-2026');
+        const showManagerKeySecret = ref(false);
+        const managerKeySavedToast = ref(false);
+
+        const saveManagerPasscode = async () => {
+            const newKey = managerPasscodeInput.value?.trim().toUpperCase();
+            if (!newKey) {
+                alert("Manager Security Passcode cannot be blank.");
+                return;
+            }
+            try {
+                await db.setManagerSecurityKey(newKey);
+                activeManagerPasscode.value = newKey;
+                managerPasscodeInput.value = newKey;
+                managerKeySavedToast.value = true;
+                setTimeout(() => { managerKeySavedToast.value = false; }, 4000);
+            } catch(e) {
+                console.error("Error saving manager key", e);
+                alert("Failed to save manager security key: " + (e.message || e));
+            }
+        };
+
+        const generateRandomManagerKey = () => {
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            const currentBank = (registerForm.value.bankName || 'MGR').replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'MGR';
+            managerPasscodeInput.value = `${currentBank}-${randomSuffix}`;
+        };
+
+        const copyManagerKey = async () => {
+            try {
+                await navigator.clipboard.writeText(managerPasscodeInput.value);
+                alert(`Copied manager key "${managerPasscodeInput.value}" to clipboard!`);
+            } catch (e) {
+                alert(`Manager Key: ${managerPasscodeInput.value}`);
             }
         };
 
@@ -1673,7 +1755,14 @@ const app = createApp({
                 registerError.value = 'Operating Region / Zone is mandatory.';
                 return;
             }
-            if (!smPasscode || smPasscode.toUpperCase() !== 'AXIS-MGR-2026') {
+
+            let validPasscode = activeManagerPasscode.value || 'AXIS-MGR-2026';
+            try {
+                const remoteKey = await db.getManagerSecurityKey();
+                if (remoteKey) validPasscode = remoteKey;
+            } catch (e) {}
+
+            if (!smPasscode || smPasscode.toUpperCase() !== validPasscode.toUpperCase()) {
                 registerError.value = 'Invalid Manager Security Key. If you are an RO, please click "Back to Sign In" and sign in with Google.';
                 return;
             }
@@ -1942,7 +2031,7 @@ const app = createApp({
         // RO: Add File
         const resetNewFileForm = () => {
             newFileForm.value = {
-                appId: '',
+                appId: 'ALA00000',
                 customerName: '',
                 nclUcl: 'NCL',
                 sourcingChannel: 'DSA',
@@ -1951,7 +2040,7 @@ const app = createApp({
                 status: 'FI',
                 customStatus: '',
                 ppc: '',
-                smName: '',
+                smName: defaultSmName.value || '',
                 vcip: '',
                 mi: ''
             };
@@ -2360,6 +2449,8 @@ const app = createApp({
             try {
                 systemAnnouncement.value = await db.getAnnouncement();
                 adminAnnouncementInput.value = systemAnnouncement.value;
+                activeManagerPasscode.value = await db.getManagerSecurityKey();
+                managerPasscodeInput.value = activeManagerPasscode.value;
             } catch(e) { console.error(e); }
 
             // Check if returning from Direct Sign-In (Redirect)
@@ -2408,6 +2499,8 @@ const app = createApp({
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
+            activeManagerPasscode, managerPasscodeInput, showManagerKeySecret, managerKeySavedToast,
+            saveManagerPasscode, generateRandomManagerKey, copyManagerKey,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
             eodForm, eodSubmitError, eodSubmitSuccess, submitting, metricsConfig, validateEOD, myEods, smEods, submitEOD,
             smEodSummary, missingEods, generateEodWhatsApp, generateRoWhatsApp, hasSubmittedToday, eodTotals,
