@@ -1,8 +1,8 @@
 {
-  "name": "SalesTrack Pro",
-  "short_name": "SalesTrack",
-  "description": "SalesTrack Pro - Retail Lending & Loan Operations Tracking Portal",
-  "id": "salestrack-pro-app",
+  "name": "SalesLink",
+  "short_name": "SalesLink",
+  "description": "SalesLink - Retail Lending & Loan Operations Tracking Portal",
+  "id": "saleslink-app",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

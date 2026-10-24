@@ -2731,14 +2731,14 @@ const app = createApp({
             } else if (isIos.value) {
                 showIosInstallModal.value = true;
             } else {
-                alert('To install SalesTrack Pro on your device, open your browser menu (â‹® or Share) and tap "Install app" or "Add to Home screen".');
+                alert('To install SalesLink on your device, open your browser menu (â‹® or Share) and tap "Install app" or "Add to Home screen".');
             }
         };
 
         const dismissInstallBanner = () => {
             showInstallBanner.value = false;
             try {
-                localStorage.setItem('salestrack_pwa_dismissed', String(Date.now()));
+                localStorage.setItem('saleslink_pwa_dismissed', String(Date.now()));
             } catch(e) {}
         };
 
@@ -2752,7 +2752,7 @@ const app = createApp({
                 e.preventDefault();
                 deferredInstallPrompt.value = e;
                 if (!isStandalone.value) {
-                    const dismissedAt = localStorage.getItem('salestrack_pwa_dismissed');
+                    const dismissedAt = localStorage.getItem('saleslink_pwa_dismissed');
                     const cooldown = 2 * 24 * 60 * 60 * 1000; // 2 days cooldown
                     if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
                         showInstallBanner.value = true;
@@ -2768,7 +2768,7 @@ const app = createApp({
 
             // On iOS Safari, if not standalone, prompt after brief delay
             if (isIos.value && !isStandalone.value) {
-                const dismissedAt = localStorage.getItem('salestrack_pwa_dismissed');
+                const dismissedAt = localStorage.getItem('saleslink_pwa_dismissed');
                 const cooldown = 2 * 24 * 60 * 60 * 1000;
                 if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
                     setTimeout(() => {

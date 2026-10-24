@@ -1,5 +1,5 @@
-// SalesTrack Pro - Modern High-Performance PWA Service Worker
-const CACHE_NAME = 'salestrack-pro-v1';
+// SalesLink - Modern High-Performance PWA Service Worker
+const CACHE_NAME = 'saleslink-v1';
 
 // Core shell assets to pre-cache on install
 const PRECACHE_ASSETS = [

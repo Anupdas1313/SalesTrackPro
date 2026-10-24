@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SalesTrack Pro</title>
+    <title>SalesLink</title>
 
     <!-- Progressive Web App (PWA) & Native Mobile App Meta -->
     <link rel="manifest" href="manifest.json">
@@ -11,7 +11,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SalesTrack Pro">
+    <meta name="apple-mobile-web-app-title" content="SalesLink">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -3623,7 +3623,7 @@
                 </div>
                 <div class="min-w-0">
                     <h4 class="text-xs sm:text-sm font-extrabold text-white truncate flex items-center gap-1.5">
-                        <span>Install SalesTrack Pro</span>
+                        <span>Install SalesLink</span>
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#4F46E5] text-white">App</span>
                     </h4>
                     <p class="text-[11px] text-slate-300 font-medium leading-tight truncate">
@@ -3678,7 +3678,7 @@
                     <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                         <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shrink-0 font-bold">3</div>
                         <p class="pt-0.5 leading-snug">
-                            Tap <strong>"Add"</strong> in the top right. <strong>SalesTrack Pro</strong> will launch fullscreen from your home screen!
+                            Tap <strong>"Add"</strong> in the top right. <strong>SalesLink</strong> will launch fullscreen from your home screen!
                         </p>
                     </div>
                 </div>
@@ -3692,7 +3692,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-48"></script>
+    <script type="module" src="js/app.js?v=force-update-49"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
@@ -3700,10 +3700,10 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then((reg) => {
-                        console.log('SalesTrack ServiceWorker registered with scope:', reg.scope);
+                        console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
                     })
                     .catch((err) => {
-                        console.warn('SalesTrack ServiceWorker registration failed:', err);
+                        console.warn('SalesLink ServiceWorker registration failed:', err);
                     });
             });
         }
