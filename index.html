@@ -2457,6 +2457,68 @@
                             </div>
                         </div>
 
+                        <!-- Top Performance Summary Card (FTD & MTD) -->
+                        <div class="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 rounded-2xl p-4 text-white shadow-lg mb-4 border border-slate-800 relative overflow-hidden">
+                            <div class="absolute -right-8 -top-8 w-32 h-32 bg-[#97144D]/20 rounded-full blur-2xl pointer-events-none"></div>
+                            <div class="absolute -left-8 -bottom-8 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none"></div>
+                            
+                            <div class="flex items-center justify-between mb-3 relative z-10">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="text-[11px] font-black uppercase tracking-wider text-slate-300">Sales Pace & Performance</span>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/10">FTD &middot; MTD Live</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5 relative z-10">
+                                <!-- Logins Card -->
+                                <div class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 transition">
+                                    <div class="flex items-center justify-between text-blue-300 text-[10px] font-extrabold uppercase tracking-wide mb-1.5">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fas fa-file-import text-blue-400"></i> Logins
+                                        </span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex items-baseline justify-between">
+                                            <span class="text-[11px] text-slate-400 font-bold">FTD:</span>
+                                            <span class="text-xs font-black text-white">
+                                                {{ eodTotals.loginCount }} <span class="text-[10px] font-semibold text-slate-400">({{ eodTotals.loginAmount.toFixed(1) }}L)</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline justify-between pt-1 border-t border-white/10">
+                                            <span class="text-[11px] text-blue-400 font-bold">MTD:</span>
+                                            <span class="text-xs font-black text-blue-200">
+                                                {{ eodMtdTotals.loginCount }} <span class="text-[10px] font-bold text-blue-400">({{ eodMtdTotals.loginAmount.toFixed(1) }}L)</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disbursements Card -->
+                                <div class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 transition">
+                                    <div class="flex items-center justify-between text-emerald-300 text-[10px] font-extrabold uppercase tracking-wide mb-1.5">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fas fa-hand-holding-usd text-emerald-400"></i> Disb
+                                        </span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex items-baseline justify-between">
+                                            <span class="text-[11px] text-slate-400 font-bold">FTD:</span>
+                                            <span class="text-xs font-black text-white">
+                                                {{ eodTotals.disbCount }} <span class="text-[10px] font-semibold text-slate-400">({{ eodTotals.disbAmount.toFixed(1) }}L)</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline justify-between pt-1 border-t border-white/10">
+                                            <span class="text-[11px] text-emerald-400 font-bold">MTD:</span>
+                                            <span class="text-xs font-black text-emerald-200">
+                                                {{ eodMtdTotals.disbCount }} <span class="text-[10px] font-bold text-emerald-400">({{ eodMtdTotals.disbAmount.toFixed(1) }}L)</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Sub-Tab Navigation Pills -->
                         <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl mb-4 sticky top-0 z-20">
                             <button @click="eodSubTab = 'form'" :class="eodSubTab === 'form' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
@@ -2479,29 +2541,7 @@
                         <div v-if="eodSubTab === 'form'">
                             <form v-if="!hasSubmittedToday || isEditingTodayEod" class="space-y-3">
 
-                                <!-- Live FTD vs MTD Summary Banner -->
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="bg-blue-50/80 border border-blue-200/80 rounded-xl p-2.5 shadow-2xs">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="text-[9px] font-extrabold text-blue-600 uppercase tracking-wider">Total Logins</span>
-                                            <span class="text-[9px] font-bold text-blue-500 bg-blue-100/70 px-1.5 py-0.2 rounded">FTD &bull; MTD</span>
-                                        </div>
-                                        <div class="flex items-baseline justify-between text-xs">
-                                            <span class="text-slate-500 font-bold">FTD: <strong class="text-blue-900 font-black">{{ eodTotals.loginCount }}</strong> ({{ eodTotals.loginAmount.toFixed(1) }}L)</span>
-                                            <span class="text-blue-700 font-bold">MTD: <strong class="text-blue-950 font-black">{{ eodMtdTotals.loginCount }}</strong> ({{ eodMtdTotals.loginAmount.toFixed(1) }}L)</span>
-                                        </div>
-                                    </div>
-                                    <div class="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-2.5 shadow-2xs">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">Total Disb</span>
-                                            <span class="text-[9px] font-bold text-emerald-500 bg-emerald-100/70 px-1.5 py-0.2 rounded">FTD &bull; MTD</span>
-                                        </div>
-                                        <div class="flex items-baseline justify-between text-xs">
-                                            <span class="text-slate-500 font-bold">FTD: <strong class="text-emerald-900 font-black">{{ eodTotals.disbCount }}</strong> ({{ eodTotals.disbAmount.toFixed(1) }}L)</span>
-                                            <span class="text-emerald-700 font-bold">MTD: <strong class="text-emerald-950 font-black">{{ eodMtdTotals.disbCount }}</strong> ({{ eodMtdTotals.disbAmount.toFixed(1) }}L)</span>
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 <!-- LOGINS SECTION -->
                                 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
@@ -3622,7 +3662,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-31"></script>
+    <script type="module" src="js/app.js?v=force-update-32"></script>
 </body>
 </html>
 
