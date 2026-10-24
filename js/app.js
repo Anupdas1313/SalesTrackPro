@@ -998,7 +998,9 @@ const app = createApp({
             { label: 'Open Market', key: 'loginOpenMarket', category: 'Login', type: 'both' },
             { label: 'Branch', key: 'loginBranch', category: 'Login', type: 'both' },
             { label: 'Used Car', key: 'loginUsedCar', category: 'Login', type: 'both' },
-            { label: 'Branch Sanction', key: 'loginBranchSanction', category: 'Sanction', type: 'both' },
+            { label: 'Open Market', key: 'sanctionOpenMarket', category: 'Sanction', type: 'both' },
+            { label: 'Branch', key: 'loginBranchSanction', category: 'Sanction', type: 'both' },
+            { label: 'Used Car', key: 'sanctionUsedCar', category: 'Sanction', type: 'both' },
             { label: 'Open Market', key: 'disbOpenMarket', category: 'Disbursement', type: 'both' },
             { label: 'Branch', key: 'disbBranch', category: 'Disbursement', type: 'both' },
             { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
@@ -1037,8 +1039,10 @@ const app = createApp({
         const eodForm = ref({
             loginOpenMarket: { count: 0, amount: 0 },
             loginBranch: { count: 0, amount: 0 },
-            loginBranchSanction: { count: 0, amount: 0 },
             loginUsedCar: { count: 0, amount: 0 },
+            sanctionOpenMarket: { count: 0, amount: 0 },
+            loginBranchSanction: { count: 0, amount: 0 },
+            sanctionUsedCar: { count: 0, amount: 0 },
             disbOpenMarket: { count: 0, amount: 0 },
             disbBranch: { count: 0, amount: 0 },
             disbUsedCar: { count: 0, amount: 0 },
@@ -1187,8 +1191,8 @@ const app = createApp({
 
         const eodTotals = computed(() => {
             const f = eodForm.value;
-            const sCount = (f.loginBranchSanction?.count || 0);
-            const sAmt = (f.loginBranchSanction?.amount || 0);
+            const sCount = (f.sanctionOpenMarket?.count || 0) + (f.loginBranchSanction?.count || 0) + (f.sanctionUsedCar?.count || 0);
+            const sAmt = (f.sanctionOpenMarket?.amount || 0) + (f.loginBranchSanction?.amount || 0) + (f.sanctionUsedCar?.amount || 0);
             return {
                 loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0),
                 loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0),
@@ -1211,8 +1215,10 @@ const app = createApp({
             const m = {
                 loginOpenMarket: { count: 0, amount: 0 },
                 loginBranch: { count: 0, amount: 0 },
-                loginBranchSanction: { count: 0, amount: 0 },
                 loginUsedCar: { count: 0, amount: 0 },
+                sanctionOpenMarket: { count: 0, amount: 0 },
+                loginBranchSanction: { count: 0, amount: 0 },
+                sanctionUsedCar: { count: 0, amount: 0 },
                 disbOpenMarket: { count: 0, amount: 0 },
                 disbBranch: { count: 0, amount: 0 },
                 disbUsedCar: { count: 0, amount: 0 },
@@ -1245,9 +1251,17 @@ const app = createApp({
                     m.loginOpenMarket.amount += amt;
                 }
 
-                if (chan === 'BRANCH' && (f.status === 'Approved' || f.status === 'Disbursed')) {
-                    m.loginBranchSanction.count += 1;
-                    m.loginBranchSanction.amount += amt;
+                if (f.status === 'Approved' || f.status === 'Disbursed') {
+                    if (cat === 'UCL') {
+                        m.sanctionUsedCar.count += 1;
+                        m.sanctionUsedCar.amount += amt;
+                    } else if (chan === 'BRANCH') {
+                        m.loginBranchSanction.count += 1;
+                        m.loginBranchSanction.amount += amt;
+                    } else {
+                        m.sanctionOpenMarket.count += 1;
+                        m.sanctionOpenMarket.amount += amt;
+                    }
                 }
 
                 if (f.status === 'Disbursed') {
@@ -1309,8 +1323,8 @@ const app = createApp({
             const loginAmount = (m.loginOpenMarket?.amount || 0) + (m.loginBranch?.amount || 0) + (m.loginUsedCar?.amount || 0);
             const disbCount = (m.disbOpenMarket?.count || 0) + (m.disbBranch?.count || 0) + (m.disbUsedCar?.count || 0);
             const disbAmount = (m.disbOpenMarket?.amount || 0) + (m.disbBranch?.amount || 0) + (m.disbUsedCar?.amount || 0);
-            const sanctionCount = (m.loginBranchSanction?.count || 0);
-            const sanctionAmount = (m.loginBranchSanction?.amount || 0);
+            const sanctionCount = (m.sanctionOpenMarket?.count || 0) + (m.loginBranchSanction?.count || 0) + (m.sanctionUsedCar?.count || 0);
+            const sanctionAmount = (m.sanctionOpenMarket?.amount || 0) + (m.loginBranchSanction?.amount || 0) + (m.sanctionUsedCar?.amount || 0);
             return { loginCount, loginAmount, disbCount, disbAmount, sanctionCount, sanctionAmount, sanctionAmt: sanctionAmount };
         });
 
@@ -1327,8 +1341,10 @@ const app = createApp({
                     ftd: {
                         loginOpenMarket: { count: 0, amount: 0 },
                         loginBranch: { count: 0, amount: 0 },
-                        loginBranchSanction: { count: 0, amount: 0 },
                         loginUsedCar: { count: 0, amount: 0 },
+                        sanctionOpenMarket: { count: 0, amount: 0 },
+                        loginBranchSanction: { count: 0, amount: 0 },
+                        sanctionUsedCar: { count: 0, amount: 0 },
                         disbOpenMarket: { count: 0, amount: 0 },
                         disbBranch: { count: 0, amount: 0 },
                         disbUsedCar: { count: 0, amount: 0 },
@@ -1338,8 +1354,10 @@ const app = createApp({
                     mtd: {
                         loginOpenMarket: { count: 0, amount: 0 },
                         loginBranch: { count: 0, amount: 0 },
-                        loginBranchSanction: { count: 0, amount: 0 },
                         loginUsedCar: { count: 0, amount: 0 },
+                        sanctionOpenMarket: { count: 0, amount: 0 },
+                        loginBranchSanction: { count: 0, amount: 0 },
+                        sanctionUsedCar: { count: 0, amount: 0 },
                         disbOpenMarket: { count: 0, amount: 0 },
                         disbBranch: { count: 0, amount: 0 },
                         disbUsedCar: { count: 0, amount: 0 },
@@ -1456,6 +1474,11 @@ const app = createApp({
             const tdMtd = (m.disbOpenMarket.count || 0) + (m.disbBranch.count || 0) + (m.disbUsedCar.count || 0);
             const tdaMtd = (m.disbOpenMarket.amount || 0) + (m.disbBranch.amount || 0) + (m.disbUsedCar.amount || 0);
 
+            const sTotalFtd = (f.sanctionOpenMarket?.count || 0) + (f.loginBranchSanction?.count || 0) + (f.sanctionUsedCar?.count || 0);
+            const sTotalAmountFtd = (f.sanctionOpenMarket?.amount || 0) + (f.loginBranchSanction?.amount || 0) + (f.sanctionUsedCar?.amount || 0);
+            const sTotalMtd = (m.sanctionOpenMarket?.count || 0) + (m.loginBranchSanction?.count || 0) + (m.sanctionUsedCar?.count || 0);
+            const sTotalAmountMtd = (m.sanctionOpenMarket?.amount || 0) + (m.loginBranchSanction?.amount || 0) + (m.sanctionUsedCar?.amount || 0);
+
             let text = `${dateStr}\n`;
             text += `*Login :*\n`;
             text += `*Open Market :*\n`;
@@ -1464,14 +1487,20 @@ const app = createApp({
             text += `*Branch*\n`;
             text += `FTD : ${formatVal(f.loginBranch.count, f.loginBranch.amount)}\n`;
             text += `MTD:  ${formatVal(m.loginBranch.count, m.loginBranch.amount)}\n`;
-            text += `Sanction: ${formatVal(f.loginBranchSanction.count, f.loginBranchSanction.amount)}\n`;
-            text += `MTD sanction: ${m.loginBranchSanction.count || 0}\n`;
+            text += `Sanction: ${formatVal(f.loginBranchSanction?.count, f.loginBranchSanction?.amount)}\n`;
+            text += `MTD sanction: ${m.loginBranchSanction?.count || 0}\n`;
             text += `*Used Car*\n`;
             text += `FTD - ${formatVal(f.loginUsedCar.count, f.loginUsedCar.amount)}\n`;
             text += `MTD - ${formatVal(m.loginUsedCar.count, m.loginUsedCar.amount)}\n\n`;
 
             text += `Total FTD :  ${formatVal(tlFtd, tlaFtd)}\n`;
             text += `Total MTD: ${formatVal(tlMtd, tlaMtd)} \n\n`;
+
+            text += `*Sanction :*\n`;
+            text += `*Open Market :* FTD: ${formatVal(f.sanctionOpenMarket?.count, f.sanctionOpenMarket?.amount)} | MTD: ${formatVal(m.sanctionOpenMarket?.count, m.sanctionOpenMarket?.amount)}\n`;
+            text += `*Branch :* FTD: ${formatVal(f.loginBranchSanction?.count, f.loginBranchSanction?.amount)} | MTD: ${formatVal(m.loginBranchSanction?.count, m.loginBranchSanction?.amount)}\n`;
+            text += `*Used Car :* FTD: ${formatVal(f.sanctionUsedCar?.count, f.sanctionUsedCar?.amount)} | MTD: ${formatVal(m.sanctionUsedCar?.count, m.sanctionUsedCar?.amount)}\n`;
+            text += `Total Sanction FTD: ${formatVal(sTotalFtd, sTotalAmountFtd)} | MTD: ${formatVal(sTotalMtd, sTotalAmountMtd)}\n\n`;
 
             text += `*Disb :*\n`;
             text += `*Open Market :* \n`;
@@ -1605,6 +1634,24 @@ const app = createApp({
                     eodForm.value.disbOpenMarket.amount += amt;
                 }
             });
+
+            const approvedToday = myFiles.value.filter(f => (f.status === 'Approved' || f.status === 'Disbursed') && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
+            approvedToday.forEach(f => {
+                const amt = toLakhs(f.loanAmount) || 0;
+                const chan = (f.sourcingChannel || '').toUpperCase();
+                const cat = (f.nclUcl || '').toUpperCase();
+
+                if (cat === 'UCL') {
+                    eodForm.value.sanctionUsedCar.count += 1;
+                    eodForm.value.sanctionUsedCar.amount += amt;
+                } else if (chan === 'BRANCH') {
+                    eodForm.value.loginBranchSanction.count += 1;
+                    eodForm.value.loginBranchSanction.amount += amt;
+                } else {
+                    eodForm.value.sanctionOpenMarket.count += 1;
+                    eodForm.value.sanctionOpenMarket.amount += amt;
+                }
+            });
             
             Object.keys(eodForm.value).forEach(k => {
                 if (eodForm.value[k].amount !== undefined) {
@@ -1634,8 +1681,10 @@ const app = createApp({
             eodForm.value = {
                 loginOpenMarket: { count: 0, amount: 0 },
                 loginBranch: { count: 0, amount: 0 },
-                loginBranchSanction: { count: 0, amount: 0 },
                 loginUsedCar: { count: 0, amount: 0 },
+                sanctionOpenMarket: { count: 0, amount: 0 },
+                loginBranchSanction: { count: 0, amount: 0 },
+                sanctionUsedCar: { count: 0, amount: 0 },
                 disbOpenMarket: { count: 0, amount: 0 },
                 disbBranch: { count: 0, amount: 0 },
                 disbUsedCar: { count: 0, amount: 0 },

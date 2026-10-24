@@ -2844,11 +2844,11 @@
                                         <span class="text-[10px] text-emerald-600 font-bold block">{{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(1) }}L</span>
                                         <span class="text-[8px] text-emerald-700 font-bold bg-emerald-100/70 px-1 py-0.5 rounded mt-1 inline-block">MTD: {{ getRoMtdForDate(eod.date, eod.metrics).disbOpenMarket.count + getRoMtdForDate(eod.date, eod.metrics).disbBranch.count + getRoMtdForDate(eod.date, eod.metrics).disbUsedCar.count }}/{{ (getRoMtdForDate(eod.date, eod.metrics).disbOpenMarket.amount + getRoMtdForDate(eod.date, eod.metrics).disbBranch.amount + getRoMtdForDate(eod.date, eod.metrics).disbUsedCar.amount).toFixed(1) }}L</span>
                                     </div>
-                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
-                                        <span class="text-[9px] font-bold text-slate-500 uppercase block">Br. Sanc</span>
-                                        <span class="text-xs font-black text-slate-800">{{ eod.metrics.loginBranchSanction?.count || 0 }}</span>
-                                        <span class="text-[10px] text-slate-600 font-bold block">{{ (eod.metrics.loginBranchSanction?.amount || 0).toFixed(1) }}L</span>
-                                        <span class="text-[8px] text-slate-700 font-bold bg-slate-200/70 px-1 py-0.5 rounded mt-1 inline-block">MTD: {{ getRoMtdForDate(eod.date, eod.metrics).loginBranchSanction?.count || 0 }}</span>
+                                    <div class="bg-amber-50/60 rounded-lg p-2 text-center border border-amber-100/50">
+                                        <span class="text-[9px] font-bold text-amber-600 uppercase block">Sanctions</span>
+                                        <span class="text-xs font-black text-amber-900">{{ (eod.metrics.sanctionOpenMarket?.count || 0) + (eod.metrics.loginBranchSanction?.count || 0) + (eod.metrics.sanctionUsedCar?.count || 0) }}</span>
+                                        <span class="text-[10px] text-amber-700 font-bold block">{{ ((eod.metrics.sanctionOpenMarket?.amount || 0) + (eod.metrics.loginBranchSanction?.amount || 0) + (eod.metrics.sanctionUsedCar?.amount || 0)).toFixed(1) }}L</span>
+                                        <span class="text-[8px] text-amber-800 font-bold bg-amber-100/70 px-1 py-0.5 rounded mt-1 inline-block">MTD: {{ (getRoMtdForDate(eod.date, eod.metrics).sanctionOpenMarket?.count || 0) + (getRoMtdForDate(eod.date, eod.metrics).loginBranchSanction?.count || 0) + (getRoMtdForDate(eod.date, eod.metrics).sanctionUsedCar?.count || 0) }}</span>
                                     </div>
                                 </div>
                                 <!-- Bottom: Actions -->
@@ -2881,7 +2881,7 @@
                                             <th class="px-4 py-2">RO Name</th>
                                             <th class="px-4 py-2 text-center">Total Logins (FTD)</th>
                                             <th class="px-4 py-2 text-center">Total Disb (FTD)</th>
-                                            <th class="px-4 py-2 text-center">Branch Sanc</th>
+                                            <th class="px-4 py-2 text-center">Total Sanc (FTD)</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-50 font-medium">
@@ -3725,7 +3725,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-34"></script>
+    <script type="module" src="js/app.js?v=force-update-35"></script>
 </body>
 </html>
 
