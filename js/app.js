@@ -1005,7 +1005,6 @@ const app = createApp({
             { label: 'Branch', key: 'disbBranch', category: 'Disbursement', type: 'both' },
             { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
             { label: 'VICP/CRM', key: 'vicpCrm', category: 'Other', type: 'count' },
-            { label: 'TD', key: 'td', category: 'Other', type: 'count' },
             { label: 'MI', key: 'mi', category: 'Other', type: 'count' },
             { label: 'Maruti Login', key: 'marutiLogin', category: 'Other', type: 'both' },
             { label: 'Maruti Disb', key: 'marutiDisb', category: 'Other', type: 'both' }
@@ -1047,7 +1046,6 @@ const app = createApp({
             disbBranch: { count: 0, amount: 0 },
             disbUsedCar: { count: 0, amount: 0 },
             vicpCrm: { count: 0 },
-            td: { count: 0 },
             marutiLogin: { count: 0, amount: 0 },
             marutiDisb: { count: 0, amount: 0 },
             mi: { count: 0 }
@@ -1202,7 +1200,6 @@ const app = createApp({
                 sanctionAmt: sAmt,
                 sanctionAmount: sAmt,
                 vcipCount: (f.vicpCrm?.count || 0),
-                tdCount: (f.td?.count || 0),
                 miCount: (f.mi?.count || 0)
             };
         });
@@ -1223,7 +1220,6 @@ const app = createApp({
                 disbBranch: { count: 0, amount: 0 },
                 disbUsedCar: { count: 0, amount: 0 },
                 vicpCrm: { count: 0 },
-                td: { count: 0 },
                 marutiLogin: { count: 0, amount: 0 },
                 marutiDisb: { count: 0, amount: 0 },
                 mi: { count: 0 }
@@ -1291,7 +1287,6 @@ const app = createApp({
             const priorEods = (myEods.value || []).filter(e => e.date && e.date.startsWith(currentMonth) && e.date < targetDate);
             priorEods.forEach(e => {
                 if (!e.metrics) return;
-                m.td.count += (e.metrics.td?.count || 0);
                 m.marutiLogin.count += (e.metrics.marutiLogin?.count || 0);
                 m.marutiLogin.amount += (e.metrics.marutiLogin?.amount || 0);
                 m.marutiDisb.count += (e.metrics.marutiDisb?.count || 0);
@@ -1348,7 +1343,7 @@ const app = createApp({
                         disbOpenMarket: { count: 0, amount: 0 },
                         disbBranch: { count: 0, amount: 0 },
                         disbUsedCar: { count: 0, amount: 0 },
-                        vicpCrm: { count: 0 }, td: { count: 0 },
+                        vicpCrm: { count: 0 },
                         marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
                     },
                     mtd: {
@@ -1361,7 +1356,7 @@ const app = createApp({
                         disbOpenMarket: { count: 0, amount: 0 },
                         disbBranch: { count: 0, amount: 0 },
                         disbUsedCar: { count: 0, amount: 0 },
-                        vicpCrm: { count: 0 }, td: { count: 0 },
+                        vicpCrm: { count: 0 },
                         marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
                     }
                 };
@@ -1517,9 +1512,7 @@ const app = createApp({
             text += `Total MTD: ${formatVal(tdMtd, tdaMtd)}\n\n`;
 
             text += `FTD vicp/CRM: ${f.vicpCrm?.count || 0}\n`;
-            text += `MTD vicp/CRM: ${m.vicpCrm?.count || 0}\n`;
-            text += `FTD TD : ${f.td?.count || 0}\n`;
-            text += `MTD TD : ${m.td?.count || 0}\n\n`;
+            text += `MTD vicp/CRM: ${m.vicpCrm?.count || 0}\n\n`;
 
             text += `*Maruti*\n`;
             text += `Login FTD/MTD- ${f.marutiLogin?.count || 0}/${m.marutiLogin?.count || 0}\n`;
@@ -1689,7 +1682,6 @@ const app = createApp({
                 disbBranch: { count: 0, amount: 0 },
                 disbUsedCar: { count: 0, amount: 0 },
                 vicpCrm: { count: 0 },
-                td: { count: 0 },
                 marutiLogin: { count: 0, amount: 0 },
                 marutiDisb: { count: 0, amount: 0 },
                 mi: { count: 0 }
