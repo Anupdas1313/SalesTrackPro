@@ -1587,17 +1587,17 @@
                                 </div>
                             </div>
 
-                            <!-- Card 3: Approved (Ready) -->
-                            <div @click="navigateRoStatusFilter('Approved')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-300 hover:shadow-sm transition cursor-pointer group">
+                            <!-- Card 3: Sanctions -->
+                            <div @click="navigateRoStatusFilter('Sanction')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-300 hover:shadow-sm transition cursor-pointer group">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Approved</span>
+                                    <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Sanction</span>
                                     <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black text-emerald-600">{{ roStats.approvedCount }}</div>
+                                <div class="text-2xl sm:text-3xl font-black text-emerald-600">{{ roStats.sanctionCount || roStats.approvedCount }}</div>
                                 <div class="text-[11px] text-emerald-700 font-bold mt-1 truncate">
-                                    &#x20B9;{{ formatCurrency(roStats.approvedAmount) }}
+                                    &#x20B9;{{ formatCurrency(roStats.sanctionAmount || roStats.approvedAmount) }}
                                 </div>
                             </div>
 
@@ -1657,10 +1657,10 @@
                                     <span class="text-base font-black text-amber-900 block mt-0.5">{{ roStats.stages?.UW || 0 }}</span>
                                 </button>
 
-                                <!-- Approved -->
-                                <button @click="navigateRoStatusFilter('Approved')" type="button" class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 transition text-center group">
-                                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Approved</span>
-                                    <span class="text-base font-black text-emerald-900 block mt-0.5">{{ roStats.stages?.Approved || 0 }}</span>
+                                <!-- Sanction -->
+                                <button @click="navigateRoStatusFilter('Sanction')" type="button" class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Sanction</span>
+                                    <span class="text-base font-black text-emerald-900 block mt-0.5">{{ roStats.stages?.Sanction || roStats.stages?.Approved || 0 }}</span>
                                 </button>
 
                                 <!-- Disbursed -->
@@ -2155,7 +2155,7 @@
                                         Status <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                        <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
+                                        <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="newFileForm.status = st" :class="[
                                             newFileForm.status === st 
                                                 ? 'bg-white text-[#97144D] font-bold shadow-xs'
                                                 : 'text-slate-600 font-medium hover:text-slate-900',
@@ -2862,7 +2862,7 @@
                                     <div>
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Status</label>
                                         <div class="flex flex-wrap gap-2">
-                                            <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'FCU', label:'FCU'}, {val:'UW', label:'UW'}, {val:'Approved', label:'Approved'}, {val:'Rejected', label:'Rejected'}, {val:'Disbursed', label:'Disbursed'}, {val:'Cancelled', label:'Cancelled'}, {val:'Custom', label:'Custom'}]" 
+                                            <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'FCU', label:'FCU'}, {val:'UW', label:'UW'}, {val:'Sanction', label:'Sanction'}, {val:'Approved', label:'Approved'}, {val:'Rejected', label:'Rejected'}, {val:'Disbursed', label:'Disbursed'}, {val:'Cancelled', label:'Cancelled'}, {val:'Custom', label:'Custom'}]" 
                                                     :key="st.val"
                                                     @click="roFilters.status = st.val"
                                                     :class="roFilters.status === st.val ? 'bg-slate-800 text-white shadow-md font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
@@ -3025,7 +3025,7 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Status <span class="text-rose-500">*</span></label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
+                                <button type="button" v-for="st in ['FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled', 'Custom']" :key="st" @click="editFileForm.status = st" :class="[
                                     editFileForm.status === st 
                                         ? 'bg-white text-[#97144D] font-bold shadow-xs' 
                                         : 'text-slate-600 font-medium hover:text-slate-900',
@@ -3123,6 +3123,7 @@
                                 <option value="FI">FI</option>
                                 <option value="FCU">FCU</option>
                                 <option value="UW">UW</option>
+                                <option value="Sanction">Sanction</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
                                 <option value="Disbursed">Disbursed</option>
@@ -3594,7 +3595,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-44"></script>
+    <script type="module" src="js/app.js?v=force-update-45"></script>
 </body>
 </html>
 

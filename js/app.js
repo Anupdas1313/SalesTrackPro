@@ -207,7 +207,7 @@ const app = createApp({
             return `${year}-${month}-${day}`;
         };
 
-        const STANDARD_STATUSES = ['Lead', 'FI', 'FCU', 'UW', 'Approved', 'Rejected', 'Disbursed', 'Cancelled'];
+        const STANDARD_STATUSES = ['Lead', 'FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled'];
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
         const newFileForm = ref({
             appId: 'ALA00000',
@@ -257,10 +257,32 @@ const app = createApp({
             status: '',
             nclUcl: '',
             sourcingChannel: '',
-            timeline: 'today', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
+            timeline: 'this-month', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
             customDate: '',
             sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
         });
+
+                // Helper: Sanction / Disbursal status matchers
+        const isSanctionStatus = (status) => {
+            if (!status) return false;
+            const s = String(status).trim().toLowerCase();
+            return s === 'approved' || s === 'sanction' || s === 'sanctioned';
+        };
+
+        const isDisbursedStatus = (status) => {
+            if (!status) return false;
+            const s = String(status).trim().toLowerCase();
+            return s === 'disbursed';
+        };
+
+        const matchesFileTimeline = (f, timeline, customDate) => {
+            if (!f) return false;
+            if (timeline === 'all') return true;
+            if (f.loginDate && matchesTimeline(f.loginDate, timeline, customDate)) return true;
+            if (f.updatedAt && matchesTimeline(f.updatedAt, timeline, customDate)) return true;
+            if (f.createdAt && matchesTimeline(f.createdAt, timeline, customDate)) return true;
+            return false;
+        };
 
         // Helper: Date timeline matching (supports YYYY-MM-DD strings and ISO timestamps)
         const matchesTimeline = (fileDateStr, timeline, customDate) => {
@@ -747,19 +769,19 @@ const app = createApp({
         };
 
         // RO Overview State
-        const roOverviewTimeline = ref('today');
+        const roOverviewTimeline = ref('this-month');
         const roOverviewCustomDate = ref('');
 
         // RO Overview KPIs
         const roStats = computed(() => {
-            const files = myFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, roOverviewTimeline.value, roOverviewCustomDate.value));
-            const approved = files.filter(f => f.status === 'Approved');
-            const disbursed = files.filter(f => f.status === 'Disbursed');
-            const inProcess = files.filter(f => ['Lead', 'FI', 'FCU', 'UW'].includes(f.status));
-            const login = files.filter(f => f.status === 'FI');
-            const rejected = files.filter(f => f.status === 'Rejected');
-            const ncl = files.filter(f => f.nclUcl === 'NCL');
-            const ucl = files.filter(f => f.nclUcl === 'UCL');
+            const files = myFiles.value.filter(f => matchesFileTimeline(f, roOverviewTimeline.value, roOverviewCustomDate.value));
+            const approved = files.filter(f => isSanctionStatus(f.status));
+            const disbursed = files.filter(f => isDisbursedStatus(f.status));
+            const inProcess = files.filter(f => ['lead', 'fi', 'fcu', 'uw'].includes((f.status || '').toLowerCase()));
+            const login = files.filter(f => (f.status || '').toLowerCase() === 'fi');
+            const rejected = files.filter(f => (f.status || '').toLowerCase() === 'rejected');
+            const ncl = files.filter(f => (f.nclUcl || '').toUpperCase() === 'NCL');
+            const ucl = files.filter(f => (f.nclUcl || '').toUpperCase() === 'UCL');
 
             const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
@@ -771,29 +793,61 @@ const app = createApp({
             const nclAmount = ncl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const uclAmount = ucl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
-            const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
+            // EOD alignment fallback: ensures metrics from EOD reports reflect even if files haven't been separately logged
+            const eodSancCount = (roOverviewTimeline.value === 'this-month') 
+                ? (eodMtdTotals.value?.sanctionCount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.sanctionCount || 0) : 0);
+            const eodSancAmt = (roOverviewTimeline.value === 'this-month')
+                ? (eodMtdTotals.value?.sanctionAmount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.sanctionAmount || 0) : 0);
+
+            const eodDisbCount = (roOverviewTimeline.value === 'this-month') 
+                ? (eodMtdTotals.value?.disbCount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.disbCount || 0) : 0);
+            const eodDisbAmt = (roOverviewTimeline.value === 'this-month')
+                ? (eodMtdTotals.value?.disbAmount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.disbAmount || 0) : 0);
+
+            const eodLoginCount = (roOverviewTimeline.value === 'this-month') 
+                ? (eodMtdTotals.value?.loginCount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.loginCount || 0) : 0);
+            const eodLoginAmt = (roOverviewTimeline.value === 'this-month')
+                ? (eodMtdTotals.value?.loginAmount || 0)
+                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.loginAmount || 0) : 0);
+
+            const finalApprovedCount = Math.max(approved.length, eodSancCount);
+            const finalApprovedAmount = Math.max(approvedAmount, eodSancAmt);
+            const finalDisbCount = Math.max(disbursed.length, eodDisbCount);
+            const finalDisbAmount = Math.max(disbursedAmount, eodDisbAmt);
+            const finalTotalFiles = Math.max(files.length, eodLoginCount, finalApprovedCount);
+            const finalTotalAmount = Math.max(totalAmount, eodLoginAmt, finalApprovedAmount);
+
+            const approvalRate = finalTotalFiles ? Math.round(((finalApprovedCount + finalDisbCount) / finalTotalFiles) * 100) : 0;
 
             const todayStr = getTodayDateStr();
             const todayLogged = myFiles.value.filter(f => (f.loginDate === todayStr) || (f.createdAt && f.createdAt.startsWith(todayStr)));
-            const todayDisb = myFiles.value.filter(f => f.status === 'Disbursed' && ((f.loginDate === todayStr) || (f.updatedAt && f.updatedAt.startsWith(todayStr))));
+            const todayDisb = myFiles.value.filter(f => isDisbursedStatus(f.status) && ((f.loginDate === todayStr) || (f.updatedAt && f.updatedAt.startsWith(todayStr))));
 
             const stages = {
-                Lead: files.filter(f => f.status === 'Lead').length,
-                FI: files.filter(f => f.status === 'FI').length,
-                FCU: files.filter(f => f.status === 'FCU').length,
-                UW: files.filter(f => f.status === 'UW').length,
-                Approved: approved.length,
-                Disbursed: disbursed.length,
+                Lead: files.filter(f => (f.status || '').toLowerCase() === 'lead').length,
+                FI: files.filter(f => (f.status || '').toLowerCase() === 'fi').length,
+                FCU: files.filter(f => (f.status || '').toLowerCase() === 'fcu').length,
+                UW: files.filter(f => (f.status || '').toLowerCase() === 'uw').length,
+                Approved: finalApprovedCount,
+                Sanction: finalApprovedCount,
+                Disbursed: finalDisbCount,
                 Rejected: rejected.length
             };
 
             return {
-                totalFiles: files.length,
-                totalAmount,
-                approvedCount: approved.length,
-                approvedAmount,
-                disbursedCount: disbursed.length,
-                disbursedAmount,
+                totalFiles: finalTotalFiles,
+                totalAmount: finalTotalAmount,
+                approvedCount: finalApprovedCount,
+                approvedAmount: finalApprovedAmount,
+                sanctionCount: finalApprovedCount,
+                sanctionAmount: finalApprovedAmount,
+                disbursedCount: finalDisbCount,
+                disbursedAmount: finalDisbAmount,
                 inProcessCount: inProcess.length,
                 inProcessAmount,
                 loginCount: login.length,
@@ -819,6 +873,7 @@ const app = createApp({
 
         const navigateRoStatusFilter = (status) => {
             roFilters.value.status = status;
+            roFilters.value.timeline = roOverviewTimeline.value;
             currentTab.value = 'ro-tracking';
         };
         const recentFiles = computed(() => {
@@ -837,7 +892,7 @@ const app = createApp({
                     (file.status && file.status.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
                 const matchStatus = roFilters.value.status 
-                    ? (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase()) 
+                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
                     : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
                 const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
@@ -879,7 +934,7 @@ const app = createApp({
                     (file.status && file.status.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
                 const matchStatus = roFilters.value.status 
-                    ? (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase()) 
+                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
                     : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
                 const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
@@ -936,6 +991,8 @@ const app = createApp({
                 case 'FCU': return 'px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-semibold';
                 case 'UW': return 'px-2.5 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[11px] font-semibold';
                 case 'Cancelled': return 'px-2.5 py-0.5 bg-stone-50 text-stone-700 rounded-full text-[11px] font-semibold';
+                case 'Sanction':
+                case 'Sanctioned':
                 case 'Approved': return 'px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[11px] font-semibold';
                 case 'Rejected': return 'px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-[11px] font-semibold';
                 case 'Disbursed': return 'px-2.5 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[11px] font-semibold';
@@ -1247,7 +1304,7 @@ const app = createApp({
                     m.loginOpenMarket.amount += amt;
                 }
 
-                if (f.status === 'Approved' || f.status === 'Disbursed') {
+                if (isSanctionStatus(f.status) || isDisbursedStatus(f.status)) {
                     if (cat === 'UCL') {
                         m.sanctionUsedCar.count += 1;
                         m.sanctionUsedCar.amount += amt;
@@ -1628,7 +1685,7 @@ const app = createApp({
                 }
             });
 
-            const approvedToday = myFiles.value.filter(f => (f.status === 'Approved' || f.status === 'Disbursed') && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
+            const approvedToday = myFiles.value.filter(f => (isSanctionStatus(f.status) || isDisbursedStatus(f.status)) && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
             approvedToday.forEach(f => {
                 const amt = toLakhs(f.loanAmount) || 0;
                 const chan = (f.sourcingChannel || '').toUpperCase();
