@@ -1555,27 +1555,7 @@
 
 
 
-                        <!-- Attention Radar Banner (Stale Files Flag) -->
-                        <div v-if="roNeedsAttentionFiles.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
-                                    <i class="fas fa-triangle-exclamation"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-amber-900 flex items-center gap-2">
-                                        <span>Attention Radar: {{ roNeedsAttentionFiles.length }} Case(s) Need Movement</span>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-800">Action Required</span>
-                                    </h4>
-                                    <p class="text-[11px] text-amber-700 font-medium mt-0.5">
-                                        Cases resting in FI/UW (>3 days) or Approved without disbursal (>4 days).
-                                    </p>
-                                </div>
-                            </div>
-                            <button @click="currentTab = 'ro-tracking'; roFilters.timeline = 'all';" type="button" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-                                <span>Review Cases</span>
-                                <i class="fas fa-arrow-right text-[10px]"></i>
-                            </button>
-                        </div>
+
 
                         <!-- Core KPI Metrics Cards (Interactive & Clickable) -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -3664,7 +3644,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-42"></script>
+    <script type="module" src="js/app.js?v=force-update-43"></script>
 </body>
 </html>
 
