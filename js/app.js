@@ -167,6 +167,15 @@ const app = createApp({
             return 'ro-dashboard';
         };
         const currentTab = ref(getInitialTab());
+        const goToTab = (tab) => {
+            if (tab) {
+                currentTab.value = tab;
+                nextTick(() => {
+                    const scrollContainer = document.querySelector('.overflow-y-auto');
+                    if (scrollContainer) scrollContainer.scrollTop = 0;
+                });
+            }
+        };
         const mobileMenuOpen = ref(false);
 
         // Data arrays
@@ -300,9 +309,12 @@ const app = createApp({
         };
 
         // --- Computed ---
-        const isSuperAdmin = computed(() => currentUser.value?.role === 'super_admin');
-        const isSM = computed(() => currentUser.value?.role === 'sm' || currentUser.value?.role === 'admin'); // fallback for legacy
-        const isRO = computed(() => currentUser.value?.role === 'ro');
+        const isSuperAdmin = computed(() => (currentUser.value?.role || '').toLowerCase() === 'super_admin');
+        const isSM = computed(() => {
+            const r = (currentUser.value?.role || '').toLowerCase();
+            return r === 'sm' || r === 'admin';
+        }); // fallback for legacy
+        const isRO = computed(() => (currentUser.value?.role || '').toLowerCase() === 'ro');
 
 
 
@@ -936,6 +948,8 @@ const app = createApp({
                 case 'ro-dashboard': return 'Portfolio Overview';
                 case 'ro-tracking': return 'Saved Login Details';
                 case 'ro-add-file': return 'New Customer Login';
+                case 'ro-eod': return 'Daily EOD Report';
+                case 'sm-eod': return 'RO Daily EOD Submissions';
                 case 'dashboard': return 'Global Dashboard';
                 case 'tracking': return 'Live File Tracking';
                 case 'users': return 'User Management';
@@ -1173,13 +1187,16 @@ const app = createApp({
 
         const eodTotals = computed(() => {
             const f = eodForm.value;
+            const sCount = (f.loginBranchSanction?.count || 0);
+            const sAmt = (f.loginBranchSanction?.amount || 0);
             return {
                 loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0),
                 loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0),
                 disbCount: (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0),
                 disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0),
-                sanctionCount: (f.loginBranchSanction?.count || 0),
-                sanctionAmt: (f.loginBranchSanction?.amount || 0),
+                sanctionCount: sCount,
+                sanctionAmt: sAmt,
+                sanctionAmount: sAmt,
                 vcipCount: (f.vicpCrm?.count || 0),
                 tdCount: (f.td?.count || 0),
                 miCount: (f.mi?.count || 0)
@@ -1287,12 +1304,14 @@ const app = createApp({
         });
 
         const eodMtdTotals = computed(() => {
-            const m = currentRoMtd.value;
-            const loginCount = (m.loginOpenMarket.count || 0) + (m.loginBranch.count || 0) + (m.loginUsedCar.count || 0);
-            const loginAmount = (m.loginOpenMarket.amount || 0) + (m.loginBranch.amount || 0) + (m.loginUsedCar.amount || 0);
-            const disbCount = (m.disbOpenMarket.count || 0) + (m.disbBranch.count || 0) + (m.disbUsedCar.count || 0);
-            const disbAmount = (m.disbOpenMarket.amount || 0) + (m.disbBranch.amount || 0) + (m.disbUsedCar.amount || 0);
-            return { loginCount, loginAmount, disbCount, disbAmount };
+            const m = currentRoMtd.value || {};
+            const loginCount = (m.loginOpenMarket?.count || 0) + (m.loginBranch?.count || 0) + (m.loginUsedCar?.count || 0);
+            const loginAmount = (m.loginOpenMarket?.amount || 0) + (m.loginBranch?.amount || 0) + (m.loginUsedCar?.amount || 0);
+            const disbCount = (m.disbOpenMarket?.count || 0) + (m.disbBranch?.count || 0) + (m.disbUsedCar?.count || 0);
+            const disbAmount = (m.disbOpenMarket?.amount || 0) + (m.disbBranch?.amount || 0) + (m.disbUsedCar?.amount || 0);
+            const sanctionCount = (m.loginBranchSanction?.count || 0);
+            const sanctionAmount = (m.loginBranchSanction?.amount || 0);
+            return { loginCount, loginAmount, disbCount, disbAmount, sanctionCount, sanctionAmount, sanctionAmt: sanctionAmount };
         });
 
         const smEodSummary = computed(() => {
@@ -2656,7 +2675,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab
         };
     }
 });
