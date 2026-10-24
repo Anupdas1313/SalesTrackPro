@@ -1,0 +1,37 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#4F46E5" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1E1B4B" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background with rounded squircles -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect width="512" height="512" rx="128" fill="url(#glowGrad)"/>
+
+  <!-- Subtle inner border -->
+  <rect x="8" y="8" width="496" height="496" rx="120" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="6"/>
+
+  <!-- Stylized Geometric Layers / Pipeline Chevron Emblem -->
+  <g filter="url(#shadow)" transform="translate(0, -6)">
+    <!-- Top Layer / Arrow Head -->
+    <path d="M 256 128 L 388 200 L 256 264 L 124 200 Z" fill="#FFFFFF"/>
+    
+    <!-- Middle Layer -->
+    <path d="M 124 246 L 256 310 L 388 246 L 388 280 L 256 344 L 124 280 Z" fill="#E0E7FF" opacity="0.95"/>
+    
+    <!-- Bottom Layer -->
+    <path d="M 124 326 L 256 390 L 388 326 L 388 360 L 256 424 L 124 360 Z" fill="#C7D2FE" opacity="0.9"/>
+
+    <!-- Upward Trend Accent Dot -->
+    <circle cx="256" cy="196" r="18" fill="#4F46E5"/>
+  </g>
+</svg>

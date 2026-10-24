@@ -2707,8 +2707,78 @@ const app = createApp({
 
         watch([allFiles, currentTab], renderGrowthChart);
 
+        // --- PWA (Progressive Web App) Install State ---
+        const deferredInstallPrompt = ref(null);
+        const showInstallBanner = ref(false);
+        const showIosInstallModal = ref(false);
+        const isStandalone = ref(false);
+        const isIos = ref(false);
+
+        const checkStandalone = () => {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone === true ||
+                   document.referrer.includes('android-app://');
+        };
+
+        const installPwaApp = async () => {
+            if (deferredInstallPrompt.value) {
+                deferredInstallPrompt.value.prompt();
+                const choice = await deferredInstallPrompt.value.userChoice;
+                if (choice && choice.outcome === 'accepted') {
+                    showInstallBanner.value = false;
+                }
+                deferredInstallPrompt.value = null;
+            } else if (isIos.value) {
+                showIosInstallModal.value = true;
+            } else {
+                alert('To install SalesTrack Pro on your device, open your browser menu (â‹® or Share) and tap "Install app" or "Add to Home screen".');
+            }
+        };
+
+        const dismissInstallBanner = () => {
+            showInstallBanner.value = false;
+            try {
+                localStorage.setItem('salestrack_pwa_dismissed', String(Date.now()));
+            } catch(e) {}
+        };
+
         // --- Lifecycle ---
         onMounted(async () => {
+            // PWA Standalone & Install detection
+            isStandalone.value = checkStandalone();
+            isIos.value = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt.value = e;
+                if (!isStandalone.value) {
+                    const dismissedAt = localStorage.getItem('salestrack_pwa_dismissed');
+                    const cooldown = 2 * 24 * 60 * 60 * 1000; // 2 days cooldown
+                    if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
+                        showInstallBanner.value = true;
+                    }
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                showInstallBanner.value = false;
+                deferredInstallPrompt.value = null;
+                isStandalone.value = true;
+            });
+
+            // On iOS Safari, if not standalone, prompt after brief delay
+            if (isIos.value && !isStandalone.value) {
+                const dismissedAt = localStorage.getItem('salestrack_pwa_dismissed');
+                const cooldown = 2 * 24 * 60 * 60 * 1000;
+                if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
+                    setTimeout(() => {
+                        if (!isStandalone.value) {
+                            showInstallBanner.value = true;
+                        }
+                    }, 2500);
+                }
+            }
+
             try {
                 systemAnnouncement.value = await db.getAnnouncement();
                 adminAnnouncementInput.value = systemAnnouncement.value;
@@ -2773,7 +2843,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner
         };
     }
 });
