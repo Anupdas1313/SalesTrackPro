@@ -2440,7 +2440,7 @@
                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
-                                        <span class="text-[9px] font-bold text-blue-600 uppercase text-center">MTD Tot</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">MTD Tot</span>
                                     </div>
                                     <!-- Metric Rows -->
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Login')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
@@ -2453,9 +2453,9 @@
                                             <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#97144D] focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
-                                        <div class="text-center px-1 py-1 bg-blue-50/70 border border-blue-100/80 rounded-lg">
-                                            <span class="text-[11px] font-black text-blue-900 block leading-tight">
-                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-blue-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                        <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-slate-800 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-slate-500 font-semibold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2480,7 +2480,7 @@
                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
-                                        <span class="text-[9px] font-bold text-amber-600 uppercase text-center">MTD Tot</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">MTD Tot</span>
                                     </div>
                                     <!-- Metric Rows -->
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Sanction')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
@@ -2493,9 +2493,9 @@
                                             <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-amber-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
-                                        <div class="text-center px-1 py-1 bg-amber-50/70 border border-amber-100/80 rounded-lg">
-                                            <span class="text-[11px] font-black text-amber-900 block leading-tight">
-                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-amber-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                        <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-slate-800 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-slate-500 font-semibold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2519,7 +2519,7 @@
                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
-                                        <span class="text-[9px] font-bold text-emerald-600 uppercase text-center">MTD Tot</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">MTD Tot</span>
                                     </div>
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Disbursement')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
                                         <label class="text-[11px] font-bold text-slate-700 truncate pr-1">{{ m.label }}</label>
@@ -2531,9 +2531,9 @@
                                             <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-emerald-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
-                                        <div class="text-center px-1 py-1 bg-emerald-50/70 border border-emerald-100/80 rounded-lg">
-                                            <span class="text-[11px] font-black text-emerald-900 block leading-tight">
-                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-emerald-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                        <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-slate-800 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-slate-500 font-semibold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2557,7 +2557,7 @@
                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
-                                        <span class="text-[9px] font-bold text-indigo-600 uppercase text-center">MTD Tot</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">MTD Tot</span>
                                     </div>
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Maruti')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
                                         <label class="text-[11px] font-bold text-slate-700 truncate pr-1">{{ m.label }}</label>
@@ -2569,9 +2569,9 @@
                                             <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-indigo-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
-                                        <div class="text-center px-1 py-1 bg-indigo-50/70 border border-indigo-100/80 rounded-lg">
-                                            <span class="text-[11px] font-black text-indigo-900 block leading-tight">
-                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-indigo-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                        <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-slate-800 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-slate-500 font-semibold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2592,7 +2592,7 @@
                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Metric</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
                                         <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
-                                        <span class="text-[9px] font-bold text-purple-600 uppercase text-center">MTD Tot</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">MTD Tot</span>
                                     </div>
                                     <div v-for="m in metricsConfig.filter(x => x.category === 'Other')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
                                         <label class="text-[11px] font-bold text-slate-700 truncate pr-1">{{ m.label }}</label>
@@ -2604,9 +2604,9 @@
                                             <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-purple-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
                                         </div>
                                         <div v-else></div>
-                                        <div class="text-center px-1 py-1 bg-purple-50/70 border border-purple-100/80 rounded-lg">
-                                            <span class="text-[11px] font-black text-purple-900 block leading-tight">
-                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-purple-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                        <div class="text-center px-1 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-slate-800 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-slate-500 font-semibold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2617,10 +2617,10 @@
                                 <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs mt-3">
                                     <div class="grid grid-cols-3 gap-2">
                                         <!-- Logins Card -->
-                                        <div class="bg-blue-50/60 border border-blue-100/80 rounded-lg p-2 transition">
-                                            <div class="flex items-center justify-between text-blue-700 text-[10px] font-extrabold uppercase tracking-wide mb-1">
+                                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2 transition">
+                                            <div class="flex items-center justify-between text-slate-700 text-[10px] font-extrabold uppercase tracking-wide mb-1">
                                                 <span class="flex items-center gap-1">
-                                                    <i class="fas fa-file-import text-blue-500 text-[9px]"></i> Logins
+                                                    <i class="fas fa-file-import text-slate-500 text-[9px]"></i> Logins
                                                 </span>
                                             </div>
                                             <div class="space-y-0.5">
@@ -2630,20 +2630,20 @@
                                                         {{ eodTotals.loginCount }} <span class="text-[9px] font-semibold text-slate-500">({{ eodTotals.loginAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
-                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-blue-100">
-                                                    <span class="text-[9px] text-blue-700 font-bold">MTD:</span>
-                                                    <span class="text-xs font-black text-blue-900">
-                                                        {{ eodMtdTotals.loginCount }} <span class="text-[9px] font-bold text-blue-600">({{ eodMtdTotals.loginAmount.toFixed(1) }}L)</span>
+                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-slate-200/80">
+                                                    <span class="text-[9px] text-slate-500 font-bold">MTD:</span>
+                                                    <span class="text-xs font-black text-slate-900">
+                                                        {{ eodMtdTotals.loginCount }} <span class="text-[9px] font-bold text-slate-600">({{ eodMtdTotals.loginAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Sanction Card -->
-                                        <div class="bg-amber-50/60 border border-amber-100/80 rounded-lg p-2 transition">
-                                            <div class="flex items-center justify-between text-amber-800 text-[10px] font-extrabold uppercase tracking-wide mb-1">
+                                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2 transition">
+                                            <div class="flex items-center justify-between text-slate-700 text-[10px] font-extrabold uppercase tracking-wide mb-1">
                                                 <span class="flex items-center gap-1">
-                                                    <i class="fas fa-stamp text-amber-600 text-[9px]"></i> Sanction
+                                                    <i class="fas fa-stamp text-slate-500 text-[9px]"></i> Sanction
                                                 </span>
                                             </div>
                                             <div class="space-y-0.5">
@@ -2653,20 +2653,20 @@
                                                         {{ eodTotals.sanctionCount }} <span class="text-[9px] font-semibold text-slate-500">({{ eodTotals.sanctionAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
-                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-amber-100">
-                                                    <span class="text-[9px] text-amber-700 font-bold">MTD:</span>
-                                                    <span class="text-xs font-black text-amber-900">
-                                                        {{ eodMtdTotals.sanctionCount }} <span class="text-[9px] font-bold text-amber-600">({{ eodMtdTotals.sanctionAmount.toFixed(1) }}L)</span>
+                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-slate-200/80">
+                                                    <span class="text-[9px] text-slate-500 font-bold">MTD:</span>
+                                                    <span class="text-xs font-black text-slate-900">
+                                                        {{ eodMtdTotals.sanctionCount }} <span class="text-[9px] font-bold text-slate-600">({{ eodMtdTotals.sanctionAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Disbursements Card -->
-                                        <div class="bg-emerald-50/60 border border-emerald-100/80 rounded-lg p-2 transition">
-                                            <div class="flex items-center justify-between text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide mb-1">
+                                        <div class="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2 transition">
+                                            <div class="flex items-center justify-between text-slate-700 text-[10px] font-extrabold uppercase tracking-wide mb-1">
                                                 <span class="flex items-center gap-1">
-                                                    <i class="fas fa-hand-holding-usd text-emerald-600 text-[9px]"></i> Disb
+                                                    <i class="fas fa-hand-holding-usd text-slate-500 text-[9px]"></i> Disb
                                                 </span>
                                             </div>
                                             <div class="space-y-0.5">
@@ -2676,10 +2676,10 @@
                                                         {{ eodTotals.disbCount }} <span class="text-[9px] font-semibold text-slate-500">({{ eodTotals.disbAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
-                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-emerald-100">
-                                                    <span class="text-[9px] text-emerald-700 font-bold">MTD:</span>
-                                                    <span class="text-xs font-black text-emerald-900">
-                                                        {{ eodMtdTotals.disbCount }} <span class="text-[9px] font-bold text-emerald-600">({{ eodMtdTotals.disbAmount.toFixed(1) }}L)</span>
+                                                <div class="flex items-baseline justify-between pt-0.5 border-t border-slate-200/80">
+                                                    <span class="text-[9px] text-slate-500 font-bold">MTD:</span>
+                                                    <span class="text-xs font-black text-slate-900">
+                                                        {{ eodMtdTotals.disbCount }} <span class="text-[9px] font-bold text-slate-600">({{ eodMtdTotals.disbAmount.toFixed(1) }}L)</span>
                                                     </span>
                                                 </div>
                                             </div>
@@ -3693,7 +3693,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-40"></script>
+    <script type="module" src="js/app.js?v=force-update-41"></script>
 </body>
 </html>
 
