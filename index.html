@@ -2539,6 +2539,44 @@
                                     </div>
                                 </div>
 
+                                <!-- MARUTI SECTION (DEDICATED) -->
+                                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                                    <div class="bg-indigo-50/80 px-3.5 py-2.5 border-b border-indigo-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px]">
+                                                <i class="fas fa-car-side"></i>
+                                            </div>
+                                            <span class="text-xs font-black text-indigo-900 uppercase tracking-wide">Maruti</span>
+                                        </div>
+                                        <div class="text-right flex items-center gap-1.5">
+                                            <span class="text-[10px] text-slate-500 font-bold">FTD (L/D): <strong class="text-indigo-950 font-black">{{ eodForm.marutiLogin?.count || 0 }}/{{ eodForm.marutiDisb?.count || 0 }}</strong></span>
+                                            <span class="text-[10px] text-indigo-700 font-bold bg-indigo-100/70 px-1.5 py-0.2 rounded">MTD: <strong class="text-indigo-950 font-black">{{ currentRoMtd.marutiLogin?.count || 0 }}/{{ currentRoMtd.marutiDisb?.count || 0 }}</strong></span>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 px-3 py-1.5 bg-slate-50 border-b border-slate-100">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD Nos</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">FTD (L)</span>
+                                        <span class="text-[9px] font-bold text-indigo-600 uppercase text-center">MTD Tot</span>
+                                    </div>
+                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Maruti')" :key="m.key" class="grid grid-cols-[1fr_52px_62px_74px] sm:grid-cols-[1fr_60px_72px_80px] gap-1 items-center px-3 py-1.5 border-b border-slate-50 hover:bg-slate-50/50 transition">
+                                        <label class="text-[11px] font-bold text-slate-700 truncate pr-1">{{ m.label }}</label>
+                                        <div v-if="m.type === 'both' || m.type === 'count'">
+                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-indigo-500 focus:bg-white outline-none text-center transition" min="0">
+                                        </div>
+                                        <div v-else></div>
+                                        <div v-if="m.type === 'both' || m.type === 'amount'">
+                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-indigo-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
+                                        </div>
+                                        <div v-else></div>
+                                        <div class="text-center px-1 py-1 bg-indigo-50/70 border border-indigo-100/80 rounded-lg">
+                                            <span class="text-[11px] font-black text-indigo-900 block leading-tight">
+                                                {{ currentRoMtd[m.key]?.count || 0 }}<span v-if="m.type === 'both' || m.type === 'amount'" class="text-[9px] text-indigo-700 font-bold ml-0.5">/{{ (currentRoMtd[m.key]?.amount || 0).toFixed(1) }}L</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- OTHER METRICS SECTION -->
                                 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
                                     <div class="bg-purple-50/80 px-3.5 py-2.5 border-b border-purple-100 flex items-center justify-between">
@@ -3655,7 +3693,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-39"></script>
+    <script type="module" src="js/app.js?v=force-update-40"></script>
 </body>
 </html>
 

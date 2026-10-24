@@ -1006,8 +1006,8 @@ const app = createApp({
             { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
             { label: 'VICP/CRM', key: 'vicpCrm', category: 'Other', type: 'count' },
             { label: 'MI', key: 'mi', category: 'Other', type: 'count' },
-            { label: 'Maruti Login', key: 'marutiLogin', category: 'Other', type: 'both' },
-            { label: 'Maruti Disb', key: 'marutiDisb', category: 'Other', type: 'both' }
+            { label: 'Maruti Login', key: 'marutiLogin', category: 'Maruti', type: 'both' },
+            { label: 'Maruti Disb', key: 'marutiDisb', category: 'Maruti', type: 'both' }
         ];
 
         const validateEOD = (metrics) => {
