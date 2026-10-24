@@ -743,6 +743,7 @@ const app = createApp({
             const files = myFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, roOverviewTimeline.value, roOverviewCustomDate.value));
             const approved = files.filter(f => f.status === 'Approved');
             const disbursed = files.filter(f => f.status === 'Disbursed');
+            const inProcess = files.filter(f => ['Lead', 'FI', 'FCU', 'UW'].includes(f.status));
             const login = files.filter(f => f.status === 'FI');
             const rejected = files.filter(f => f.status === 'Rejected');
             const ncl = files.filter(f => f.nclUcl === 'NCL');
@@ -751,6 +752,7 @@ const app = createApp({
             const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const disbursedAmount = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+            const inProcessAmount = inProcess.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const loginAmount = login.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const rejectedAmount = rejected.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
@@ -759,6 +761,20 @@ const app = createApp({
 
             const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
 
+            const todayStr = getTodayDateStr();
+            const todayLogged = myFiles.value.filter(f => (f.loginDate === todayStr) || (f.createdAt && f.createdAt.startsWith(todayStr)));
+            const todayDisb = myFiles.value.filter(f => f.status === 'Disbursed' && ((f.loginDate === todayStr) || (f.updatedAt && f.updatedAt.startsWith(todayStr))));
+
+            const stages = {
+                Lead: files.filter(f => f.status === 'Lead').length,
+                FI: files.filter(f => f.status === 'FI').length,
+                FCU: files.filter(f => f.status === 'FCU').length,
+                UW: files.filter(f => f.status === 'UW').length,
+                Approved: approved.length,
+                Disbursed: disbursed.length,
+                Rejected: rejected.length
+            };
+
             return {
                 totalFiles: files.length,
                 totalAmount,
@@ -766,6 +782,8 @@ const app = createApp({
                 approvedAmount,
                 disbursedCount: disbursed.length,
                 disbursedAmount,
+                inProcessCount: inProcess.length,
+                inProcessAmount,
                 loginCount: login.length,
                 loginAmount,
                 rejectedCount: rejected.length,
@@ -774,10 +792,23 @@ const app = createApp({
                 nclAmount,
                 uclCount: ucl.length,
                 uclAmount,
-                approvalRate
+                approvalRate,
+                stages,
+                todayLoggedCount: todayLogged.length,
+                todayLoggedAmount: todayLogged.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0),
+                todayDisbCount: todayDisb.length,
+                todayDisbAmount: todayDisb.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0)
             };
         });
 
+        const myRecentFiles = computed(() => {
+            return [...myFiles.value].sort((a, b) => new Date(b.createdAt || b.loginDate || 0) - new Date(a.createdAt || a.loginDate || 0)).slice(0, 4);
+        });
+
+        const navigateRoStatusFilter = (status) => {
+            roFilters.value.status = status;
+            currentTab.value = 'ro-tracking';
+        };
         const recentFiles = computed(() => {
             return [...allFiles.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
         });
@@ -2511,7 +2542,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter
         };
     }
 });

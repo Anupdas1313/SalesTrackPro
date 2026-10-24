@@ -1509,20 +1509,35 @@
 
 
                     <!-- RO: PURE OVERVIEW DASHBOARD (Minimal & Clean) -->
-                    <div v-if="currentTab === 'ro-dashboard' && isRO" class="space-y-5 pb-12 max-w-5xl mx-auto">
+                    <!-- RO: OVERVIEW DASHBOARD (Elevated Executive Cockpit) -->
+                    <div v-if="currentTab === 'ro-dashboard' && isRO" class="space-y-4 sm:space-y-5 pb-14 max-w-5xl mx-auto animate-fade-in">
                         
-                        <!-- Dashboard Controls -->
-                        <div class="relative flex justify-between items-center gap-2 mb-4 sm:static">
-                            <!-- Left Side (Optional Badges) -->
-                            <div class="px-3 py-1.5 bg-white rounded-xl border border-slate-200/70 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                                <span class="text-slate-400">Approval Rate:</span>
-                                <span class="text-emerald-600 font-bold">{{ roStats.approvalRate }}%</span>
+                        <!-- Top Welcome & Timeframe Header -->
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-[#97144D]/10 text-[#97144D] flex items-center justify-center text-lg font-black shrink-0 shadow-inner">
+                                    {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'R' }}
+                                </div>
+                                <div>
+                                    <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                                        <span>Hello, {{ currentUser?.name || 'Relationship Officer' }}</span>
+                                        <span class="text-sm">👋</span>
+                                    </h2>
+                                    <p class="text-xs text-slate-400 font-medium">
+                                        Retail Asset Operations &bull; {{ new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }}
+                                    </p>
+                                </div>
                             </div>
 
-                            <!-- Timeline Filter (Top Right, under logout) -->
-                            <div class="absolute -top-12 right-0 sm:relative sm:top-auto sm:right-auto flex flex-wrap justify-end items-center gap-2 z-10">
-                                <div class="relative w-[130px]">
-                                    <select v-model="roOverviewTimeline" @change="roOverviewTimeline !== 'custom' ? roOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] appearance-none cursor-pointer text-slate-700 shadow-xs">
+                            <!-- Controls: Conversion Rate Pill & Timeline Select -->
+                            <div class="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                                <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                                    <i class="fas fa-chart-line text-emerald-600 text-xs"></i>
+                                    <span>{{ roStats.approvalRate }}% Conversion</span>
+                                </div>
+
+                                <div class="relative min-w-[130px]">
+                                    <select v-model="roOverviewTimeline" @change="roOverviewTimeline !== 'custom' ? roOverviewCustomDate = '' : null" class="w-full pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-[#97144D] focus:ring-2 focus:ring-[#97144D]/10 transition appearance-none cursor-pointer text-slate-700 shadow-xs">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
@@ -1532,12 +1547,107 @@
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                                 </div>
-                                <!-- Custom Date Input -->
-                                <input v-if="roOverviewTimeline === 'custom'" v-model="roOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
+                                <input v-if="roOverviewTimeline === 'custom'" v-model="roOverviewCustomDate" type="date" class="w-[125px] px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#97144D] shadow-xs text-slate-700">
                             </div>
                         </div>
+
+                        <!-- 1-Tap Fast-Action Command Dock -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                            <!-- Action 1: New File -->
+                            <button @click="currentTab = 'ro-add-file'" type="button" class="group p-3.5 bg-gradient-to-br from-[#97144D] to-[#78103d] text-white rounded-2xl shadow-sm hover:shadow-md hover:from-[#801040] hover:to-[#600830] transition text-left flex flex-col justify-between active:scale-[0.98]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white text-sm group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <i class="fas fa-arrow-right text-[10px] text-white/50 group-hover:text-white group-hover:translate-x-0.5 transition"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-black tracking-wide">Log New File</span>
+                                    <span class="text-[10px] text-pink-100/70 font-medium">Add Customer Lead</span>
+                                </div>
+                            </button>
+
+                            <!-- Action 2: Daily EOD -->
+                            <button @click="currentTab = 'ro-eod'" type="button" class="group p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-xs hover:border-slate-300 transition text-left flex flex-col justify-between active:scale-[0.98]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <span v-if="hasSubmittedToday" class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-0.5">
+                                        <i class="fas fa-check text-[7px]"></i> Filed
+                                    </span>
+                                    <span v-else class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200">
+                                        Pending
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-black text-slate-800">Daily EOD</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">{{ hasSubmittedToday ? 'Review or Revise' : 'Submit Today''s EOD' }}</span>
+                                </div>
+                            </button>
+
+                            <!-- Action 3: Active Pipeline -->
+                            <button @click="currentTab = 'ro-tracking'" type="button" class="group p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-xs hover:border-slate-300 transition text-left flex flex-col justify-between active:scale-[0.98]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <span class="text-xs font-black text-blue-600">{{ roStats.totalFiles }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-black text-slate-800">Track Pipeline</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Search & Update Status</span>
+                                </div>
+                            </button>
+
+                            <!-- Action 4: Monthly Target -->
+                            <button @click="openEditTargetModal" type="button" class="group p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-xs hover:border-slate-300 transition text-left flex flex-col justify-between active:scale-[0.98]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-sm group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-bullseye"></i>
+                                    </div>
+                                    <i class="fas fa-sliders text-[10px] text-slate-400 group-hover:text-purple-600 transition"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-black text-slate-800">My Target</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">{{ roTargetFiles }}F / &#x20B9;{{ roTargetVolume }}L</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <!-- Today's Live Pulse Strip -->
+                        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#97144D] text-base shrink-0">
+                                    <i class="fas fa-bolt text-amber-400"></i>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Today's Activity</span>
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                        <span class="font-bold text-slate-200">
+                                            Logins: <strong class="text-white font-black">{{ roStats.todayLoggedCount || 0 }}</strong> 
+                                            <span class="text-slate-400 text-[11px]">(+&#x20B9;{{ formatCurrency(roStats.todayLoggedAmount || 0) }})</span>
+                                        </span>
+                                        <span class="text-slate-600 hidden sm:inline">&bull;</span>
+                                        <span class="font-bold text-slate-200">
+                                            Disbursed: <strong class="text-emerald-400 font-black">{{ roStats.todayDisbCount || 0 }}</strong>
+                                            <span class="text-slate-400 text-[11px]">(+&#x20B9;{{ formatCurrency(roStats.todayDisbAmount || 0) }})</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                <button @click="currentTab = 'ro-add-file'" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-xl transition flex items-center gap-1.5 border border-white/10">
+                                    <i class="fas fa-plus text-[9px]"></i> Quick Log
+                                </button>
+                                <button @click="currentTab = 'ro-eod'" type="button" class="px-3 py-1.5 bg-white text-slate-900 hover:bg-slate-100 text-[11px] font-black rounded-xl transition shadow-xs flex items-center gap-1.5">
+                                    <i class="fas fa-clipboard-check text-[#97144D]"></i> Go to EOD
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Attention Radar Banner (Stale Files Flag) -->
-                        <div v-if="roNeedsAttentionFiles.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div v-if="roNeedsAttentionFiles.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
                                     <i class="fas fa-triangle-exclamation"></i>
@@ -1545,7 +1655,7 @@
                                 <div>
                                     <h4 class="text-xs sm:text-sm font-bold text-amber-900 flex items-center gap-2">
                                         <span>Attention Radar: {{ roNeedsAttentionFiles.length }} Case(s) Need Movement</span>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-800">Pending Action</span>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/60 text-amber-800">Action Required</span>
                                     </h4>
                                     <p class="text-[11px] text-amber-700 font-medium mt-0.5">
                                         Cases resting in FI/UW (>3 days) or Approved without disbursal (>4 days).
@@ -1556,6 +1666,126 @@
                                 <span>Review Cases</span>
                                 <i class="fas fa-arrow-right text-[10px]"></i>
                             </button>
+                        </div>
+
+                        <!-- Core KPI Metrics Cards (Interactive & Clickable) -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Card 1: Total Portfolio -->
+                            <div @click="navigateRoStatusFilter('')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#97144D]/30 hover:shadow-sm transition cursor-pointer group">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Portfolio</span>
+                                    <div class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-[#97144D]/10 text-slate-600 group-hover:text-[#97144D] flex items-center justify-center text-xs transition">
+                                        <i class="fas fa-folder-open"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-[#97144D] transition">{{ roStats.totalFiles }}</div>
+                                <div class="text-[11px] text-slate-500 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.totalAmount) }} <span class="text-slate-400 font-normal">pipeline</span>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Disbursed (Done) -->
+                            <div @click="navigateRoStatusFilter('Disbursed')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-purple-300 hover:shadow-sm transition cursor-pointer group">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] sm:text-xs font-bold text-purple-600 uppercase tracking-wider">Disbursed</span>
+                                    <div class="w-7 h-7 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl sm:text-3xl font-black text-purple-600">{{ roStats.disbursedCount }}</div>
+                                <div class="text-[11px] text-purple-700 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.disbursedAmount) }}
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Approved (Ready) -->
+                            <div @click="navigateRoStatusFilter('Approved')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-emerald-300 hover:shadow-sm transition cursor-pointer group">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Approved</span>
+                                    <div class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl sm:text-3xl font-black text-emerald-600">{{ roStats.approvedCount }}</div>
+                                <div class="text-[11px] text-emerald-700 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.approvedAmount) }}
+                                </div>
+                            </div>
+
+                            <!-- Card 4: In Process / UW -->
+                            <div @click="navigateRoStatusFilter('FI')" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-amber-300 hover:shadow-sm transition cursor-pointer group">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] sm:text-xs font-bold text-amber-600 uppercase tracking-wider">In Process</span>
+                                    <div class="w-7 h-7 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl sm:text-3xl font-black text-amber-600">{{ roStats.inProcessCount }}</div>
+                                <div class="text-[11px] text-amber-700 font-bold mt-1 truncate">
+                                    &#x20B9;{{ formatCurrency(roStats.inProcessAmount) }} <span class="text-slate-400 font-normal">UW/FI</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Pipeline Stage Funnel Strip -->
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fas fa-filter text-[#97144D]"></i>
+                                        <span>Pipeline Stage Breakdown</span>
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Click any stage to filter your tracking list</p>
+                                </div>
+                                <button @click="navigateRoStatusFilter('')" type="button" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                    <span>View All</span>
+                                    <i class="fas fa-arrow-right text-[9px]"></i>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
+                                <!-- Lead -->
+                                <button @click="navigateRoStatusFilter('Lead')" type="button" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300 transition text-center group">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase block">Lead</span>
+                                    <span class="text-base font-black text-slate-800 group-hover:text-[#97144D] transition block mt-0.5">{{ roStats.stages?.Lead || 0 }}</span>
+                                </button>
+
+                                <!-- FI -->
+                                <button @click="navigateRoStatusFilter('FI')" type="button" class="p-2.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-blue-600 uppercase block">FI</span>
+                                    <span class="text-base font-black text-blue-900 block mt-0.5">{{ roStats.stages?.FI || 0 }}</span>
+                                </button>
+
+                                <!-- FCU -->
+                                <button @click="navigateRoStatusFilter('FCU')" type="button" class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-indigo-600 uppercase block">FCU</span>
+                                    <span class="text-base font-black text-indigo-900 block mt-0.5">{{ roStats.stages?.FCU || 0 }}</span>
+                                </button>
+
+                                <!-- UW -->
+                                <button @click="navigateRoStatusFilter('UW')" type="button" class="p-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-amber-600 uppercase block">UW</span>
+                                    <span class="text-base font-black text-amber-900 block mt-0.5">{{ roStats.stages?.UW || 0 }}</span>
+                                </button>
+
+                                <!-- Approved -->
+                                <button @click="navigateRoStatusFilter('Approved')" type="button" class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Approved</span>
+                                    <span class="text-base font-black text-emerald-900 block mt-0.5">{{ roStats.stages?.Approved || 0 }}</span>
+                                </button>
+
+                                <!-- Disbursed -->
+                                <button @click="navigateRoStatusFilter('Disbursed')" type="button" class="p-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-purple-600 uppercase block">Disbursed</span>
+                                    <span class="text-base font-black text-purple-900 block mt-0.5">{{ roStats.stages?.Disbursed || 0 }}</span>
+                                </button>
+
+                                <!-- Rejected -->
+                                <button @click="navigateRoStatusFilter('Rejected')" type="button" class="p-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 transition text-center group">
+                                    <span class="text-[10px] font-bold text-rose-600 uppercase block">Rejected</span>
+                                    <span class="text-base font-black text-rose-900 block mt-0.5">{{ roStats.stages?.Rejected || 0 }}</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Target & Run-Rate Pacing Card -->
@@ -1572,7 +1802,7 @@
                                 </div>
                                 <button @click="openEditTargetModal" type="button" class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex items-center gap-1.5">
                                     <i class="fas fa-sliders text-[#97144D]"></i>
-                                    <span>Set Target ({{ roTargetFiles }} Files / ₹{{ roTargetVolume }}L)</span>
+                                    <span>Set Target ({{ roTargetFiles }} Files / &#x20B9;{{ roTargetVolume }}L)</span>
                                 </button>
                             </div>
 
@@ -1585,7 +1815,7 @@
                                         <span class="font-black text-slate-900">{{ roTargetPacing.mtdFilesCount }} / {{ roTargetPacing.targetFiles }} <span class="text-slate-400 font-normal">({{ roTargetPacing.filesPercent }}%)</span></span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div :style="{ width: roTargetPacing.filesPercent + '%' }" class="bg-[#97144D] h-full transition-all duration-500 rounded-full"></div>
+                                        <div :style="{ width: Math.min(100, roTargetPacing.filesPercent) + '%' }" class="bg-[#97144D] h-full transition-all duration-500 rounded-full"></div>
                                     </div>
                                     <div class="flex justify-between text-[10px] text-slate-500 font-medium">
                                         <span>Remaining: <b>{{ roTargetPacing.filesRemaining }} files</b></span>
@@ -1597,64 +1827,80 @@
                                 <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
                                     <div class="flex justify-between items-center text-xs">
                                         <span class="font-bold text-slate-700">Volume Achieved (MTD)</span>
-                                        <span class="font-black text-slate-900">₹{{ roTargetPacing.mtdVolumeLakhs.toFixed(2) }}L / ₹{{ roTargetPacing.targetVolume }}L <span class="text-slate-400 font-normal">({{ roTargetPacing.volumePercent }}%)</span></span>
+                                        <span class="font-black text-slate-900">&#x20B9;{{ roTargetPacing.mtdVolumeLakhs.toFixed(2) }}L / &#x20B9;{{ roTargetPacing.targetVolume }}L <span class="text-slate-400 font-normal">({{ roTargetPacing.volumePercent }}%)</span></span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div :style="{ width: roTargetPacing.volumePercent + '%' }" class="bg-emerald-600 h-full transition-all duration-500 rounded-full"></div>
+                                        <div :style="{ width: Math.min(100, roTargetPacing.volumePercent) + '%' }" class="bg-emerald-600 h-full transition-all duration-500 rounded-full"></div>
                                     </div>
                                     <div class="flex justify-between text-[10px] text-slate-500 font-medium">
-                                        <span>Remaining: <b>₹{{ roTargetPacing.volumeRemaining.toFixed(2) }}L</b></span>
-                                        <span>Daily Run-Rate: <b class="text-emerald-700">₹{{ roTargetPacing.requiredDailyVolume }}L/day</b></span>
+                                        <span>Remaining: <b>&#x20B9;{{ roTargetPacing.volumeRemaining.toFixed(2) }}L</b></span>
+                                        <span>Daily Run-Rate: <b class="text-emerald-700">&#x20B9;{{ roTargetPacing.requiredDailyVolume }}L/day</b></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Top KPI Cards -->
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <!-- Total Files -->
-                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
-                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Files</div>
-                                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">{{ roStats.totalFiles }}</div>
-                                <div class="text-[11px] text-slate-400 font-medium mt-1">Total logged files</div>
+                        <!-- Recent Customer Activity Feed -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fas fa-clock text-slate-400"></i>
+                                        <span>Recent Customer Cases</span>
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 font-medium">Latest customer logins by you</p>
+                                </div>
+                                <button @click="currentTab = 'ro-tracking'" type="button" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                    <span>All Cases ({{ myFiles.length }})</span>
+                                    <i class="fas fa-arrow-right text-[9px]"></i>
+                                </button>
                             </div>
 
-                            <!-- Total Value -->
-                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
-                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Value</div>
-                                <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1.5 truncate">₹{{ formatCurrency(roStats.totalAmount) }}</div>
-                                <div class="text-[11px] text-slate-400 font-medium mt-1">Cumulative pipeline</div>
+                            <!-- List of Recent Files -->
+                            <div v-if="myRecentFiles && myRecentFiles.length > 0" class="divide-y divide-slate-100">
+                                <div v-for="file in myRecentFiles" :key="'dash-rec-'+file.id" @click="openViewFileModal(file)" class="p-3.5 sm:p-4 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-extrabold text-xs sm:text-sm text-slate-900 uppercase truncate">{{ file.customerName }}</span>
+                                            <span class="text-[10px] font-mono text-slate-400 shrink-0">#{{ file.appId || 'NoID' }}</span>
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-medium mt-0.5">
+                                            <span class="font-bold text-slate-600">{{ file.nclUcl || 'NCL' }}</span>
+                                            <span>&bull;</span>
+                                            <span>{{ file.sourcingChannel || 'DSA' }}</span>
+                                            <span>&bull;</span>
+                                            <span>{{ formatDateOnly(file.loginDate || file.createdAt) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right shrink-0 flex flex-col items-end gap-1">
+                                        <span class="text-xs sm:text-sm font-black text-slate-900">&#x20B9;{{ formatCurrency(file.loanAmount) }}</span>
+                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
+                                    </div>
+                                </div>
                             </div>
-
-                            <!-- Approved -->
-                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
-                                <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Approved</div>
-                                <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1.5">{{ roStats.approvedCount }}</div>
-                                <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.approvedAmount) }}</div>
-                            </div>
-
-                            <!-- Disbursed -->
-                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/70 shadow-xs">
-                                <div class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Disbursed</div>
-                                <div class="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-1.5">{{ roStats.disbursedCount }}</div>
-                                <div class="text-[11px] text-slate-400 font-medium mt-1">₹{{ formatCurrency(roStats.disbursedAmount) }}</div>
+                            <div v-else class="p-8 text-center text-slate-400 space-y-2">
+                                <i class="fas fa-folder-open text-2xl text-slate-300"></i>
+                                <p class="text-xs font-semibold">No customer files logged yet.</p>
+                                <button @click="currentTab = 'ro-add-file'" type="button" class="px-3.5 py-1.5 bg-[#97144D] text-white text-xs font-bold rounded-xl shadow-xs">
+                                    + Add Your First File
+                                </button>
                             </div>
                         </div>
 
                         <!-- Category Breakdown (NCL vs UCL) -->
-                        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 shadow-xs space-y-4">
+                        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
                                 <div>
                                     <h3 class="font-bold text-slate-900 text-sm">Category Breakdown</h3>
                                     <p class="text-xs text-slate-400">Portfolio distribution</p>
                                 </div>
-                                <span class="text-xs text-slate-500 font-semibold">{{ roStats.totalFiles }} Total</span>
+                                <span class="text-xs text-slate-500 font-semibold">{{ roStats.totalFiles }} Total Files</span>
                             </div>
 
-                            <!-- Minimal Proportional Progress Bar -->
+                            <!-- Proportional Progress Bar -->
                             <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
-                                <div :style="{ width: (roStats.totalFiles ? (roStats.nclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-[#97144D] h-full transition-all" title="NCL"></div>
-                                <div :style="{ width: (roStats.totalFiles ? (roStats.uclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-slate-700 h-full transition-all" title="UCL"></div>
+                                <div :style="{ width: (roStats.totalFiles ? (roStats.nclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-[#97144D] h-full transition-all duration-500" title="NCL"></div>
+                                <div :style="{ width: (roStats.totalFiles ? (roStats.uclCount / roStats.totalFiles) * 100 : 50) + '%' }" class="bg-slate-700 h-full transition-all duration-500" title="UCL"></div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4 pt-1">
@@ -1664,7 +1910,7 @@
                                         <span class="text-xs font-bold text-slate-700">NCL (New Car)</span>
                                     </div>
                                     <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">{{ roStats.nclCount }} <span class="text-xs text-slate-400 font-normal">files</span></div>
-                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">₹{{ formatCurrency(roStats.nclAmount) }}</div>
+                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">&#x20B9;{{ formatCurrency(roStats.nclAmount) }}</div>
                                 </div>
                                 <div class="p-4 bg-slate-50/70 rounded-xl border border-slate-100">
                                     <div class="flex items-center gap-1.5">
@@ -1672,10 +1918,11 @@
                                         <span class="text-xs font-bold text-slate-700">UCL (Used Car)</span>
                                     </div>
                                     <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">{{ roStats.uclCount }} <span class="text-xs text-slate-400 font-normal">files</span></div>
-                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">₹{{ formatCurrency(roStats.uclAmount) }}</div>
+                                    <div class="text-xs font-semibold text-slate-600 mt-0.5">&#x20B9;{{ formatCurrency(roStats.uclAmount) }}</div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
 
@@ -3358,7 +3605,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-27"></script>
+    <script type="module" src="js/app.js?v=force-update-28"></script>
 </body>
 </html>
 
