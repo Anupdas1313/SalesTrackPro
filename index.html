@@ -1677,57 +1677,7 @@
                             </div>
                         </div>
 
-                        <!-- Target & Run-Rate Pacing Card -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-bold text-slate-900 text-sm">Monthly Target & Run-Rate</h3>
-                                        <span :class="roTargetPacing.paceColorClass" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border">
-                                            {{ roTargetPacing.paceBadgeText }}
-                                        </span>
-                                    </div>
-                                    <p class="text-xs text-slate-400">Pacing for {{ new Date().toLocaleString('default', { month: 'long', year: 'numeric' }) }} &bull; {{ roTargetPacing.daysRemaining }} day(s) left</p>
-                                </div>
-                                <button @click="openEditTargetModal" type="button" class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex items-center gap-1.5">
-                                    <i class="fas fa-sliders text-[#97144D]"></i>
-                                    <span>Set Target ({{ roTargetFiles }} Files / &#x20B9;{{ roTargetVolume }}L)</span>
-                                </button>
-                            </div>
 
-                            <!-- Two target tracks: Files & Volume -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <!-- Files Target -->
-                                <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="font-bold text-slate-700">Files Logged (MTD)</span>
-                                        <span class="font-black text-slate-900">{{ roTargetPacing.mtdFilesCount }} / {{ roTargetPacing.targetFiles }} <span class="text-slate-400 font-normal">({{ roTargetPacing.filesPercent }}%)</span></span>
-                                    </div>
-                                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div :style="{ width: Math.min(100, roTargetPacing.filesPercent) + '%' }" class="bg-[#97144D] h-full transition-all duration-500 rounded-full"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-500 font-medium">
-                                        <span>Remaining: <b>{{ roTargetPacing.filesRemaining }} files</b></span>
-                                        <span>Daily Run-Rate: <b class="text-[#97144D]">{{ roTargetPacing.requiredDailyFiles }} files/day</b></span>
-                                    </div>
-                                </div>
-
-                                <!-- Volume Target -->
-                                <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="font-bold text-slate-700">Volume Achieved (MTD)</span>
-                                        <span class="font-black text-slate-900">&#x20B9;{{ roTargetPacing.mtdVolumeLakhs.toFixed(2) }}L / &#x20B9;{{ roTargetPacing.targetVolume }}L <span class="text-slate-400 font-normal">({{ roTargetPacing.volumePercent }}%)</span></span>
-                                    </div>
-                                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div :style="{ width: Math.min(100, roTargetPacing.volumePercent) + '%' }" class="bg-emerald-600 h-full transition-all duration-500 rounded-full"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] text-slate-500 font-medium">
-                                        <span>Remaining: <b>&#x20B9;{{ roTargetPacing.volumeRemaining.toFixed(2) }}L</b></span>
-                                        <span>Daily Run-Rate: <b class="text-emerald-700">&#x20B9;{{ roTargetPacing.requiredDailyVolume }}L/day</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Recent Customer Activity Feed -->
                         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
@@ -3644,7 +3594,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-43"></script>
+    <script type="module" src="js/app.js?v=force-update-44"></script>
 </body>
 </html>
 
