@@ -2133,352 +2133,365 @@
 
 
                     <!-- RO: DAILY EOD SUBMISSION -->
-                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-4xl mx-auto pb-12 space-y-6 animate-fade-in relative">
+                    <div v-if="currentTab === 'ro-eod' && isRO" class="max-w-2xl mx-auto pb-16 animate-fade-in">
                         
                         <!-- Floating Toast Notification for Copied Clipboard -->
-                        <div v-if="eodCopiedToast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold border border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-200">
-                            <i class="fas fa-check-circle text-emerald-400 text-base"></i>
-                            <span>Formatted EOD copied to clipboard! Paste directly into WhatsApp.</span>
+                        <div v-if="eodCopiedToast" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold border border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-200">
+                            <i class="fas fa-check-circle text-emerald-400"></i>
+                            <span>EOD copied! Paste in WhatsApp.</span>
                         </div>
 
-                        <!-- Header -->
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 pb-4 gap-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Daily EOD</h3>
-                                    <span v-if="hasSubmittedToday && !isEditingTodayEod" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        Submitted Today
-                                    </span>
-                                    <span v-else-if="isEditingTodayEod" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse">
-                                        Revising Today's Report
-                                    </span>
-                                </div>
-                                <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">Audit today's logged cases, plan commitments, and file your official EOD.</p>
+                        <!-- Compact Header -->
+                        <div class="flex items-center justify-between py-3 border-b border-slate-200 mb-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight whitespace-nowrap">Daily EOD</h3>
+                                <span class="text-xs font-bold text-slate-400 hidden sm:inline">&middot;</span>
+                                <span class="text-xs font-bold text-[#97144D] whitespace-nowrap">{{ new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+                                <span v-if="hasSubmittedToday && !isEditingTodayEod" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
+                                    <i class="fas fa-check text-[8px] mr-0.5"></i> Submitted
+                                </span>
+                                <span v-else-if="isEditingTodayEod" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse whitespace-nowrap">
+                                    Revising
+                                </span>
                             </div>
-                            <div class="flex items-center gap-2 self-end sm:self-auto">
-                                <button v-if="!hasSubmittedToday || isEditingTodayEod" @click="triggerResyncEod" type="button" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition flex items-center gap-1.5" title="Re-sync from today's saved files">
-                                    <i class="fas fa-rotate" :class="eodResyncSuccess ? 'fa-spin text-[#97144D]' : ''"></i>
-                                    <span>{{ eodResyncSuccess ? 'Re-synced!' : 'Re-sync Files' }}</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button v-if="!hasSubmittedToday || isEditingTodayEod" @click="triggerResyncEod" type="button" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition" title="Re-sync from today's files">
+                                    <i class="fas fa-rotate text-xs" :class="eodResyncSuccess ? 'fa-spin text-[#97144D]' : ''"></i>
                                 </button>
-                                <div class="text-right pl-2 border-l border-slate-200">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Date</p>
-                                    <p class="text-xs sm:text-sm font-bold text-[#97144D]">{{ new Date().toLocaleDateString('en-IN') }}</p>
-                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Submission Success / Already Submitted Banner -->
-                        <div v-if="hasSubmittedToday && !isEditingTodayEod" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-                            <div class="flex items-start gap-3.5">
-                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+
+                        <!-- Success Banner (Compact on mobile) -->
+                        <div v-if="hasSubmittedToday && !isEditingTodayEod" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mb-3 space-y-2.5">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-base shrink-0">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2 mb-1">
-                                        <h4 class="text-lg font-black text-emerald-900">You're all set for today!</h4>
-                                        <span v-if="myEods[0]?.isRevised" class="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full border border-amber-200">Revised</span>
-                                    </div>
-                                    <p class="text-xs sm:text-sm text-emerald-700 font-medium">Your End of Day report has been filed with your SM. Great job today! You can share it to your WhatsApp group, copy the raw text, or revise it if any late-evening updates happen.</p>
+                                <div class="min-w-0">
+                                    <h4 class="text-sm font-black text-emerald-900">You're all set!</h4>
+                                    <p class="text-[11px] text-emerald-700 font-medium">EOD filed with your SM. Share it or revise if needed.</p>
                                 </div>
                             </div>
-
-                            <!-- Action Buttons on Success -->
-                            <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-emerald-100">
-                                <a :href="`https://wa.me/?text=${generateRoWhatsApp(myEods[0])}`" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1ebd59] text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                    <i class="fab fa-whatsapp text-sm"></i> Share to WhatsApp
+                            <div class="flex flex-wrap items-center gap-2 pt-1.5 border-t border-emerald-100">
+                                <a :href="`https://wa.me/?text=${generateRoWhatsApp(myEods[0])}`" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd59] text-white text-[11px] font-bold rounded-lg shadow-xs transition">
+                                    <i class="fab fa-whatsapp text-sm"></i> WhatsApp
                                 </a>
-                                <button @click="copyRoEodToClipboard(myEods[0])" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl shadow-xs transition">
-                                    <i class="fas fa-clipboard text-sm"></i> Copy Text
+                                <button @click="copyRoEodToClipboard(myEods[0])" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-[11px] font-bold rounded-lg shadow-xs transition">
+                                    <i class="fas fa-clipboard text-xs"></i> Copy
                                 </button>
-                                <button @click="startReviseTodayEod" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-xs transition sm:ml-auto">
-                                    <i class="fas fa-pen-to-square text-xs"></i> Revise Today's EOD
+                                <button @click="startReviseTodayEod" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg shadow-xs transition ml-auto">
+                                    <i class="fas fa-pen-to-square text-xs"></i> Revise
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Revising Banner (When editing submitted EOD) -->
-                        <div v-if="isEditingTodayEod" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                                    <i class="fas fa-pen text-sm"></i>
+                        <!-- Revising Banner (Compact) -->
+                        <div v-if="isEditingTodayEod" class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-pen text-xs"></i>
                                 </div>
-                                <div>
-                                    <h5 class="text-xs sm:text-sm font-bold text-amber-900">Revising Today's Report</h5>
-                                    <p class="text-[11px] text-amber-700 font-medium">Make updates or click "Re-sync Files" to pull any newly logged cases, then submit your updated EOD.</p>
+                                <div class="min-w-0">
+                                    <h5 class="text-xs font-bold text-amber-900">Revising Today's Report</h5>
+                                    <p class="text-[10px] text-amber-700 font-medium truncate">Update numbers or re-sync, then resubmit.</p>
                                 </div>
                             </div>
-                            <button @click="cancelReviseTodayEod" type="button" class="px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300 transition shrink-0">
+                            <button @click="cancelReviseTodayEod" type="button" class="px-2.5 py-1.5 bg-white hover:bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg border border-amber-300 transition shrink-0">
                                 Cancel
                             </button>
                         </div>
 
-                        <!-- Live File Audit Collapsible Tray (Always accessible in EOD tab) -->
-                        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-                            <div class="flex items-center justify-between cursor-pointer select-none" @click="showTodayFilesBreakdown = !showTodayFilesBreakdown">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs">
-                                        <i class="fas fa-list-check"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
-                                            <span>Files Included in Today's EOD</span>
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                                                {{ todayLoginsFiles.length }} Logins &bull; {{ todayDisbFiles.length }} Disb
-                                            </span>
-                                        </h5>
-                                        <p class="text-[11px] text-slate-400 font-medium">Verify exact customer cases that back up today's numbers.</p>
-                                    </div>
-                                </div>
-                                <button type="button" class="text-xs font-bold text-[#97144D] flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-pink-50 transition">
-                                    <span>{{ showTodayFilesBreakdown ? 'Hide Cases' : 'Audit Cases' }}</span>
-                                    <i class="fas" :class="showTodayFilesBreakdown ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                </button>
-                            </div>
-
-                            <!-- Tray Content -->
-                            <div v-if="showTodayFilesBreakdown" class="mt-4 pt-4 border-t border-slate-100 space-y-4 animate-in fade-in duration-200">
-                                <!-- Logins Grid -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <h6 class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's Logins ({{ todayLoginsFiles.length }})</h6>
-                                        <span class="text-[10px] text-slate-400 font-medium">Auto-aggregated into Open Market, Branch & UCL</span>
-                                    </div>
-                                    <div v-if="todayLoginsFiles.length === 0" class="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl text-center">
-                                        No files logged for today's date yet.
-                                    </div>
-                                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div v-for="f in todayLoginsFiles" :key="'eod-log-'+f.id" class="p-2.5 bg-slate-50/70 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                                            <div class="truncate mr-2">
-                                                <span class="font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
-                                                <span class="text-[10px] text-slate-400">#{{ f.appId || 'No ID' }} &bull; {{ f.nclUcl || 'NCL' }} &bull; {{ f.sourcingChannel || 'DSA' }}</span>
-                                            </div>
-                                            <div class="text-right shrink-0">
-                                                <span class="font-black text-[#97144D] block">₹{{ formatCurrency(f.loanAmount) }}</span>
-                                                <span :class="getStatusBadgeClass(f.status)" class="!px-1.5 !py-0.2 !text-[9px] font-bold">{{ f.status }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Disbursements Grid -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <h6 class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's Disbursements ({{ todayDisbFiles.length }})</h6>
-                                    </div>
-                                    <div v-if="todayDisbFiles.length === 0" class="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl text-center">
-                                        No files marked Disbursed today.
-                                    </div>
-                                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div v-for="f in todayDisbFiles" :key="'eod-disb-'+f.id" class="p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center justify-between text-xs">
-                                            <div class="truncate mr-2">
-                                                <span class="font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
-                                                <span class="text-[10px] text-emerald-600 font-bold">#{{ f.appId || 'No ID' }} &bull; {{ f.nclUcl || 'NCL' }}</span>
-                                            </div>
-                                            <div class="text-right shrink-0">
-                                                <span class="font-black text-emerald-700 block">₹{{ formatCurrency(f.loanAmount) }}</span>
-                                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Disbursed</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Error Banner for EOD Form -->
-                        <div v-if="eodSubmitError" class="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 shadow-xs animate-in fade-in slide-in-from-top-4 duration-300">
-                            <i class="fas fa-exclamation-circle text-rose-500 mt-0.5"></i>
+                        <!-- Error Banner -->
+                        <div v-if="eodSubmitError" class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 mb-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <i class="fas fa-exclamation-circle text-rose-500 mt-0.5 text-sm"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-rose-800">Submission Notice</h4>
-                                <p class="text-xs font-medium text-rose-600 mt-1">{{ eodSubmitError }}</p>
+                                <h4 class="text-xs font-bold text-rose-800">Submission Notice</h4>
+                                <p class="text-[11px] font-medium text-rose-600 mt-0.5">{{ eodSubmitError }}</p>
                             </div>
                         </div>
 
-                        <!-- Active Submission Form (Shown if not submitted OR revising) -->
-                        <form v-if="!hasSubmittedToday || isEditingTodayEod" class="space-y-6">
-                            <!-- Logins Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm shadow-inner">
-                                            <i class="fas fa-file-import"></i>
+                        <!-- Sub-Tab Navigation Pills -->
+                        <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl mb-4 sticky top-0 z-20">
+                            <button @click="eodSubTab = 'form'" :class="eodSubTab === 'form' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-edit text-[11px]"></i>
+                                <span>Form</span>
+                            </button>
+                            <button @click="eodSubTab = 'audit'" :class="eodSubTab === 'audit' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-list-check text-[11px]"></i>
+                                <span>Audit</span>
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 ml-0.5">{{ todayLoginsFiles.length + todayDisbFiles.length }}</span>
+                            </button>
+                            <button @click="eodSubTab = 'history'" :class="eodSubTab === 'history' ? 'bg-white text-[#97144D] shadow-sm font-black' : 'text-slate-500 font-semibold hover:text-slate-700'" class="flex-1 py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-clock-rotate-left text-[11px]"></i>
+                                <span>History</span>
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 ml-0.5">{{ myEods.length }}</span>
+                            </button>
+                        </div>
+
+                        <!-- ========== FORM TAB ========== -->
+                        <div v-if="eodSubTab === 'form'">
+                            <form v-if="!hasSubmittedToday || isEditingTodayEod" class="space-y-0">
+
+                                <!-- LOGINS SECTION -->
+                                <div class="bg-white rounded-t-xl border border-slate-200 overflow-hidden">
+                                    <div class="bg-blue-50/80 px-3.5 py-2.5 border-b border-blue-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-[11px]">
+                                                <i class="fas fa-file-import"></i>
+                                            </div>
+                                            <span class="text-xs font-black text-blue-900 uppercase tracking-wide">Logins (FTD)</span>
                                         </div>
-                                        <h4 class="font-bold text-slate-700 text-lg">Logins (FTD)</h4>
+                                        <span class="text-[11px] font-black text-blue-700">{{ eodTotals.loginCount }} / {{ eodTotals.loginAmount.toFixed(2) }}L</span>
                                     </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="text-right">
-                                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Logins</span>
-                                            <span class="text-sm font-black text-[#97144D]">{{ eodTotals.loginCount }} <span class="text-xs text-slate-500 font-bold ml-0.5">/ {{ eodTotals.loginAmount.toFixed(2) }}L</span></span>
+                                    <!-- Spreadsheet Header -->
+                                    <div class="grid grid-cols-[1fr_72px_80px] gap-0 px-3.5 py-1.5 bg-slate-50 border-b border-slate-100">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Files</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Amt (L)</span>
+                                    </div>
+                                    <!-- Metric Rows -->
+                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Login')" :key="m.key" class="grid grid-cols-[1fr_72px_80px] gap-0 items-center px-3.5 py-2 border-b border-slate-50 hover:bg-slate-50/50 transition">
+                                        <label class="text-[11px] font-bold text-slate-700 truncate pr-2">{{ m.label }}</label>
+                                        <div v-if="m.type === 'both' || m.type === 'count'">
+                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#97144D] focus:bg-white outline-none text-center transition" min="0">
+                                        </div>
+                                        <div v-else></div>
+                                        <div v-if="m.type === 'both' || m.type === 'amount'">
+                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-[#97144D] focus:bg-white outline-none text-center transition" min="0" step="0.01">
+                                        </div>
+                                        <div v-else></div>
+                                    </div>
+                                </div>
+
+                                <!-- DISBURSEMENTS SECTION -->
+                                <div class="bg-white border-x border-b border-slate-200 overflow-hidden">
+                                    <div class="bg-emerald-50/80 px-3.5 py-2.5 border-b border-emerald-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[11px]">
+                                                <i class="fas fa-hand-holding-usd"></i>
+                                            </div>
+                                            <span class="text-xs font-black text-emerald-900 uppercase tracking-wide">Disbursements (FTD)</span>
+                                        </div>
+                                        <span class="text-[11px] font-black text-emerald-700">{{ eodTotals.disbCount }} / {{ eodTotals.disbAmount.toFixed(2) }}L</span>
+                                    </div>
+                                    <div class="grid grid-cols-[1fr_72px_80px] gap-0 px-3.5 py-1.5 bg-slate-50 border-b border-slate-100">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Category</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Files</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Amt (L)</span>
+                                    </div>
+                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Disbursement')" :key="m.key" class="grid grid-cols-[1fr_72px_80px] gap-0 items-center px-3.5 py-2 border-b border-slate-50 hover:bg-slate-50/50 transition">
+                                        <label class="text-[11px] font-bold text-slate-700 truncate pr-2">{{ m.label }}</label>
+                                        <div v-if="m.type === 'both' || m.type === 'count'">
+                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-emerald-500 focus:bg-white outline-none text-center transition" min="0">
+                                        </div>
+                                        <div v-else></div>
+                                        <div v-if="m.type === 'both' || m.type === 'amount'">
+                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-emerald-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
+                                        </div>
+                                        <div v-else></div>
+                                    </div>
+                                </div>
+
+                                <!-- OTHER METRICS SECTION -->
+                                <div class="bg-white border-x border-b border-slate-200 overflow-hidden">
+                                    <div class="bg-purple-50/80 px-3.5 py-2.5 border-b border-purple-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-[11px]">
+                                                <i class="fas fa-chart-bar"></i>
+                                            </div>
+                                            <span class="text-xs font-black text-purple-900 uppercase tracking-wide">Other Metrics</span>
+                                        </div>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase bg-white px-2 py-0.5 rounded border border-slate-100">Auto-Calc</span>
+                                    </div>
+                                    <div class="grid grid-cols-[1fr_72px_80px] gap-0 px-3.5 py-1.5 bg-slate-50 border-b border-slate-100">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Metric</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Count</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase text-center">Amt (L)</span>
+                                    </div>
+                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Other')" :key="m.key" class="grid grid-cols-[1fr_72px_80px] gap-0 items-center px-3.5 py-2 border-b border-slate-50 hover:bg-slate-50/50 transition">
+                                        <label class="text-[11px] font-bold text-slate-700 truncate pr-2">{{ m.label }}</label>
+                                        <div v-if="m.type === 'both' || m.type === 'count'">
+                                            <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-purple-500 focus:bg-white outline-none text-center transition" min="0">
+                                        </div>
+                                        <div v-else></div>
+                                        <div v-if="m.type === 'both' || m.type === 'amount'">
+                                            <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-1.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-purple-500 focus:bg-white outline-none text-center transition" min="0" step="0.01">
+                                        </div>
+                                        <div v-else></div>
+                                    </div>
+                                </div>
+
+                                <!-- PLANNING & FIELD ACTIVITIES SECTION -->
+                                <div class="bg-white rounded-b-xl border-x border-b border-slate-200 overflow-hidden">
+                                    <div class="bg-amber-50/80 px-3.5 py-2.5 border-b border-amber-100 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-[11px]">
+                                                <i class="fas fa-location-dot"></i>
+                                            </div>
+                                            <span class="text-xs font-black text-amber-900 uppercase tracking-wide">Planning</span>
+                                        </div>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase bg-white px-2 py-0.5 rounded border border-slate-100">Optional</span>
+                                    </div>
+                                    <div class="p-3.5 space-y-2.5">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                            <div>
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Dealer Visits Today</label>
+                                                <input type="number" v-model.number="dealerVisitsInput" min="0" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:border-amber-500 focus:bg-white outline-none transition" placeholder="e.g. 3">
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Tomorrow Login Commit</label>
+                                                <input type="text" v-model="tomorrowLoginsInput" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-amber-500 focus:bg-white outline-none transition" placeholder="e.g. 2 Files (18.50 L)">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                            <div>
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Tomorrow Disb Commit</label>
+                                                <input type="text" v-model="tomorrowDisbInput" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-amber-500 focus:bg-white outline-none transition" placeholder="e.g. 1 File (9.00 L)">
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Remarks / Hold Reasons</label>
+                                                <input type="text" v-model="remarksInput" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-amber-500 focus:bg-white outline-none transition" placeholder="e.g. 1 file approved, delivery scheduled">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="p-5 grid grid-cols-2 lg:grid-cols-4 gap-4 bg-white">
-                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Login')" :key="m.key" class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-[#97144D] transition">{{ m.label }}</label>
-                                        <div class="flex gap-2">
-                                            <div class="flex-1" v-if="m.type === 'both' || m.type === 'count'">
-                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
-                                                <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
-                                            </div>
-                                            <div class="flex-1" v-if="m.type === 'both' || m.type === 'amount'">
-                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
-                                                <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
-                                            </div>
+
+                                <!-- Submit Button -->
+                                <div class="pt-4">
+                                    <div class="flex flex-col sm:flex-row gap-2.5">
+                                        <button v-if="isEditingTodayEod" @click="cancelReviseTodayEod" type="button" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                            Cancel Revision
+                                        </button>
+                                        <button type="button" @click.prevent="submitEOD(isEditingTodayEod)" :disabled="submitting" class="w-full px-6 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
+                                            <i v-else :class="isEditingTodayEod ? 'fas fa-pen-to-square' : 'fas fa-paper-plane'"></i>
+                                            <span>{{ submitting ? 'Submitting...' : (isEditingTodayEod ? 'Update & Resubmit EOD' : 'Submit Final EOD') }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Placeholder when already submitted -->
+                            <div v-else class="bg-slate-50 rounded-xl border border-slate-200 p-8 text-center space-y-2">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-500 flex items-center justify-center text-2xl mx-auto">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <p class="text-sm font-bold text-slate-700">Today's report is submitted.</p>
+                                <p class="text-xs text-slate-400">Use the <strong>Revise</strong> button above to make changes, or check the <strong>Audit</strong> tab to verify your cases.</p>
+                            </div>
+                        </div>
+
+                        <!-- ========== AUDIT TAB ========== -->
+                        <div v-if="eodSubTab === 'audit'" class="space-y-4">
+                            
+                            <!-- Today's Logins -->
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div class="bg-blue-50/80 px-3.5 py-2.5 border-b border-blue-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-file-import text-blue-500 text-xs"></i>
+                                        <span class="text-xs font-black text-blue-900 uppercase">Today's Logins</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">{{ todayLoginsFiles.length }} files</span>
+                                </div>
+                                <div v-if="todayLoginsFiles.length === 0" class="p-6 text-center">
+                                    <i class="fas fa-inbox text-slate-300 text-2xl mb-2"></i>
+                                    <p class="text-xs text-slate-400 font-medium">No files logged for today's date yet.</p>
+                                </div>
+                                <div v-else class="divide-y divide-slate-50">
+                                    <div v-for="f in todayLoginsFiles" :key="'audit-log-'+f.id" class="px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50/50 transition">
+                                        <div class="min-w-0 mr-3">
+                                            <span class="text-[11px] font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
+                                            <span class="text-[10px] text-slate-400 font-medium">#{{ f.appId || 'No ID' }} &middot; {{ f.nclUcl || 'NCL' }} &middot; {{ f.sourcingChannel || 'DSA' }}</span>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-[11px] font-black text-[#97144D] block">&#x20B9;{{ formatCurrency(f.loanAmount) }}</span>
+                                            <span :class="getStatusBadgeClass(f.status)" class="!px-1.5 !py-0 !text-[9px] font-bold">{{ f.status }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Disbursements Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm shadow-inner">
-                                            <i class="fas fa-hand-holding-usd"></i>
-                                        </div>
-                                        <h4 class="font-bold text-slate-700 text-lg">Disbursements (FTD)</h4>
+                            <!-- Today's Disbursements -->
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div class="bg-emerald-50/80 px-3.5 py-2.5 border-b border-emerald-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-hand-holding-usd text-emerald-500 text-xs"></i>
+                                        <span class="text-xs font-black text-emerald-900 uppercase">Today's Disbursements</span>
                                     </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="text-right">
-                                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Disb</span>
-                                            <span class="text-sm font-black text-emerald-600">{{ eodTotals.disbCount }} <span class="text-xs text-slate-500 font-bold ml-0.5">/ {{ eodTotals.disbAmount.toFixed(2) }}L</span></span>
-                                        </div>
-                                    </div>
+                                    <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">{{ todayDisbFiles.length }} files</span>
                                 </div>
-                                <div class="p-5 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-white">
-                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Disbursement')" :key="m.key" class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-600 transition">{{ m.label }}</label>
-                                        <div class="flex gap-2">
-                                            <div class="flex-1" v-if="m.type === 'both' || m.type === 'count'">
-                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Files</span>
-                                                <input type="number" v-model.number="eodForm[m.key].count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0">
-                                            </div>
-                                            <div class="flex-1" v-if="m.type === 'both' || m.type === 'amount'">
-                                                <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Amt (L)</span>
-                                                <input type="number" v-model.number="eodForm[m.key].amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01">
-                                            </div>
+                                <div v-if="todayDisbFiles.length === 0" class="p-6 text-center">
+                                    <i class="fas fa-inbox text-slate-300 text-2xl mb-2"></i>
+                                    <p class="text-xs text-slate-400 font-medium">No files marked Disbursed today.</p>
+                                </div>
+                                <div v-else class="divide-y divide-slate-50">
+                                    <div v-for="f in todayDisbFiles" :key="'audit-disb-'+f.id" class="px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50/50 transition">
+                                        <div class="min-w-0 mr-3">
+                                            <span class="text-[11px] font-bold text-slate-800 uppercase block truncate">{{ f.customerName }}</span>
+                                            <span class="text-[10px] text-emerald-600 font-bold">#{{ f.appId || 'No ID' }} &middot; {{ f.nclUcl || 'NCL' }}</span>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-[11px] font-black text-emerald-700 block">&#x20B9;{{ formatCurrency(f.loanAmount) }}</span>
+                                            <span class="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Disbursed</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Other Metrics Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm shadow-inner">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                        <h4 class="font-bold text-slate-700 text-lg">Other Metrics (FTD)</h4>
-                                    </div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Auto-Calculated</span>
-                                </div>
-                                <div class="p-5 grid grid-cols-2 sm:grid-cols-5 gap-4 bg-white">
-                                    <div v-for="m in metricsConfig.filter(x => x.category === 'Other')" :key="m.key" class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-slate-300 transition group">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 group-hover:text-purple-600 transition text-center text-nowrap">{{ m.label }}</label>
-                                        <div class="flex gap-2">
-                                            <input v-if="m.type === 'both' || m.type === 'count'" type="number" v-model.number="eodForm[m.key].count" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" placeholder="Count">
-                                            <input v-if="m.type === 'both' || m.type === 'amount'" type="number" v-model.number="eodForm[m.key].amount" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none text-center shadow-xs transition" min="0" step="0.01" placeholder="Amt(L)">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Planning & Field Activity Card (Card 4) -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm shadow-inner">
-                                            <i class="fas fa-location-dot"></i>
-                                        </div>
-                                        <h4 class="font-bold text-slate-700 text-lg">Planning & Field Activities</h4>
-                                    </div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md shadow-xs border border-slate-100">Optional</span>
-                                </div>
-                                <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white">
-                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Dealer Visits Today</label>
-                                        <input type="number" v-model.number="dealerVisitsInput" min="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 3">
-                                        <p class="text-[10px] text-slate-400 mt-1">Showrooms / partner visits done today</p>
-                                    </div>
-                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Tomorrow Login Commit</label>
-                                        <input type="text" v-model="tomorrowLoginsInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 2 Files (18.50 L)">
-                                        <p class="text-[10px] text-slate-400 mt-1">Expected logins tomorrow</p>
-                                    </div>
-                                    <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Tomorrow Disb Commit</label>
-                                        <input type="text" v-model="tomorrowDisbInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 1 File (9.00 L)">
-                                        <p class="text-[10px] text-slate-400 mt-1">Expected delivery/disbursal</p>
-                                    </div>
-                                    <div class="sm:col-span-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Remarks / Hold Reasons</label>
-                                        <input type="text" v-model="remarksInput" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:border-[#97144D] outline-none shadow-xs" placeholder="e.g. 1 file approved, delivery scheduled tomorrow at 11 AM">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-2 flex flex-col sm:flex-row justify-end gap-3">
-                                <button v-if="isEditingTodayEod" @click="cancelReviseTodayEod" type="button" class="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition">
-                                    Cancel Revision
+                            <!-- Quick summary -->
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-3 flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-slate-500">Auto-aggregated into your EOD form</span>
+                                <button @click="eodSubTab = 'form'" class="text-[11px] font-bold text-[#97144D] hover:underline flex items-center gap-1">
+                                    <i class="fas fa-arrow-left text-[9px]"></i> Go to Form
                                 </button>
-                                <button type="button" @click.prevent="submitEOD(isEditingTodayEod)" :disabled="submitting" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-[#97144D] to-[#801040] hover:from-[#801040] hover:to-[#600830] text-white font-black rounded-xl transition shadow-md shadow-pink-900/20 text-sm flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
-                                    <i v-else :class="isEditingTodayEod ? 'fas fa-pen-to-square' : 'fas fa-paper-plane'"></i>
-                                    <span>{{ submitting ? 'Submitting...' : (isEditingTodayEod ? 'Update & Resubmit EOD' : 'Submit Final EOD Report') }}</span>
-                                </button>
                             </div>
-                        </form>
+                        </div>
 
-                        <!-- Past Submissions History Table -->
-                        <div class="mt-12 pt-8 border-t border-slate-200">
-                            <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <i class="fas fa-history text-slate-400"></i> Your Submission History
-                            </h4>
-                            <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left text-sm text-slate-600">
-                                        <thead class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
-                                            <tr>
-                                                <th class="px-4 py-3">Date</th>
-                                                <th class="px-4 py-3 text-center">Total Logins</th>
-                                                <th class="px-4 py-3 text-center">Total Disb</th>
-                                                <th class="px-4 py-3 text-center">Branch Sanc</th>
-                                                <th class="px-4 py-3 text-center">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-50 font-medium">
-                                            <tr v-for="eod in myEods" :key="eod.id" class="hover:bg-slate-50 transition">
-                                                <td class="px-4 py-3 text-slate-800 font-bold whitespace-nowrap">
-                                                    <span>{{ new Date(eod.date).toLocaleDateString() }}</span>
-                                                    <span v-if="eod.isRevised" class="ml-1.5 px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded">Revised</span>
-                                                </td>
-                                                <td class="px-4 py-3 text-center whitespace-nowrap font-bold text-slate-800">
-                                                    {{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }} / 
-                                                    {{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(2) }}L
-                                                </td>
-                                                <td class="px-4 py-3 text-center whitespace-nowrap font-bold text-emerald-600">
-                                                    {{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }} / 
-                                                    {{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(2) }}L
-                                                </td>
-                                                <td class="px-4 py-3 text-center whitespace-nowrap">
-                                                    {{ eod.metrics.loginBranchSanction?.count || 0 }} / {{ (eod.metrics.loginBranchSanction?.amount || 0).toFixed(2) }}L
-                                                </td>
-                                                <td class="px-4 py-3 text-center whitespace-nowrap">
-                                                    <div class="inline-flex items-center gap-3">
-                                                        <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] hover:text-[#1ebd59] transition text-base" title="Share to WhatsApp">
-                                                            <i class="fab fa-whatsapp"></i>
-                                                        </a>
-                                                        <button @click="copyRoEodToClipboard(eod)" type="button" class="text-slate-400 hover:text-slate-700 transition text-base" title="Copy formatted text to clipboard">
-                                                            <i class="fas fa-clipboard"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="myEods.length === 0">
-                                                <td colspan="5" class="px-4 py-8 text-center text-slate-400">You haven't submitted any EOD reports yet.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        <!-- ========== HISTORY TAB ========== -->
+                        <div v-if="eodSubTab === 'history'" class="space-y-2.5">
+
+                            <div v-if="myEods.length === 0" class="bg-slate-50 rounded-xl border border-slate-200 p-8 text-center space-y-2">
+                                <i class="fas fa-clock-rotate-left text-slate-300 text-3xl"></i>
+                                <p class="text-sm font-bold text-slate-500">No submissions yet</p>
+                                <p class="text-xs text-slate-400">Your EOD reports will appear here after your first submission.</p>
+                            </div>
+
+                            <!-- History Cards (Mobile-friendly) -->
+                            <div v-for="eod in myEods" :key="'hist-'+eod.id" class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2 hover:shadow-sm transition">
+                                <!-- Top: Date + Revised Badge -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-calendar-day text-slate-400 text-xs"></i>
+                                        <span class="text-xs font-black text-slate-800">{{ new Date(eod.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+                                        <span v-if="eod.isRevised" class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 rounded border border-amber-200">Revised</span>
+                                    </div>
+                                </div>
+                                <!-- Middle: Stats Grid -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="bg-blue-50/60 rounded-lg p-2 text-center">
+                                        <span class="text-[9px] font-bold text-blue-500 uppercase block">Logins</span>
+                                        <span class="text-xs font-black text-blue-800">{{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }}</span>
+                                        <span class="text-[10px] text-blue-600 font-bold block">{{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(1) }}L</span>
+                                    </div>
+                                    <div class="bg-emerald-50/60 rounded-lg p-2 text-center">
+                                        <span class="text-[9px] font-bold text-emerald-500 uppercase block">Disb</span>
+                                        <span class="text-xs font-black text-emerald-800">{{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }}</span>
+                                        <span class="text-[10px] text-emerald-600 font-bold block">{{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(1) }}L</span>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase block">Br. Sanc</span>
+                                        <span class="text-xs font-black text-slate-800">{{ eod.metrics.loginBranchSanction?.count || 0 }}</span>
+                                        <span class="text-[10px] text-slate-600 font-bold block">{{ (eod.metrics.loginBranchSanction?.amount || 0).toFixed(1) }}L</span>
+                                    </div>
+                                </div>
+                                <!-- Bottom: Actions -->
+                                <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+                                    <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#1ebd59] text-white text-[11px] font-bold rounded-lg transition">
+                                        <i class="fab fa-whatsapp text-sm"></i> Share
+                                    </a>
+                                    <button @click="copyRoEodToClipboard(eod)" type="button" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">
+                                        <i class="fas fa-clipboard text-xs"></i> Copy
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -3345,7 +3358,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-26"></script>
+    <script type="module" src="js/app.js?v=force-update-27"></script>
 </body>
 </html>
 

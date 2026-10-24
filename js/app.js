@@ -1012,6 +1012,7 @@ const app = createApp({
         const showTodayFilesBreakdown = ref(false);
         const eodCopiedToast = ref(false);
         const eodResyncSuccess = ref(false);
+        const eodSubTab = ref('form');
 
         // RO Personal Target & Pacing State
         const roTargetFiles = ref(Number(localStorage.getItem('ro_target_files') || 25));
@@ -2507,7 +2508,7 @@ const app = createApp({
             dealerVisitsInput, tomorrowLoginsInput, tomorrowDisbInput, remarksInput,
             isEditingTodayEod, startReviseTodayEod, cancelReviseTodayEod,
             showTodayFilesBreakdown, todayLoginsFiles, todayDisbFiles,
-            eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
+            eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp
