@@ -983,8 +983,8 @@ const app = createApp({
         const metricsConfig = [
             { label: 'Open Market', key: 'loginOpenMarket', category: 'Login', type: 'both' },
             { label: 'Branch', key: 'loginBranch', category: 'Login', type: 'both' },
-            { label: 'Branch Sanction', key: 'loginBranchSanction', category: 'Login', type: 'both' },
             { label: 'Used Car', key: 'loginUsedCar', category: 'Login', type: 'both' },
+            { label: 'Branch Sanction', key: 'loginBranchSanction', category: 'Sanction', type: 'both' },
             { label: 'Open Market', key: 'disbOpenMarket', category: 'Disbursement', type: 'both' },
             { label: 'Branch', key: 'disbBranch', category: 'Disbursement', type: 'both' },
             { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
