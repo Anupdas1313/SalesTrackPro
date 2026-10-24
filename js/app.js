@@ -1174,8 +1174,8 @@ const app = createApp({
         const eodTotals = computed(() => {
             const f = eodForm.value;
             return {
-                loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginBranchSanction.count||0) + (f.loginUsedCar.count||0),
-                loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginBranchSanction.amount||0) + (f.loginUsedCar.amount||0),
+                loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0),
+                loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0),
                 disbCount: (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0),
                 disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0),
                 sanctionCount: (f.loginBranchSanction?.count || 0),
@@ -1184,6 +1184,115 @@ const app = createApp({
                 tdCount: (f.td?.count || 0),
                 miCount: (f.mi?.count || 0)
             };
+        });
+
+        // 100% Accurate MTD calculation engine
+        const getRoMtdForDate = (eodDate, currentMetrics = null) => {
+            const targetDate = eodDate || getTodayDateStr();
+            const currentMonth = targetDate.substring(0, 7);
+
+            const m = {
+                loginOpenMarket: { count: 0, amount: 0 },
+                loginBranch: { count: 0, amount: 0 },
+                loginBranchSanction: { count: 0, amount: 0 },
+                loginUsedCar: { count: 0, amount: 0 },
+                disbOpenMarket: { count: 0, amount: 0 },
+                disbBranch: { count: 0, amount: 0 },
+                disbUsedCar: { count: 0, amount: 0 },
+                vicpCrm: { count: 0 },
+                td: { count: 0 },
+                marutiLogin: { count: 0, amount: 0 },
+                marutiDisb: { count: 0, amount: 0 },
+                mi: { count: 0 }
+            };
+
+            // 1. Files in current month prior to targetDate
+            const priorFiles = (myFiles.value || []).filter(f => {
+                const fDate = f.loginDate || (f.createdAt ? f.createdAt.split('T')[0] : '');
+                return fDate && fDate.startsWith(currentMonth) && fDate < targetDate;
+            });
+
+            priorFiles.forEach(f => {
+                const amt = toLakhs(f.loanAmount) || 0;
+                const chan = (f.sourcingChannel || '').toUpperCase();
+                const cat = (f.nclUcl || '').toUpperCase();
+
+                if (cat === 'UCL') {
+                    m.loginUsedCar.count += 1;
+                    m.loginUsedCar.amount += amt;
+                } else if (chan === 'BRANCH') {
+                    m.loginBranch.count += 1;
+                    m.loginBranch.amount += amt;
+                } else {
+                    m.loginOpenMarket.count += 1;
+                    m.loginOpenMarket.amount += amt;
+                }
+
+                if (chan === 'BRANCH' && (f.status === 'Approved' || f.status === 'Disbursed')) {
+                    m.loginBranchSanction.count += 1;
+                    m.loginBranchSanction.amount += amt;
+                }
+
+                if (f.status === 'Disbursed') {
+                    if (cat === 'UCL') {
+                        m.disbUsedCar.count += 1;
+                        m.disbUsedCar.amount += amt;
+                    } else if (chan === 'BRANCH') {
+                        m.disbBranch.count += 1;
+                        m.disbBranch.amount += amt;
+                    } else {
+                        m.disbOpenMarket.count += 1;
+                        m.disbOpenMarket.amount += amt;
+                    }
+                }
+
+                let vcipVal = f.vcip ? String(f.vcip).trim().toLowerCase() : '';
+                if (vcipVal && vcipVal !== '0' && vcipVal !== 'no' && vcipVal !== 'n/a' && vcipVal !== 'false') {
+                    m.vicpCrm.count += 1;
+                }
+                let miVal = f.mi ? String(f.mi).trim().toLowerCase() : '';
+                if (miVal && miVal !== '0' && miVal !== 'no' && miVal !== 'n/a' && miVal !== 'false') {
+                    m.mi.count += 1;
+                }
+            });
+
+            // 2. Prior EODs in current month
+            const priorEods = (myEods.value || []).filter(e => e.date && e.date.startsWith(currentMonth) && e.date < targetDate);
+            priorEods.forEach(e => {
+                if (!e.metrics) return;
+                m.td.count += (e.metrics.td?.count || 0);
+                m.marutiLogin.count += (e.metrics.marutiLogin?.count || 0);
+                m.marutiLogin.amount += (e.metrics.marutiLogin?.amount || 0);
+                m.marutiDisb.count += (e.metrics.marutiDisb?.count || 0);
+                m.marutiDisb.amount += (e.metrics.marutiDisb?.amount || 0);
+            });
+
+            // 3. Add current metrics for the target date
+            const f = currentMetrics || eodForm.value;
+            if (f) {
+                Object.keys(f).forEach(k => {
+                    if (!m[k]) return;
+                    m[k].count += (f[k].count || 0);
+                    if (m[k].amount !== undefined) {
+                        m[k].amount += (f[k].amount || 0);
+                    }
+                });
+            }
+
+            return m;
+        };
+
+        const currentRoMtd = computed(() => {
+            return getRoMtdForDate(getTodayDateStr(), eodForm.value);
+        });
+
+        const eodMtdTotals = computed(() => {
+            const m = currentRoMtd.value;
+            const loginCount = (m.loginOpenMarket.count || 0) + (m.loginBranch.count || 0) + (m.loginUsedCar.count || 0);
+            const loginAmount = (m.loginOpenMarket.amount || 0) + (m.loginBranch.amount || 0) + (m.loginUsedCar.amount || 0);
+            const disbCount = (m.disbOpenMarket.count || 0) + (m.disbBranch.count || 0) + (m.disbUsedCar.count || 0);
+            const disbAmount = (m.disbOpenMarket.amount || 0) + (m.disbBranch.amount || 0) + (m.disbUsedCar.amount || 0);
+            return { loginCount, loginAmount, disbCount, disbAmount };
         });
 
         const smEodSummary = computed(() => {
@@ -1294,78 +1403,83 @@ const app = createApp({
 
         const generateRoWhatsAppText = (eod) => {
             if (!eod || !eod.metrics) return '';
-            const roSummary = smEodSummary.value.find(s => s.id === eod.userId);
-            const m = roSummary?.mtd || {
-                loginOpenMarket: { count: 0, amount: 0 },
-                loginBranch: { count: 0, amount: 0 },
-                loginBranchSanction: { count: 0, amount: 0 },
-                loginUsedCar: { count: 0, amount: 0 },
-                disbOpenMarket: { count: 0, amount: 0 },
-                disbBranch: { count: 0, amount: 0 },
-                disbUsedCar: { count: 0, amount: 0 },
-                vicpCrm: { count: 0 }, td: { count: 0 },
-                marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
-            };
-            
-            const formatVal = (count, amt) => {
-                if (!count && !amt) return '0';
-                if (!amt) return `${count}`;
-                return `${count}(${amt.toFixed(2)}L)`;
-            };
+
+            const m = getRoMtdForDate(eod.date, eod.metrics);
             const f = eod.metrics;
-            const tDay = new Date(eod.date).toLocaleDateString('en-GB');
 
-            const tlFtd = (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0);
-            const tlaFtd = (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0);
-            const tlMtd = (m.loginOpenMarket.count||0) + (m.loginBranch.count||0) + (m.loginUsedCar.count||0);
-            const tlaMtd = (m.loginOpenMarket.amount||0) + (m.loginBranch.amount||0) + (m.loginUsedCar.amount||0);
-
-            const tdFtd = (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0);
-            const tdaFtd = (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0);
-            const tdMtd = (m.disbOpenMarket.count||0) + (m.disbBranch.count||0) + (m.disbUsedCar.count||0);
-            const tdaMtd = (m.disbOpenMarket.amount||0) + (m.disbBranch.amount||0) + (m.disbUsedCar.amount||0);
-
-            let text = `*DAILY EOD REPORT — ${tDay}*${eod.isRevised ? ' *(REVISED)*' : ''}\n`;
-            text += `👤 *RO:* ${eod.userName || currentUser.value?.name || 'RO'}\n`;
-            text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-            text += `*LOGINS :*\n`;
-            text += `• Open Market: ${formatVal(f.loginOpenMarket.count, f.loginOpenMarket.amount)} | MTD: ${formatVal(m.loginOpenMarket.count, m.loginOpenMarket.amount)}\n`;
-            text += `• Branch: ${formatVal(f.loginBranch.count, f.loginBranch.amount)} | MTD: ${formatVal(m.loginBranch.count, m.loginBranch.amount)}\n`;
-            text += `• Branch Sanction: ${formatVal(f.loginBranchSanction.count, f.loginBranchSanction.amount)} | MTD: ${formatVal(m.loginBranchSanction.count, m.loginBranchSanction.amount)}\n`;
-            text += `• Used Car: ${formatVal(f.loginUsedCar.count, f.loginUsedCar.amount)} | MTD: ${formatVal(m.loginUsedCar.count, m.loginUsedCar.amount)}\n`;
-            text += `👉 *Total FTD Login:* ${formatVal(tlFtd, tlaFtd)}\n`;
-            text += `📈 *Total MTD Login:* ${formatVal(tlMtd, tlaMtd)}\n\n`;
-
-            text += `*DISBURSEMENTS :*\n`;
-            text += `• Open Market: ${formatVal(f.disbOpenMarket.count, f.disbOpenMarket.amount)} | MTD: ${formatVal(m.disbOpenMarket.count, m.disbOpenMarket.amount)}\n`;
-            text += `• Branch: ${formatVal(f.disbBranch.count, f.disbBranch.amount)} | MTD: ${formatVal(m.disbBranch.count, m.disbBranch.amount)}\n`;
-            text += `• Used Car: ${formatVal(f.disbUsedCar.count, f.disbUsedCar.amount)} | MTD: ${formatVal(m.disbUsedCar.count, m.disbUsedCar.amount)}\n`;
-            text += `👉 *Total FTD Disb:* ${formatVal(tdFtd, tdaFtd)}\n`;
-            text += `💰 *Total MTD Disb:* ${formatVal(tdMtd, tdaMtd)}\n\n`;
-
-            text += `*ENABLERS & ACTIVITY :*\n`;
-            text += `• VICP/CRM: FTD ${f.vicpCrm?.count||0} | MTD ${m.vicpCrm?.count||0}\n`;
-            text += `• TD: FTD ${f.td?.count||0} | MTD ${m.td?.count||0}\n`;
-            text += `• MI: FTD ${f.mi?.count||0} | MTD ${m.mi?.count||0}\n`;
-            if (f.marutiLogin?.count || f.marutiDisb?.count) {
-                text += `• Maruti Login: ${formatVal(f.marutiLogin?.count, f.marutiLogin?.amount)} | Disb: ${formatVal(f.marutiDisb?.count, f.marutiDisb?.amount)}\n`;
-            }
-            if (eod.dealerVisits) {
-                text += `• Dealer Visits Today: ${eod.dealerVisits}\n`;
+            let dateStr = '';
+            if (eod.date) {
+                const parts = eod.date.split('-');
+                if (parts.length === 3) {
+                    dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    dateStr = new Date(eod.date).toLocaleDateString('en-GB');
+                }
+            } else {
+                const now = new Date();
+                dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
             }
 
-            if (eod.tomorrowLogins || eod.tomorrowDisb) {
-                text += `\n🚀 *TOMORROW COMMITMENT :*\n`;
-                if (eod.tomorrowLogins) text += `• Logins: ${eod.tomorrowLogins}\n`;
-                if (eod.tomorrowDisb) text += `• Disbursements: ${eod.tomorrowDisb}\n`;
-            }
+            const formatVal = (count, amt) => {
+                const c = Number(count) || 0;
+                const a = Number(amt) || 0;
+                if (c === 0 && a === 0) return '0/0.0cr';
+                return `${c}/${a.toFixed(2)}L`;
+            };
 
-            if (eod.remarks) {
-                text += `\n📝 *REMARKS :*\n${eod.remarks}\n`;
-            }
+            const tlFtd = (f.loginOpenMarket.count || 0) + (f.loginBranch.count || 0) + (f.loginUsedCar.count || 0);
+            const tlaFtd = (f.loginOpenMarket.amount || 0) + (f.loginBranch.amount || 0) + (f.loginUsedCar.amount || 0);
+            const tlMtd = (m.loginOpenMarket.count || 0) + (m.loginBranch.count || 0) + (m.loginUsedCar.count || 0);
+            const tlaMtd = (m.loginOpenMarket.amount || 0) + (m.loginBranch.amount || 0) + (m.loginUsedCar.amount || 0);
 
-            text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-            text += `_Powered by Sales Link_`;
+            const tdFtd = (f.disbOpenMarket.count || 0) + (f.disbBranch.count || 0) + (f.disbUsedCar.count || 0);
+            const tdaFtd = (f.disbOpenMarket.amount || 0) + (f.disbBranch.amount || 0) + (f.disbUsedCar.amount || 0);
+            const tdMtd = (m.disbOpenMarket.count || 0) + (m.disbBranch.count || 0) + (m.disbUsedCar.count || 0);
+            const tdaMtd = (m.disbOpenMarket.amount || 0) + (m.disbBranch.amount || 0) + (m.disbUsedCar.amount || 0);
+
+            let text = `${dateStr}\n`;
+            text += `*Login :*\n`;
+            text += `*Open Market :*\n`;
+            text += `FTD : ${formatVal(f.loginOpenMarket.count, f.loginOpenMarket.amount)}\n`;
+            text += `MTD: ${formatVal(m.loginOpenMarket.count, m.loginOpenMarket.amount)}\n`;
+            text += `*Branch*\n`;
+            text += `FTD : ${formatVal(f.loginBranch.count, f.loginBranch.amount)}\n`;
+            text += `MTD:  ${formatVal(m.loginBranch.count, m.loginBranch.amount)}\n`;
+            text += `Sanction: ${formatVal(f.loginBranchSanction.count, f.loginBranchSanction.amount)}\n`;
+            text += `MTD sanction: ${m.loginBranchSanction.count || 0}\n`;
+            text += `*Used Car*\n`;
+            text += `FTD - ${formatVal(f.loginUsedCar.count, f.loginUsedCar.amount)}\n`;
+            text += `MTD - ${formatVal(m.loginUsedCar.count, m.loginUsedCar.amount)}\n\n`;
+
+            text += `Total FTD :  ${formatVal(tlFtd, tlaFtd)}\n`;
+            text += `Total MTD: ${formatVal(tlMtd, tlaMtd)} \n\n`;
+
+            text += `*Disb :*\n`;
+            text += `*Open Market :* \n`;
+            text += `FTD : ${formatVal(f.disbOpenMarket.count, f.disbOpenMarket.amount)}\n`;
+            text += `MTD: ${formatVal(m.disbOpenMarket.count, m.disbOpenMarket.amount)}\n`;
+            text += `*Branch :*\n`;
+            text += `FTD : ${formatVal(f.disbBranch.count, f.disbBranch.amount)}\n`;
+            text += `MTD: ${formatVal(m.disbBranch.count, m.disbBranch.amount)}\n`;
+            text += `*Used :*\n`;
+            text += `FTD : ${f.disbUsedCar.count || 0}\n`;
+            text += `MTD: ${m.disbUsedCar.count || 0}\n\n`;
+
+            text += `Total FTD : ${formatVal(tdFtd, tdaFtd)}\n`;
+            text += `Total MTD: ${formatVal(tdMtd, tdaMtd)}\n\n`;
+
+            text += `FTD vicp/CRM: ${f.vicpCrm?.count || 0}\n`;
+            text += `MTD vicp/CRM: ${m.vicpCrm?.count || 0}\n`;
+            text += `FTD TD : ${f.td?.count || 0}\n`;
+            text += `MTD TD : ${m.td?.count || 0}\n\n`;
+
+            text += `*Maruti*\n`;
+            text += `Login FTD/MTD- ${f.marutiLogin?.count || 0}/${m.marutiLogin?.count || 0}\n`;
+            text += `Disb Ftd /Mtd  :  ${f.marutiDisb?.count || 0}/${m.marutiDisb?.count || 0}\n\n`;
+
+            text += `MI FTD - ${f.mi?.count || 0}\n`;
+            text += `MI MTD - ${m.mi?.count || 0}\n`;
+
             return text;
         };
 
@@ -2542,7 +2656,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate
         };
     }
 });
