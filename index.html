@@ -1553,36 +1553,7 @@
 
 
 
-                        <!-- Today's Live Pulse Strip -->
-                        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#97144D] text-base shrink-0">
-                                    <i class="fas fa-bolt text-amber-400"></i>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Today's Activity</span>
-                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                                        <span class="font-bold text-slate-200">
-                                            Logins: <strong class="text-white font-black">{{ roStats.todayLoggedCount || 0 }}</strong> 
-                                            <span class="text-slate-400 text-[11px]">(+&#x20B9;{{ formatCurrency(roStats.todayLoggedAmount || 0) }})</span>
-                                        </span>
-                                        <span class="text-slate-600 hidden sm:inline">&bull;</span>
-                                        <span class="font-bold text-slate-200">
-                                            Disbursed: <strong class="text-emerald-400 font-black">{{ roStats.todayDisbCount || 0 }}</strong>
-                                            <span class="text-slate-400 text-[11px]">(+&#x20B9;{{ formatCurrency(roStats.todayDisbAmount || 0) }})</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                                <button @click="currentTab = 'ro-add-file'" type="button" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-xl transition flex items-center gap-1.5 border border-white/10">
-                                    <i class="fas fa-plus text-[9px]"></i> Quick Log
-                                </button>
-                                <button @click="currentTab = 'ro-eod'" type="button" class="px-3 py-1.5 bg-white text-slate-900 hover:bg-slate-100 text-[11px] font-black rounded-xl transition shadow-xs flex items-center gap-1.5">
-                                    <i class="fas fa-clipboard-check text-[#97144D]"></i> Go to EOD
-                                </button>
-                            </div>
-                        </div>
+
 
                         <!-- Attention Radar Banner (Stale Files Flag) -->
                         <div v-if="roNeedsAttentionFiles.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300">
@@ -3693,7 +3664,7 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-41"></script>
+    <script type="module" src="js/app.js?v=force-update-42"></script>
 </body>
 </html>
 
