@@ -103,6 +103,18 @@ export const getUserByEmail = async (email) => {
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
+export const getUserById = async (id) => {
+    if (!id) return null;
+    try {
+        const docRef = doc(db, 'users', id);
+        const snap = await getDoc(docRef);
+        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    } catch (e) {
+        console.warn("Error fetching user by ID:", e);
+        return null;
+    }
+};
+
 export const updateUser = async (id, updateData) => {
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, updateData);
@@ -666,3 +678,86 @@ export const findUserByAnyIdentifier = async (identifier) => {
     return null;
 };
 
+
+// --- Enterprise Offboarding & Pipeline Handoff ---
+export const offboardAndReassignRo = async ({ resignedUserId, replacementUserId, supervisorId, reason = 'resigned' }) => {
+    if (!resignedUserId) throw new Error("Resigned User ID is required.");
+    const now = new Date().toISOString();
+
+    const resignedRef = doc(db, 'users', resignedUserId);
+    const resignedSnap = await getDoc(resignedRef);
+    if (!resignedSnap.exists()) throw new Error("Resigned officer record not found in database.");
+    const resignedData = resignedSnap.data();
+
+    let replacementData = null;
+    if (replacementUserId) {
+        const repRef = doc(db, 'users', replacementUserId);
+        const repSnap = await getDoc(repRef);
+        if (repSnap.exists()) {
+            replacementData = repSnap.data();
+        }
+    }
+
+    // Retrieve all candidate files in this branch hub to ensure both roId and roName matches are found
+    let candidateFiles = [];
+    if (resignedData.tenantId) {
+        candidateFiles = await getLoanFilesByTenant(resignedData.tenantId);
+    } else {
+        const qFiles = query(filesCol, where('roId', '==', resignedUserId));
+        const snapFiles = await getDocs(qFiles);
+        candidateFiles = mapSnapshot(snapFiles);
+    }
+
+    const normalizedResignedName = (resignedData.name || '').trim().toUpperCase();
+    const targetFiles = candidateFiles.filter(f => {
+        const matchId = f.roId === resignedUserId;
+        const matchName = normalizedResignedName && f.roName && f.roName.trim().toUpperCase() === normalizedResignedName;
+        return matchId || matchName;
+    });
+
+    // Active pipeline files (not already Disbursed, Rejected, or Cancelled)
+    const activeFiles = targetFiles.filter(f => {
+        const s = (f.status || '').toLowerCase();
+        return s !== 'disbursed' && s !== 'rejected' && s !== 'cancelled';
+    });
+
+    let transferredCount = 0;
+    if (replacementData && activeFiles.length > 0) {
+        for (const file of activeFiles) {
+            try {
+                const fRef = doc(db, 'loanFiles', file.id);
+                await updateDoc(fRef, {
+                    roId: replacementUserId,
+                    roName: replacementData.name || 'Relationship Officer',
+                    transferredFromRoId: resignedUserId,
+                    transferredFromRoName: resignedData.name || 'Former Officer',
+                    transferredAt: now,
+                    updatedAt: now
+                });
+                transferredCount++;
+            } catch (err) {
+                console.warn(`Could not transfer file ${file.id}:`, err);
+            }
+        }
+    }
+
+    // Lock out and offboard the resigned employee immediately
+    await updateDoc(resignedRef, {
+        status: 'resigned',
+        isResigned: true,
+        resignedAt: now,
+        offboardedBy: supervisorId || '',
+        offboardReason: reason,
+        transferredFilesCount: transferredCount,
+        transferredToRoId: replacementUserId || null,
+        transferredToRoName: replacementData ? replacementData.name : null,
+        updatedAt: now
+    });
+
+    return {
+        resignedUser: { id: resignedUserId, ...resignedData },
+        replacementUser: replacementData ? { id: replacementUserId, ...replacementData } : null,
+        transferredCount,
+        totalFilesCount: targetFiles.length
+    };
+};

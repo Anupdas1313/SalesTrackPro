@@ -9,6 +9,10 @@ const app = createApp({
             if (savedUser) {
                 try {
                     const parsed = JSON.parse(savedUser);
+                    if (parsed.status === 'resigned' || parsed.status === 'suspended' || parsed.status === 'inactive') {
+                        localStorage.removeItem('axis_user');
+                        return null;
+                    }
                     if (!parsed.email && parsed.role !== 'ro') return null;
                     return parsed;
                 } catch(e) {}
@@ -435,14 +439,108 @@ const app = createApp({
             }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
         });
 
-        // Split active and suspended ROs for clear visual separation
+        // Split active, suspended, and resigned/offboarded ROs for clear visual separation & governance
         const activeRoUsers = computed(() => {
-            return (roUsers.value || []).filter(u => u.status !== 'suspended');
+            return (roUsers.value || []).filter(u => u.status !== 'suspended' && u.status !== 'resigned');
         });
 
         const suspendedRoUsers = computed(() => {
             return (roUsers.value || []).filter(u => u.status === 'suspended');
         });
+
+        const resignedRoUsers = computed(() => {
+            return (roUsers.value || []).filter(u => u.status === 'resigned');
+        });
+
+        // --- Employee Resignation & Pipeline Handoff State ---
+        const showOffboardModal = ref(false);
+        const userToOffboard = ref(null);
+        const offboardReplacementRoId = ref('');
+        const offboardReason = ref('resigned');
+        const offboardConfirm = ref(false);
+        const isOffboarding = ref(false);
+        const offboardError = ref('');
+        const offboardSuccess = ref('');
+
+        const availableReplacementRos = computed(() => {
+            if (!userToOffboard.value) return activeRoUsers.value;
+            return activeRoUsers.value.filter(u => u.id !== userToOffboard.value.id);
+        });
+
+        const offboardCandidateFiles = computed(() => {
+            if (!userToOffboard.value) return [];
+            const uid = userToOffboard.value.id;
+            const uName = (userToOffboard.value.name || '').trim().toUpperCase();
+            return (allFiles.value || []).filter(f => f.roId === uid || (uName && f.roName && f.roName.trim().toUpperCase() === uName));
+        });
+
+        const offboardActiveFiles = computed(() => {
+            return offboardCandidateFiles.value.filter(f => {
+                const s = (f.status || '').toLowerCase();
+                return s !== 'disbursed' && s !== 'rejected' && s !== 'cancelled';
+            });
+        });
+
+        const offboardDisbursedFiles = computed(() => {
+            return offboardCandidateFiles.value.filter(f => (f.status || '').toLowerCase() === 'disbursed');
+        });
+
+        const offboardActiveFilesVolume = computed(() => {
+            return offboardActiveFiles.value.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+        });
+
+        const openOffboardModal = (user) => {
+            userToOffboard.value = user;
+            offboardReplacementRoId.value = '';
+            offboardReason.value = 'resigned';
+            offboardConfirm.value = false;
+            offboardError.value = '';
+            offboardSuccess.value = '';
+            isOffboarding.value = false;
+            showOffboardModal.value = true;
+        };
+
+        const submitOffboardUser = async () => {
+            if (!userToOffboard.value) return;
+            offboardError.value = '';
+            offboardSuccess.value = '';
+
+            if (offboardActiveFiles.value.length > 0 && !offboardReplacementRoId.value) {
+                offboardError.value = 'Please select an active officer to inherit this active loan pipeline.';
+                return;
+            }
+
+            if (!offboardConfirm.value) {
+                offboardError.value = 'Please confirm the employee resignation and credential revocation checkbox.';
+                return;
+            }
+
+            isOffboarding.value = true;
+            try {
+                const result = await db.offboardAndReassignRo({
+                    resignedUserId: userToOffboard.value.id,
+                    replacementUserId: offboardReplacementRoId.value || null,
+                    supervisorId: currentUser.value?.id || '',
+                    reason: offboardReason.value
+                });
+
+                const repName = result.replacementUser?.name || 'designated officer';
+                offboardSuccess.value = `✓ Offboarding complete! Reassigned ${result.transferredCount} active files to ${repName} and permanently revoked login access for ${result.resignedUser.name}.`;
+
+                await loadData();
+
+                setTimeout(() => {
+                    showOffboardModal.value = false;
+                    userToOffboard.value = null;
+                    offboardSuccess.value = '';
+                }, 2800);
+            } catch (err) {
+                console.error("Offboard error:", err);
+                offboardError.value = err.message || 'Failed to offboard employee.';
+            } finally {
+                isOffboarding.value = false;
+            }
+        };
 
         // RO 360 Inspector Drawer State & Logic (For SM Monitoring)
         const selectedRoForInspection = ref(null);
@@ -3099,8 +3197,8 @@ const app = createApp({
             }
             
             if (user) {
-                if (user.status === 'suspended') {
-                    loginError.value = 'Account is suspended. Contact Administrator.';
+                if (user.status === 'suspended' || user.status === 'resigned' || user.status === 'inactive') {
+                    loginError.value = 'Account has been deactivated due to resignation or suspension. Access is revoked.';
                     return;
                 }
 
@@ -3853,12 +3951,24 @@ const app = createApp({
             if (currentUser.value) {
                 initUserSm();
                 
-                // Self-healing session sync: ensure fresh user profile & salesLinkId
+                // Self-healing session sync & Enterprise Kill-Switch (Remote Wipe)
                 (async () => {
                     try {
-                        if (currentUser.value.email) {
-                            let fresh = await db.getUserByEmail(currentUser.value.email);
-                            if (fresh) {
+                        let fresh = null;
+                        if (currentUser.value.id) fresh = await db.getUserById(currentUser.value.id);
+                        if (!fresh && currentUser.value.email) fresh = await db.getUserByEmail(currentUser.value.email);
+
+                        if (fresh) {
+                            // KILL-SWITCH: If user was marked resigned or suspended, wipe device storage immediately
+                            if (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive') {
+                                console.warn("Remote Wipe Triggered: Account has been deactivated or resigned.");
+                                localStorage.removeItem('axis_user');
+                                currentUser.value = null;
+                                alert("⚠️ Access Revoked: Your SalesLink account has been deactivated by your branch supervisor. All session data has been wiped.");
+                                window.location.reload();
+                                return;
+                            }
+                            if (currentUser.value.email) {
                                 if (!fresh.salesLinkId) {
                                     const newId = db.generateSalesLinkId(fresh.role || currentUser.value.role || 'sm');
                                     await db.updateUser(fresh.id, { salesLinkId: newId });
@@ -3895,12 +4005,30 @@ const app = createApp({
             } else {
                 localStorage.removeItem('axis_user');
             }
+
+            // Real-Time Background Kill-Switch: check account status whenever employee returns to app
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible' && currentUser.value?.id) {
+                    try {
+                        const fresh = await db.getUserById(currentUser.value.id);
+                        if (fresh && (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive')) {
+                            console.warn("Account deactivated while app was in background. Executing remote wipe...");
+                            localStorage.removeItem('axis_user');
+                            currentUser.value = null;
+                            alert("⚠️ Access Revoked: Your SalesLink account has been deactivated by your branch supervisor. All cached data has been wiped.");
+                            window.location.reload();
+                        }
+                    } catch (e) {}
+                }
+            });
         });
 
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, resignedRoUsers, myFiles, allWorkspaces, allFiles,
+            showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
+            availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError,
