@@ -26,7 +26,7 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
-        const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+        const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
         const divisionOptions = [
             'Auto Loans (Car Loans)',
             'Personal Loans (PL)',
@@ -2279,45 +2279,6 @@ const app = createApp({
             }
         };
 
-        // Manager Security Key Access Control
-        const activeManagerPasscode = ref('AXIS-MGR-2026');
-        const managerPasscodeInput = ref('AXIS-MGR-2026');
-        const showManagerKeySecret = ref(false);
-        const managerKeySavedToast = ref(false);
-
-        const saveManagerPasscode = async () => {
-            const newKey = managerPasscodeInput.value?.trim().toUpperCase();
-            if (!newKey) {
-                alert("Manager Security Passcode cannot be blank.");
-                return;
-            }
-            try {
-                await db.setManagerSecurityKey(newKey);
-                activeManagerPasscode.value = newKey;
-                managerPasscodeInput.value = newKey;
-                managerKeySavedToast.value = true;
-                setTimeout(() => { managerKeySavedToast.value = false; }, 4000);
-            } catch(e) {
-                console.error("Error saving manager key", e);
-                alert("Failed to save manager security key: " + (e.message || e));
-            }
-        };
-
-        const generateRandomManagerKey = () => {
-            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-            const currentBank = (registerForm.value.bankName || 'MGR').replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'MGR';
-            managerPasscodeInput.value = `${currentBank}-${randomSuffix}`;
-        };
-
-        const copyManagerKey = async () => {
-            try {
-                await navigator.clipboard.writeText(managerPasscodeInput.value);
-                alert(`Copied manager key "${managerPasscodeInput.value}" to clipboard!`);
-            } catch (e) {
-                alert(`Manager Key: ${managerPasscodeInput.value}`);
-            }
-        };
-
         // Auth & Registration
         const registerSM = async () => {
             if (isRegistering.value) return;
@@ -2326,7 +2287,6 @@ const app = createApp({
             const smName = registerForm.value.name?.trim();
             const smRegion = registerForm.value.region?.trim();
             const smPhone = registerForm.value.phone?.trim() || '';
-            const smPasscode = registerForm.value.passcode?.trim();
             let smBank = registerForm.value.bankName?.trim() || 'Axis Bank';
             if (smBank === 'Other') {
                 smBank = registerForm.value.customBankName?.trim();
@@ -2347,17 +2307,6 @@ const app = createApp({
             }
             if (!smRegion) {
                 registerError.value = 'Operating Region / Zone is mandatory.';
-                return;
-            }
-
-            let validPasscode = activeManagerPasscode.value || 'AXIS-MGR-2026';
-            try {
-                const remoteKey = await db.getManagerSecurityKey();
-                if (remoteKey) validPasscode = remoteKey;
-            } catch (e) {}
-
-            if (!smPasscode || smPasscode.toUpperCase() !== validPasscode.toUpperCase()) {
-                registerError.value = 'Invalid Manager Security Key. If you are an RO, please click "Back to Sign In" and sign in with Google.';
                 return;
             }
 
@@ -2432,7 +2381,7 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { role: 'sm', name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
+                registerForm.value = { role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -3151,8 +3100,6 @@ const app = createApp({
             try {
                 systemAnnouncement.value = await db.getAnnouncement();
                 adminAnnouncementInput.value = systemAnnouncement.value;
-                activeManagerPasscode.value = await db.getManagerSecurityKey();
-                managerPasscodeInput.value = activeManagerPasscode.value;
             } catch(e) { console.error(e); }
 
             // Check if returning from Direct Sign-In (Redirect)
@@ -3201,8 +3148,6 @@ const app = createApp({
             resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
             originalUser, impersonateUser, stopImpersonation,
             systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
-            activeManagerPasscode, managerPasscodeInput, showManagerKeySecret, managerKeySavedToast,
-            saveManagerPasscode, generateRandomManagerKey, copyManagerKey,
             openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
             eodForm, eodSubmitError, eodSubmitSuccess, submitting, metricsConfig, validateEOD, myEods, smEods, submitEOD,
             smEodSummary, missingEods, generateEodWhatsApp, generateRoWhatsApp, hasSubmittedToday, eodTotals,
