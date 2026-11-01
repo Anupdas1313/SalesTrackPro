@@ -1821,9 +1821,10 @@ const app = createApp({
         // --- SalesLink Identity & Invitation Handshake State ---
         const copiedSalesLinkIdToast = ref(false);
         const copySalesLinkId = async (id) => {
-            if (!id) return;
+            const targetId = id || currentUser.value?.salesLinkId;
+            if (!targetId || targetId === 'Syncing...' || targetId.includes('...')) return;
             try {
-                await navigator.clipboard.writeText(id);
+                await navigator.clipboard.writeText(targetId);
                 copiedSalesLinkIdToast.value = true;
                 setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
             } catch (e) {
@@ -2145,11 +2146,30 @@ const app = createApp({
                 const allU = await db.getAllUsers();
                 roUsers.value = allU.filter(u => u.role === 'ro' && !u.tenantId);
                 smEods.value = [];
-                return;
+            } else {
+                allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
+                roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
+                smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
             }
-            allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
-            roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
-            smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
+
+            // Ensure salesLinkId exists for SM
+            if (currentUser.value && !currentUser.value.salesLinkId && currentUser.value.email) {
+                try {
+                    const fresh = await db.getUserByEmail(currentUser.value.email);
+                    if (fresh) {
+                        if (!fresh.salesLinkId) {
+                            const newId = db.generateSalesLinkId('sm');
+                            await db.updateUser(fresh.id, { salesLinkId: newId });
+                            fresh.salesLinkId = newId;
+                        }
+                        currentUser.value.salesLinkId = fresh.salesLinkId;
+                        localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
+                    }
+                } catch (e) {
+                    console.warn('Could not sync SM salesLinkId:', e);
+                }
+            }
+
             try {
                 pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
             } catch (e) {
@@ -2187,7 +2207,22 @@ const app = createApp({
                 originalUser.value = { ...currentUser.value };
             }
             
-            const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId || user.id }; // Workspaces use id as tenantId
+            const sessionUser = { 
+                id: user.id, 
+                email: user.email, 
+                username: user.name, 
+                role: user.role, 
+                name: user.name, 
+                salesLinkId: user.salesLinkId || null,
+                supervisorId: user.supervisorId || null,
+                supervisorName: user.supervisorName || null,
+                supervisorRole: user.supervisorRole || null,
+                supervisorSalesLinkId: user.supervisorSalesLinkId || null,
+                tenantId: user.tenantId || user.id,
+                bankName: user.bankName,
+                division: user.division,
+                region: user.region
+            };
             localStorage.setItem('axis_user', JSON.stringify(sessionUser));
             currentUser.value = sessionUser;
             
@@ -3123,6 +3158,34 @@ const app = createApp({
             if (currentUser.value) {
                 initUserSm();
                 
+                // Self-healing session sync: ensure fresh user profile & salesLinkId
+                (async () => {
+                    try {
+                        if (currentUser.value.email) {
+                            let fresh = await db.getUserByEmail(currentUser.value.email);
+                            if (fresh) {
+                                if (!fresh.salesLinkId) {
+                                    const newId = db.generateSalesLinkId(fresh.role || currentUser.value.role || 'sm');
+                                    await db.updateUser(fresh.id, { salesLinkId: newId });
+                                    fresh.salesLinkId = newId;
+                                }
+                                currentUser.value.salesLinkId = fresh.salesLinkId;
+                                currentUser.value.supervisorId = fresh.supervisorId || null;
+                                currentUser.value.supervisorName = fresh.supervisorName || null;
+                                currentUser.value.supervisorRole = fresh.supervisorRole || null;
+                                currentUser.value.supervisorSalesLinkId = fresh.supervisorSalesLinkId || null;
+                                if (fresh.tenantId) currentUser.value.tenantId = fresh.tenantId;
+                                if (fresh.region) currentUser.value.region = fresh.region;
+                                if (fresh.bankName) currentUser.value.bankName = fresh.bankName;
+                                if (fresh.division) currentUser.value.division = fresh.division;
+                                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Session refresh error:", e);
+                    }
+                })();
+
                 try {
                     await loadData();
                 } catch (e) {
