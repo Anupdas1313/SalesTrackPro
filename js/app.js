@@ -1,4 +1,4 @@
-import * as db from './db.js';
+﻿import * as db from './db.js';
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const app = createApp({
@@ -26,7 +26,7 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
-        const registerForm = ref({ name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+        const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
         const divisionOptions = [
             'Auto Loans (Car Loans)',
             'Personal Loans (PL)',
@@ -163,6 +163,8 @@ const app = createApp({
         const getInitialTab = () => {
             if (!initialUser) return '';
             if (initialUser.role === 'super_admin') return 'super-admin-dashboard';
+            if (initialUser.role === 'zsm') return 'zsm-dashboard';
+            if (initialUser.role === 'asm') return 'asm-dashboard';
             if (initialUser.role === 'sm' || initialUser.role === 'admin') return 'dashboard';
             return 'ro-dashboard';
         };
@@ -337,6 +339,8 @@ const app = createApp({
             return r === 'sm' || r === 'admin';
         }); // fallback for legacy
         const isRO = computed(() => (currentUser.value?.role || '').toLowerCase() === 'ro');
+        const isASM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'asm');
+        const isZSM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'zsm');
 
 
 
@@ -1010,6 +1014,12 @@ const app = createApp({
                 case 'dashboard': return 'Global Dashboard';
                 case 'tracking': return 'Live File Tracking';
                 case 'users': return 'User Management';
+                case 'asm-dashboard': return 'Area Operations Cockpit';
+                case 'asm-tracking': return 'Area Pipeline Tracking';
+                case 'asm-team': return 'Supervised Sales Managers';
+                case 'asm-eod': return 'Area Branch Daily EODs';
+                case 'zsm-dashboard': return 'Zonal Operations Cockpit';
+                case 'zsm-team': return 'Supervised Area Managers';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
         };
@@ -1808,6 +1818,318 @@ const app = createApp({
             }
         };
 
+        // --- SalesLink Identity & Invitation Handshake State ---
+        const copiedSalesLinkIdToast = ref(false);
+        const copySalesLinkId = async (id) => {
+            if (!id) return;
+            try {
+                await navigator.clipboard.writeText(id);
+                copiedSalesLinkIdToast.value = true;
+                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
+            } catch (e) {
+                console.warn('Could not copy SalesLink ID to clipboard:', e);
+            }
+        };
+
+        const pendingInvitations = ref([]);
+        const isRespondingInvite = ref(false);
+
+        const acceptSupervisorInvite = async (invitation) => {
+            if (!invitation || !currentUser.value) return;
+            isRespondingInvite.value = true;
+            try {
+                await db.acceptInvitation(invitation.id, currentUser.value.id);
+                currentUser.value.supervisorId = invitation.fromUserId;
+                currentUser.value.supervisorName = invitation.fromName;
+                currentUser.value.supervisorRole = invitation.fromRole;
+                currentUser.value.supervisorSalesLinkId = invitation.fromSalesLinkId;
+                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
+                pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
+                await loadData();
+            } catch (e) {
+                console.error('Accept invite error:', e);
+                alert(e.message || 'Error accepting invitation');
+            } finally {
+                isRespondingInvite.value = false;
+            }
+        };
+
+        const declineSupervisorInvite = async (invitation) => {
+            if (!invitation) return;
+            if (!confirm(`Are you sure you want to decline this invitation from ${invitation.fromName || 'Manager'}?`)) return;
+            isRespondingInvite.value = true;
+            try {
+                await db.declineInvitation(invitation.id);
+                pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
+            } catch (e) {
+                console.error('Decline invite error:', e);
+            } finally {
+                isRespondingInvite.value = false;
+            }
+        };
+
+        const unlinkFromSupervisor = async () => {
+            if (!confirm('Are you sure you want to disconnect from your Area Sales Manager? You will need a new invite to reconnect.')) return;
+            try {
+                await db.unlinkSupervisor(currentUser.value.id);
+                currentUser.value.supervisorId = null;
+                currentUser.value.supervisorName = null;
+                currentUser.value.supervisorRole = null;
+                currentUser.value.supervisorSalesLinkId = null;
+                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
+                await loadData();
+            } catch (e) {
+                console.error('Unlink error:', e);
+                alert(e.message || 'Error disconnecting');
+            }
+        };
+
+        // --- Area Sales Manager (ASM) State & Operations ---
+        const supervisedSMs = ref([]);
+        const areaFiles = ref([]);
+        const areaEods = ref([]);
+        const areaInvitations = ref([]);
+        const showInviteSmModal = ref(false);
+        const inviteSmForm = ref({ email: '', salesLinkId: '', territoryName: '' });
+        const inviteSmError = ref('');
+        const inviteSmSuccess = ref('');
+        const isInvitingSm = ref(false);
+        const selectedSmDrilldown = ref(null);
+        const asmSearchQuery = ref('');
+        const asmStatusFilter = ref('All');
+        const asmHubFilter = ref('All');
+
+        const loadAsmData = async () => {
+            if (!currentUser.value?.id) return;
+            try {
+                supervisedSMs.value = await db.getUsersBySupervisor(currentUser.value.id);
+                const wsIds = supervisedSMs.value.map(s => s.tenantId).filter(Boolean);
+                areaFiles.value = await db.getLoanFilesByTenantIds(wsIds);
+                areaEods.value = await db.getEODReportsByTenantIds(wsIds);
+                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
+                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
+            } catch (e) {
+                console.error('Error loading ASM data:', e);
+            }
+        };
+
+        const sendSmInvitation = async () => {
+            inviteSmError.value = '';
+            inviteSmSuccess.value = '';
+            const email = (inviteSmForm.value.email || '').trim().toLowerCase();
+            if (!email) {
+                inviteSmError.value = 'Please enter a valid Gmail address.';
+                return;
+            }
+            isInvitingSm.value = true;
+            try {
+                await db.createInvitation({
+                    fromUserId: currentUser.value.id,
+                    fromName: currentUser.value.name,
+                    fromEmail: currentUser.value.email,
+                    fromRole: 'asm',
+                    fromSalesLinkId: currentUser.value.salesLinkId || '',
+                    toEmail: email,
+                    toSalesLinkId: (inviteSmForm.value.salesLinkId || '').trim().toUpperCase(),
+                    toRole: 'sm',
+                    territoryName: inviteSmForm.value.territoryName || currentUser.value.region || 'Area Hub',
+                    bankName: currentUser.value.bankName || 'Axis Bank',
+                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
+                });
+                inviteSmSuccess.value = `Invitation successfully sent to ${email}! They will be prompted to accept when they log in.`;
+                inviteSmForm.value = { email: '', salesLinkId: '', territoryName: '' };
+                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
+                setTimeout(() => {
+                    showInviteSmModal.value = false;
+                    inviteSmSuccess.value = '';
+                }, 2500);
+            } catch (e) {
+                console.error('Send invite error:', e);
+                inviteSmError.value = e.message || 'Failed to send invitation.';
+            } finally {
+                isInvitingSm.value = false;
+            }
+        };
+
+        const cancelInvitation = async (invId) => {
+            if (!confirm('Are you sure you want to cancel this pending invitation?')) return;
+            try {
+                await db.revokeInvitation(invId);
+                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
+            } catch (e) {
+                console.error('Revoke invite error:', e);
+            }
+        };
+
+        const releaseSm = async (smUser) => {
+            if (!confirm(`Are you sure you want to release Sales Manager "${smUser.name || smUser.email}" from your Area? Their files and hub will be unlinked from your dashboard.`)) return;
+            try {
+                await db.unlinkSupervisor(smUser.id);
+                await loadAsmData();
+            } catch (e) {
+                console.error('Release SM error:', e);
+            }
+        };
+
+        const asmStats = computed(() => {
+            const files = areaFiles.value || [];
+            const now = new Date();
+            const curY = now.getFullYear();
+            const curM = now.getMonth();
+            
+            const mtdFiles = files.filter(f => {
+                const dStr = f.loginDate || f.createdAt;
+                if (!dStr) return false;
+                const d = new Date(dStr);
+                return d.getFullYear() === curY && d.getMonth() === curM;
+            });
+
+            const mtdLoginCount = mtdFiles.length;
+            const mtdLoginVol = mtdFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+
+            const mtdSancFiles = mtdFiles.filter(f => isSanctionStatus(f.status));
+            const mtdSancCount = mtdSancFiles.length;
+            const mtdSancVol = mtdSancFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+
+            const mtdDisbFiles = mtdFiles.filter(f => isDisbursedStatus(f.status));
+            const mtdDisbCount = mtdDisbFiles.length;
+            const mtdDisbVol = mtdDisbFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+
+            const activeHubsCount = supervisedSMs.value.length;
+
+            return {
+                mtdLoginCount,
+                mtdLoginVol,
+                mtdSancCount,
+                mtdSancVol,
+                mtdDisbCount,
+                mtdDisbVol,
+                activeHubsCount
+            };
+        });
+
+        const smPerformanceList = computed(() => {
+            const todayStr = getTodayDateStr();
+            return (supervisedSMs.value || []).map(sm => {
+                const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
+                const now = new Date();
+                const curY = now.getFullYear();
+                const curM = now.getMonth();
+                const mtdF = smFiles.filter(f => {
+                    const dStr = f.loginDate || f.createdAt;
+                    if (!dStr) return false;
+                    const d = new Date(dStr);
+                    return d.getFullYear() === curY && d.getMonth() === curM;
+                });
+                const mtdLogins = mtdF.length;
+                const mtdLoginVol = mtdF.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+                const mtdSanc = mtdF.filter(f => isSanctionStatus(f.status));
+                const mtdSancVol = mtdSanc.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+                const mtdDisb = mtdF.filter(f => isDisbursedStatus(f.status));
+                const mtdDisbVol = mtdDisb.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
+
+                const smTodayEods = (areaEods.value || []).filter(e => e.tenantId === sm.tenantId && e.date === todayStr);
+
+                return {
+                    id: sm.id,
+                    name: sm.name || 'Sales Manager',
+                    email: sm.email,
+                    phone: sm.phone || '-',
+                    salesLinkId: sm.salesLinkId || 'SL-SM-PENDING',
+                    tenantId: sm.tenantId,
+                    region: sm.region || 'Branch Hub',
+                    bankName: sm.bankName || 'Axis Bank',
+                    mtdLoginCount: mtdLogins,
+                    mtdLoginVol: mtdLoginVol,
+                    mtdSancCount: mtdSanc.length,
+                    mtdSancVol: mtdSancVol,
+                    mtdDisbCount: mtdDisb.length,
+                    mtdDisbVol: mtdDisbVol,
+                    todayEodsCount: smTodayEods.length,
+                    allFilesCount: smFiles.length
+                };
+            });
+        });
+
+        const filteredAreaFiles = computed(() => {
+            let list = areaFiles.value || [];
+            if (asmHubFilter.value && asmHubFilter.value !== 'All') {
+                list = list.filter(f => f.tenantId === asmHubFilter.value);
+            }
+            if (asmStatusFilter.value && asmStatusFilter.value !== 'All') {
+                list = list.filter(f => f.status === asmStatusFilter.value);
+            }
+            if (asmSearchQuery.value) {
+                const q = asmSearchQuery.value.trim().toLowerCase();
+                list = list.filter(f => 
+                    (f.customerName || '').toLowerCase().includes(q) ||
+                    (f.appId || '').toLowerCase().includes(q) ||
+                    (f.roName || '').toLowerCase().includes(q)
+                );
+            }
+            return list;
+        });
+
+        // --- Zonal Sales Manager (ZSM) State & Operations ---
+        const supervisedASMs = ref([]);
+        const zsmInvitations = ref([]);
+        const showInviteAsmModal = ref(false);
+        const inviteAsmForm = ref({ email: '', salesLinkId: '', territoryName: '' });
+        const inviteAsmError = ref('');
+        const inviteAsmSuccess = ref('');
+        const isInvitingAsm = ref(false);
+        const selectedAsmDrilldown = ref(null);
+
+        const loadZsmData = async () => {
+            if (!currentUser.value?.id) return;
+            try {
+                supervisedASMs.value = await db.getUsersBySupervisor(currentUser.value.id);
+                zsmInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
+                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
+            } catch (e) {
+                console.error('Error loading ZSM data:', e);
+            }
+        };
+
+        const sendAsmInvitation = async () => {
+            inviteAsmError.value = '';
+            inviteAsmSuccess.value = '';
+            const email = (inviteAsmForm.value.email || '').trim().toLowerCase();
+            if (!email) {
+                inviteAsmError.value = 'Please enter a valid Gmail address.';
+                return;
+            }
+            isInvitingAsm.value = true;
+            try {
+                await db.createInvitation({
+                    fromUserId: currentUser.value.id,
+                    fromName: currentUser.value.name,
+                    fromEmail: currentUser.value.email,
+                    fromRole: 'zsm',
+                    fromSalesLinkId: currentUser.value.salesLinkId || '',
+                    toEmail: email,
+                    toSalesLinkId: (inviteAsmForm.value.salesLinkId || '').trim().toUpperCase(),
+                    toRole: 'asm',
+                    territoryName: inviteAsmForm.value.territoryName || currentUser.value.region || 'Zonal Area',
+                    bankName: currentUser.value.bankName || 'Axis Bank',
+                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
+                });
+                inviteAsmSuccess.value = `Invitation successfully sent to ${email}!`;
+                inviteAsmForm.value = { email: '', salesLinkId: '', territoryName: '' };
+                zsmInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
+                setTimeout(() => {
+                    showInviteAsmModal.value = false;
+                    inviteAsmSuccess.value = '';
+                }, 2500);
+            } catch (e) {
+                console.error('Send invite error:', e);
+                inviteAsmError.value = e.message || 'Failed to send invitation.';
+            } finally {
+                isInvitingAsm.value = false;
+            }
+        };
+
+
         // Data Loading
         const loadSuperAdminData = async () => {
             allWorkspaces.value = await db.getAllWorkspaces();
@@ -1828,6 +2150,11 @@ const app = createApp({
             allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
             roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
             smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
+            try {
+                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
+            } catch (e) {
+                console.warn('Could not fetch pending invitations for SM:', e);
+            }
         };
 
         const loadRoData = async () => {
@@ -1842,6 +2169,10 @@ const app = createApp({
             if (!currentUser.value) return;
             if (isSuperAdmin.value) {
                 await loadSuperAdminData();
+            } else if (isZSM.value) {
+                await loadZsmData();
+            } else if (isASM.value) {
+                await loadAsmData();
             } else if (isSM.value) {
                 await loadSmData();
             } else {
@@ -2049,49 +2380,59 @@ const app = createApp({
                     return;
                 }
                 
-                const workspaceId = await db.addWorkspace({
-                    name: wsName,
-                    bankName: smBank,
-                    division: smDivision,
-                    region: smRegion,
-                    managerName: smName,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                });
+                const chosenRole = registerForm.value.role || 'sm';
+                let workspaceId = '';
+                if (chosenRole === 'sm') {
+                    workspaceId = await db.addWorkspace({
+                        name: wsName,
+                        bankName: smBank,
+                        division: smDivision,
+                        region: smRegion,
+                        managerName: smName,
+                        status: 'active',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                const newSalesLinkId = db.generateSalesLinkId(chosenRole);
 
                 const newUserId = await db.addUser({
                     email: email,
-                    role: 'sm',
+                    role: chosenRole,
                     name: smName,
                     bankName: smBank,
                     division: smDivision,
                     region: smRegion,
                     phone: smPhone,
-                    tenantId: workspaceId,
+                    salesLinkId: newSalesLinkId,
+                    tenantId: workspaceId || null,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 });
 
-                // Auto sign-in new Sales Manager
+                // Auto sign-in new user
                 const sessionUser = {
                     id: newUserId || email,
                     email: email,
                     username: smName,
-                    role: 'sm',
+                    role: chosenRole,
                     name: smName,
                     bankName: smBank,
                     division: smDivision,
                     region: smRegion,
-                    tenantId: workspaceId
+                    salesLinkId: newSalesLinkId,
+                    tenantId: workspaceId || null
                 };
                 localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                 currentUser.value = sessionUser;
                 initUserSm();
-                currentTab.value = 'dashboard';
+                if (chosenRole === 'zsm') currentTab.value = 'zsm-dashboard';
+                else if (chosenRole === 'asm') currentTab.value = 'asm-dashboard';
+                else currentTab.value = 'dashboard';
                 await loadData();
 
                 showRegisterMode.value = false;
-                registerForm.value = { name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
+                registerForm.value = { role: 'sm', name: '', region: '', phone: '', passcode: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
             } catch (error) {
                 console.error("Registration Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
@@ -2137,13 +2478,41 @@ const app = createApp({
                     }
                 }
 
+                // Auto assign SalesLink ID if missing (backward compatibility)
+                if (!user.salesLinkId) {
+                    try {
+                        const newSalesLinkId = db.generateSalesLinkId(user.role);
+                        await db.updateUser(user.id, { salesLinkId: newSalesLinkId });
+                        user.salesLinkId = newSalesLinkId;
+                    } catch (e) {
+                        console.warn('Could not backfill salesLinkId:', e);
+                    }
+                }
+
                 // Store user session
-                const sessionUser = { id: user.id, email: user.email, username: user.name, role: user.role, name: user.name, tenantId: user.tenantId };
+                const sessionUser = {
+                    id: user.id,
+                    email: user.email,
+                    username: user.name,
+                    role: user.role,
+                    name: user.name,
+                    salesLinkId: user.salesLinkId,
+                    supervisorId: user.supervisorId || null,
+                    supervisorName: user.supervisorName || null,
+                    supervisorRole: user.supervisorRole || null,
+                    supervisorSalesLinkId: user.supervisorSalesLinkId || null,
+                    tenantId: user.tenantId || null,
+                    bankName: user.bankName,
+                    division: user.division,
+                    region: user.region
+                };
                 localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                 currentUser.value = sessionUser;
                 initUserSm();
                 
                 if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
+                else if (isZSM.value) currentTab.value = 'zsm-dashboard';
+                else if (isASM.value) currentTab.value = 'asm-dashboard';
                 else if (isSM.value) currentTab.value = 'dashboard';
                 else currentTab.value = 'ro-dashboard';
 
@@ -2843,7 +3212,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation
         };
     }
 });

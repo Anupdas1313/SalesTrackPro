@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -208,11 +208,27 @@
                         <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full">SM Only</span>
                     </div>
 
+                    <!-- Role Selector in Registration Mode -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Registration Role <span class="text-rose-500">*</span></label>
+                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                            <button type="button" @click="registerForm.role = 'sm'" :class="[registerForm.role === 'sm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                Branch SM
+                            </button>
+                            <button type="button" @click="registerForm.role = 'asm'" :class="[registerForm.role === 'asm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                Area ASM
+                            </button>
+                            <button type="button" @click="registerForm.role = 'zsm'" :class="[registerForm.role === 'zsm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                Zonal ZSM
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Explicit Manager Alert in Registration Mode -->
                     <div class="p-3 bg-amber-50 border border-amber-200/90 rounded-2xl text-left space-y-1">
                         <div class="flex items-center gap-1.5 text-amber-900 text-xs font-bold">
                             <i class="fas fa-shield-halved text-amber-600"></i>
-                            <span>Sales Manager (SM) Setup Only</span>
+                            <span>{{ registerForm.role === 'zsm' ? 'Zonal Head (ZSM) Setup' : (registerForm.role === 'asm' ? 'Area Manager (ASM) Setup' : 'Sales Manager (SM) Setup') }}</span>
                         </div>
                         <p class="text-[11px] text-amber-800 leading-snug">
                             <strong>Relationship Officers (ROs):</strong> Do <u>NOT</u> register here. Your Sales Manager must invite you first. Please click <strong>Back to Sign In</strong> above.
@@ -305,7 +321,7 @@
                             <span>Select account in Google window...</span>
                         </template>
                         <template v-else>
-                            <span>Register as Sales Manager</span>
+                            <span>Register as {{ registerForm.role === 'zsm' ? 'Zonal Sales Manager (ZSM)' : (registerForm.role === 'asm' ? 'Area Sales Manager (ASM)' : 'Sales Manager (SM)') }}</span>
                         </template>
                     </button>
 
@@ -357,6 +373,32 @@
                             </a>
                         </template>
                         
+                        <!-- ASM Navigation -->
+                        <template v-else-if="isASM">
+                            <a href="#" @click.prevent="currentTab = 'asm-dashboard'" :class="[currentTab === 'asm-dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-chart-line w-5 text-sm"></i> Area Cockpit
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'asm-tracking'" :class="[currentTab === 'asm-tracking' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1']">
+                                <i class="fas fa-layer-group w-5 text-sm"></i> Area Pipeline
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'asm-team'" :class="[currentTab === 'asm-team' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1']">
+                                <i class="fas fa-network-wired w-5 text-sm"></i> Supervised Hubs
+                            </a>
+                            <a href="#" @click.prevent="goToTab('asm-eod')" :class="[currentTab === 'asm-eod' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer select-none']">
+                                <i class="fas fa-clipboard-check w-5 text-sm"></i> Area Daily EODs
+                            </a>
+                        </template>
+
+                        <!-- ZSM Navigation -->
+                        <template v-else-if="isZSM">
+                            <a href="#" @click.prevent="currentTab = 'zsm-dashboard'" :class="[currentTab === 'zsm-dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
+                                <i class="fas fa-globe-asia w-5 text-sm"></i> Zonal Cockpit
+                            </a>
+                            <a href="#" @click.prevent="currentTab = 'zsm-team'" :class="[currentTab === 'zsm-team' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1']">
+                                <i class="fas fa-sitemap w-5 text-sm"></i> Supervised Areas
+                            </a>
+                        </template>
+
                         <!-- SM Navigation -->
                         <template v-else-if="isSM">
                             <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'bg-slate-900 text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
@@ -418,6 +460,13 @@
                         <div class="text-xs text-slate-400 font-medium hidden md:block">
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
+                        <!-- Personal SalesLink ID Badge (Copyable) -->
+                        <div v-if="currentUser?.salesLinkId" @click="copySalesLinkId(currentUser.salesLinkId)" title="Click to copy your personal SalesLink ID" class="cursor-pointer bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-[#4F46E5] px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold flex items-center gap-1.5 transition select-none shadow-2xs">
+                            <i class="fas fa-id-badge text-[11px] text-[#4F46E5]"></i>
+                            <span>{{ currentUser.salesLinkId }}</span>
+                            <i class="fas fa-copy text-[9px] text-slate-400"></i>
+                        </div>
+
                         <div class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs">
                             <span class="w-7 h-7 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] font-bold flex items-center justify-center text-xs">
                                 {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
@@ -433,6 +482,39 @@
 
                 <!-- Scrollable Content -->
                 <div class="bg-slate-50 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-5 lg:p-6">
+                    <!-- Supervisor Connection Request Alert Banner -->
+                    <div v-if="pendingInvitations && pendingInvitations.length > 0" class="mb-4 space-y-2.5">
+                        <div v-for="inv in pendingInvitations" :key="inv.id" class="p-3 sm:p-4 bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 border border-indigo-200 rounded-2xl shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                                    <i class="fas fa-user-tie text-base"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs sm:text-sm font-black text-slate-900">Supervisor Connection Request</span>
+                                        <span class="px-2 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full text-[10px] font-extrabold uppercase">{{ inv.fromRole }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mt-0.5 leading-snug">
+                                        <strong>{{ inv.fromName || 'Manager' }}</strong>
+                                        <span v-if="inv.fromSalesLinkId" class="font-mono text-[#4F46E5] font-bold ml-1">({{ inv.fromSalesLinkId }})</span>
+                                        has invited your hub to join the <strong>{{ inv.territoryName || 'Area Team' }}</strong>.
+                                    </p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">
+                                        Connecting links your hub performance and daily EODs to this manager's oversight.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                <button @click="acceptSupervisorInvite(inv)" :disabled="isRespondingInvite" class="px-3.5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-75">
+                                    <i class="fas fa-check"></i>
+                                    <span>Accept & Connect Hub</span>
+                                </button>
+                                <button @click="declineSupervisorInvite(inv)" :disabled="isRespondingInvite" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer">
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- SUPER ADMIN: DASHBOARD -->
                     <div v-if="currentTab === 'super-admin-dashboard' && isSuperAdmin" class="space-y-4">
@@ -1286,6 +1368,432 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ========================================== -->
+                    <!-- ASM: AREA COCKPIT (DASHBOARD)               -->
+                    <!-- ========================================== -->
+                    <div v-if="currentTab === 'asm-dashboard' && isASM" class="space-y-6 pb-14 max-w-6xl mx-auto animate-fade-in">
+                        <!-- Top Banner / Area Overview Header -->
+                        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden">
+                            <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#4F46E5] text-white tracking-wider uppercase">
+                                            Area Cockpit • ASM
+                                        </span>
+                                        <span v-if="currentUser.salesLinkId" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/10 text-indigo-200">
+                                            {{ currentUser.salesLinkId }}
+                                        </span>
+                                        <span class="text-xs text-slate-300 font-medium">
+                                            {{ currentUser.bankName || 'Axis Bank' }} • {{ currentUser.division || 'Auto Loans' }}
+                                        </span>
+                                    </div>
+                                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white">
+                                        {{ currentUser.region || 'Area Operations' }} Cockpit
+                                    </h1>
+                                    <p class="text-xs text-slate-300 mt-1">
+                                        Supervising <strong class="text-white">{{ supervisedSMs.length }} Branch Hub(s)</strong> across your assigned area.
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2 self-start md:self-auto shrink-0">
+                                    <button @click="showInviteSmModal = true" class="px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-2 cursor-pointer">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>Invite Sales Manager</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Area Executive KPI Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Card 1: Logins -->
+                            <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs">
+                                <div class="flex items-center justify-between text-slate-500 mb-1">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider">Area Logins (MTD)</span>
+                                    <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                </div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                                    ₹{{ formatCurrency(asmStats.mtdLoginVol) }}
+                                </div>
+                                <div class="text-xs font-semibold text-slate-500 mt-0.5">
+                                    {{ asmStats.mtdLoginCount }} Total Files Logged
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Sanctions -->
+                            <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs">
+                                <div class="flex items-center justify-between text-slate-500 mb-1">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider">Area Sanctions (MTD)</span>
+                                    <div class="w-7 h-7 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs">
+                                        <i class="fas fa-stamp"></i>
+                                    </div>
+                                </div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                                    ₹{{ formatCurrency(asmStats.mtdSancVol) }}
+                                </div>
+                                <div class="text-xs font-semibold text-slate-500 mt-0.5">
+                                    {{ asmStats.mtdSancCount }} Files Approved
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Disbursals -->
+                            <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs">
+                                <div class="flex items-center justify-between text-slate-500 mb-1">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider">Area Disbursals (MTD)</span>
+                                    <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                                    ₹{{ formatCurrency(asmStats.mtdDisbVol) }}
+                                </div>
+                                <div class="text-xs font-semibold text-emerald-700 mt-0.5">
+                                    {{ asmStats.mtdDisbCount }} Disbursed Cases
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Hub Network -->
+                            <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs">
+                                <div class="flex items-center justify-between text-slate-500 mb-1">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider">Supervised Network</span>
+                                    <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
+                                        <i class="fas fa-network-wired"></i>
+                                    </div>
+                                </div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                                    {{ supervisedSMs.length }} Hubs
+                                </div>
+                                <div class="text-xs font-semibold text-slate-500 mt-0.5">
+                                    Connected & Supervised
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hub Comparison Section -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between px-1">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-building text-slate-700 text-sm"></i>
+                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">
+                                        Supervised Hub Performance Ranking
+                                    </h3>
+                                </div>
+                                <span class="text-xs text-slate-500 font-medium">MTD Branch Overview</span>
+                            </div>
+
+                            <!-- Empty state if no SMs linked yet -->
+                            <div v-if="supervisedSMs.length === 0" class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl mx-auto shadow-xs">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <h4 class="text-sm font-bold text-slate-800">No Sales Managers Connected Yet</h4>
+                                <p class="text-xs text-slate-500 max-w-md mx-auto">
+                                    Connect your branch Sales Managers to start monitoring their loan pipelines and daily EOD submissions in this area cockpit.
+                                </p>
+                                <button @click="showInviteSmModal = true" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition inline-flex items-center gap-2 cursor-pointer shadow-xs">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Send Your First SM Invitation</span>
+                                </button>
+                            </div>
+
+                            <!-- Table of Supervised Hubs -->
+                            <div v-else class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-50/80 border-b border-slate-200">
+                                            <tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                                <th class="py-2.5 px-3">Branch Hub</th>
+                                                <th class="py-2.5 px-3">Sales Manager</th>
+                                                <th class="py-2.5 px-3 text-right">Logins (MTD)</th>
+                                                <th class="py-2.5 px-3 text-right">Sanctions (MTD)</th>
+                                                <th class="py-2.5 px-3 text-right">Disbursals (MTD)</th>
+                                                <th class="py-2.5 px-3 text-center">Today EOD</th>
+                                                <th class="py-2.5 px-3 text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="text-xs divide-y divide-slate-100">
+                                            <tr v-for="hub in smPerformanceList" :key="hub.id" class="hover:bg-slate-50/70 transition">
+                                                <td class="py-3 px-3">
+                                                    <div class="font-bold text-slate-900">{{ hub.region }}</div>
+                                                    <div class="text-[10px] text-slate-400 font-mono">{{ hub.bankName }}</div>
+                                                </td>
+                                                <td class="py-3 px-3">
+                                                    <div class="font-bold text-slate-800">{{ hub.name }}</div>
+                                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                                        <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{{ hub.salesLinkId }}</span>
+                                                        <span class="text-[10px] text-slate-400">{{ hub.phone }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3 px-3 text-right font-medium text-slate-700">
+                                                    <div>₹{{ formatCurrency(hub.mtdLoginVol) }}</div>
+                                                    <div class="text-[10px] text-slate-400">{{ hub.mtdLoginCount }} files</div>
+                                                </td>
+                                                <td class="py-3 px-3 text-right font-medium text-slate-700">
+                                                    <div>₹{{ formatCurrency(hub.mtdSancVol) }}</div>
+                                                    <div class="text-[10px] text-slate-400">{{ hub.mtdSancCount }} files</div>
+                                                </td>
+                                                <td class="py-3 px-3 text-right font-bold text-emerald-700">
+                                                    <div>₹{{ formatCurrency(hub.mtdDisbVol) }}</div>
+                                                    <div class="text-[10px] text-emerald-600">{{ hub.mtdDisbCount }} files</div>
+                                                </td>
+                                                <td class="py-3 px-3 text-center">
+                                                    <span :class="hub.todayEodsCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1">
+                                                        <i :class="hub.todayEodsCount > 0 ? 'fas fa-check text-[9px]' : 'fas fa-clock text-[9px]'"></i>
+                                                        <span>{{ hub.todayEodsCount > 0 ? hub.todayEodsCount + ' Filed' : 'Pending' }}</span>
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-3 text-center">
+                                                    <button @click="currentTab = 'asm-tracking'; asmHubFilter = hub.tenantId" class="px-2.5 py-1 bg-slate-100 hover:bg-[#4F46E5] hover:text-white text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer">
+                                                        View Pipeline
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- ASM: AREA PIPELINE FILE TRACKING            -->
+                    <!-- ========================================== -->
+                    <div v-if="currentTab === 'asm-tracking' && isASM" class="space-y-4 pb-14 max-w-6xl mx-auto animate-fade-in">
+                        <!-- Top Filters Bar -->
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div>
+                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">Area Loan Files Pipeline</h3>
+                                    <p class="text-xs text-slate-400 font-medium">Monitoring files across all supervised branch hubs ({{ filteredAreaFiles.length }} matches)</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button @click="asmHubFilter = 'All'; asmStatusFilter = 'All'; asmSearchQuery = ''" class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                                <!-- Hub Selector -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Hub</label>
+                                    <select v-model="asmHubFilter" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="All">All Supervised Hubs</option>
+                                        <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">
+                                            {{ hub.region || hub.name }} ({{ hub.name }})
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Status Selector -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Status</label>
+                                    <select v-model="asmStatusFilter" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="All">All Stages</option>
+                                        <option value="Logged">Logged</option>
+                                        <option value="FI">FI (Field Investigation)</option>
+                                        <option value="Sanction">Sanction / Approved</option>
+                                        <option value="Disbursed">Disbursed</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </div>
+
+                                <!-- Search Box -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Search Pipeline</label>
+                                    <div class="relative">
+                                        <i class="fas fa-search absolute left-2.5 top-2.5 text-xs text-slate-400"></i>
+                                        <input v-model="asmSearchQuery" type="text" placeholder="Customer, App ID, RO..." class="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-[#4F46E5]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Table -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-50/80 border-b border-slate-200">
+                                        <tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                            <th class="py-2.5 px-3">App ID / Date</th>
+                                            <th class="py-2.5 px-3">Customer Name</th>
+                                            <th class="py-2.5 px-3">Hub & Officer</th>
+                                            <th class="py-2.5 px-3 text-right">Loan Amount</th>
+                                            <th class="py-2.5 px-3 text-center">Status</th>
+                                            <th class="py-2.5 px-3 text-center">Channel</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-xs divide-y divide-slate-100">
+                                        <tr v-if="filteredAreaFiles.length === 0">
+                                            <td colspan="6" class="p-8 text-center text-slate-400">No files found matching current area filters.</td>
+                                        </tr>
+                                        <tr v-for="file in filteredAreaFiles" :key="file.id" class="hover:bg-slate-50/70 transition">
+                                            <td class="py-3 px-3">
+                                                <div class="font-bold text-[#4F46E5] font-mono">#{{ file.appId || 'NoID' }}</div>
+                                                <div class="text-[10px] text-slate-400">{{ formatDateOnly(file.loginDate || file.createdAt) }}</div>
+                                            </td>
+                                            <td class="py-3 px-3">
+                                                <div class="font-bold text-slate-900">{{ file.customerName }}</div>
+                                                <div class="text-[10px] text-slate-500">{{ file.nclUcl || '-' }}</div>
+                                            </td>
+                                            <td class="py-3 px-3">
+                                                <div class="font-semibold text-slate-800">{{ file.roName || 'RO' }}</div>
+                                                <div class="text-[10px] text-slate-400">{{ file.smName || 'Hub' }}</div>
+                                            </td>
+                                            <td class="py-3 px-3 text-right font-black text-slate-900">
+                                                ₹{{ formatCurrency(file.loanAmount) }}
+                                            </td>
+                                            <td class="py-3 px-3 text-center">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[10px] font-bold rounded-md inline-block">
+                                                    {{ file.status }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-3 text-center text-slate-600 font-semibold text-[11px]">
+                                                {{ file.sourcingChannel || 'DSA' }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- ASM: SUPERVISED HUBS & TEAM MANAGEMENT      -->
+                    <!-- ========================================== -->
+                    <div v-if="currentTab === 'asm-team' && isASM" class="space-y-6 pb-14 max-w-5xl mx-auto animate-fade-in">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900">Supervised Sales Managers & Hubs</h3>
+                                <p class="text-xs text-slate-500 font-medium">Manage connected branch managers and send area link invitations</p>
+                            </div>
+                            <button @click="showInviteSmModal = true" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Invite New Sales Manager</span>
+                            </button>
+                        </div>
+
+                        <!-- SECTION 1: Active Connected SMs -->
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 px-1">
+                                <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">
+                                    Active Supervised Hubs ({{ supervisedSMs.length }})
+                                </h4>
+                            </div>
+
+                            <div v-if="supervisedSMs.length === 0" class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
+                                No branch managers connected yet. Use the invite button above to link an SM.
+                            </div>
+
+                            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div v-for="sm in supervisedSMs" :key="sm.id" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                                Active Link
+                                            </span>
+                                            <span class="text-[10px] font-mono text-slate-400">{{ sm.salesLinkId || 'SL-SM-PENDING' }}</span>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-slate-900">{{ sm.name || 'Sales Manager' }}</h4>
+                                        <p class="text-xs text-slate-500 font-medium">{{ sm.region || 'Branch Hub' }} • {{ sm.bankName || 'Axis Bank' }}</p>
+                                        <div class="text-[11px] text-slate-400 mt-2 space-y-0.5">
+                                            <div><i class="fas fa-envelope text-[10px] w-4"></i> {{ sm.email }}</div>
+                                            <div v-if="sm.phone"><i class="fas fa-phone text-[10px] w-4"></i> {{ sm.phone }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                        <button @click="currentTab = 'asm-tracking'; asmHubFilter = sm.tenantId" class="text-xs font-bold text-[#4F46E5] hover:underline cursor-pointer">
+                                            View Hub Pipeline →
+                                        </button>
+                                        <button @click="releaseSm(sm)" class="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer">
+                                            Release Hub
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2: Pending Invitations -->
+                        <div class="space-y-3 pt-2">
+                            <div class="flex items-center gap-2 px-1">
+                                <i class="fas fa-clock text-amber-500 text-sm"></i>
+                                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">
+                                    Pending Sent Invitations ({{ areaInvitations.filter(i => i.status === 'pending').length }})
+                                </h4>
+                            </div>
+
+                            <div v-if="areaInvitations.filter(i => i.status === 'pending').length === 0" class="bg-slate-50/80 rounded-2xl border border-slate-200/60 p-5 text-center text-xs text-slate-400">
+                                No pending invitations. All invited managers have responded.
+                            </div>
+
+                            <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs divide-y divide-slate-100">
+                                <div v-for="inv in areaInvitations.filter(i => i.status === 'pending')" :key="inv.id" class="p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-slate-900">{{ inv.toEmail }}</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Awaiting SM Sign-in</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">
+                                            Sent on {{ formatDateOnly(inv.createdAt) }} for {{ inv.territoryName }}
+                                        </p>
+                                    </div>
+                                    <button @click="cancelInvitation(inv.id)" class="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-semibold rounded-xl transition cursor-pointer self-start sm:self-auto">
+                                        Cancel Invite
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- ASM: AREA EOD MONITORING                   -->
+                    <!-- ========================================== -->
+                    <div v-if="currentTab === 'asm-eod' && isASM" class="space-y-4 pb-14 max-w-6xl mx-auto animate-fade-in">
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">Area Daily EOD Submissions</h3>
+                                <p class="text-xs text-slate-400 font-medium">Daily operational activity reports across all supervised hubs</p>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
+                                Total Reports: {{ areaEods.length }}
+                            </span>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-50/80 border-b border-slate-200">
+                                        <tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                            <th class="py-2.5 px-3">Date</th>
+                                            <th class="py-2.5 px-3">Officer</th>
+                                            <th class="py-2.5 px-3 text-center">Dealer Visits</th>
+                                            <th class="py-2.5 px-3 text-right">Tomorrow Expected</th>
+                                            <th class="py-2.5 px-3">Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-xs divide-y divide-slate-100">
+                                        <tr v-if="areaEods.length === 0">
+                                            <td colspan="5" class="p-8 text-center text-slate-400">No EOD reports logged across the area yet.</td>
+                                        </tr>
+                                        <tr v-for="eod in areaEods" :key="eod.id" class="hover:bg-slate-50/70 transition">
+                                            <td class="py-3 px-3 font-mono font-bold text-slate-800">{{ eod.date }}</td>
+                                            <td class="py-3 px-3 font-semibold text-slate-900">{{ eod.userName || 'RO' }}</td>
+                                            <td class="py-3 px-3 text-center font-bold text-indigo-700">{{ eod.dealerVisits || 0 }} visits</td>
+                                            <td class="py-3 px-3 text-right text-slate-700">
+                                                <div>Logins: {{ eod.tomorrowLogins || '0' }}</div>
+                                                <div class="text-[10px] text-emerald-600 font-bold">Disb: {{ eod.tomorrowDisb || '0' }}</div>
+                                            </td>
+                                            <td class="py-3 px-3 text-slate-500 max-w-xs truncate">{{ eod.remarks || '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- ADMIN: USER MANAGEMENT -->
                     <div v-if="currentTab === 'users' && isSM" class="space-y-6">
@@ -2810,7 +3318,25 @@
 
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
-                    <template v-if="isSM">
+                    <template v-if="isASM">
+                        <a href="#" @click.prevent="currentTab = 'asm-dashboard'" :class="[currentTab === 'asm-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-chart-line text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Area</span>
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'asm-tracking'" :class="[currentTab === 'asm-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-layer-group text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Track</span>
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'asm-team'" :class="[currentTab === 'asm-team' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-network-wired text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Hubs</span>
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'asm-eod'" :class="[currentTab === 'asm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                            <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
+                            <span class="text-[10px]">EODs</span>
+                        </a>
+                    </template>
+                    <template v-else-if="isSM">
                         <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Home</span>
@@ -3691,8 +4217,81 @@
 
     </div>
 
+        <!-- Copied SalesLink ID Toast -->
+        <div v-if="copiedSalesLinkIdToast" class="fixed top-4 right-4 z-[999] bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in font-bold">
+            <i class="fas fa-check-circle text-emerald-400"></i>
+            <span>SalesLink ID copied to clipboard!</span>
+        </div>
+
+        <!-- Invite Sales Manager Modal (ASM Feature) -->
+        <div v-if="showInviteSmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm font-bold shadow-xs">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-extrabold text-slate-900">Invite Sales Manager</h3>
+                            <p class="text-[11px] text-slate-400 font-medium">Link a branch hub under your Area supervision</p>
+                        </div>
+                    </div>
+                    <button @click="showInviteSmModal = false; inviteSmError = ''; inviteSmSuccess = ''" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <div v-if="inviteSmError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                    <i class="fas fa-circle-exclamation shrink-0"></i>
+                    <span>{{ inviteSmError }}</span>
+                </div>
+
+                <div v-if="inviteSmSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                    <i class="fas fa-check-circle shrink-0 text-emerald-600"></i>
+                    <span>{{ inviteSmSuccess }}</span>
+                </div>
+
+                <form @submit.prevent="sendSmInvitation" class="space-y-3.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Sales Manager Google Email <span class="text-rose-500">*</span>
+                        </label>
+                        <input v-model="inviteSmForm.email" type="email" required placeholder="e.g. rahul.manager@gmail.com" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                        <p class="text-[10px] text-slate-400 mt-1">They will receive an in-app prompt to accept when signing in with this email.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            SalesLink Personal ID (Optional)
+                        </label>
+                        <input v-model="inviteSmForm.salesLinkId" type="text" placeholder="e.g. SL-SM-7821" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 font-mono uppercase">
+                        <p class="text-[10px] text-slate-400 mt-1">If known, provides an extra layer of verification.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Territory / Cluster Name
+                        </label>
+                        <input v-model="inviteSmForm.territoryName" type="text" :placeholder="currentUser?.region || 'e.g. Mumbai North Area'" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end gap-2">
+                        <button type="button" @click="showInviteSmModal = false; inviteSmError = ''; inviteSmSuccess = ''" class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="isInvitingSm" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
+                            <i v-if="isInvitingSm" class="fas fa-spinner fa-spin text-xs"></i>
+                            <i v-else class="fas fa-paper-plane text-xs"></i>
+                            <span>{{ isInvitingSm ? 'Sending Invite...' : 'Send Area Invitation' }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-49"></script>
+    <script type="module" src="js/app.js?v=force-update-50"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
