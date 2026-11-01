@@ -905,8 +905,11 @@
                                             Branch SM
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-300 font-medium truncate mt-0.5">
-                                        {{ currentUser?.bankName || 'Axis Bank' }} &bull; {{ currentUser?.division || 'Retail Lending' }}
+                                    <p class="text-xs text-slate-300 font-medium truncate mt-0.5 flex items-center gap-2 flex-wrap">
+                                        <span>{{ currentUser?.bankName || 'Axis Bank' }} &bull; {{ currentUser?.division || 'Retail Lending' }}</span>
+                                        <span v-if="currentUser.supervisorName" class="inline-flex items-center gap-1 text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-400/20 text-[10px]">
+                                            <i class="fas fa-check-circle text-[9px]"></i> Supervised by {{ currentUser.supervisorName }}
+                                        </span>
                                     </p>
                                 </div>
                             </div>
@@ -920,6 +923,10 @@
                                 <button @click="copySalesLinkId(currentUser?.salesLinkId)" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer ml-2">
                                     <i class="fas fa-copy text-[10px]"></i>
                                     <span>Copy ID</span>
+                                </button>
+                                <button v-if="!currentUser.supervisorName" @click="showConnectSupervisorModal = true" type="button" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer ml-1.5 shrink-0">
+                                    <i class="fas fa-link text-[#4F46E5] text-[10px]"></i>
+                                    <span>Connect to ASM</span>
                                 </button>
                             </div>
                         </div>
@@ -1477,10 +1484,18 @@
                                         Supervising <strong class="text-white">{{ supervisedSMs.length }} Branch Hub(s)</strong> across your assigned area.
                                     </p>
                                 </div>
-                                <div class="flex items-center gap-2 self-start md:self-auto shrink-0">
-                                    <button @click="showInviteSmModal = true" class="px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-2 cursor-pointer">
+                                <div class="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
+                                    <button @click="shareAreaInviteWhatsApp" title="Share Area Invite via WhatsApp" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-2 cursor-pointer">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <span>Share Area Link</span>
+                                    </button>
+                                    <button @click="copyAreaInviteLink" title="Copy Area Link" class="px-3 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fas fa-link text-xs"></i>
+                                        <span>Copy Link</span>
+                                    </button>
+                                    <button @click="showInviteSmModal = true" class="px-3.5 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-2 cursor-pointer">
                                         <i class="fas fa-plus-circle"></i>
-                                        <span>Invite Sales Manager</span>
+                                        <span>Invite SM</span>
                                     </button>
                                 </div>
                             </div>
@@ -3637,14 +3652,18 @@
                                                 </div>
                                             </div>
 
-                                            <div v-else class="p-3.5 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-between gap-3">
+                                            <div v-else class="p-3.5 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
                                                 <div class="flex items-center gap-2.5">
-                                                    <i class="fas fa-circle-info text-amber-500 text-sm"></i>
+                                                    <i class="fas fa-circle-info text-amber-500 text-sm shrink-0"></i>
                                                     <div>
                                                         <p class="text-xs font-bold text-slate-800">No Area ASM Linked Yet</p>
-                                                        <p class="text-[11px] text-slate-400">Share your SM ID <strong class="font-mono text-slate-700">{{ currentUser.salesLinkId }}</strong> with your Area Sales Manager.</p>
+                                                        <p class="text-[11px] text-slate-400">Enter your Area Sales Manager's SalesLink ID to connect your hub directly.</p>
                                                     </div>
                                                 </div>
+                                                <button @click="showConnectSupervisorModal = true" type="button" class="px-3 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0">
+                                                    <i class="fas fa-link text-[10px]"></i>
+                                                    <span>Connect to ASM</span>
+                                                </button>
                                             </div>
 
                                             <!-- Hub Info -->
@@ -4772,11 +4791,72 @@
             </div>
         </div>
 
+        <!-- Connect to Area Sales Manager Modal (SM Self-Service) -->
+        <div v-if="showConnectSupervisorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm font-bold shadow-xs">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-extrabold text-slate-900">Connect to Area Sales Manager</h3>
+                            <p class="text-[11px] text-slate-400 font-medium">Link your Branch Hub under your Area Manager's supervision</p>
+                        </div>
+                    </div>
+                    <button @click="showConnectSupervisorModal = false; connectSupervisorError = ''; connectSupervisorSuccess = ''" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <div v-if="connectSupervisorError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                    <i class="fas fa-circle-exclamation shrink-0"></i>
+                    <span>{{ connectSupervisorError }}</span>
+                </div>
+
+                <div v-if="connectSupervisorSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                    <i class="fas fa-check-circle shrink-0 text-emerald-600"></i>
+                    <span>{{ connectSupervisorSuccess }}</span>
+                </div>
+
+                <form @submit.prevent="submitConnectSupervisor" class="space-y-3.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Area Manager SalesLink ID or Google Email <span class="text-rose-500">*</span>
+                        </label>
+                        <input v-model="connectSupervisorInput" type="text" required placeholder="e.g. SL-ASM-7204 or rajesh.asm@gmail.com" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 font-mono uppercase">
+                        <p class="text-[10px] text-slate-400 mt-1">Ask your Area Sales Manager (ASM) for their SalesLink ID or email.</p>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-[11px] text-slate-600 space-y-1">
+                        <p class="font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-shield-halved text-[#4F46E5]"></i>
+                            <span>What happens when you connect?</span>
+                        </p>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                            Your branch workspace ({{ currentUser?.region ? currentUser.region + ' Hub' : 'Branch Hub' }}) will appear inside your Area Manager's supervision cockpit. You can disconnect at any time from your Profile settings.
+                        </p>
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end gap-2">
+                        <button type="button" @click="showConnectSupervisorModal = false; connectSupervisorError = ''; connectSupervisorSuccess = ''" class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="isConnectingSupervisor" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
+                            <i v-if="isConnectingSupervisor" class="fas fa-spinner fa-spin text-xs"></i>
+                            <i v-else class="fas fa-link text-xs"></i>
+                            <span>{{ isConnectingSupervisor ? 'Verifying & Linking...' : 'Connect to Area Manager' }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-56"></script>
+    <script type="module" src="js/app.js?v=force-update-57"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

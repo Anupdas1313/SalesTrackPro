@@ -424,3 +424,93 @@ export const unlinkSupervisor = async (subordinateUserId) => {
     }
     return true;
 };
+
+export const linkSmToSupervisor = async (smUserId, supervisorIdentifier) => {
+    if (!smUserId || !supervisorIdentifier) throw new Error("SM User ID and Supervisor Identifier are required.");
+
+    const cleanIdentifier = supervisorIdentifier.trim();
+    let supervisor = null;
+
+    // 1. Try finding by salesLinkId
+    if (cleanIdentifier.toUpperCase().startsWith('SL-')) {
+        supervisor = await getUserBySalesLinkId(cleanIdentifier.toUpperCase());
+    }
+    // 2. If not found or not SL-, try finding by email
+    if (!supervisor) {
+        supervisor = await getUserByEmail(cleanIdentifier.toLowerCase());
+    }
+    // 3. Fallback: try salesLinkId without prefix check
+    if (!supervisor) {
+        supervisor = await getUserBySalesLinkId(cleanIdentifier.toUpperCase());
+    }
+
+    if (!supervisor) {
+        throw new Error(`Supervisor not found with ID or Email "${supervisorIdentifier}". Please verify the identifier and try again.`);
+    }
+
+    if (supervisor.role !== 'asm' && supervisor.role !== 'zsm' && supervisor.role !== 'super_admin') {
+        throw new Error(`User "${supervisor.name || supervisor.email}" has role "${supervisor.role}". Only Area Sales Managers (ASM) or Zonal Managers (ZSM) can supervise a branch hub.`);
+    }
+
+    if (supervisor.id === smUserId) {
+        throw new Error("You cannot set yourself as your own supervisor.");
+    }
+
+    const now = new Date().toISOString();
+    const smRef = doc(db, 'users', smUserId);
+    const smSnap = await getDoc(smRef);
+    if (!smSnap.exists()) throw new Error("SM user record not found in database.");
+    const smData = smSnap.data();
+
+    // Link supervisor on SM user
+    const userUpdate = {
+        supervisorId: supervisor.id,
+        supervisorName: supervisor.name || 'Area Manager',
+        supervisorRole: supervisor.role,
+        supervisorSalesLinkId: supervisor.salesLinkId || '',
+        updatedAt: now
+    };
+    if (supervisor.role === 'asm') {
+        userUpdate.asmId = supervisor.id;
+    } else if (supervisor.role === 'zsm') {
+        userUpdate.zsmId = supervisor.id;
+    }
+    await updateDoc(smRef, userUpdate);
+
+    // Link workspace to supervisor
+    if (smData.tenantId) {
+        try {
+            const wsRef = doc(db, 'workspaces', smData.tenantId);
+            const wsUpdate = { updatedAt: now };
+            if (supervisor.role === 'asm') wsUpdate.asmId = supervisor.id;
+            if (supervisor.role === 'zsm') wsUpdate.zsmId = supervisor.id;
+            await updateDoc(wsRef, wsUpdate);
+        } catch (e) {
+            console.warn("Could not link workspace to supervisor:", e);
+        }
+    }
+
+    // Record connection event in invitations collection for historical audit
+    try {
+        await addDoc(invitationsCol, {
+            fromUserId: smUserId,
+            fromName: smData.name || '',
+            fromRole: smData.role || 'sm',
+            fromSalesLinkId: smData.salesLinkId || '',
+            toUserId: supervisor.id,
+            toName: supervisor.name || '',
+            toEmail: supervisor.email,
+            toSalesLinkId: supervisor.salesLinkId || '',
+            targetRole: supervisor.role,
+            status: 'accepted',
+            initiatedBy: 'sm',
+            createdAt: now,
+            respondedAt: now
+        });
+    } catch (e) {
+        console.warn("Could not log invitation audit doc:", e);
+    }
+
+    return supervisor;
+};
+
