@@ -4215,15 +4215,13 @@
             </div>
         </div>
 
-    </div>
-
-        <!-- Copied SalesLink ID Toast -->
+        <!-- Copied SalesLink ID Toast (Inside Vue #app) -->
         <div v-if="copiedSalesLinkIdToast" class="fixed top-4 right-4 z-[999] bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in font-bold">
             <i class="fas fa-check-circle text-emerald-400"></i>
             <span>SalesLink ID copied to clipboard!</span>
         </div>
 
-        <!-- Invite Sales Manager Modal (ASM Feature) -->
+        <!-- Invite Sales Manager Modal (Inside Vue #app) -->
         <div v-if="showInviteSmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
             <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-100">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -4289,9 +4287,11 @@
             </div>
         </div>
 
+    </div>
+
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-50"></script>
+    <script type="module" src="js/app.js?v=force-update-51"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
