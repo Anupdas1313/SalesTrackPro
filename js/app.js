@@ -1935,9 +1935,14 @@ const app = createApp({
 
 
         // --- User Profile State & Firestore Operations ---
+        const assignedSm = ref({ name: '', phone: '', email: '', salesLinkId: '' });
         const profileForm = ref({
             name: '',
             phone: '',
+            employeeCode: '',
+            branchSolId: '',
+            designation: '',
+            branchAddress: '',
             bankName: 'Axis Bank',
             division: 'Auto Loans (Car Loans)',
             region: ''
@@ -1948,13 +1953,73 @@ const app = createApp({
 
         const initProfileForm = () => {
             if (!currentUser.value) return;
+            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'Branch Sales Manager' : 'Relationship Officer')));
             profileForm.value = {
                 name: currentUser.value.name || currentUser.value.username || '',
                 phone: currentUser.value.phone || '',
+                employeeCode: currentUser.value.employeeCode || '',
+                branchSolId: currentUser.value.branchSolId || '',
+                designation: currentUser.value.designation || defaultRoleDesignation,
+                branchAddress: currentUser.value.branchAddress || '',
                 bankName: currentUser.value.bankName || 'Axis Bank',
                 division: currentUser.value.division || 'Auto Loans (Car Loans)',
                 region: currentUser.value.region || ''
             };
+        };
+
+        const profileCompletion = computed(() => {
+            if (!currentUser.value) return { percentage: 0, items: [] };
+            const u = currentUser.value;
+            const items = [
+                { label: 'Google Account', completed: !!u.email, icon: 'fab fa-google' },
+                { label: 'Mobile Number', completed: !!(u.phone && u.phone.replace(/\D/g, '').length >= 10), icon: 'fas fa-phone' },
+                { label: 'Bank & Division', completed: !!(u.bankName && u.division), icon: 'fas fa-building-columns' },
+                { label: 'Operating Hub', completed: !!u.region, icon: 'fas fa-location-dot' },
+                { label: 'Staff Code / SOL', completed: !!(u.employeeCode || u.branchSolId), icon: 'fas fa-id-card' },
+                { 
+                    label: isRO.value ? 'Supervisor Linked' : (isSM.value ? 'Area ASM Connected' : 'Jurisdiction Defined'), 
+                    completed: isRO.value ? !!defaultSmName.value : (isSM.value ? !!u.supervisorName : !!u.region),
+                    icon: 'fas fa-sitemap'
+                }
+            ];
+            const completedCount = items.filter(i => i.completed).length;
+            const percentage = Math.round((completedCount / items.length) * 100);
+            return { percentage, items, completedCount, totalCount: items.length };
+        });
+
+        const openRoWhatsAppChat = (ro) => {
+            if (!ro?.phone) return;
+            const cleanPhone = ro.phone.replace(/\D/g, '');
+            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            const text = encodeURIComponent(`Hi ${ro.name || 'Officer'}, checking in regarding today's loan files and logins for ${currentUser.value?.region || 'our branch'}.`);
+            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+        };
+
+        const openSmWhatsAppChat = () => {
+            if (!assignedSm.value?.phone) return;
+            const cleanPhone = assignedSm.value.phone.replace(/\D/g, '');
+            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            const text = encodeURIComponent(`Hi ${assignedSm.value.name || 'Manager'}, checking in regarding loan files from ${currentUser.value?.name || 'RO'}.`);
+            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+        };
+
+        const isResyncingProfile = ref(false);
+        const profileResyncSuccess = ref(false);
+        const triggerProfileResync = async () => {
+            if (isResyncingProfile.value) return;
+            isResyncingProfile.value = true;
+            try {
+                await loadData();
+                if (isRO.value) await initUserSm();
+                initProfileForm();
+                profileResyncSuccess.value = true;
+                setTimeout(() => { profileResyncSuccess.value = false; }, 3500);
+            } catch (e) {
+                console.error("Resync failed:", e);
+                alert("Could not refresh data: " + (e.message || e));
+            } finally {
+                isResyncingProfile.value = false;
+            }
         };
 
         watch(currentUser, (newVal) => {
@@ -1988,7 +2053,11 @@ const app = createApp({
             try {
                 const updatePayload = {
                     name: trimmedName,
-                    phone: profileForm.value.phone?.trim() || '',
+                    phone: trimmedPhone,
+                    employeeCode: (profileForm.value.employeeCode || '').trim().toUpperCase(),
+                    branchSolId: (profileForm.value.branchSolId || '').trim().toUpperCase(),
+                    designation: (profileForm.value.designation || '').trim(),
+                    branchAddress: (profileForm.value.branchAddress || '').trim(),
                     bankName: profileForm.value.bankName?.trim() || 'Axis Bank',
                     division: profileForm.value.division?.trim() || 'Auto Loans (Car Loans)',
                     region: profileForm.value.region?.trim() || '',
@@ -2005,7 +2074,9 @@ const app = createApp({
                             managerName: trimmedName,
                             bankName: updatePayload.bankName,
                             division: updatePayload.division,
-                            region: updatePayload.region
+                            region: updatePayload.region,
+                            branchSolId: updatePayload.branchSolId,
+                            branchAddress: updatePayload.branchAddress
                         });
                     } catch (wsErr) {
                         console.warn('Workspace sync warning:', wsErr);
@@ -2015,6 +2086,10 @@ const app = createApp({
                 // 3. Update active session state & local storage
                 currentUser.value.name = trimmedName;
                 currentUser.value.phone = updatePayload.phone;
+                currentUser.value.employeeCode = updatePayload.employeeCode;
+                currentUser.value.branchSolId = updatePayload.branchSolId;
+                currentUser.value.designation = updatePayload.designation;
+                currentUser.value.branchAddress = updatePayload.branchAddress;
                 currentUser.value.bankName = updatePayload.bankName;
                 currentUser.value.division = updatePayload.division;
                 currentUser.value.region = updatePayload.region;
@@ -2366,9 +2441,15 @@ const app = createApp({
                 supervisorRole: user.supervisorRole || null,
                 supervisorSalesLinkId: user.supervisorSalesLinkId || null,
                 tenantId: user.tenantId || user.id,
+                phone: user.phone || '',
                 bankName: user.bankName,
                 division: user.division,
-                region: user.region
+                region: user.region,
+                employeeCode: user.employeeCode || '',
+                branchSolId: user.branchSolId || '',
+                designation: user.designation || '',
+                branchAddress: user.branchAddress || '',
+                createdAt: user.createdAt || ''
             };
             localStorage.setItem('axis_user', JSON.stringify(sessionUser));
             currentUser.value = sessionUser;
@@ -2404,31 +2485,45 @@ const app = createApp({
             if (!currentUser.value) return;
 
             let smName = '';
+            let smObj = { name: '', phone: '', email: '', salesLinkId: '' };
 
             // 1. If SM or Admin, their own name is the SM Name
             if (isSM.value) {
                 smName = currentUser.value.name || currentUser.value.username || '';
+                smObj = {
+                    name: smName,
+                    phone: currentUser.value.phone || '',
+                    email: currentUser.value.email || '',
+                    salesLinkId: currentUser.value.salesLinkId || ''
+                };
             } else if (currentUser.value.tenantId) {
-                // 2. Fetch from Workspace (managerName)
+                // 2. Look in users collection for SM of this tenant
                 try {
-                    const ws = await db.getWorkspace(currentUser.value.tenantId);
-                    if (ws && ws.managerName) {
-                        smName = ws.managerName.trim();
+                    const allUsers = await db.getAllUsers();
+                    const smUser = allUsers.find(u => u.tenantId === currentUser.value.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                    if (smUser) {
+                        smName = smUser.name ? smUser.name.trim() : '';
+                        smObj = {
+                            name: smUser.name || '',
+                            phone: smUser.phone || '',
+                            email: smUser.email || '',
+                            salesLinkId: smUser.salesLinkId || ''
+                        };
                     }
                 } catch (e) {
-                    console.warn("Could not fetch workspace managerName:", e);
+                    console.warn("Could not fetch SM user for tenant:", e);
                 }
 
-                // 3. Fallback: Search SM in users of same workspace
+                // 3. Fallback: Fetch from Workspace (managerName)
                 if (!smName) {
                     try {
-                        const allUsers = await db.getAllUsers();
-                        const smUser = allUsers.find(u => u.tenantId === currentUser.value.tenantId && (u.role === 'sm' || u.role === 'admin'));
-                        if (smUser && smUser.name) {
-                            smName = smUser.name.trim();
+                        const ws = await db.getWorkspace(currentUser.value.tenantId);
+                        if (ws && ws.managerName) {
+                            smName = ws.managerName.trim();
+                            smObj.name = smName;
                         }
                     } catch (e) {
-                        console.warn("Could not fetch SM user for tenant:", e);
+                        console.warn("Could not fetch workspace managerName:", e);
                     }
                 }
             }
@@ -2436,15 +2531,18 @@ const app = createApp({
             // 4. Fallback to localStorage if still not found
             if (!smName) {
                 smName = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
+                smObj.name = smName;
             }
 
             if (smName) {
                 const upperSm = smName.toUpperCase();
                 defaultSmName.value = upperSm;
+                smObj.name = upperSm;
                 newFileForm.value.smName = upperSm;
                 localStorage.setItem('axis_default_sm_' + currentUser.value.id, upperSm);
                 localStorage.setItem('axis_default_sm', upperSm);
             }
+            assignedSm.value = smObj;
         };
 
         const systemAnnouncement = ref('');
@@ -2645,7 +2743,12 @@ const app = createApp({
                     phone: user.phone || '',
                     bankName: user.bankName,
                     division: user.division,
-                    region: user.region
+                    region: user.region,
+                    employeeCode: user.employeeCode || '',
+                    branchSolId: user.branchSolId || '',
+                    designation: user.designation || '',
+                    branchAddress: user.branchAddress || '',
+                    createdAt: user.createdAt || ''
                 };
                 localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                 currentUser.value = sessionUser;
@@ -3347,6 +3450,11 @@ const app = createApp({
                                 if (fresh.region) currentUser.value.region = fresh.region;
                                 if (fresh.bankName) currentUser.value.bankName = fresh.bankName;
                                 if (fresh.division) currentUser.value.division = fresh.division;
+                                if (fresh.employeeCode) currentUser.value.employeeCode = fresh.employeeCode;
+                                if (fresh.branchSolId) currentUser.value.branchSolId = fresh.branchSolId;
+                                if (fresh.designation) currentUser.value.designation = fresh.designation;
+                                if (fresh.branchAddress) currentUser.value.branchAddress = fresh.branchAddress;
+                                if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
                                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
                             }
                         }
@@ -3391,6 +3499,7 @@ const app = createApp({
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
+            assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorInput, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess,
             submitConnectSupervisor
         };

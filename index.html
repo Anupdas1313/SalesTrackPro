@@ -3444,7 +3444,7 @@
                                         <div class="flex items-center gap-2 flex-wrap">
                                             <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight truncate">{{ currentUser.name }}</h2>
                                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shrink-0">
-                                                {{ isSM ? 'Branch Sales Manager' : (isASM ? 'Area Sales Manager' : (isZSM ? 'Zonal Sales Manager' : (isSuperAdmin ? 'Platform Super Admin' : 'Relationship Officer'))) }}
+                                                {{ currentUser.designation || (isSM ? 'Branch Sales Manager' : (isASM ? 'Area Sales Manager' : (isZSM ? 'Zonal Sales Manager' : (isSuperAdmin ? 'Platform Super Admin' : 'Relationship Officer')))) }}
                                             </span>
                                         </div>
 
@@ -3461,6 +3461,12 @@
                                             <span>{{ currentUser.division || 'Retail Lending' }}</span>
                                             <span v-if="currentUser.region">&bull;</span>
                                             <span v-if="currentUser.region">{{ currentUser.region }}</span>
+                                            <span v-if="currentUser.employeeCode" class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-white/10 text-white border border-white/20">
+                                                Staff: {{ currentUser.employeeCode }}
+                                            </span>
+                                            <span v-if="currentUser.branchSolId" class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-white/10 text-white border border-white/20">
+                                                SOL: {{ currentUser.branchSolId }}
+                                            </span>
                                         </p>
                                     </div>
                                 </div>
@@ -3475,6 +3481,36 @@
                                         <i class="fas fa-copy text-[10px]"></i>
                                         <span>Copy</span>
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Completion & Banking Readiness Meter -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-50 to-indigo-100 border border-indigo-200 flex items-center justify-center text-[#4F46E5] font-black shrink-0">
+                                        <i class="fas fa-id-badge text-base"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Profile Strength & Banking Readiness</span>
+                                            <span :class="profileCompletion.percentage === 100 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-indigo-100 text-indigo-800 border-indigo-200'" class="px-2.5 py-0.5 rounded-full text-[10px] font-black border">
+                                                {{ profileCompletion.percentage }}% Complete ({{ profileCompletion.completedCount }}/{{ profileCompletion.totalCount }})
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Complete your banking credentials for verified MIS attribution and supervisor routing.</p>
+                                    </div>
+                                </div>
+                                <div class="w-full sm:w-44 bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/60 shrink-0">
+                                    <div class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-2.5 rounded-full transition-all duration-700" :style="{ width: profileCompletion.percentage + '%' }"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-3 pt-3 border-t border-slate-100">
+                                <div v-for="item in profileCompletion.items" :key="item.label" class="flex items-center gap-1.5 text-[11px] min-w-0" :class="item.completed ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'">
+                                    <i :class="item.completed ? 'fas fa-circle-check text-emerald-500 text-xs' : 'far fa-circle text-slate-300 text-xs'"></i>
+                                    <span class="truncate">{{ item.label }}</span>
                                 </div>
                             </div>
                         </div>
@@ -3569,6 +3605,50 @@
                                                     <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
                                                 </select>
                                             </div>
+
+                                            <!-- Official Designation -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Official Designation
+                                                </label>
+                                                <input v-model="profileForm.designation" list="designationList" type="text" placeholder="e.g. Relationship Officer / Sr. RM" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                                <datalist id="designationList">
+                                                    <option value="Relationship Officer (RO)">
+                                                    <option value="Senior Relationship Officer">
+                                                    <option value="Key Account Manager (KAM)">
+                                                    <option value="Branch Sales Manager (SM)">
+                                                    <option value="Senior Branch Manager">
+                                                    <option value="Territory Sales Lead">
+                                                    <option value="Area Sales Manager (ASM)">
+                                                    <option value="Zonal Sales Manager (ZSM)">
+                                                    <option value="Assistant Vice President (AVP)">
+                                                    <option value="Vice President (VP)">
+                                                </datalist>
+                                            </div>
+
+                                            <!-- Employee / Staff Code -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Employee / Staff ID
+                                                </label>
+                                                <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482 / 883912" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                            </div>
+
+                                            <!-- Branch SOL ID / Code -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Branch SOL ID / Code
+                                                </label>
+                                                <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412 / BR-081" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                            </div>
+
+                                            <!-- Branch Hub Address / Office Desk -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Branch Office Desk / Address
+                                                </label>
+                                                <input v-model="profileForm.branchAddress" type="text" placeholder="e.g. 3rd Floor, Retail Assets Division, Hub Office" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
                                         </div>
 
                                         <div class="pt-2 flex items-center justify-end gap-2">
@@ -3603,13 +3683,27 @@
                                                 <span class="text-[10px] uppercase font-bold text-slate-400">Direct Branch Supervisor</span>
                                                 <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded-full">Branch SM</span>
                                             </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-9 h-9 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center font-bold text-xs">
-                                                    <i class="fas fa-user-tie"></i>
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-9 h-9 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center font-bold text-xs shrink-0">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs font-extrabold text-slate-900">{{ defaultSmName || 'Branch Sales Manager' }}</p>
+                                                        <p class="text-[11px] text-slate-500 font-medium">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Assigned Branch Hub' }}</p>
+                                                        <p v-if="assignedSm.salesLinkId" class="text-[10px] font-mono font-bold text-indigo-600 mt-0.5">ID: {{ assignedSm.salesLinkId }}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p class="text-xs font-extrabold text-slate-900">{{ defaultSmName || 'Branch Sales Manager' }}</p>
-                                                    <p class="text-[11px] text-slate-500 font-medium">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Assigned Branch Hub' }}</p>
+
+                                                <!-- Action Buttons for RO to contact SM -->
+                                                <div v-if="assignedSm.phone" class="flex items-center gap-1.5 shrink-0">
+                                                    <a :href="'tel:' + assignedSm.phone" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center" title="Call Branch Manager">
+                                                        <i class="fas fa-phone text-xs text-indigo-600"></i>
+                                                    </a>
+                                                    <button @click="openSmWhatsAppChat" type="button" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1 border border-emerald-200 cursor-pointer" title="WhatsApp Branch Manager">
+                                                        <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                        <span>Chat</span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -3651,11 +3745,45 @@
                                                 </button>
                                             </div>
 
+                                            <!-- Direct Branch Officers Roster Preview -->
+                                            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2.5">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-[10px] uppercase font-bold text-slate-400">Direct Branch Officers</p>
+                                                        <p class="text-xs font-extrabold text-slate-900">{{ activeRoUsers.length }} Active Relationship Officers</p>
+                                                    </div>
+                                                    <button @click="goToTab('users')" type="button" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer flex items-center gap-1">
+                                                        <span>Manage Team</span>
+                                                        <i class="fas fa-chevron-right text-[9px]"></i>
+                                                    </button>
+                                                </div>
+                                                <div v-if="activeRoUsers.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div v-for="ro in activeRoUsers.slice(0, 4)" :key="ro.id" class="p-2.5 bg-white rounded-xl border border-slate-200/60 flex items-center justify-between gap-2 shadow-2xs">
+                                                        <div class="flex items-center gap-2 min-w-0">
+                                                            <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 font-black text-xs flex items-center justify-center shrink-0">
+                                                                {{ ro.name ? ro.name.charAt(0).toUpperCase() : 'R' }}
+                                                            </div>
+                                                            <div class="min-w-0">
+                                                                <p class="text-xs font-bold text-slate-800 truncate">{{ ro.name }}</p>
+                                                                <p class="text-[10px] font-mono text-slate-400 truncate">{{ ro.phone || ro.salesLinkId || 'Active' }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button v-if="ro.phone" @click="openRoWhatsAppChat(ro)" type="button" class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer shrink-0" title="Send WhatsApp Message">
+                                                            <i class="fab fa-whatsapp text-xs text-emerald-600"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p v-if="activeRoUsers.length > 4" class="text-[10px] text-slate-400 text-center font-medium">
+                                                    + {{ activeRoUsers.length - 4 }} more officers supervised in this hub
+                                                </p>
+                                            </div>
+
                                             <!-- Hub Info -->
                                             <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
                                                 <div>
                                                     <p class="text-[10px] uppercase font-bold text-slate-400">Supervised Branch Hub</p>
                                                     <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ currentUser.region ? currentUser.region + ' Hub' : (currentUser.bankName || 'Branch') + ' Hub' }}</p>
+                                                    <p v-if="currentUser.branchSolId" class="text-[10px] font-mono text-slate-500 font-bold">SOL: {{ currentUser.branchSolId }}</p>
                                                 </div>
                                                 <span class="text-xs font-bold text-slate-600 font-mono">Workspace: {{ currentUser.tenantId ? currentUser.tenantId.slice(0, 10) + '...' : 'Default' }}</span>
                                             </div>
@@ -3679,6 +3807,61 @@
 
                             <!-- Col 3: Real-Time Performance & Account Security -->
                             <div class="space-y-5">
+                                <!-- Monthly Target & Pacing Card (RO) -->
+                                <div v-if="isRO" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold shadow-2xs">
+                                                <i class="fas fa-bullseye"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-sm font-extrabold text-slate-900">Monthly Target & Pacing</h3>
+                                                <p class="text-[11px] text-slate-400 font-medium">Month-to-date run rate</p>
+                                            </div>
+                                        </div>
+                                        <button @click="openEditTargetModal" type="button" class="px-2.5 py-1 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition cursor-pointer">
+                                            Adjust Goals
+                                        </button>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <!-- Files Pacing -->
+                                        <div>
+                                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                                <span class="font-bold text-slate-700">Target Files: {{ roTargetFiles }}</span>
+                                                <span class="font-black text-indigo-600">{{ roTargetPacing.mtdFiles }} logged ({{ roTargetPacing.filesPercent }}%)</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" :style="{ width: roTargetPacing.filesPercent + '%' }"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Volume Pacing -->
+                                        <div>
+                                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                                <span class="font-bold text-slate-700">Target Volume: ₹{{ roTargetVolume }}L</span>
+                                                <span class="font-black text-blue-600">₹{{ roTargetPacing.mtdVolumeLakhs }}L ({{ roTargetPacing.volumePercent }}%)</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" :style="{ width: roTargetPacing.volumePercent + '%' }"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between text-xs font-semibold">
+                                            <span class="text-slate-600">Pacing Status:</span>
+                                            <span v-if="roTargetPacing.filesPercent >= 100" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                                                🏆 Target Achieved
+                                            </span>
+                                            <span v-else-if="roTargetPacing.filesPercent >= roTargetPacing.expectedPercent" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800">
+                                                ⚡ On Track ({{ roTargetPacing.requiredDailyFiles }}/day)
+                                            </span>
+                                            <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">
+                                                ⚠️ Needs Push ({{ roTargetPacing.requiredDailyFiles }}/day)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Performance Highlights -->
                                 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
                                     <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
@@ -3768,7 +3951,21 @@
                                             <span class="font-bold uppercase text-indigo-600 font-mono">{{ currentUser.role }}</span>
                                         </div>
 
+                                        <div class="flex items-center justify-between text-slate-600">
+                                            <span>Member Since</span>
+                                            <span class="font-bold text-slate-800">{{ currentUser.createdAt ? formatDateOnly(currentUser.createdAt) : 'Active' }}</span>
+                                        </div>
+
                                         <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                            <button @click="triggerProfileResync" type="button" :disabled="isResyncingProfile" class="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75">
+                                                <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'" class="text-xs"></i>
+                                                <span>{{ isResyncingProfile ? 'Resyncing Database...' : 'Resync Data & Refresh Cache' }}</span>
+                                            </button>
+
+                                            <div v-if="profileResyncSuccess" class="p-2 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-xl text-center border border-emerald-200 animate-fade-in">
+                                                ✓ Data and cache synchronized!
+                                            </div>
+
                                             <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
                                                 <i class="fas fa-mobile-screen-button text-indigo-600"></i>
                                                 <span>Install SalesLink as App</span>
@@ -4841,7 +5038,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-58"></script>
+    <script type="module" src="js/app.js?v=force-update-59"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
