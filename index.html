@@ -89,261 +89,332 @@
             <button @click="stopImpersonation" class="ml-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded border border-white/30 transition">End Session</button>
         </div>
 
-        <!-- Refined, Professional Login Experience (Noise-Free) -->
-        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-50/80 relative overflow-hidden font-sans">
-            <!-- Subtle, static dot grid for visual depth without noise -->
-            <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-70 pointer-events-none"></div>
+        <!-- ======================================================== -->
+        <!-- ENTERPRISE SPLIT-SCREEN AUTHENTICATION PORTAL              -->
+        <!-- ======================================================== -->
+        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-900 font-sans antialiased overflow-x-hidden selection:bg-[#4F46E5] selection:text-white">
 
-            <div class="w-full max-w-[420px] bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/50 p-6 sm:p-8 space-y-6 relative z-10">
-                
-                <!-- Brand Header -->
-                <div class="text-center space-y-3">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#4F46E5] to-[#B31857] text-white flex items-center justify-center text-2xl mx-auto shadow-md shadow-[#4F46E5]/25 ring-4 ring-[#4F46E5]/10">
+            <!-- LEFT BRAND PANEL: Corporate Authority, Vision & Trust Badges -->
+            <div class="lg:w-[50%] xl:w-[54%] relative flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-gradient-to-br from-slate-950 via-[#0a0f1d] to-[#1e1b4b] text-white overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10 shrink-0">
+                <!-- Background Geometric Grid & Ambient Glows -->
+                <div class="absolute inset-0 bg-[radial-gradient(#4F46E5_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none"></div>
+                <div class="absolute -top-32 -left-32 w-80 h-80 bg-[#4F46E5]/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Top Brand Emblem -->
+                <div class="relative z-10 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-lg shadow-lg shadow-[#4F46E5]/25 ring-1 ring-white/20">
                         <i class="fas fa-layer-group"></i>
                     </div>
                     <div>
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] text-[10px] font-extrabold uppercase tracking-wider mb-1.5">
-                            Retail Asset Operations
-                        </div>
-                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sales Link</h1>
-                        <p class="text-xs text-slate-500 font-medium mt-1">
-                            Daily File Tracking, Pipeline & Team Execution Portal
-                        </p>
+                        <span class="text-[10px] font-mono font-bold tracking-widest uppercase text-indigo-300 block leading-tight">Enterprise Sales OS</span>
+                        <span class="text-lg font-black tracking-tight text-white leading-tight">SalesLink</span>
                     </div>
                 </div>
 
-                <!-- Error Message -->
-                <div v-if="loginError || registerError" class="p-3 bg-rose-50 text-rose-700 text-xs font-semibold rounded-xl border border-rose-100 flex items-start gap-2.5">
-                    <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
-                    <span class="leading-snug">{{ loginError || registerError }}</span>
-                </div>
-
-                <!-- VIEW 1: Sign In View (Primary / Default Screen for ROs & SMs) -->
-                <div v-if="!showRegisterMode" class="space-y-4">
-                    <div class="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-center">
-                        <p class="text-[11px] text-blue-800 font-semibold flex items-center justify-center gap-1.5">
-                            <i class="fas fa-id-badge text-blue-600"></i>
-                            <span>Relationship Officers (ROs): Click below to sign in</span>
-                        </p>
+                <!-- Center Enterprise Value Proposition -->
+                <div class="relative z-10 my-8 lg:my-auto max-w-lg space-y-5">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-indigo-200 text-xs font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Retail Lending Operations Platform</span>
                     </div>
+                    
+                    <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.15]">
+                        Accelerate file tracking, <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-white to-indigo-200">from login to disbursal.</span>
+                    </h1>
 
-                    <div class="text-center space-y-1">
-                        <p class="text-xs text-slate-600 font-medium">
-                            Continue with your authorized Google work account
-                        </p>
-                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                        Unified live pipeline intelligence, automated daily EOD reports, and role-governed supervision for bank branch hubs, areas, and zones.
+                    </p>
 
-                    <button type="button" @click="login" :disabled="isLoggingIn" class="w-full py-3 px-4 bg-white hover:bg-slate-50/80 border border-slate-200 hover:border-slate-300 text-slate-800 font-bold rounded-xl shadow-xs transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
-                        <!-- Phase 2: Account chosen, verifying session & routing -->
-                        <template v-if="loginStage === 'verifying'">
-                            <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Signing in...</span>
-                        </template>
-
-                        <!-- Phase 1: Popup opened, waiting for user to click their Google account -->
-                        <template v-else-if="loginStage === 'selecting'">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0"></div>
-                            <span class="text-emerald-700">Select account in Google window...</span>
-                        </template>
-
-                        <!-- Phase 0: Default idle state -->
-                        <template v-else>
-                            <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" viewBox="0 0 24 24">
-                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                            </svg>
-                            <span>Continue with Google Workspace</span>
-                        </template>
-                    </button>
-
-                    <!-- Direct Redirect Fallback for Desktop Browsers -->
-                    <div class="text-center pt-0.5">
-                        <button type="button" @click="loginRedirect" :disabled="isLoggingIn" class="text-[11px] text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer underline decoration-slate-300 hover:decoration-slate-500 py-0.5">
-                            <span v-if="loginStage === 'redirecting'">Redirecting to Google...</span>
-                            <span v-else>Popups blocked on Desktop? Click for Direct Sign-In →</span>
-                        </button>
-                    </div>
-
-                    <!-- Role Guidance Helper -->
-                    <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 text-[11px] text-slate-600">
-                        <div class="flex items-start gap-2">
-                            <span class="px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-700 font-extrabold text-[9px] shrink-0 mt-0.5">RO</span>
-                            <span class="leading-tight"><strong>Relationship Officers:</strong> Sign in using the Google account invited by your Sales Manager.</span>
+                    <!-- 3 Trust Feature Pillars -->
+                    <div class="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xs space-y-1">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
+                            <div class="text-xs font-bold text-white pt-0.5">Multi-Tier Hierarchy</div>
+                            <div class="text-[10px] text-slate-400 leading-snug">Isolated portals for ROs, SMs, ASMs & ZSMs</div>
                         </div>
-                        <div class="flex items-start gap-2">
-                            <span class="px-1.5 py-0.5 rounded bg-[#4F46E5]/10 text-[#4F46E5] font-extrabold text-[9px] shrink-0 mt-0.5">SM</span>
-                            <span class="leading-tight"><strong>Sales Managers:</strong> Sign in to monitor file tracking, team EODs, and pacing targets.</span>
+
+                        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xs space-y-1">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="text-xs font-bold text-white pt-0.5">Live Pipeline Radar</div>
+                            <div class="text-[10px] text-slate-400 leading-snug">Real-time status: Logins, FI, Sanction, Disbursal</div>
                         </div>
-                    </div>
 
-                    <!-- Security & Compliance Reassurance -->
-                    <div class="pt-1 flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-semibold tracking-wide">
-                        <i class="fas fa-lock text-[9px] text-slate-400"></i>
-                        <span>Authorized Internal Access • 256-Bit SSL Encrypted</span>
-                    </div>
-
-                    <!-- Manager Setup Secondary Access (Kept at bottom so ROs won't accidentally click it) -->
-                    <div class="pt-3 border-t border-slate-100 text-center">
-                        <p class="text-[11px] text-slate-500">
-                            Sales Manager onboarding a new branch?
-                            <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="text-[#4F46E5] font-bold hover:underline ml-1 cursor-pointer">
-                                Register Workspace (Key Required) →
-                            </button>
-                        </p>
+                        <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xs space-y-1">
+                            <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center text-xs">
+                                <i class="fas fa-shield-halved"></i>
+                            </div>
+                            <div class="text-xs font-bold text-white pt-0.5">Bank-Grade Security</div>
+                            <div class="text-[10px] text-slate-400 leading-snug">256-bit SSL encryption & OAuth 2.0 Auth</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- VIEW 2: Sales Manager Workspace Registration View -->
-                <form v-else @submit.prevent="registerSM" class="space-y-3.5">
-                    <!-- Top Navigation & SM Only Badge -->
-                    <div class="flex items-center justify-between pb-1">
-                        <button type="button" @click="showRegisterMode = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-bold cursor-pointer">
-                            <i class="fas fa-arrow-left text-[11px]"></i> Back to Sign In
-                        </button>
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full">SM Only</span>
+                <!-- Bottom Trust Badges -->
+                <div class="relative z-10 pt-5 border-t border-white/10 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-lock text-emerald-400 text-xs"></i>
+                        <span class="text-[11px] font-medium text-slate-300">Authorized Banking Staff Access</span>
                     </div>
-
-                    <!-- Role Selector in Registration Mode -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Registration Role <span class="text-rose-500">*</span></label>
-                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                            <button type="button" @click="registerForm.role = 'sm'" :class="[registerForm.role === 'sm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
-                                Branch SM
-                            </button>
-                            <button type="button" @click="registerForm.role = 'asm'" :class="[registerForm.role === 'asm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
-                                Area ASM
-                            </button>
-                            <button type="button" @click="registerForm.role = 'zsm'" :class="[registerForm.role === 'zsm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
-                                Zonal ZSM
-                            </button>
-                        </div>
+                    <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                        <span>Axis Bank</span>
+                        <span>•</span>
+                        <span>HDFC</span>
+                        <span>•</span>
+                        <span>ICICI</span>
+                        <span>•</span>
+                        <span>PSBs & NBFCs</span>
                     </div>
-
-                    <!-- Explicit Manager Alert in Registration Mode -->
-                    <div class="p-3 bg-amber-50 border border-amber-200/90 rounded-2xl text-left space-y-1">
-                        <div class="flex items-center gap-1.5 text-amber-900 text-xs font-bold">
-                            <i class="fas fa-shield-halved text-amber-600"></i>
-                            <span>{{ registerForm.role === 'zsm' ? 'Zonal Head (ZSM) Setup' : (registerForm.role === 'asm' ? 'Area Manager (ASM) Setup' : 'Sales Manager (SM) Setup') }}</span>
-                        </div>
-                        <p class="text-[11px] text-amber-800 leading-snug">
-                            <strong>Relationship Officers (ROs):</strong> Do <u>NOT</u> register here. Your Sales Manager must invite you first. Please click <strong>Back to Sign In</strong> above.
-                        </p>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Manager Security Key <span class="text-rose-500">*</span></label>
-                            <span class="text-[10px] text-slate-400 font-mono">Issued by Super Admin</span>
-                        </div>
-                        <input v-model="registerForm.passcode" type="password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="Enter Manager Security Passcode">
-                        <p class="text-[10px] text-slate-400 mt-1">ROs do not have a passcode. Click 'Back to Sign In' above.</p>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Institution / Bank Name <span class="text-rose-500">*</span></label>
-                            <span class="text-[10px] text-emerald-600 font-bold">Mandatory</span>
-                        </div>
-                        <select v-model="registerForm.bankName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
-                            <optgroup label="Default Primary Institution">
-                                <option value="Axis Bank">Axis Bank (Default)</option>
-                            </optgroup>
-                            <optgroup label="Private Sector Banks">
-                                <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Public Sector Banks (PSBs)">
-                                <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Small Finance Banks (SFBs)">
-                                <option v-for="b in bankOptions.sfb" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Major NBFCs & Lending Institutions">
-                                <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Housing Finance Companies (HFCs)">
-                                <option v-for="b in bankOptions.hfc" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Foreign Banks in India">
-                                <option v-for="b in bankOptions.foreign" :key="b" :value="b">{{ b }}</option>
-                            </optgroup>
-                            <optgroup label="Other / Specialized Institution">
-                                <option value="Other">Other Bank / NBFC (Specify below)</option>
-                            </optgroup>
-                        </select>
-                    </div>
-
-                    <!-- Custom Bank Name input if "Other" is chosen -->
-                    <div v-if="registerForm.bankName === 'Other'">
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Specify Bank / NBFC Name <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.customBankName" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Kerala Gramin Bank / Northern Arc">
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sales Division / Asset Vertical <span class="text-rose-500">*</span></label>
-                            <span class="text-[10px] text-emerald-600 font-bold">Mandatory</span>
-                        </div>
-                        <select v-model="registerForm.division" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
-                            <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Sales Manager Name <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.name" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. Rahul Sharma">
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Operating Region / Zone <span class="text-rose-500">*</span></label>
-                        <input v-model="registerForm.region" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" required placeholder="e.g. North Zone / Delhi NCR">
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contact / Phone (Optional)</label>
-                        <input v-model="registerForm.phone" type="tel" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800" placeholder="e.g. 9876543210">
-                    </div>
-
-                    <button type="submit" :disabled="isRegistering" class="w-full py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-75 flex items-center justify-center gap-2 shadow-xs mt-1">
-                        <template v-if="registerStage === 'setting_up'">
-                            <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Setting up Workspace...</span>
-                        </template>
-                        <template v-else-if="registerStage === 'selecting'">
-                            <div class="w-2 h-2 rounded-full bg-white animate-ping shrink-0"></div>
-                            <span>Select account in Google window...</span>
-                        </template>
-                        <template v-else>
-                            <span>Register as {{ registerForm.role === 'zsm' ? 'Zonal Sales Manager (ZSM)' : (registerForm.role === 'asm' ? 'Area Sales Manager (ASM)' : 'Sales Manager (SM)') }}</span>
-                        </template>
-                    </button>
-
-                    <div class="text-center pt-1">
-                        <button type="button" @click="showRegisterMode = false; loginError = ''; registerError = ''" class="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer">
-                            ← Cancel and Return to Sign In
-                        </button>
-                    </div>
-                </form>
-
+                </div>
             </div>
 
-            <!-- Page Footer -->
-            <footer class="mt-6 text-center text-[11px] text-slate-400 font-medium relative z-10 space-y-1">
-                <div>Sales Link • Retail Operations Platform</div>
-                <div class="flex items-center justify-center gap-2">
-                    <a href="privacy.html" target="_blank" class="text-slate-400 hover:text-slate-600 underline">Privacy Policy</a>
-                    <span>•</span>
-                    <a href="terms.html" target="_blank" class="text-slate-400 hover:text-slate-600 underline">Terms of Service</a>
+            <!-- RIGHT AUTH PANEL: Minimalist, Friction-Free Authentication -->
+            <div class="lg:w-[50%] xl:w-[46%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white relative">
+                <!-- Top Status Bar -->
+                <div class="flex items-center justify-between text-xs text-slate-500 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-[11px] font-semibold text-slate-700">Production Cloud • Online</span>
+                    </div>
+                    <a href="mailto:support@saleslink.in" class="text-[11px] text-slate-400 hover:text-slate-700 font-medium transition">
+                        Help & Support
+                    </a>
                 </div>
-            </footer>
+
+                <!-- Center Authentication Container -->
+                <div class="my-auto max-w-sm w-full mx-auto py-4">
+
+                    <!-- VIEW 1: Standard Employee Sign In (RO, SM, ASM, ZSM, Super Admin) -->
+                    <div v-if="!showRegisterMode" class="space-y-5 animate-fade-in">
+                        <div class="space-y-1.5">
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                                Sign In
+                            </h2>
+                            <p class="text-xs sm:text-sm text-slate-500">
+                                Access your loan pipeline and daily branch tracking.
+                            </p>
+                        </div>
+
+                        <!-- Login Error Alert -->
+                        <div v-if="loginError" class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium rounded-2xl flex items-start gap-2.5">
+                            <i class="fas fa-circle-exclamation text-rose-600 text-sm shrink-0 mt-0.5"></i>
+                            <div class="space-y-0.5 leading-snug">
+                                <div class="font-bold">{{ loginError }}</div>
+                                <div v-if="loginError.includes('not found') || loginError.includes('invite')" class="text-[11px] text-rose-600 font-normal mt-0.5">
+                                    If you are a new officer, ask your branch Sales Manager to invite your Google account.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Primary Sign In Action -->
+                        <div class="space-y-2.5 pt-1">
+                            <button type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-[#4F46E5] text-slate-800 hover:text-slate-900 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
+                                <template v-if="loginStage === 'verifying'">
+                                    <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Verifying Account...</span>
+                                </template>
+                                <template v-else-if="loginStage === 'selecting'">
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0"></div>
+                                    <span class="text-emerald-700 font-bold">Select account in Google window...</span>
+                                </template>
+                                <template v-else>
+                                    <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                    </svg>
+                                    <span>Continue with Google Workspace</span>
+                                </template>
+                            </button>
+
+                            <!-- Direct Redirect Option for Popup Blockers -->
+                            <div class="text-center">
+                                <button type="button" @click="loginRedirect" :disabled="isLoggingIn" class="text-[11px] text-slate-400 hover:text-slate-700 font-semibold transition cursor-pointer underline decoration-slate-200 py-0.5">
+                                    <span v-if="loginStage === 'redirecting'">Redirecting to Google SSO...</span>
+                                    <span v-else>Browser blocking popups? Click for Direct Sign-In →</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Automatic Role Routing Note -->
+                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between text-[11px] text-slate-500">
+                            <span class="flex items-center gap-1.5 font-medium">
+                                <i class="fas fa-shield-check text-[#4F46E5]"></i>
+                                <span>Auto-routes by authority:</span>
+                            </span>
+                            <span class="font-bold text-slate-700">RO • SM • ASM • ZSM</span>
+                        </div>
+
+                        <!-- Manager Setup Callout Card -->
+                        <div class="pt-3 border-t border-slate-100">
+                            <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-2xl flex items-center justify-between gap-3">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900">Branch or Area Manager Setup?</div>
+                                    <div class="text-[11px] text-slate-500">Onboarding a new hub or territory</div>
+                                </div>
+                                <button type="button" @click="showRegisterMode = true; loginError = ''; registerError = ''" class="px-3 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition shrink-0 cursor-pointer">
+                                    Register Hub →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 2: Manager & Area Workspace Registration -->
+                    <form v-else @submit.prevent="registerSM" class="space-y-3.5 animate-fade-in">
+                        <!-- Top Navigation & Return Link -->
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                            <button type="button" @click="showRegisterMode = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-bold cursor-pointer">
+                                <i class="fas fa-arrow-left text-[11px]"></i> Back to Sign In
+                            </button>
+                            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full">
+                                Manager Key Required
+                            </span>
+                        </div>
+
+                        <div class="space-y-0.5">
+                            <h2 class="text-xl font-black text-slate-900 tracking-tight">
+                                Register Workspace
+                            </h2>
+                            <p class="text-xs text-slate-500">
+                                Configure a new Hub or Supervisory Area. Passcode required.
+                            </p>
+                        </div>
+
+                        <!-- Registration Role Selector -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Supervisory Role <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                <button type="button" @click="registerForm.role = 'sm'" :class="[registerForm.role === 'sm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                    Branch SM
+                                </button>
+                                <button type="button" @click="registerForm.role = 'asm'" :class="[registerForm.role === 'asm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                    Area ASM
+                                </button>
+                                <button type="button" @click="registerForm.role = 'zsm'" :class="[registerForm.role === 'zsm' ? 'bg-white text-[#4F46E5] shadow-xs font-bold' : 'text-slate-600 font-medium', 'py-1.5 px-2 rounded-lg text-[11px] transition text-center cursor-pointer']">
+                                    Zonal ZSM
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Registration Error -->
+                        <div v-if="registerError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
+                            <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
+                            <span>{{ registerError }}</span>
+                        </div>
+
+                        <!-- Registration Inputs -->
+                        <div class="space-y-2.5">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Manager Security Passcode <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="registerForm.passcode" type="password" required placeholder="Security Key issued by Admin" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        Institution / Bank <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select v-model="registerForm.bankName" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
+                                        <option value="Axis Bank">Axis Bank (Default)</option>
+                                        <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
+                                        <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
+                                        <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
+                                        <option value="Other">Other Bank / NBFC</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        Asset Vertical <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select v-model="registerForm.division" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 cursor-pointer" required>
+                                        <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div v-if="registerForm.bankName === 'Other'">
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Custom Bank / NBFC Name <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="registerForm.customBankName" type="text" required placeholder="e.g. Northern Arc Capital" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        Manager Name <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input v-model="registerForm.name" type="text" required placeholder="e.g. Vikram Singh" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        Operating Region / Area <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input v-model="registerForm.region" type="text" required placeholder="e.g. Mumbai North / Thane" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Contact Phone (Optional)
+                                </label>
+                                <input v-model="registerForm.phone" type="tel" placeholder="e.g. 9876543210" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" :disabled="isRegistering" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-75 flex items-center justify-center gap-2 shadow-xs mt-1">
+                            <template v-if="registerStage === 'setting_up'">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Creating Workspace...</span>
+                            </template>
+                            <template v-else-if="registerStage === 'selecting'">
+                                <div class="w-2 h-2 rounded-full bg-white animate-ping shrink-0"></div>
+                                <span>Select Google Account to Link...</span>
+                            </template>
+                            <template v-else>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Register & Link with Google Workspace</span>
+                            </template>
+                        </button>
+
+                        <div class="text-center pt-0.5">
+                            <button type="button" @click="showRegisterMode = false; loginError = ''; registerError = ''" class="text-[11px] text-slate-400 hover:text-slate-700 font-semibold cursor-pointer">
+                                Cancel and return to Sign In
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer Links -->
+                <footer class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                    <div>SalesLink Enterprise OS</div>
+                    <div class="flex items-center gap-3">
+                        <a href="privacy.html" target="_blank" class="hover:text-slate-600 underline">Privacy Policy</a>
+                        <a href="terms.html" target="_blank" class="hover:text-slate-600 underline">Terms of Service</a>
+                    </div>
+                </footer>
+            </div>
         </div>
+
 
         <!-- Main Application (Logged In) -->
         <div v-else class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
@@ -4291,7 +4362,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-51"></script>
+    <script type="module" src="js/app.js?v=force-update-52"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
