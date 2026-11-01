@@ -447,46 +447,19 @@
                             </a>
                         </template>
                         
-                        <!-- ASM (Area Sales Manager) Navigation -->
+                        <!-- ASM (Area Sales Manager) Navigation - Parallel to SM -->
                         <template v-else-if="isASM">
-                            <!-- Section 1: Overview -->
-                            <div class="px-2 pt-1 pb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
-                                Overview
-                            </div>
-                            <a href="#" @click.prevent="goToTab('asm-dashboard')" :class="[currentTab === 'asm-dashboard' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600 font-semibold', 'flex items-center px-2 py-1.5 rounded-xl transition-all duration-150 text-xs gap-2 cursor-pointer select-none']">
-                                <i class="fas fa-chart-line w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Area Cockpit</span>
+                            <a href="#" @click.prevent="goToTab('asm-dashboard')" :class="[currentTab === 'asm-dashboard' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer select-none']">
+                                <i class="fas fa-chart-pie w-5 text-sm"></i> Dashboard
                             </a>
-
-                            <!-- Section 2: Pipeline & Sales -->
-                            <div class="px-2 pt-2.5 pb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
-                                Sales & Pipeline
-                            </div>
-                            <a href="#" @click.prevent="goToTab('asm-tracking')" :class="[currentTab === 'asm-tracking' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600 font-semibold', 'flex items-center px-2 py-1.5 rounded-xl transition-all duration-150 text-xs gap-2 cursor-pointer select-none']">
-                                <i class="fas fa-folder-tree w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Area Pipeline</span>
+                            <a href="#" @click.prevent="goToTab('asm-tracking')" :class="[currentTab === 'asm-tracking' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer select-none']">
+                                <i class="fas fa-layer-group w-5 text-sm"></i> File Tracking
                             </a>
-
-                            <!-- Section 3: Branch Network -->
-                            <div class="px-2 pt-2.5 pb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
-                                Branch Network
-                            </div>
-                            <a href="#" @click.prevent="goToTab('asm-team')" :class="[currentTab === 'asm-team' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600 font-semibold', 'flex items-center px-2 py-1.5 rounded-xl transition-all duration-150 text-xs gap-2 cursor-pointer select-none']">
-                                <i class="fas fa-building-columns w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Hubs & Managers</span>
+                            <a href="#" @click.prevent="goToTab('asm-team')" :class="[currentTab === 'asm-team' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer select-none']">
+                                <i class="fas fa-users-cog w-5 text-sm"></i> Team Users
                             </a>
-                            <button @click="openConnectSmModal()" type="button" class="w-full flex items-center px-2 py-1.5 rounded-xl text-xs gap-2 font-semibold text-indigo-600 hover:bg-indigo-50/80 transition-all duration-150 cursor-pointer text-left">
-                                <i class="fas fa-plus-circle w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Connect Hub</span>
-                            </button>
-
-                            <!-- Section 4: Operations -->
-                            <div class="px-2 pt-2.5 pb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
-                                Operations
-                            </div>
-                            <a href="#" @click.prevent="goToTab('asm-eod')" :class="[currentTab === 'asm-eod' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600 font-semibold', 'flex items-center px-2 py-1.5 rounded-xl transition-all duration-150 text-xs gap-2 cursor-pointer select-none']">
-                                <i class="fas fa-clipboard-check w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Daily Branch EODs</span>
+                            <a href="#" @click.prevent="goToTab('asm-eod')" :class="[currentTab === 'asm-eod' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer select-none']">
+                                <i class="fas fa-clipboard-check w-5 text-sm"></i> SM Daily EODs
                             </a>
                         </template>
 
@@ -1678,104 +1651,373 @@
                     <!-- ========================================== -->
                     <!-- ASM: AREA PIPELINE FILE TRACKING            -->
                     <!-- ========================================== -->
-                    <div v-if="currentTab === 'asm-tracking' && isASM" class="space-y-4 pb-14 max-w-6xl mx-auto animate-fade-in">
-                        <!-- Top Filters Bar -->
-                        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <div>
-                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">Area Loan Files Pipeline</h3>
-                                    <p class="text-xs text-slate-400 font-medium">Monitoring files across all supervised branch hubs ({{ filteredAreaFiles.length }} matches)</p>
-                                </div>
+                    <div v-if="currentTab === 'asm-tracking' && isASM" class="flex flex-col h-full space-y-3 max-w-7xl mx-auto animate-fade-in pb-16">
+
+                        <!-- 1. Frictionless SM Distribution Bar (Quick Switcher Pills) -->
+                        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                                 <div class="flex items-center gap-2">
-                                    <button @click="asmHubFilter = 'All'; asmStatusFilter = 'All'; asmSearchQuery = ''" class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                                        Reset Filters
+                                    <div class="w-6 h-6 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs">
+                                        <i class="fas fa-sitemap"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Branch SM Hubs ({{ supervisedSMs.length }})</h3>
+                                        <p class="text-[10px] text-slate-400">1-tap to isolate files under any Branch Sales Manager</p>
+                                    </div>
+                                </div>
+                                <div class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200/60 self-start sm:self-auto">
+                                    Total Area Pipeline: <strong class="text-slate-900 font-bold font-mono">{{ areaFiles.length }} Files</strong> (₹{{ formatCurrency(areaFiles.reduce((s,f) => s + (Number(f.loanAmount)||0), 0)) }})
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Horizontal Chip Bar -->
+                            <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+                                <!-- All SM Hubs Pill -->
+                                <button 
+                                    type="button"
+                                    @click="asmHubFilter = 'All'" 
+                                    :class="[asmHubFilter === 'All' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                    <i class="fas fa-layer-group text-[10px]"></i>
+                                    <span>All Branch Hubs</span>
+                                    <span :class="asmHubFilter === 'All' ? 'bg-white/20 text-white' : 'bg-white text-slate-800'" class="px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono">
+                                        {{ areaFiles.length }}
+                                    </span>
+                                </button>
+
+                                <!-- Each SM Pill -->
+                                <button 
+                                    v-for="dist in asmSmDistribution" 
+                                    :key="dist.id"
+                                    type="button"
+                                    @click="asmHubFilter = dist.tenantId"
+                                    :class="[asmHubFilter === dist.tenantId ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                    <i class="fas fa-building-columns text-[10px]" :class="asmHubFilter === dist.tenantId ? 'text-white' : 'text-[#4F46E5]'"></i>
+                                    <span>{{ dist.region }}</span>
+                                    <span class="text-[10px] opacity-80 font-normal">({{ dist.name }})</span>
+                                    <span :class="asmHubFilter === dist.tenantId ? 'bg-white/20 text-white' : 'bg-white text-slate-800 border border-slate-200'" class="px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono">
+                                        {{ dist.totalFiles }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. Admin Filter, Search & Sort Toolbar (Architecture same as SM) -->
+                        <div class="bg-white p-2.5 sm:p-3 rounded-2xl shadow-xs border border-slate-200/80 space-y-2.5">
+                            <!-- Top Row: Search & Timeline & Actions -->
+                            <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-stretch md:items-center">
+                                <!-- Search Input -->
+                                <div class="w-full md:flex-1 relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input 
+                                        v-model="asmSearchQuery" 
+                                        type="text" 
+                                        placeholder="Search Customer Name, App ID, RO, SM, Hub, Vehicle..." 
+                                        class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] transition">
+                                </div>
+
+                                <!-- Action Buttons Row -->
+                                <div class="flex items-center gap-2">
+                                    <!-- Timeline Selector -->
+                                    <select v-model="asmTimelineFilter" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="this-month">This Month</option>
+                                    </select>
+
+                                    <!-- Reset Button -->
+                                    <button 
+                                        @click="resetAsmFilters" 
+                                        v-if="asmSearchQuery || asmHubFilter !== 'All' || asmStatusFilter !== 'All' || asmTimelineFilter !== 'all' || asmCategoryFilter !== 'All' || asmChannelFilter !== 'All' || asmSortBy !== 'newest'" 
+                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition text-xs font-bold cursor-pointer" 
+                                        title="Clear Filters">
+                                        <i class="fas fa-undo mr-1"></i>
+                                        <span>Reset</span>
+                                    </button>
+
+                                    <!-- Export to Excel Button -->
+                                    <button 
+                                        @click="exportToExcel" 
+                                        class="px-3.5 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl transition shadow-xs text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fas fa-file-excel text-xs"></i>
+                                        <span>Export</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                                <!-- Hub Selector -->
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Hub</label>
-                                    <select v-model="asmHubFilter" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All Branch Hubs</option>
+                            <!-- Secondary Filter Dropdowns Row -->
+                            <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
+                                <!-- Branch SM Hub Dropdown -->
+                                <div class="flex-1 min-w-[140px] sm:max-w-[220px]">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Branch Hub / SM</label>
+                                    <select v-model="asmHubFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="All">All Branch Hubs ({{ supervisedSMs.length }})</option>
                                         <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">
                                             {{ hub.region || hub.name }} ({{ hub.name }})
                                         </option>
                                     </select>
                                 </div>
 
-                                <!-- Status Selector -->
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Status</label>
-                                    <select v-model="asmStatusFilter" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                <!-- Status Stage Dropdown -->
+                                <div class="flex-1 min-w-[120px] sm:max-w-[160px]">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Stage / Status</label>
+                                    <select v-model="asmStatusFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
                                         <option value="All">All Stages</option>
-                                        <option value="Logged">Logged</option>
+                                        <option value="Logged">Logged / Lead</option>
                                         <option value="FI">FI (Field Investigation)</option>
-                                        <option value="Sanction">Sanction / Approved</option>
+                                        <option value="FCU">FCU</option>
+                                        <option value="UW">UW (Credit Underwriting)</option>
+                                        <option value="Sanction">Approved / Sanction</option>
                                         <option value="Disbursed">Disbursed</option>
-                                        <option value="Rejected">Rejected</option>
+                                        <option value="Rejected">Rejected / Cancelled</option>
                                     </select>
                                 </div>
 
-                                <!-- Search Box -->
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Search Pipeline</label>
-                                    <div class="relative">
-                                        <i class="fas fa-search absolute left-2.5 top-2.5 text-xs text-slate-400"></i>
-                                        <input v-model="asmSearchQuery" type="text" placeholder="Customer, App ID, RO..." class="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-[#4F46E5]">
-                                    </div>
+                                <!-- Category Dropdown (NCL / UCL) -->
+                                <div class="w-[90px]">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Category</label>
+                                    <select v-model="asmCategoryFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="All">All</option>
+                                        <option value="NCL">NCL</option>
+                                        <option value="UCL">UCL</option>
+                                    </select>
+                                </div>
+
+                                <!-- Channel Dropdown -->
+                                <div class="w-[90px]">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Channel</label>
+                                    <select v-model="asmChannelFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="All">All</option>
+                                        <option value="DSA">DSA</option>
+                                        <option value="Branch">Branch</option>
+                                    </select>
+                                </div>
+
+                                <!-- Sort Dropdown -->
+                                <div class="w-[110px]">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sort By</label>
+                                    <select v-model="asmSortBy" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="amount-desc">Amount &darr;</option>
+                                        <option value="amount-asc">Amount &uarr;</option>
+                                        <option value="name-asc">Customer A-Z</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Data Table -->
-                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                        <!-- 3. Status Stage Quick-Filter Pills Strip -->
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
+                            <button @click="asmStatusFilter = 'All'" :class="[asmStatusFilter === 'All' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>All Files</span>
+                                <span :class="asmStatusFilter === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'" class="px-1.5 py-0.2 rounded-md text-[10px] font-mono">{{ asmStatusCounts.all }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'Logged'" :class="[asmStatusFilter === 'Logged' ? 'bg-slate-800 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>Logged</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.logged }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'FI'" :class="[asmStatusFilter === 'FI' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>FI</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.fi }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'UW'" :class="[asmStatusFilter === 'UW' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>UW</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.uw }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'Sanction'" :class="[asmStatusFilter === 'Sanction' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>Sanctioned</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.sanctioned }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'Disbursed'" :class="[asmStatusFilter === 'Disbursed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>Disbursed</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.disbursed }}</span>
+                            </button>
+                            <button @click="asmStatusFilter = 'Rejected'" :class="[asmStatusFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
+                                <span>Rejected</span>
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.rejected }}</span>
+                            </button>
+                        </div>
+
+                        <!-- 4. Desktop Table View (Full width, dense, fits screen) -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden hidden md:block">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="bg-slate-50/80 border-b border-slate-200">
-                                        <tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                                            <th class="py-2.5 px-3">App ID / Date</th>
-                                            <th class="py-2.5 px-3">Customer Name</th>
-                                            <th class="py-2.5 px-3">Hub & Officer</th>
-                                            <th class="py-2.5 px-3 text-right">Loan Amount</th>
-                                            <th class="py-2.5 px-3 text-center">Status</th>
-                                            <th class="py-2.5 px-3 text-center">Channel</th>
+                                <table class="w-full text-left border-collapse border border-slate-200 bg-white">
+                                    <thead class="bg-slate-100 sticky top-0 z-10">
+                                        <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
+                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Branch Hub & SM</th>
+                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Relationship Officer</th>
+                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-200 px-2.5 py-1.5 text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-200 px-2.5 py-1.5 text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-xs divide-y divide-slate-100">
+                                    <tbody class="text-[11px] divide-y divide-slate-100">
                                         <tr v-if="filteredAreaFiles.length === 0">
-                                            <td colspan="6" class="p-8 text-center text-slate-400">No files found matching current area filters.</td>
+                                            <td colspan="10" class="p-8 text-center text-slate-400 font-semibold">
+                                                No loan files match the selected area filters.
+                                            </td>
                                         </tr>
-                                        <tr v-for="file in filteredAreaFiles" :key="file.id" class="hover:bg-slate-50/70 transition">
-                                            <td class="py-3 px-3">
-                                                <div class="font-bold text-[#4F46E5] font-mono">#{{ file.appId || 'NoID' }}</div>
-                                                <div class="text-[10px] text-slate-400">{{ formatDateOnly(file.loginDate || file.createdAt) }}</div>
+                                        <tr v-for="file in filteredAreaFiles" :key="file.id" class="hover:bg-slate-50/80 transition-colors">
+                                            <!-- App ID -->
+                                            <td class="border border-slate-200 px-2 py-1.5 font-bold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">
+                                                #{{ file.appId || 'No ID' }}
                                             </td>
-                                            <td class="py-3 px-3">
-                                                <div class="font-bold text-slate-900">{{ file.customerName }}</div>
-                                                <div class="text-[10px] text-slate-500">{{ file.nclUcl || '-' }}</div>
+
+                                            <!-- Customer Name -->
+                                            <td class="border border-slate-200 px-2.5 py-1.5 font-bold text-slate-900 uppercase whitespace-nowrap">
+                                                <div>{{ file.customerName }}</div>
+                                                <div v-if="file.vehicleModel" class="text-[9px] text-slate-400 font-normal lowercase">{{ file.vehicleModel }}</div>
                                             </td>
-                                            <td class="py-3 px-3">
-                                                <div class="font-semibold text-slate-800">{{ file.roName || 'RO' }}</div>
-                                                <div class="text-[10px] text-slate-400">{{ file.smName || 'Hub' }}</div>
+
+                                            <!-- Branch Hub & SM -->
+                                            <td class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">
+                                                <div class="font-bold text-slate-800 flex items-center gap-1">
+                                                    <i class="fas fa-building-columns text-[9px] text-[#4F46E5]"></i>
+                                                    <span>{{ file.hubName }}</span>
+                                                </div>
+                                                <div class="text-[10px] text-slate-400 font-medium">SM: {{ file.smDisplayName }}</div>
                                             </td>
-                                            <td class="py-3 px-3 text-right font-black text-slate-900">
+
+                                            <!-- RO Officer -->
+                                            <td class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap font-semibold text-slate-800">
+                                                <div class="flex items-center gap-1">
+                                                    <i class="fas fa-user text-[9px] text-slate-400"></i>
+                                                    <span>{{ file.roName || 'Unassigned RO' }}</span>
+                                                </div>
+                                            </td>
+
+                                            <!-- Category -->
+                                            <td class="border border-slate-200 px-2 py-1.5 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">
+                                                {{ file.nclUcl || '-' }}
+                                            </td>
+
+                                            <!-- Channel -->
+                                            <td class="border border-slate-200 px-2 py-1.5 font-semibold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">
+                                                {{ file.sourcingChannel || 'DSA' }}
+                                            </td>
+
+                                            <!-- Loan Amount -->
+                                            <td class="border border-slate-200 px-2.5 py-1.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px] font-mono">
                                                 ₹{{ formatCurrency(file.loanAmount) }}
                                             </td>
-                                            <td class="py-3 px-3 text-center">
-                                                <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[10px] font-bold rounded-md inline-block">
+
+                                            <!-- Status Badge -->
+                                            <td class="border border-slate-200 px-2.5 py-1.5 text-center whitespace-nowrap">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] font-bold rounded-md inline-block">
                                                     {{ file.status }}
                                                 </span>
                                             </td>
-                                            <td class="py-3 px-3 text-center text-slate-600 font-semibold text-[11px]">
-                                                {{ file.sourcingChannel || 'DSA' }}
+
+                                            <!-- Login Date -->
+                                            <td class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap font-medium text-slate-600 text-[10px]">
+                                                {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
+                                            </td>
+
+                                            <!-- Actions -->
+                                            <td class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <!-- Inspect / View Details -->
+                                                    <button 
+                                                        type="button" 
+                                                        @click="openViewFileModal(file)" 
+                                                        class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer" 
+                                                        title="View Complete File Lifecycle">
+                                                        <i class="fas fa-eye text-xs"></i>
+                                                    </button>
+                                                    <!-- WhatsApp Alert to SM / RO -->
+                                                    <button 
+                                                        type="button" 
+                                                        @click="sendFileAlertToSm(file)" 
+                                                        class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition cursor-pointer" 
+                                                        title="WhatsApp Follow-up Alert">
+                                                        <i class="fab fa-whatsapp text-xs"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Table Footer -->
+                            <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 text-slate-500 flex justify-between items-center text-[11px] font-semibold">
+                                <span>Showing {{ filteredAreaFiles.length }} loan files across {{ asmHubFilter === 'All' ? supervisedSMs.length + ' Branch Hubs' : 'selected Hub' }}</span>
+                                <span class="font-mono font-bold text-slate-700">₹{{ formatCurrency(filteredAreaFiles.reduce((s,f) => s + (Number(f.loanAmount)||0), 0)) }}</span>
+                            </div>
                         </div>
+
+                        <!-- 5. Mobile Cards View (Responsive & Touch-Friendly) -->
+                        <div class="md:hidden space-y-2.5">
+                            <div v-if="filteredAreaFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 text-xs font-semibold">
+                                No loan files match the selected area filters.
+                            </div>
+
+                            <div v-for="file in filteredAreaFiles" :key="file.id" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2.5">
+                                <!-- Top Row -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-mono font-black text-[#4F46E5]">#{{ file.appId || 'NoID' }}</span>
+                                        <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.2 !text-[9px] font-bold rounded-md">
+                                            {{ file.status }}
+                                        </span>
+                                    </div>
+                                    <span class="font-black text-xs text-slate-900 font-mono">
+                                        ₹{{ formatCurrency(file.loanAmount) }}
+                                    </span>
+                                </div>
+
+                                <!-- Customer Details -->
+                                <div>
+                                    <h4 class="text-xs font-black uppercase text-slate-900">{{ file.customerName }}</h4>
+                                    <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                                        <span>Category: {{ file.nclUcl || '-' }}</span>
+                                        <span>•</span>
+                                        <span>Channel: {{ file.sourcingChannel || 'DSA' }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Hub & Officer Tags -->
+                                <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-[11px]">
+                                    <div class="space-y-0.5">
+                                        <div class="font-bold text-slate-800 flex items-center gap-1">
+                                            <i class="fas fa-building-columns text-[10px] text-[#4F46E5]"></i>
+                                            <span>{{ file.hubName }}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-500">SM: {{ file.smDisplayName }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-semibold text-slate-700">RO: {{ file.roName || 'Unassigned' }}</div>
+                                        <div class="text-[10px] text-slate-400">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                                    <button 
+                                        type="button" 
+                                        @click="openViewFileModal(file)" 
+                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-eye text-xs"></i>
+                                        <span>Details</span>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @click="sendFileAlertToSm(file)" 
+                                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fab fa-whatsapp text-xs text-emerald-600"></i>
+                                        <span>Nudge</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- ========================================== -->
@@ -4017,16 +4259,16 @@
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isASM">
                         <a href="#" @click.prevent="currentTab = 'asm-dashboard'" :class="[currentTab === 'asm-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-chart-line text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Area</span>
+                            <i class="fas fa-chart-pie text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Dashboard</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'asm-tracking'" :class="[currentTab === 'asm-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'asm-team'" :class="[currentTab === 'asm-team' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-network-wired text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Hubs</span>
+                            <i class="fas fa-users-cog text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Team</span>
                         </a>
                         <a href="#" @click.prevent="currentTab = 'asm-eod'" :class="[currentTab === 'asm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
@@ -5222,7 +5464,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-64"></script>
+    <script type="module" src="js/app.js?v=force-update-65"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

@@ -1017,10 +1017,10 @@ const app = createApp({
                 case 'dashboard': return 'Global Dashboard';
                 case 'tracking': return 'Live File Tracking';
                 case 'users': return 'User Management';
-                case 'asm-dashboard': return 'Area Operations Cockpit';
-                case 'asm-tracking': return 'Area Pipeline Tracking';
-                case 'asm-team': return 'Branch Hubs & Managers';
-                case 'asm-eod': return 'Area Branch Daily EODs';
+                case 'asm-dashboard': return 'Area Dashboard';
+                case 'asm-tracking': return 'File Tracking';
+                case 'asm-team': return 'Team Users';
+                case 'asm-eod': return 'SM Daily EODs';
                 case 'zsm-dashboard': return 'Zonal Operations Cockpit';
                 case 'zsm-team': return 'Supervised Area Managers';
                 case 'profile': return 'My Profile & Account';
@@ -2197,6 +2197,20 @@ const app = createApp({
         const asmSearchQuery = ref('');
         const asmStatusFilter = ref('All');
         const asmHubFilter = ref('All');
+        const asmTimelineFilter = ref('all'); // 'all' | 'today' | 'yesterday' | 'this-week' | 'this-month'
+        const asmCategoryFilter = ref('All'); // 'All' | 'NCL' | 'UCL'
+        const asmChannelFilter = ref('All');  // 'All' | 'DSA' | 'Branch'
+        const asmSortBy = ref('newest');      // 'newest' | 'oldest' | 'amount-desc' | 'amount-asc' | 'name-asc'
+
+        const resetAsmFilters = () => {
+            asmSearchQuery.value = '';
+            asmStatusFilter.value = 'All';
+            asmHubFilter.value = 'All';
+            asmTimelineFilter.value = 'all';
+            asmCategoryFilter.value = 'All';
+            asmChannelFilter.value = 'All';
+            asmSortBy.value = 'newest';
+        };
 
         // Simple Dynamic Connector State (Dropdown method + dynamic input box + conflict warning)
         const allRegisteredSMs = ref([]);
@@ -2527,24 +2541,154 @@ const app = createApp({
             });
         });
 
+        // Computed SM Distribution & Breakdown for Frictionless Navigation
+        const asmSmDistribution = computed(() => {
+            return (supervisedSMs.value || []).map(sm => {
+                const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
+                const totalFiles = smFiles.length;
+                const totalVolume = smFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+                const disbursedFiles = smFiles.filter(f => (f.status || '').toLowerCase() === 'disbursed');
+                const disbursedVolume = disbursedFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+                const pipelineFiles = smFiles.filter(f => (f.status || '').toLowerCase() !== 'disbursed' && (f.status || '').toLowerCase() !== 'rejected' && (f.status || '').toLowerCase() !== 'cancelled');
+                const pipelineVolume = pipelineFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
+
+                return {
+                    id: sm.id,
+                    name: sm.name || 'Branch Manager',
+                    region: sm.region || 'Branch Hub',
+                    tenantId: sm.tenantId,
+                    phone: sm.phone || '',
+                    totalFiles,
+                    totalVolume,
+                    disbursedCount: disbursedFiles.length,
+                    disbursedVolume,
+                    pipelineCount: pipelineFiles.length,
+                    pipelineVolume
+                };
+            });
+        });
+
+        // Stage counts matching active hub filter (or all hubs)
+        const asmStatusCounts = computed(() => {
+            let files = areaFiles.value || [];
+            if (asmHubFilter.value && asmHubFilter.value !== 'All') {
+                files = files.filter(f => f.tenantId === asmHubFilter.value);
+            }
+            const all = files.length;
+            const logged = files.filter(f => (f.status || '').toLowerCase() === 'logged' || (f.status || '').toLowerCase() === 'lead').length;
+            const fi = files.filter(f => (f.status || '').toLowerCase() === 'fi').length;
+            const fcu = files.filter(f => (f.status || '').toLowerCase() === 'fcu').length;
+            const uw = files.filter(f => (f.status || '').toLowerCase() === 'uw').length;
+            const sanctioned = files.filter(f => (f.status || '').toLowerCase() === 'approved' || (f.status || '').toLowerCase() === 'sanction').length;
+            const disbursed = files.filter(f => (f.status || '').toLowerCase() === 'disbursed').length;
+            const rejected = files.filter(f => (f.status || '').toLowerCase() === 'rejected' || (f.status || '').toLowerCase() === 'cancelled').length;
+
+            return { all, logged, fi, fcu, uw, sanctioned, disbursed, rejected };
+        });
+
         const filteredAreaFiles = computed(() => {
-            let list = areaFiles.value || [];
+            let list = (areaFiles.value || []).map(f => {
+                const sm = supervisedSMs.value.find(s => s.tenantId === f.tenantId);
+                return {
+                    ...f,
+                    hubName: sm ? (sm.region || sm.name) : (f.branchName || 'Branch Hub'),
+                    smDisplayName: sm ? sm.name : (f.smName || 'Branch Manager'),
+                    smPhone: sm ? sm.phone : ''
+                };
+            });
+
+            // 1. Hub / SM Filter
             if (asmHubFilter.value && asmHubFilter.value !== 'All') {
                 list = list.filter(f => f.tenantId === asmHubFilter.value);
             }
+
+            // 2. Status Stage Filter
             if (asmStatusFilter.value && asmStatusFilter.value !== 'All') {
-                list = list.filter(f => f.status === asmStatusFilter.value);
+                const s = asmStatusFilter.value.toLowerCase();
+                if (s === 'logged') {
+                    list = list.filter(f => (f.status || '').toLowerCase() === 'logged' || (f.status || '').toLowerCase() === 'lead');
+                } else if (s === 'sanction' || s === 'approved') {
+                    list = list.filter(f => (f.status || '').toLowerCase() === 'approved' || (f.status || '').toLowerCase() === 'sanction');
+                } else if (s === 'rejected' || s === 'cancelled') {
+                    list = list.filter(f => (f.status || '').toLowerCase() === 'rejected' || (f.status || '').toLowerCase() === 'cancelled');
+                } else {
+                    list = list.filter(f => (f.status || '').toLowerCase() === s);
+                }
             }
+
+            // 3. Search Query
             if (asmSearchQuery.value) {
                 const q = asmSearchQuery.value.trim().toLowerCase();
                 list = list.filter(f => 
                     (f.customerName || '').toLowerCase().includes(q) ||
                     (f.appId || '').toLowerCase().includes(q) ||
-                    (f.roName || '').toLowerCase().includes(q)
+                    (f.roName || '').toLowerCase().includes(q) ||
+                    (f.smDisplayName || '').toLowerCase().includes(q) ||
+                    (f.hubName || '').toLowerCase().includes(q) ||
+                    (f.vehicleModel || '').toLowerCase().includes(q)
                 );
             }
+
+            // 4. Timeline Filter
+            if (asmTimelineFilter.value && asmTimelineFilter.value !== 'all') {
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const startOfYesterday = startOfToday - 86400000;
+                const startOfWeek = startOfToday - (now.getDay() === 0 ? 6 : now.getDay() - 1) * 86400000;
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+                list = list.filter(f => {
+                    const dateStr = f.loginDate || f.createdAt;
+                    if (!dateStr) return false;
+                    const t = new Date(dateStr).getTime();
+                    if (asmTimelineFilter.value === 'today') return t >= startOfToday;
+                    if (asmTimelineFilter.value === 'yesterday') return t >= startOfYesterday && t < startOfToday;
+                    if (asmTimelineFilter.value === 'this-week') return t >= startOfWeek;
+                    if (asmTimelineFilter.value === 'this-month') return t >= startOfMonth;
+                    return true;
+                });
+            }
+
+            // 5. Category Filter
+            if (asmCategoryFilter.value && asmCategoryFilter.value !== 'All') {
+                list = list.filter(f => (f.nclUcl || '').toUpperCase() === asmCategoryFilter.value.toUpperCase());
+            }
+
+            // 6. Channel Filter
+            if (asmChannelFilter.value && asmChannelFilter.value !== 'All') {
+                list = list.filter(f => (f.sourcingChannel || '').toLowerCase() === asmChannelFilter.value.toLowerCase());
+            }
+
+            // 7. Sort
+            list = [...list].sort((a, b) => {
+                if (asmSortBy.value === 'newest') {
+                    return new Date(b.loginDate || b.createdAt || 0) - new Date(a.loginDate || a.createdAt || 0);
+                } else if (asmSortBy.value === 'oldest') {
+                    return new Date(a.loginDate || a.createdAt || 0) - new Date(b.loginDate || b.createdAt || 0);
+                } else if (asmSortBy.value === 'amount-desc') {
+                    return (Number(b.loanAmount) || 0) - (Number(a.loanAmount) || 0);
+                } else if (asmSortBy.value === 'amount-asc') {
+                    return (Number(a.loanAmount) || 0) - (Number(b.loanAmount) || 0);
+                } else if (asmSortBy.value === 'name-asc') {
+                    return (a.customerName || '').localeCompare(b.customerName || '');
+                }
+                return 0;
+            });
+
             return list;
         });
+
+        const sendFileAlertToSm = (file) => {
+            const sm = supervisedSMs.value.find(s => s.tenantId === file.tenantId);
+            const targetPhone = sm?.phone || file.smPhone || file.roPhone;
+            if (!targetPhone) {
+                alert("No phone number on file for this branch manager or relationship officer.");
+                return;
+            }
+            const cleanPhone = targetPhone.replace(/\D/g, '').slice(-10);
+            const text = encodeURIComponent(`Hi ${sm?.name || 'Manager'}, regarding file #${file.appId || ''} (${file.customerName} - ₹${formatCurrency(file.loanAmount)}) at ${file.hubName || 'branch hub'}. Current status is "${file.status}". Please provide an update.`);
+            window.open(`https://wa.me/91${cleanPhone}?text=${text}`, '_blank');
+        };
 
         // --- Zonal Sales Manager (ZSM) State & Operations ---
         const supervisedASMs = ref([]);
@@ -3453,8 +3597,35 @@ const app = createApp({
             showViewFileModal.value = true;
         };
 
-        // Export to Excel (Admin)
+        // Export to Excel (Supports ASM Area Files & SM Files)
         const exportToExcel = () => {
+            if (isASM.value) {
+                if (filteredAreaFiles.value.length === 0) {
+                    alert("No area loan files to export based on current filters.");
+                    return;
+                }
+                const exportData = filteredAreaFiles.value.map(file => ({
+                    'Branch Hub': file.hubName || '',
+                    'Sales Manager': file.smDisplayName || '',
+                    'Relationship Officer': file.roName || '',
+                    'App ID': file.appId || '',
+                    'Customer Name': file.customerName || '',
+                    'Category': file.nclUcl || '',
+                    'Channel': file.sourcingChannel || 'DSA',
+                    'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
+                    'Status': file.status || '',
+                    'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
+                    'Last Updated': file.updatedAt || ''
+                }));
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Area_Files");
+                const dateStr = new Date().toISOString().split('T')[0];
+                const filename = `SalesLink_Area_Files_${currentUser.value?.region || 'Area'}_${dateStr}.xlsx`;
+                XLSX.writeFile(workbook, filename);
+                return;
+            }
+
             if (filteredFiles.value.length === 0) {
                 alert("No data to export based on current filters.");
                 return;
@@ -3750,7 +3921,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation,
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
             allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
