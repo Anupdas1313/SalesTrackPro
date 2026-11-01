@@ -1915,27 +1915,7 @@ const app = createApp({
             }
         };
 
-        const shareAreaInviteWhatsApp = () => {
-            if (!currentUser.value?.salesLinkId) return;
-            const areaName = currentUser.value.region || 'Area Operations';
-            const url = `https://saleslink.in/?joinArea=${encodeURIComponent(currentUser.value.salesLinkId)}`;
-            const text = `👋 Hi Team! Connect your branch hub to our *SalesLink* Area (*${areaName}*):\n\n` +
-                         `🔗 Click here to link your hub directly:\n${url}\n\n` +
-                         `Or enter my Area SalesLink ID in your dashboard: *${currentUser.value.salesLinkId}*`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        };
 
-        const copyAreaInviteLink = async () => {
-            if (!currentUser.value?.salesLinkId) return;
-            const url = `https://saleslink.in/?joinArea=${encodeURIComponent(currentUser.value.salesLinkId)}`;
-            try {
-                await navigator.clipboard.writeText(url);
-                copiedSalesLinkIdToast.value = true;
-                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
-            } catch (e) {
-                alert(`Area Invite Link: ${url}`);
-            }
-        };
 
         const unlinkFromSupervisor = async () => {
             if (!confirm('Are you sure you want to disconnect from your Area Sales Manager? You will need a new invite to reconnect.')) return;
@@ -2050,18 +2030,7 @@ const app = createApp({
             }
         };
 
-        const shareProfileWhatsApp = () => {
-            if (!currentUser.value) return;
-            const roleLabel = isSM.value ? 'Branch Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isZSM.value ? 'Zonal Sales Manager' : (isSuperAdmin.value ? 'Platform Super Admin' : 'Relationship Officer')));
-            const orgInfo = currentUser.value.region ? `${currentUser.value.bankName || 'Axis Bank'} - ${currentUser.value.region}` : (currentUser.value.bankName || 'Axis Bank');
-            const text = `👋 Hello! Here is my *SalesLink* Identity Card:\n\n` +
-                         `👤 *Name:* ${currentUser.value.name}\n` +
-                         `💼 *Role:* ${roleLabel}\n` +
-                         `🏢 *Institution:* ${orgInfo}\n` +
-                         `🆔 *Personal SalesLink ID:* ${currentUser.value.salesLinkId || 'N/A'}\n\n` +
-                         `🚀 SalesLink Platform: https://saleslink.in`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        };
+
 
         // --- Area Sales Manager (ASM) State & Operations ---
         const supervisedSMs = ref([]);
@@ -2593,25 +2562,7 @@ const app = createApp({
                     salesLinkId: newSalesLinkId,
                     tenantId: workspaceId || null
                 };
-                // Auto-connect to supervisor if arriving via invite/join link
-                const pendingJoin = sessionStorage.getItem('pending_area_join');
-                if (pendingJoin && user.role === 'sm' && !user.supervisorId) {
-                    sessionStorage.removeItem('pending_area_join');
-                    try {
-                        const sup = await db.linkSmToSupervisor(user.id, pendingJoin);
-                        user.supervisorId = sup.id;
-                        user.supervisorName = sup.name;
-                        user.supervisorRole = sup.role;
-                        user.supervisorSalesLinkId = sup.salesLinkId;
-                        sessionUser.supervisorId = sup.id;
-                        sessionUser.supervisorName = sup.name;
-                        sessionUser.supervisorRole = sup.role;
-                        sessionUser.supervisorSalesLinkId = sup.salesLinkId;
-                        localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                    } catch (e) {
-                        console.warn("Could not auto-link from invite link:", e);
-                    }
-                }
+
                 localStorage.setItem('axis_user', JSON.stringify(sessionUser));
                 currentUser.value = sessionUser;
                 initUserSm();
@@ -3371,26 +3322,6 @@ const app = createApp({
                 loginStage.value = '';
             }
 
-            // Check URL parameters for direct Area join link
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const joinParam = urlParams.get('joinArea') || urlParams.get('join') || urlParams.get('invite');
-                if (joinParam) {
-                    sessionStorage.setItem('pending_area_join', joinParam.trim().toUpperCase());
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            } catch (e) {}
-
-            // If SM is logged in and pending_area_join exists, trigger connection prompt
-            if (currentUser.value && isSM.value) {
-                const pendingJoin = sessionStorage.getItem('pending_area_join');
-                if (pendingJoin && !currentUser.value.supervisorId) {
-                    sessionStorage.removeItem('pending_area_join');
-                    connectSupervisorInput.value = pendingJoin;
-                    showConnectSupervisorModal.value = true;
-                }
-            }
-
             // Check for existing session
             if (currentUser.value) {
                 initUserSm();
@@ -3459,9 +3390,9 @@ const app = createApp({
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
-            profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile, shareProfileWhatsApp,
+            profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             showConnectSupervisorModal, connectSupervisorInput, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess,
-            submitConnectSupervisor, shareAreaInviteWhatsApp, copyAreaInviteLink
+            submitConnectSupervisor
         };
     }
 });
