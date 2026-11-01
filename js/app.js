@@ -1874,45 +1874,121 @@ const app = createApp({
         };
 
 
-        // --- SM Self-Connect to Supervisor State & Handlers ---
+        // --- SM Self-Connect to Supervisor State & Handlers (Dynamic Dropdown + Instant Conflict Detection) ---
         const showConnectSupervisorModal = ref(false);
+        const connectSupervisorMethod = ref('phone'); // 'phone' | 'email' | 'employeeCode' | 'salesLinkId'
         const connectSupervisorInput = ref('');
+        const connectSupervisorWarning = ref('');
         const isConnectingSupervisor = ref(false);
         const connectSupervisorError = ref('');
         const connectSupervisorSuccess = ref('');
+        const connectedSupervisorData = ref(null);
+
+        const onConnectSupervisorMethodChange = () => {
+            connectSupervisorInput.value = '';
+            connectSupervisorWarning.value = '';
+            connectSupervisorError.value = '';
+            connectSupervisorSuccess.value = '';
+            connectedSupervisorData.value = null;
+        };
+
+        const resetConnectSupervisorModal = () => {
+            connectSupervisorMethod.value = 'phone';
+            connectSupervisorInput.value = '';
+            connectSupervisorWarning.value = '';
+            connectSupervisorError.value = '';
+            connectSupervisorSuccess.value = '';
+            connectedSupervisorData.value = null;
+            isConnectingSupervisor.value = false;
+        };
+
+        const openConnectSupervisorModal = () => {
+            resetConnectSupervisorModal();
+            showConnectSupervisorModal.value = true;
+        };
 
         const submitConnectSupervisor = async () => {
             if (!currentUser.value?.id) return;
-            const identifier = connectSupervisorInput.value?.trim();
-            if (!identifier) {
-                connectSupervisorError.value = "Please enter an Area Manager's SalesLink ID or Google email.";
+            connectSupervisorWarning.value = '';
+            connectSupervisorError.value = '';
+            connectSupervisorSuccess.value = '';
+            connectedSupervisorData.value = null;
+
+            const val = (connectSupervisorInput.value || '').trim();
+            if (!val) {
+                if (connectSupervisorMethod.value === 'phone') connectSupervisorError.value = 'Please enter your Area Manager’s 10-digit mobile number.';
+                else if (connectSupervisorMethod.value === 'email') connectSupervisorError.value = 'Please enter your Area Manager’s Gmail address.';
+                else if (connectSupervisorMethod.value === 'employeeCode') connectSupervisorError.value = 'Please enter your Area Manager’s Employee / Staff ID.';
+                else connectSupervisorError.value = 'Please enter your Area Manager’s SalesLink ID.';
                 return;
             }
 
+            // Client-side validations
+            if (connectSupervisorMethod.value === 'phone') {
+                const digits = val.replace(/\D/g, '');
+                if (digits.length < 10) {
+                    connectSupervisorError.value = 'Please enter a valid 10-digit mobile number.';
+                    return;
+                }
+            } else if (connectSupervisorMethod.value === 'email') {
+                if (!val.includes('@') || !val.includes('.')) {
+                    connectSupervisorError.value = 'Please enter a valid Google email address.';
+                    return;
+                }
+            } else if (connectSupervisorMethod.value === 'employeeCode') {
+                if (val.length < 3) {
+                    connectSupervisorError.value = 'Please enter a valid Employee / Staff ID (at least 3 characters).';
+                    return;
+                }
+            }
+
             isConnectingSupervisor.value = true;
-            connectSupervisorError.value = '';
-            connectSupervisorSuccess.value = '';
             try {
-                const supervisor = await db.linkSmToSupervisor(currentUser.value.id, identifier);
+                const supervisor = await db.linkSmToSupervisor(currentUser.value.id, val);
+                connectedSupervisorData.value = supervisor;
+
                 currentUser.value.supervisorId = supervisor.id;
-                currentUser.value.supervisorName = supervisor.name;
+                currentUser.value.supervisorName = supervisor.name || 'Area Sales Manager';
                 currentUser.value.supervisorRole = supervisor.role;
-                currentUser.value.supervisorSalesLinkId = supervisor.salesLinkId;
+                currentUser.value.supervisorSalesLinkId = supervisor.salesLinkId || '';
                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
 
-                connectSupervisorSuccess.value = `Successfully connected to ${supervisor.name} (${supervisor.role === 'asm' ? 'Area Sales Manager' : 'Supervisor'})!`;
-                setTimeout(async () => {
-                    showConnectSupervisorModal.value = false;
-                    connectSupervisorInput.value = '';
-                    connectSupervisorSuccess.value = '';
+                const roleLabel = supervisor.role === 'asm' ? 'Area Sales Manager (ASM)' : (supervisor.role === 'zsm' ? 'Zonal Sales Manager (ZSM)' : 'Area Supervisor');
+                connectSupervisorSuccess.value = `✓ Successfully linked branch hub to ${supervisor.name || 'Area Manager'} (${roleLabel})!`;
+
+                try {
                     await loadData();
-                }, 1200);
+                } catch (e) {
+                    console.warn("Error refreshing data after supervisor link:", e);
+                }
+
+                setTimeout(() => {
+                    if (showConnectSupervisorModal.value && !connectSupervisorError.value) {
+                        showConnectSupervisorModal.value = false;
+                        resetConnectSupervisorModal();
+                    }
+                }, 3000);
             } catch (err) {
                 console.error("Connect supervisor error:", err);
-                connectSupervisorError.value = err.message || 'Failed to connect to Area Manager.';
+                const msg = err.message || 'Failed to connect to Area Manager.';
+                if (msg.includes('Role Conflict') || msg.includes('registered as a Relationship Officer') || msg.includes('registered as a Branch Sales Manager')) {
+                    connectSupervisorWarning.value = msg;
+                } else {
+                    connectSupervisorError.value = msg;
+                }
             } finally {
                 isConnectingSupervisor.value = false;
             }
+        };
+
+        const openAsmWhatsAppNotify = (asm) => {
+            if (!asm || !asm.phone) return;
+            const cleanPhone = asm.phone.replace(/\D/g, '').slice(-10);
+            if (!cleanPhone) return;
+            const branchName = currentUser.value?.region || 'our branch hub';
+            const smName = currentUser.value?.name || 'Sales Manager';
+            const text = encodeURIComponent(`Hi ${asm.name || 'Area Manager'}, I (${smName}) have connected our branch hub (${branchName}) to your Area supervision on SalesLink. Looking forward to working together!`);
+            window.open(`https://wa.me/91${cleanPhone}?text=${text}`, '_blank');
         };
 
 
@@ -3678,8 +3754,8 @@ const app = createApp({
             allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
-            showConnectSupervisorModal, connectSupervisorInput, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess,
-            submitConnectSupervisor
+            showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
+            onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify
         };
     }
 });

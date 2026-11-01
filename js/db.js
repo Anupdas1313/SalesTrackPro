@@ -466,23 +466,18 @@ export const linkSmToSupervisor = async (smUserId, supervisorIdentifier) => {
     if (!smUserId || !supervisorIdentifier) throw new Error("SM User ID and Supervisor Identifier are required.");
 
     const cleanIdentifier = supervisorIdentifier.trim();
-    let supervisor = null;
-
-    // 1. Try finding by salesLinkId
-    if (cleanIdentifier.toUpperCase().startsWith('SL-')) {
-        supervisor = await getUserBySalesLinkId(cleanIdentifier.toUpperCase());
-    }
-    // 2. If not found or not SL-, try finding by email
-    if (!supervisor) {
-        supervisor = await getUserByEmail(cleanIdentifier.toLowerCase());
-    }
-    // 3. Fallback: try salesLinkId without prefix check
-    if (!supervisor) {
-        supervisor = await getUserBySalesLinkId(cleanIdentifier.toUpperCase());
-    }
+    const supervisor = await findUserByAnyIdentifier(cleanIdentifier);
 
     if (!supervisor) {
-        throw new Error(`Supervisor not found with ID or Email "${supervisorIdentifier}". Please verify the identifier and try again.`);
+        throw new Error(`No Area Sales Manager found with "${supervisorIdentifier}". Please verify the Phone, Email, Employee ID, or SalesLink ID and try again.`);
+    }
+
+    if (supervisor.role === 'ro') {
+        throw new Error(`Role Conflict: "${supervisor.name || supervisor.email}" is registered as a Relationship Officer (RO). Only Area Sales Managers (ASM) or Zonal Managers (ZSM) can supervise a branch hub.`);
+    }
+
+    if (supervisor.role === 'sm') {
+        throw new Error(`Role Conflict: "${supervisor.name || supervisor.email}" is registered as a Branch Sales Manager (SM). A branch hub cannot report to another Branch Sales Manager.`);
     }
 
     if (supervisor.role !== 'asm' && supervisor.role !== 'zsm' && supervisor.role !== 'super_admin') {
