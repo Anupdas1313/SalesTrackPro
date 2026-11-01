@@ -191,7 +191,7 @@ const app = createApp({
 
         // Modals & Forms
         const showAddRoModal = ref(false);
-        const newRoForm = ref({ name: '', email: '' });
+        const newRoForm = ref({ name: '', email: '', phone: '' });
         const addRoError = ref('');
 
         // Date Helpers
@@ -1930,6 +1930,16 @@ const app = createApp({
                 return;
             }
 
+            const trimmedPhone = profileForm.value.phone?.trim();
+            if (!trimmedPhone) {
+                profileSaveError.value = 'Contact Phone / WhatsApp number is mandatory.';
+                return;
+            }
+            if (trimmedPhone.replace(/\D/g, '').length < 10) {
+                profileSaveError.value = 'Please provide a valid 10-digit mobile number.';
+                return;
+            }
+
             isSavingProfile.value = true;
             try {
                 const updatePayload = {
@@ -2448,6 +2458,14 @@ const app = createApp({
                 registerError.value = 'Operating Region / Zone is mandatory.';
                 return;
             }
+            if (!smPhone) {
+                registerError.value = 'Contact Phone / WhatsApp number is mandatory.';
+                return;
+            }
+            if (smPhone.replace(/\D/g, '').length < 10) {
+                registerError.value = 'Please provide a valid 10-digit mobile number.';
+                return;
+            }
 
             const wsName = smBank === 'Axis Bank' ? `${smRegion} Hub` : `${smBank} - ${smRegion} Hub`;
 
@@ -2590,6 +2608,7 @@ const app = createApp({
                     supervisorRole: user.supervisorRole || null,
                     supervisorSalesLinkId: user.supervisorSalesLinkId || null,
                     tenantId: user.tenantId || null,
+                    phone: user.phone || '',
                     bankName: user.bankName,
                     division: user.division,
                     region: user.region
@@ -2661,8 +2680,17 @@ const app = createApp({
         const saveNewRo = async () => {
             addRoError.value = '';
             const email = (newRoForm.value.email || '').trim().toLowerCase();
+            const phone = (newRoForm.value.phone || '').trim();
             if (!email) {
                 addRoError.value = 'Please provide a valid Gmail address';
+                return;
+            }
+            if (!phone) {
+                addRoError.value = 'Contact Phone / WhatsApp number is mandatory';
+                return;
+            }
+            if (phone.replace(/\D/g, '').length < 10) {
+                addRoError.value = 'Please provide a valid 10-digit mobile number';
                 return;
             }
 
@@ -2676,13 +2704,15 @@ const app = createApp({
                 email: email,
                 role: 'ro',
                 name: (newRoForm.value.name || '').trim().toUpperCase(),
+                phone: phone,
+                salesLinkId: db.generateSalesLinkId('ro'),
                 tenantId: currentUser.value.tenantId,
                 status: 'active',
                 createdAt: new Date().toISOString()
             });
             
             showAddRoModal.value = false;
-            newRoForm.value = { name: '', email: '' };
+            newRoForm.value = { name: '', email: '', phone: '' };
             await loadData();
         };
 
@@ -3279,6 +3309,7 @@ const app = createApp({
                                 currentUser.value.supervisorRole = fresh.supervisorRole || null;
                                 currentUser.value.supervisorSalesLinkId = fresh.supervisorSalesLinkId || null;
                                 if (fresh.tenantId) currentUser.value.tenantId = fresh.tenantId;
+                                if (fresh.phone) currentUser.value.phone = fresh.phone;
                                 if (fresh.region) currentUser.value.region = fresh.region;
                                 if (fresh.bankName) currentUser.value.bankName = fresh.bankName;
                                 if (fresh.division) currentUser.value.division = fresh.division;
