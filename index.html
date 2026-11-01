@@ -502,6 +502,13 @@
                                 <i class="fas fa-clipboard-list w-5 text-sm"></i> Daily EOD
                             </a>
                         </template>
+
+                        <!-- Profile Navigation Item (For All Roles) -->
+                        <div class="pt-2 mt-1 border-t border-slate-100">
+                            <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer']">
+                                <i class="fas fa-id-card w-5 text-sm"></i> My Profile
+                            </a>
+                        </div>
                     </nav>
 
                     <!-- PWA Native Install Button in Sidebar -->
@@ -545,11 +552,12 @@
                             <i class="fas fa-copy text-[9px] text-slate-400"></i>
                         </div>
 
-                        <div class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs">
+                        <div @click="goToTab('profile')" title="View & Edit My Profile" class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs cursor-pointer hover:bg-slate-100/80 px-2 py-1 rounded-xl transition select-none">
                             <span class="w-7 h-7 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] font-bold flex items-center justify-center text-xs">
                                 {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
                             </span>
-                            <span class="font-semibold text-slate-700">{{ currentUser?.name }}</span>
+                            <span class="font-semibold text-slate-700 hover:text-[#4F46E5] transition-colors">{{ currentUser?.name }}</span>
+                            <i class="fas fa-chevron-right text-[9px] text-slate-400 ml-0.5"></i>
                         </div>
                         <button @click="logout" title="Logout" class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-arrow-right-from-bracket"></i>
@@ -3396,62 +3404,451 @@
                         </div>
                     </div>
 
+                    <!-- ============================================== -->
+                    <!-- USER PROFILE & ACCOUNT SECTION (All Roles)     -->
+                    <!-- ============================================== -->
+                    <div v-if="currentTab === 'profile' && currentUser" class="space-y-5 animate-fade-in pb-16 max-w-5xl mx-auto">
+                        <!-- Top Breadcrumb & Return -->
+                        <div class="flex items-center justify-between">
+                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                                <i class="fas fa-arrow-left text-[11px]"></i>
+                                <span>Back to Dashboard</span>
+                            </button>
+                            <span class="text-[11px] font-mono text-slate-400">Account ID: {{ currentUser.id }}</span>
+                        </div>
+
+                        <!-- Hero Executive Profile Card -->
+                        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+                            <div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none"></div>
+
+                            <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+                                    <!-- Avatar Badge with Glowing Active Indicator -->
+                                    <div class="relative shrink-0">
+                                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#4F46E5] to-indigo-400 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20">
+                                            {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
+                                        </div>
+                                        <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center" title="Active Account">
+                                            <i class="fas fa-check text-[9px] text-white"></i>
+                                        </span>
+                                    </div>
+
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight truncate">{{ currentUser.name }}</h2>
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shrink-0">
+                                                {{ isSM ? 'Branch Sales Manager' : (isASM ? 'Area Sales Manager' : (isZSM ? 'Zonal Sales Manager' : (isSuperAdmin ? 'Platform Super Admin' : 'Relationship Officer'))) }}
+                                            </span>
+                                        </div>
+
+                                        <p class="text-xs sm:text-sm text-slate-300 font-medium flex items-center gap-2 mt-1 truncate">
+                                            <i class="fas fa-envelope text-slate-400 text-xs"></i>
+                                            <span>{{ currentUser.email }}</span>
+                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Google SSO</span>
+                                        </p>
+
+                                        <p class="text-xs text-indigo-200/90 font-medium mt-1 flex items-center gap-1.5 flex-wrap">
+                                            <i class="fas fa-building-columns text-[11px]"></i>
+                                            <span>{{ currentUser.bankName || 'Axis Bank' }}</span>
+                                            <span>&bull;</span>
+                                            <span>{{ currentUser.division || 'Retail Lending' }}</span>
+                                            <span v-if="currentUser.region">&bull;</span>
+                                            <span v-if="currentUser.region">{{ currentUser.region }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons: Copy ID & WhatsApp Share -->
+                                <div class="flex flex-col sm:flex-row md:flex-col gap-2.5 w-full md:w-auto shrink-0">
+                                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner">
+                                        <div class="text-left min-w-0">
+                                            <p class="text-[9px] uppercase tracking-wider text-indigo-200 font-extrabold">Personal SalesLink ID</p>
+                                            <p class="text-sm font-mono font-black text-white tracking-wider truncate">{{ currentUser.salesLinkId || 'Syncing ID...' }}</p>
+                                        </div>
+                                        <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                                            <i class="fas fa-copy text-[10px]"></i>
+                                            <span>Copy</span>
+                                        </button>
+                                    </div>
+
+                                    <button @click="shareProfileWhatsApp" type="button" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <span>Share Identity Card</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feedback Alerts -->
+                        <div v-if="profileSaveSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-xs">
+                            <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                            <span>Profile details saved and updated across database successfully!</span>
+                        </div>
+
+                        <div v-if="profileSaveError" class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-xs">
+                            <i class="fas fa-circle-exclamation text-rose-500 text-sm"></i>
+                            <span>{{ profileSaveError }}</span>
+                        </div>
+
+                        <!-- Main Profile Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                            <!-- Col 1 & 2: Edit Form & Organizational Reporting Line -->
+                            <div class="lg:col-span-2 space-y-5">
+                                <!-- Personal & Contact Information -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+                                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs font-bold shadow-2xs">
+                                                <i class="fas fa-user-pen"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-sm font-extrabold text-slate-900">Personal & Contact Details</h3>
+                                                <p class="text-[11px] text-slate-400 font-medium">Synced with your verified Google session and Firestore</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form @submit.prevent="saveUserProfile" class="space-y-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <!-- Full Name -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Full Name <span class="text-rose-500">*</span>
+                                                </label>
+                                                <input v-model="profileForm.name" type="text" required placeholder="Your full name" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Phone Number -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Phone Number / WhatsApp
+                                                </label>
+                                                <input v-model="profileForm.phone" type="tel" placeholder="e.g. +91 9876543210" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Google Email -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Google Email Address
+                                                </label>
+                                                <div class="relative">
+                                                    <input :value="currentUser.email" type="email" readonly disabled class="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 cursor-not-allowed">
+                                                    <i class="fas fa-lock absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                                </div>
+                                                <p class="text-[10px] text-slate-400 mt-1">Google accounts cannot be changed directly.</p>
+                                            </div>
+
+                                            <!-- Region / Hub Location -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Operating Region / Zone
+                                                </label>
+                                                <input v-model="profileForm.region" type="text" placeholder="e.g. Pune Hub / Mumbai North" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Bank Name -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Institution / Bank
+                                                </label>
+                                                <select v-model="profileForm.bankName" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
+                                                    <option value="Axis Bank">Axis Bank</option>
+                                                    <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
+                                                    <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
+                                                    <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
+                                                    <option value="Other">Other Bank / NBFC</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Asset Division / Vertical -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Asset Division / Vertical
+                                                </label>
+                                                <select v-model="profileForm.division" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
+                                                    <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-2 flex items-center justify-end gap-2">
+                                            <button type="submit" :disabled="isSavingProfile" class="px-5 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
+                                                <i v-if="isSavingProfile" class="fas fa-spinner fa-spin text-xs"></i>
+                                                <i v-else class="fas fa-floppy-disk text-xs"></i>
+                                                <span>{{ isSavingProfile ? 'Saving Changes...' : 'Save Profile Changes' }}</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Organizational Hierarchy & Reporting Lines -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+                                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xs font-bold shadow-2xs">
+                                                <i class="fas fa-sitemap"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-sm font-extrabold text-slate-900">Organizational Reporting Line</h3>
+                                                <p class="text-[11px] text-slate-400 font-medium">Your reporting relationships within SalesLink</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hierarchy Chain Display -->
+                                    <div class="space-y-3">
+                                        <!-- For RO -->
+                                        <div v-if="isRO" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] uppercase font-bold text-slate-400">Direct Branch Supervisor</span>
+                                                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded-full">Branch SM</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center font-bold text-xs">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs font-extrabold text-slate-900">{{ defaultSmName || 'Branch Sales Manager' }}</p>
+                                                    <p class="text-[11px] text-slate-500 font-medium">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Assigned Branch Hub' }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- For SM -->
+                                        <div v-if="isSM" class="space-y-3">
+                                            <div v-if="currentUser.supervisorName" class="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-2">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[10px] uppercase font-bold text-indigo-500">Supervising Area Manager</span>
+                                                    <span class="text-[10px] font-bold text-indigo-700 bg-white border border-indigo-200 px-2 py-0.5 rounded-full">Area ASM</span>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                                                            <i class="fas fa-user-shield"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-xs font-extrabold text-slate-900">{{ currentUser.supervisorName }}</p>
+                                                            <p class="text-[11px] font-mono text-indigo-600 font-bold">{{ currentUser.supervisorSalesLinkId || 'SL-ASM-CONNECTED' }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button @click="unlinkFromSupervisor" type="button" class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition cursor-pointer">
+                                                        Disconnect
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div v-else class="p-3.5 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2.5">
+                                                    <i class="fas fa-circle-info text-amber-500 text-sm"></i>
+                                                    <div>
+                                                        <p class="text-xs font-bold text-slate-800">No Area ASM Linked Yet</p>
+                                                        <p class="text-[11px] text-slate-400">Share your SM ID <strong class="font-mono text-slate-700">{{ currentUser.salesLinkId }}</strong> with your Area Sales Manager.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Hub Info -->
+                                            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                                                <div>
+                                                    <p class="text-[10px] uppercase font-bold text-slate-400">Supervised Branch Hub</p>
+                                                    <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ currentUser.region ? currentUser.region + ' Hub' : (currentUser.bankName || 'Branch') + ' Hub' }}</p>
+                                                </div>
+                                                <span class="text-xs font-bold text-slate-600 font-mono">Workspace: {{ currentUser.tenantId ? currentUser.tenantId.slice(0, 10) + '...' : 'Default' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- For ASM -->
+                                        <div v-if="isASM" class="space-y-3">
+                                            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                                                <div>
+                                                    <p class="text-[10px] uppercase font-bold text-slate-400">Area Cluster Jurisdiction</p>
+                                                    <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
+                                                </div>
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800">
+                                                    {{ supervisedSMs.length }} Supervised Hubs
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Col 3: Real-Time Performance & Account Security -->
+                            <div class="space-y-5">
+                                <!-- Performance Highlights -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                                    <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs font-bold shadow-2xs">
+                                            <i class="fas fa-chart-simple"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-extrabold text-slate-900">Performance Summary</h3>
+                                            <p class="text-[11px] text-slate-400 font-medium">Real-time database metrics</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2.5">
+                                        <!-- For RO -->
+                                        <div v-if="isRO" class="space-y-2.5">
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Total Logged Files</span>
+                                                <span class="text-sm font-black text-slate-900">{{ myFiles.length }}</span>
+                                            </div>
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Disbursed Volume</span>
+                                                <span class="text-sm font-black text-blue-600">₹{{ formatCurrency(roStats.disbursedAmount) }}</span>
+                                            </div>
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Approved Files</span>
+                                                <span class="text-sm font-black text-emerald-600">{{ roStats.approvedCount }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- For SM -->
+                                        <div v-if="isSM" class="space-y-2.5">
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Active ROs in Hub</span>
+                                                <span class="text-sm font-black text-slate-900">{{ activeRoUsers.length }}</span>
+                                            </div>
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Total Hub Files</span>
+                                                <span class="text-sm font-black text-slate-900">{{ stats.totalFiles }}</span>
+                                            </div>
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Hub Disbursed Volume</span>
+                                                <span class="text-sm font-black text-blue-600">₹{{ formatCurrency(stats.disbursedAmount) }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- For ASM -->
+                                        <div v-if="isASM" class="space-y-2.5">
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Supervised Hubs</span>
+                                                <span class="text-sm font-black text-slate-900">{{ supervisedSMs.length }}</span>
+                                            </div>
+                                            <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-slate-600">Area Pipeline Files</span>
+                                                <span class="text-sm font-black text-slate-900">{{ areaFiles.length }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Security & Platform Settings -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                                    <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                                        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-bold shadow-2xs">
+                                            <i class="fas fa-shield-halved"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-extrabold text-slate-900">Security & App Access</h3>
+                                            <p class="text-[11px] text-slate-400 font-medium">Session & platform access</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 text-xs">
+                                        <div class="flex items-center justify-between text-slate-600">
+                                            <span>Sign-in Provider</span>
+                                            <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                                                <i class="fab fa-google text-slate-500"></i> Google SSO
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between text-slate-600">
+                                            <span>Platform App</span>
+                                            <span class="font-bold text-slate-800">SalesLink v2.0 PWA</span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between text-slate-600">
+                                            <span>Account Role</span>
+                                            <span class="font-bold uppercase text-indigo-600 font-mono">{{ currentUser.role }}</span>
+                                        </div>
+
+                                        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                            <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                                                <i class="fas fa-mobile-screen-button text-indigo-600"></i>
+                                                <span>Install SalesLink as App</span>
+                                            </button>
+
+                                            <button @click="logout" type="button" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                                                <i class="fas fa-arrow-right-from-bracket"></i>
+                                                <span>Sign Out of SalesLink</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isASM">
-                        <a href="#" @click.prevent="currentTab = 'asm-dashboard'" :class="[currentTab === 'asm-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'asm-dashboard'" :class="[currentTab === 'asm-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-chart-line text-lg mb-0.5"></i>
                             <span class="text-[10px]">Area</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'asm-tracking'" :class="[currentTab === 'asm-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'asm-tracking'" :class="[currentTab === 'asm-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'asm-team'" :class="[currentTab === 'asm-team' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'asm-team'" :class="[currentTab === 'asm-team' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-network-wired text-lg mb-0.5"></i>
                             <span class="text-[10px]">Hubs</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'asm-eod'" :class="[currentTab === 'asm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'asm-eod'" :class="[currentTab === 'asm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
+                        </a>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Profile</span>
                         </a>
                     </template>
                     <template v-else-if="isSM">
-                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'dashboard'" :class="[currentTab === 'dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Home</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'tracking'" :class="[currentTab === 'tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'users'" :class="[currentTab === 'users' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-users-cog text-lg mb-0.5"></i>
                             <span class="text-[10px]">Users</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Profile</span>
+                        </a>
                     </template>
                     <template v-else>
-                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-dashboard'" :class="[currentTab === 'ro-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-chart-pie text-lg mb-0.5"></i>
                             <span class="text-[10px]">Home</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-tracking'" :class="[currentTab === 'ro-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-add-file'" :class="[currentTab === 'ro-add-file' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-plus-circle text-lg mb-0.5"></i>
                             <span class="text-[10px]">Add</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-3 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'ro-eod'" :class="[currentTab === 'ro-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-list text-lg mb-0.5"></i>
                             <span class="text-[10px]">EOD</span>
+                        </a>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Profile</span>
                         </a>
                     </template>
                 </nav>
@@ -4373,7 +4770,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-54"></script>
+    <script type="module" src="js/app.js?v=force-update-55"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

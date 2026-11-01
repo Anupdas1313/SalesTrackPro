@@ -1,5 +1,5 @@
 ﻿import * as db from './db.js';
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 const app = createApp({
     setup() {
@@ -172,6 +172,9 @@ const app = createApp({
         const goToTab = (tab) => {
             if (tab) {
                 currentTab.value = tab;
+                if (tab === 'profile') {
+                    initProfileForm();
+                }
                 nextTick(() => {
                     const scrollContainer = document.querySelector('.overflow-y-auto');
                     if (scrollContainer) scrollContainer.scrollTop = 0;
@@ -1020,6 +1023,7 @@ const app = createApp({
                 case 'asm-eod': return 'Area Branch Daily EODs';
                 case 'zsm-dashboard': return 'Zonal Operations Cockpit';
                 case 'zsm-team': return 'Supervised Area Managers';
+                case 'profile': return 'My Profile & Account';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
         };
@@ -1883,6 +1887,106 @@ const app = createApp({
                 console.error('Unlink error:', e);
                 alert(e.message || 'Error disconnecting');
             }
+        };
+
+
+        // --- User Profile State & Firestore Operations ---
+        const profileForm = ref({
+            name: '',
+            phone: '',
+            bankName: 'Axis Bank',
+            division: 'Auto Loans (Car Loans)',
+            region: ''
+        });
+        const isSavingProfile = ref(false);
+        const profileSaveSuccess = ref(false);
+        const profileSaveError = ref('');
+
+        const initProfileForm = () => {
+            if (!currentUser.value) return;
+            profileForm.value = {
+                name: currentUser.value.name || currentUser.value.username || '',
+                phone: currentUser.value.phone || '',
+                bankName: currentUser.value.bankName || 'Axis Bank',
+                division: currentUser.value.division || 'Auto Loans (Car Loans)',
+                region: currentUser.value.region || ''
+            };
+        };
+
+        watch(currentUser, (newVal) => {
+            if (newVal) {
+                initProfileForm();
+            }
+        }, { immediate: true });
+
+        const saveUserProfile = async () => {
+            if (!currentUser.value?.id) return;
+            profileSaveError.value = '';
+            profileSaveSuccess.value = false;
+
+            const trimmedName = profileForm.value.name?.trim();
+            if (!trimmedName) {
+                profileSaveError.value = 'Full name is mandatory.';
+                return;
+            }
+
+            isSavingProfile.value = true;
+            try {
+                const updatePayload = {
+                    name: trimmedName,
+                    phone: profileForm.value.phone?.trim() || '',
+                    bankName: profileForm.value.bankName?.trim() || 'Axis Bank',
+                    division: profileForm.value.division?.trim() || 'Auto Loans (Car Loans)',
+                    region: profileForm.value.region?.trim() || '',
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 1. Update user in Firestore users collection
+                await db.updateUser(currentUser.value.id, updatePayload);
+
+                // 2. If SM and has workspace, sync workspace metadata
+                if (isSM.value && currentUser.value.tenantId) {
+                    try {
+                        await db.updateWorkspace(currentUser.value.tenantId, {
+                            managerName: trimmedName,
+                            bankName: updatePayload.bankName,
+                            division: updatePayload.division,
+                            region: updatePayload.region
+                        });
+                    } catch (wsErr) {
+                        console.warn('Workspace sync warning:', wsErr);
+                    }
+                }
+
+                // 3. Update active session state & local storage
+                currentUser.value.name = trimmedName;
+                currentUser.value.phone = updatePayload.phone;
+                currentUser.value.bankName = updatePayload.bankName;
+                currentUser.value.division = updatePayload.division;
+                currentUser.value.region = updatePayload.region;
+                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
+
+                profileSaveSuccess.value = true;
+                setTimeout(() => { profileSaveSuccess.value = false; }, 4000);
+            } catch (err) {
+                console.error('Error saving profile:', err);
+                profileSaveError.value = err.message || 'Failed to save profile changes.';
+            } finally {
+                isSavingProfile.value = false;
+            }
+        };
+
+        const shareProfileWhatsApp = () => {
+            if (!currentUser.value) return;
+            const roleLabel = isSM.value ? 'Branch Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isZSM.value ? 'Zonal Sales Manager' : (isSuperAdmin.value ? 'Platform Super Admin' : 'Relationship Officer')));
+            const orgInfo = currentUser.value.region ? `${currentUser.value.bankName || 'Axis Bank'} - ${currentUser.value.region}` : (currentUser.value.bankName || 'Axis Bank');
+            const text = `👋 Hello! Here is my *SalesLink* Identity Card:\n\n` +
+                         `👤 *Name:* ${currentUser.value.name}\n` +
+                         `💼 *Role:* ${roleLabel}\n` +
+                         `🏢 *Institution:* ${orgInfo}\n` +
+                         `🆔 *Personal SalesLink ID:* ${currentUser.value.salesLinkId || 'N/A'}\n\n` +
+                         `🚀 SalesLink Platform: https://saleslink.in`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         };
 
         // --- Area Sales Manager (ASM) State & Operations ---
@@ -3220,7 +3324,8 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
+            profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile, shareProfileWhatsApp
         };
     }
 });
