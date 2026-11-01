@@ -274,18 +274,31 @@ export const getEODReportsByTenantIds = async (tenantIds) => {
 
 export const createInvitation = async (inviteData) => {
     const targetEmail = (inviteData.toEmail || '').trim().toLowerCase();
-    if (!targetEmail) {
-        throw new Error('Please provide a valid recipient email address.');
+    const targetPhone = (inviteData.toPhone || '').replace(/\D/g, '').slice(-10);
+    const targetEmp = (inviteData.toEmployeeCode || '').trim().toUpperCase();
+    const targetSalesLinkId = (inviteData.toSalesLinkId || '').trim().toUpperCase();
+
+    if (!targetEmail && !targetPhone && !targetEmp && !targetSalesLinkId) {
+        throw new Error('Please provide a valid Phone Number, Email, Employee ID, or SalesLink ID.');
     }
-    
-    const targetUser = await getUserByEmail(targetEmail);
-    if (targetUser && targetUser.supervisorId) {
-        let mgrName = 'another manager';
+
+    // Check if target user exists in database and is already supervised
+    let targetUser = null;
+    if (targetEmail) targetUser = await getUserByEmail(targetEmail);
+    if (!targetUser && targetSalesLinkId) targetUser = await getUserBySalesLinkId(targetSalesLinkId);
+    if (!targetUser && (targetPhone || targetEmp)) {
         try {
-            const mgrSnap = await getDoc(doc(db, 'users', targetUser.supervisorId));
-            if (mgrSnap.exists()) mgrName = mgrSnap.data().name || mgrName;
+            const all = await getAllUsers();
+            targetUser = all.find(u => 
+                (targetPhone && u.phone && u.phone.replace(/\D/g, '').endsWith(targetPhone)) ||
+                (targetEmp && u.employeeCode && u.employeeCode.toUpperCase() === targetEmp)
+            );
         } catch (e) {}
-        throw new Error(`This user (${targetEmail}) is already reporting to ${mgrName}. They must disconnect first before linking to a new area.`);
+    }
+
+    if (targetUser && targetUser.supervisorId && targetUser.supervisorId !== inviteData.fromUserId) {
+        let mgrName = targetUser.supervisorName || 'another Area Sales Manager';
+        throw new Error(`This manager is already reporting to ${mgrName}. They must disconnect first before joining your area.`);
     }
 
     const payload = {
@@ -294,8 +307,10 @@ export const createInvitation = async (inviteData) => {
         fromEmail: (inviteData.fromEmail || '').toLowerCase(),
         fromRole: inviteData.fromRole || 'asm',
         fromSalesLinkId: inviteData.fromSalesLinkId || '',
-        toEmail: targetEmail,
-        toSalesLinkId: inviteData.toSalesLinkId || '',
+        toEmail: targetEmail || '',
+        toPhone: targetPhone || '',
+        toEmployeeCode: targetEmp || '',
+        toSalesLinkId: targetSalesLinkId || '',
         toRole: inviteData.toRole || 'sm',
         territoryName: inviteData.territoryName || '',
         bankName: inviteData.bankName || '',
@@ -308,12 +323,34 @@ export const createInvitation = async (inviteData) => {
     return docRef.id;
 };
 
-export const getPendingInvitationsForEmail = async (email) => {
-    if (!email) return [];
-    const cleanEmail = email.trim().toLowerCase();
-    const q = query(invitationsCol, where('toEmail', '==', cleanEmail), where('status', '==', 'pending'));
-    const snapshot = await getDocs(q);
-    return mapSnapshot(snapshot);
+export const getPendingInvitationsForEmail = async (email, phone, salesLinkId, employeeCode) => {
+    if (!email && !phone && !salesLinkId && !employeeCode) return [];
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10);
+    const cleanId = (salesLinkId || '').trim().toUpperCase();
+    const cleanEmp = (employeeCode || '').trim().toUpperCase();
+
+    try {
+        const q = query(invitationsCol, where('status', '==', 'pending'));
+        const snapshot = await getDocs(q);
+        const allPending = mapSnapshot(snapshot);
+
+        return allPending.filter(inv => {
+            const invEmail = (inv.toEmail || '').trim().toLowerCase();
+            const invPhone = (inv.toPhone || '').replace(/\D/g, '').slice(-10);
+            const invId = (inv.toSalesLinkId || '').trim().toUpperCase();
+            const invEmp = (inv.toEmployeeCode || '').trim().toUpperCase();
+
+            if (cleanEmail && invEmail && cleanEmail === invEmail) return true;
+            if (cleanPhone && invPhone && cleanPhone === invPhone) return true;
+            if (cleanId && invId && cleanId === invId) return true;
+            if (cleanEmp && invEmp && cleanEmp === invEmp) return true;
+            return false;
+        });
+    } catch (e) {
+        console.warn("Could not fetch pending invitations:", e);
+        return [];
+    }
 };
 
 export const getInvitationsSentByUser = async (userId) => {

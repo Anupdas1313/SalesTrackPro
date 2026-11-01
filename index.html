@@ -4936,7 +4936,7 @@
             <span>SalesLink ID copied to clipboard!</span>
         </div>
 
-        <!-- Connect / Invite Branch Sales Manager Modal (ASM - Unified Multi-Option Connector) -->
+        <!-- Connect / Invite Branch Sales Manager Modal (ASM - Simple Dynamic Selector with Conflict Warning) -->
         <div v-if="showInviteSmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in">
             <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-100 max-h-[92vh] overflow-y-auto">
                 <!-- Modal Header -->
@@ -4950,7 +4950,7 @@
                             <p class="text-[11px] text-slate-400 font-medium">Link a branch hub under your Area supervision</p>
                         </div>
                     </div>
-                    <button @click="showInviteSmModal = false; connectSmError = ''; connectSmSuccess = ''" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer">
+                    <button @click="showInviteSmModal = false; resetInviteModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer">
                         <i class="fas fa-times text-sm"></i>
                     </button>
                 </div>
@@ -4967,159 +4967,101 @@
                     </button>
                 </div>
 
-                <!-- Feedback Toasts -->
-                <div v-if="connectSmSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-xs">
-                    <i class="fas fa-check-circle text-emerald-600 text-sm shrink-0"></i>
-                    <span>{{ connectSmSuccess }}</span>
+                <!-- Feedback Alerts -->
+                <!-- 1. Warning Alert (When detail is linked to another SM/supervisor) -->
+                <div v-if="inviteWarning" class="p-4 bg-amber-50 border-2 border-amber-300 text-amber-900 text-xs font-semibold rounded-2xl space-y-2 animate-fade-in shadow-xs">
+                    <div class="flex items-start gap-2.5">
+                        <i class="fas fa-triangle-exclamation text-amber-600 text-base shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-black text-amber-900 text-xs uppercase tracking-wider">Manager Conflict Detected</h4>
+                            <p class="text-xs text-amber-800 mt-1 leading-relaxed">{{ inviteWarning }}</p>
+                        </div>
+                    </div>
+                    <div v-if="linkedManagerDetails" class="pt-2 border-t border-amber-200/60 text-[11px] text-amber-900 flex items-center justify-between flex-wrap gap-2">
+                        <span>Branch Hub: <strong>{{ linkedManagerDetails.region || 'Assigned Branch' }}</strong> ({{ linkedManagerDetails.bankName || 'Axis Bank' }})</span>
+                        <span v-if="linkedManagerDetails.supervisorName">Current Supervisor: <strong>{{ linkedManagerDetails.supervisorName }}</strong></span>
+                    </div>
                 </div>
 
+                <!-- 2. Success Alert -->
+                <div v-if="connectSmSuccess" class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-2xl flex items-center gap-2.5 animate-fade-in shadow-xs">
+                    <i class="fas fa-circle-check text-emerald-600 text-lg shrink-0"></i>
+                    <div>
+                        <p class="leading-relaxed">{{ connectSmSuccess }}</p>
+                    </div>
+                </div>
+
+                <!-- 3. Error Alert -->
                 <div v-if="connectSmError" class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-xs">
-                    <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0"></i>
+                    <i class="fas fa-circle-exclamation text-rose-500 text-base shrink-0"></i>
                     <span>{{ connectSmError }}</span>
                 </div>
 
-                <!-- Connect Options -->
-                <div class="space-y-4">
-                    <!-- OPTION 1: Dropdown of Active Branch Managers -->
+                <!-- 4. WhatsApp Quick Notify Option (if connected SM has phone) -->
+                <div v-if="connectSmSuccess && linkedManagerDetails && linkedManagerDetails.phone" class="p-3 bg-emerald-100/60 rounded-xl border border-emerald-200 flex items-center justify-between gap-3 animate-fade-in">
+                    <span class="text-xs text-emerald-800 font-bold">Notify {{ linkedManagerDetails.name }} directly on WhatsApp?</span>
+                    <button @click="openSmWhatsAppNotify(linkedManagerDetails)" type="button" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Send Message</span>
+                    </button>
+                </div>
+
+                <!-- Invite Form -->
+                <form @submit.prevent="submitInviteSm" class="space-y-4">
+                    <!-- Dropdown: Select How to Invite -->
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                                1. Select Branch Manager (Dropdown)
-                            </label>
-                            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                                {{ availableSMs.length }} registered
-                            </span>
-                        </div>
-                        <select v-model="selectedSmDropdownId" @change="onSmDropdownChange" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
-                            <option value="">-- Choose from registered Branch Managers --</option>
-                            <option v-for="sm in availableSMs" :key="sm.id" :value="sm.id">
-                                {{ sm.name }} — {{ sm.region || 'Branch' }} ({{ sm.phone ? '📱 ' + sm.phone : '' }}{{ sm.employeeCode ? ' | 🪪 ' + sm.employeeCode : '' }}{{ sm.salesLinkId ? ' | ' + sm.salesLinkId : '' }})
-                            </option>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Choose How to Invite Sales Manager:
+                        </label>
+                        <select v-model="inviteMethod" @change="onInviteMethodChange" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-bold text-slate-800 transition cursor-pointer">
+                            <option value="phone">📱 Invite with Phone Number (Mobile / WhatsApp)</option>
+                            <option value="email">✉️ Invite with Gmail ID</option>
+                            <option value="employeeCode">🪪 Invite with Employee ID / Staff Code</option>
+                            <option value="salesLinkId">🆔 Invite with Personal SalesLink ID</option>
                         </select>
                     </div>
 
-                    <div class="relative flex items-center justify-center my-1">
-                        <div class="border-t border-slate-200 w-full"></div>
-                        <span class="bg-white px-2.5 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 absolute">OR SEARCH BY ANY IDENTIFIER</span>
-                    </div>
-
-                    <!-- OPTION 2: Universal Multi-Identifier Search -->
-                    <div>
+                    <!-- Dynamic Input Box: Appears based on chosen dropdown option -->
+                    <div class="space-y-1">
                         <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                            2. Search by Phone, Employee ID, Email, or SalesLink ID
+                            <span v-if="inviteMethod === 'phone'">Enter 10-Digit Mobile / WhatsApp Number <span class="text-rose-500">*</span></span>
+                            <span v-else-if="inviteMethod === 'email'">Enter Manager's Google Email Address <span class="text-rose-500">*</span></span>
+                            <span v-else-if="inviteMethod === 'employeeCode'">Enter Official Employee / Staff ID <span class="text-rose-500">*</span></span>
+                            <span v-else-if="inviteMethod === 'salesLinkId'">Enter Personal SalesLink ID <span class="text-rose-500">*</span></span>
                         </label>
+
                         <div class="relative">
-                            <input v-model="smSearchQuery" @input="onSmSearchInput" type="text" placeholder="e.g. 9823012345, EMP-10482, rahul.sm@gmail.com, or SL-SM-7821..." class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <button v-if="smSearchQuery" @click="smSearchQuery = ''; matchedSm = null; selectedSmDropdownId = ''" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <input 
+                                v-model="inviteInputValue" 
+                                :type="inviteMethod === 'phone' ? 'tel' : (inviteMethod === 'email' ? 'email' : 'text')"
+                                :placeholder="inviteMethod === 'phone' ? 'e.g. 9823012345' : (inviteMethod === 'email' ? 'e.g. rahul.manager@gmail.com' : (inviteMethod === 'employeeCode' ? 'e.g. EMP-10482' : 'e.g. SL-SM-7821'))"
+                                :class="{'font-mono uppercase': inviteMethod === 'employeeCode' || inviteMethod === 'salesLinkId'}"
+                                required
+                                class="w-full pl-3.5 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                            
+                            <i :class="inviteMethod === 'phone' ? 'fas fa-phone' : (inviteMethod === 'email' ? 'fas fa-envelope' : (inviteMethod === 'employeeCode' ? 'fas fa-id-badge' : 'fas fa-fingerprint'))" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         </div>
-                    </div>
-
-                    <!-- Verified Manager Found Card -->
-                    <div v-if="matchedSm" class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-3 animate-fade-in shadow-2xs">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#4F46E5] to-indigo-400 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
-                                    {{ matchedSm.name ? matchedSm.name.charAt(0).toUpperCase() : 'M' }}
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <h4 class="text-xs sm:text-sm font-black text-slate-900 truncate">{{ matchedSm.name }}</h4>
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-100 text-indigo-800">
-                                            {{ matchedSm.designation || 'Branch Sales Manager' }}
-                                        </span>
-                                    </div>
-                                    <p class="text-[11px] font-medium text-slate-600 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                        <span><i class="fas fa-building-columns text-[10px] text-indigo-600"></i> {{ matchedSm.bankName || 'Axis Bank' }}</span>
-                                        <span>&bull;</span>
-                                        <span><i class="fas fa-location-dot text-[10px] text-slate-400"></i> {{ matchedSm.region || 'Branch Hub' }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <span v-if="matchedSm.supervisorId && matchedSm.supervisorId === currentUser.id" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
-                                Already in Area
-                            </span>
-                            <span v-else-if="matchedSm.supervisorId" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 shrink-0">
-                                Supervised by {{ matchedSm.supervisorName || 'another ASM' }}
-                            </span>
-                            <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
-                                🟢 Ready to Connect
-                            </span>
-                        </div>
-
-                        <!-- Credentials Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-mono pt-2 border-t border-indigo-100/70">
-                            <div class="bg-white p-2 rounded-xl border border-slate-200/60">
-                                <span class="text-slate-400 block font-sans text-[9px] uppercase font-bold">Mobile</span>
-                                <span class="text-slate-800 font-bold truncate block">{{ matchedSm.phone || 'N/A' }}</span>
-                            </div>
-                            <div class="bg-white p-2 rounded-xl border border-slate-200/60">
-                                <span class="text-slate-400 block font-sans text-[9px] uppercase font-bold">Emp ID</span>
-                                <span class="text-slate-800 font-bold truncate block">{{ matchedSm.employeeCode || 'N/A' }}</span>
-                            </div>
-                            <div class="bg-white p-2 rounded-xl border border-slate-200/60">
-                                <span class="text-slate-400 block font-sans text-[9px] uppercase font-bold">SalesLink ID</span>
-                                <span class="text-indigo-600 font-bold truncate block">{{ matchedSm.salesLinkId || 'N/A' }}</span>
-                            </div>
-                            <div class="bg-white p-2 rounded-xl border border-slate-200/60">
-                                <span class="text-slate-400 block font-sans text-[9px] uppercase font-bold">Branch SOL</span>
-                                <span class="text-slate-800 font-bold truncate block">{{ matchedSm.branchSolId || 'N/A' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Actions for matched SM -->
-                        <div class="pt-1 flex items-center justify-end gap-2 flex-wrap">
-                            <button v-if="matchedSm.phone" @click="openSmWhatsAppNotify(matchedSm)" type="button" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer">
-                                <i class="fab fa-whatsapp text-emerald-600 text-sm"></i>
-                                <span>Notify on WhatsApp</span>
-                            </button>
-
-                            <button @click="directConnectSm(matchedSm)" type="button" :disabled="isDirectConnectingSm || (matchedSm.supervisorId && matchedSm.supervisorId === currentUser.id)" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-60">
-                                <i v-if="isDirectConnectingSm" class="fas fa-spinner fa-spin text-xs"></i>
-                                <i v-else class="fas fa-link text-xs"></i>
-                                <span>{{ isDirectConnectingSm ? 'Connecting...' : (matchedSm.supervisorId && matchedSm.supervisorId === currentUser.id ? 'Already Connected' : 'Connect Hub Now') }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- New Unregistered Manager Fallback -->
-                    <div v-else-if="smSearchQuery && !matchedSm" class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-3 animate-fade-in">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-circle-info text-amber-500 text-sm shrink-0"></i>
-                            <span class="text-xs font-bold text-slate-800">No registered manager found matching "{{ smSearchQuery }}"</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500">
-                            If this Sales Manager hasn't created their SalesLink account yet, enter their Gmail below to queue an in-app area invitation for when they first sign in:
+                        
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            <span v-if="inviteMethod === 'phone'">Connects active branch manager or queues invitation for their mobile number.</span>
+                            <span v-else-if="inviteMethod === 'email'">Connects active account or queues in-app invite for when they sign in with Google.</span>
+                            <span v-else-if="inviteMethod === 'employeeCode'">Matches official bank staff code to link branch hub jurisdiction.</span>
+                            <span v-else-if="inviteMethod === 'salesLinkId'">Instant lookup and connection by personal SalesLink ID.</span>
                         </p>
-                        <form @submit.prevent="sendSmInvitation" class="space-y-3">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-700 uppercase mb-1">Manager Gmail Address *</label>
-                                    <input v-model="inviteSmForm.email" type="email" required placeholder="manager@gmail.com" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-700 uppercase mb-1">Mobile Number (Optional)</label>
-                                    <input v-model="inviteSmForm.phone" type="tel" placeholder="10-digit mobile" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500">
-                                </div>
-                            </div>
-                            <div class="flex justify-end gap-2 pt-1">
-                                <button type="submit" :disabled="isInvitingSm" class="px-3.5 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-75">
-                                    <i v-if="isInvitingSm" class="fas fa-spinner fa-spin text-xs"></i>
-                                    <i v-else class="fas fa-paper-plane text-xs"></i>
-                                    <span>{{ isInvitingSm ? 'Sending...' : 'Send In-App Invite' }}</span>
-                                </button>
-                            </div>
-                        </form>
                     </div>
-                </div>
 
-                <div class="pt-2 border-t border-slate-100 flex justify-end">
-                    <button type="button" @click="showInviteSmModal = false; connectSmError = ''; connectSmSuccess = ''" class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition cursor-pointer">
-                        Close
-                    </button>
-                </div>
+                    <!-- Footer Action Buttons -->
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button type="button" @click="showInviteSmModal = false; resetInviteModal()" class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="isSubmittingInvite" class="px-5 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
+                            <i v-if="isSubmittingInvite" class="fas fa-spinner fa-spin text-xs"></i>
+                            <i v-else class="fas fa-paper-plane text-xs"></i>
+                            <span>{{ isSubmittingInvite ? 'Checking & Connecting...' : 'Submit & Connect SM' }}</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -5188,7 +5130,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-62"></script>
+    <script type="module" src="js/app.js?v=force-update-63"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

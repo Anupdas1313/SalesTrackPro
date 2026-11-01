@@ -2122,104 +2122,159 @@ const app = createApp({
         const asmStatusFilter = ref('All');
         const asmHubFilter = ref('All');
 
-        // Multi-option Connector State (Dropdown + Phone + Emp ID + Email)
+        // Simple Dynamic Connector State (Dropdown method + dynamic input box + conflict warning)
         const allRegisteredSMs = ref([]);
-        const selectedSmDropdownId = ref('');
-        const smSearchQuery = ref('');
-        const matchedSm = ref(null);
-        const isDirectConnectingSm = ref(false);
+        const inviteMethod = ref('phone'); // 'phone' | 'email' | 'employeeCode' | 'salesLinkId'
+        const inviteInputValue = ref('');
+        const inviteWarning = ref('');
+        const linkedManagerDetails = ref(null);
+        const isSubmittingInvite = ref(false);
         const connectSmError = ref('');
         const connectSmSuccess = ref('');
 
-        const availableSMs = computed(() => {
-            return allRegisteredSMs.value.filter(sm => sm.id !== currentUser.value?.id);
-        });
-
-        const openConnectSmModal = () => {
-            selectedSmDropdownId.value = '';
-            smSearchQuery.value = '';
-            matchedSm.value = null;
+        const onInviteMethodChange = () => {
+            inviteInputValue.value = '';
+            inviteWarning.value = '';
             connectSmError.value = '';
             connectSmSuccess.value = '';
-            inviteSmError.value = '';
-            inviteSmSuccess.value = '';
-            inviteSmForm.value = { email: '', phone: '', salesLinkId: '', territoryName: '' };
+            linkedManagerDetails.value = null;
+        };
+
+        const resetInviteModal = () => {
+            inviteMethod.value = 'phone';
+            inviteInputValue.value = '';
+            inviteWarning.value = '';
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+            linkedManagerDetails.value = null;
+            isSubmittingInvite.value = false;
+        };
+
+        const openConnectSmModal = () => {
+            resetInviteModal();
             showInviteSmModal.value = true;
         };
 
-        const onSmDropdownChange = () => {
+        const submitInviteSm = async () => {
+            inviteWarning.value = '';
             connectSmError.value = '';
             connectSmSuccess.value = '';
-            if (!selectedSmDropdownId.value) {
-                matchedSm.value = null;
-                return;
-            }
-            const found = allRegisteredSMs.value.find(s => s.id === selectedSmDropdownId.value);
-            if (found) {
-                matchedSm.value = found;
-                smSearchQuery.value = found.salesLinkId || found.phone || found.employeeCode || found.email || '';
-            }
-        };
+            linkedManagerDetails.value = null;
 
-        const onSmSearchInput = () => {
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-            const raw = (smSearchQuery.value || '').trim();
-            if (!raw) {
-                matchedSm.value = null;
-                selectedSmDropdownId.value = '';
+            const val = (inviteInputValue.value || '').trim();
+            if (!val) {
+                if (inviteMethod.value === 'phone') connectSmError.value = 'Please enter a 10-digit mobile number.';
+                else if (inviteMethod.value === 'email') connectSmError.value = 'Please enter a valid Gmail address.';
+                else if (inviteMethod.value === 'employeeCode') connectSmError.value = 'Please enter an Employee / Staff ID.';
+                else connectSmError.value = 'Please enter a SalesLink ID.';
                 return;
             }
 
-            const cleanLower = raw.toLowerCase();
-            const cleanDigits = raw.replace(/\D/g, '');
-            const cleanUpper = raw.toUpperCase();
-
-            // Match against allRegisteredSMs in memory (instant search!)
-            const found = allRegisteredSMs.value.find(u => {
-                const matchEmail = u.email && u.email.toLowerCase() === cleanLower;
-                const matchId = u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper;
-                const matchPhone = cleanDigits.length >= 7 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits);
-                const matchEmp = cleanUpper.length >= 3 && u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper;
-                const matchName = raw.length >= 3 && u.name && u.name.toLowerCase().includes(cleanLower);
-                return matchEmail || matchId || matchPhone || matchEmp || matchName;
-            });
-
-            if (found) {
-                matchedSm.value = found;
-                selectedSmDropdownId.value = found.id;
-            } else {
-                matchedSm.value = null;
-                selectedSmDropdownId.value = '';
+            if (inviteMethod.value === 'phone' && val.replace(/\D/g, '').length < 10) {
+                connectSmError.value = 'Please enter a valid 10-digit mobile number.';
+                return;
             }
-        };
-
-        const directConnectSm = async (smToConnect) => {
-            const sm = smToConnect || matchedSm.value;
-            if (!sm?.id) {
-                connectSmError.value = 'Please select or search for an active Sales Manager first.';
+            if (inviteMethod.value === 'email' && !val.includes('@')) {
+                connectSmError.value = 'Please enter a valid email address.';
                 return;
             }
 
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-            isDirectConnectingSm.value = true;
+            isSubmittingInvite.value = true;
             try {
-                await db.directConnectSupervisorToSm(currentUser.value, sm.id);
-                connectSmSuccess.value = `✓ Successfully connected ${sm.name || 'Sales Manager'} (${sm.region || 'Branch Hub'}) to your Area Cluster!`;
-                await loadAsmData();
+                // 1. Check existing users in-memory and in Firestore
+                let foundUser = null;
+                const cleanLower = val.toLowerCase();
+                const cleanDigits = val.replace(/\D/g, '');
+                const cleanUpper = val.toUpperCase();
+
+                // Search in allRegisteredSMs memory
+                foundUser = allRegisteredSMs.value.find(u => {
+                    if (inviteMethod.value === 'phone') {
+                        return u.phone && u.phone.replace(/\D/g, '').endsWith(cleanDigits.slice(-10));
+                    } else if (inviteMethod.value === 'email') {
+                        return u.email && u.email.toLowerCase() === cleanLower;
+                    } else if (inviteMethod.value === 'employeeCode') {
+                        return u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper;
+                    } else {
+                        return u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper;
+                    }
+                });
+
+                // If not found in memory, query database
+                if (!foundUser) {
+                    foundUser = await db.findUserByAnyIdentifier(val);
+                }
+
+                const methodLabel = inviteMethod.value === 'phone' ? 'Phone Number' : (inviteMethod.value === 'email' ? 'Gmail ID' : (inviteMethod.value === 'employeeCode' ? 'Employee ID' : 'SalesLink ID'));
+
+                // 2. SCENARIO: User found in database!
+                if (foundUser) {
+                    linkedManagerDetails.value = foundUser;
+
+                    if (foundUser.role !== 'sm' && foundUser.role !== 'admin') {
+                        connectSmError.value = `This user (${foundUser.name || val}) has role "${foundUser.role}". Only Branch Sales Managers (SM) can be connected under an Area.`;
+                        return;
+                    }
+
+                    // CHECK FOR CONFLICT (LINKED TO ANOTHER SM/SUPERVISOR):
+                    if (foundUser.supervisorId && foundUser.supervisorId !== currentUser.value.id) {
+                        const supName = foundUser.supervisorName || 'another Area Sales Manager';
+                        inviteWarning.value = `This ${methodLabel} (${val}) is already linked to Sales Manager "${foundUser.name || 'Manager'}" (${foundUser.region || 'Branch Hub'}) who is currently reporting to ${supName}. They must be disconnected from their current supervisor before they can join your Area.`;
+                        return;
+                    }
+
+                    // CHECK IF ALREADY LINKED TO THIS ASM:
+                    if (foundUser.supervisorId === currentUser.value.id) {
+                        inviteWarning.value = `Sales Manager "${foundUser.name}" (${foundUser.region || 'Branch Hub'}) is already connected under your Area Cluster.`;
+                        return;
+                    }
+
+                    // UNASSIGNED SM FOUND: DIRECT CONNECT IMMEDIATELY!
+                    await db.directConnectSupervisorToSm(currentUser.value, foundUser.id);
+                    connectSmSuccess.value = `✓ Connected! Sales Manager "${foundUser.name}" (${foundUser.region || 'Branch Hub'}) has been successfully attached to your Area Cluster.`;
+                    await loadAsmData();
+                    setTimeout(() => {
+                        showInviteSmModal.value = false;
+                        resetInviteModal();
+                    }, 2500);
+                    return;
+                }
+
+                // 3. SCENARIO: User not registered yet (Queue area invitation)
+                const invitePayload = {
+                    fromUserId: currentUser.value.id,
+                    fromName: currentUser.value.name,
+                    fromEmail: currentUser.value.email,
+                    fromRole: 'asm',
+                    fromSalesLinkId: currentUser.value.salesLinkId || '',
+                    toRole: 'sm',
+                    territoryName: currentUser.value.region || 'Area Jurisdiction',
+                    bankName: currentUser.value.bankName || 'Axis Bank',
+                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
+                };
+
+                if (inviteMethod.value === 'phone') {
+                    invitePayload.toPhone = cleanDigits.slice(-10);
+                } else if (inviteMethod.value === 'email') {
+                    invitePayload.toEmail = cleanLower;
+                } else if (inviteMethod.value === 'employeeCode') {
+                    invitePayload.toEmployeeCode = cleanUpper;
+                } else {
+                    invitePayload.toSalesLinkId = cleanUpper;
+                }
+
+                await db.createInvitation(invitePayload);
+                connectSmSuccess.value = `✓ Area Invitation sent! As soon as this Sales Manager signs into SalesLink with this ${methodLabel} (${val}), their branch hub will be automatically connected to your Area.`;
+                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
                 setTimeout(() => {
                     showInviteSmModal.value = false;
-                    selectedSmDropdownId.value = '';
-                    smSearchQuery.value = '';
-                    matchedSm.value = null;
-                    connectSmSuccess.value = '';
-                }, 2200);
-            } catch (e) {
-                console.error("Direct connect error:", e);
-                connectSmError.value = e.message || 'Failed to connect Sales Manager.';
+                    resetInviteModal();
+                }, 2800);
+            } catch (err) {
+                console.error("Invite / Connect error:", err);
+                connectSmError.value = err.message || 'Failed to submit invitation.';
             } finally {
-                isDirectConnectingSm.value = false;
+                isSubmittingInvite.value = false;
             }
         };
 
@@ -2240,7 +2295,7 @@ const app = createApp({
                 areaFiles.value = await db.getLoanFilesByTenantIds(wsIds);
                 areaEods.value = await db.getEODReportsByTenantIds(wsIds);
                 areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
+                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email, currentUser.value.phone, currentUser.value.salesLinkId, currentUser.value.employeeCode);
 
                 // Fetch all registered SM users for dropdown and live multi-identifier matching
                 try {
@@ -3620,7 +3675,7 @@ const app = createApp({
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation,
-            allRegisteredSMs, availableSMs, selectedSmDropdownId, smSearchQuery, matchedSm, isDirectConnectingSm, connectSmError, connectSmSuccess, openConnectSmModal, onSmDropdownChange, onSmSearchInput, directConnectSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
+            allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorInput, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess,
