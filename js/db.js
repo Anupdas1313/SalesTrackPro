@@ -514,3 +514,123 @@ export const linkSmToSupervisor = async (smUserId, supervisorIdentifier) => {
     return supervisor;
 };
 
+export const directConnectSupervisorToSm = async (supervisorUser, smUserId) => {
+    if (!supervisorUser || !smUserId) throw new Error("Supervisor user and SM User ID are required.");
+
+    if (supervisorUser.id === smUserId) {
+        throw new Error("You cannot set yourself as your own supervisor.");
+    }
+
+    const smRef = doc(db, 'users', smUserId);
+    const smSnap = await getDoc(smRef);
+    if (!smSnap.exists()) throw new Error("Branch Sales Manager record not found in database.");
+    const smData = smSnap.data();
+
+    // Verify if already supervised by someone else
+    if (smData.supervisorId && smData.supervisorId !== supervisorUser.id) {
+        throw new Error(`This Sales Manager is already reporting to ${smData.supervisorName || 'another Area Manager'}. They must disconnect first.`);
+    }
+
+    const now = new Date().toISOString();
+
+    // 1. Link supervisor on SM user
+    const userUpdate = {
+        supervisorId: supervisorUser.id,
+        supervisorName: supervisorUser.name || 'Area Manager',
+        supervisorRole: supervisorUser.role || 'asm',
+        supervisorSalesLinkId: supervisorUser.salesLinkId || '',
+        updatedAt: now
+    };
+    if (supervisorUser.role === 'asm') {
+        userUpdate.asmId = supervisorUser.id;
+    } else if (supervisorUser.role === 'zsm') {
+        userUpdate.zsmId = supervisorUser.id;
+    }
+    await updateDoc(smRef, userUpdate);
+
+    // 2. Link workspace to supervisor
+    if (smData.tenantId) {
+        try {
+            const wsRef = doc(db, 'workspaces', smData.tenantId);
+            const wsUpdate = { updatedAt: now };
+            if (supervisorUser.role === 'asm') wsUpdate.asmId = supervisorUser.id;
+            if (supervisorUser.role === 'zsm') wsUpdate.zsmId = supervisorUser.id;
+            await updateDoc(wsRef, wsUpdate);
+        } catch (e) {
+            console.warn("Could not link workspace to supervisor:", e);
+        }
+    }
+
+    // 3. Record connection event in invitations collection for audit
+    try {
+        await addDoc(invitationsCol, {
+            fromUserId: supervisorUser.id,
+            fromName: supervisorUser.name || '',
+            fromRole: supervisorUser.role || 'asm',
+            fromSalesLinkId: supervisorUser.salesLinkId || '',
+            toUserId: smUserId,
+            toName: smData.name || '',
+            toEmail: smData.email || '',
+            toSalesLinkId: smData.salesLinkId || '',
+            targetRole: smData.role || 'sm',
+            status: 'accepted',
+            initiatedBy: supervisorUser.role || 'asm',
+            createdAt: now,
+            respondedAt: now
+        });
+    } catch (e) {
+        console.warn("Could not log direct connection audit doc:", e);
+    }
+
+    return smData;
+};
+
+export const findUserByAnyIdentifier = async (identifier) => {
+    if (!identifier) return null;
+    const raw = identifier.trim();
+    const cleanLower = raw.toLowerCase();
+    const cleanDigits = raw.replace(/\D/g, '');
+    const cleanUpper = raw.toUpperCase();
+
+    // 1. Check SalesLink ID
+    if (cleanUpper.startsWith('SL-')) {
+        const byId = await getUserBySalesLinkId(cleanUpper);
+        if (byId) return byId;
+    }
+
+    // 2. Check Email
+    if (cleanLower.includes('@')) {
+        const byEmail = await getUserByEmail(cleanLower);
+        if (byEmail) return byEmail;
+    }
+
+    // 3. Check Phone (if 10 digits)
+    if (cleanDigits.length >= 10) {
+        const qPhone = query(usersCol, where('phone', '==', cleanDigits.slice(-10)), limit(1));
+        const snapPhone = await getDocs(qPhone);
+        if (!snapPhone.empty) return { id: snapPhone.docs[0].id, ...snapPhone.docs[0].data() };
+    }
+
+    // 4. Check Employee Code
+    if (cleanUpper.length >= 3) {
+        const qEmp = query(usersCol, where('employeeCode', '==', cleanUpper), limit(1));
+        const snapEmp = await getDocs(qEmp);
+        if (!snapEmp.empty) return { id: snapEmp.docs[0].id, ...snapEmp.docs[0].data() };
+    }
+
+    // 5. Fallback scan all users if not found by index
+    try {
+        const all = await getAllUsers();
+        const found = all.find(u => 
+            (u.email && u.email.toLowerCase() === cleanLower) ||
+            (u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper) ||
+            (u.phone && u.phone.replace(/\D/g, '').endsWith(cleanDigits.slice(-10))) ||
+            (u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper) ||
+            (u.name && u.name.toLowerCase() === cleanLower)
+        );
+        if (found) return found;
+    } catch (e) {}
+
+    return null;
+};
+

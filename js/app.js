@@ -2113,7 +2113,7 @@ const app = createApp({
         const areaEods = ref([]);
         const areaInvitations = ref([]);
         const showInviteSmModal = ref(false);
-        const inviteSmForm = ref({ email: '', salesLinkId: '', territoryName: '' });
+        const inviteSmForm = ref({ email: '', phone: '', salesLinkId: '', territoryName: '' });
         const inviteSmError = ref('');
         const inviteSmSuccess = ref('');
         const isInvitingSm = ref(false);
@@ -2121,6 +2121,116 @@ const app = createApp({
         const asmSearchQuery = ref('');
         const asmStatusFilter = ref('All');
         const asmHubFilter = ref('All');
+
+        // Multi-option Connector State (Dropdown + Phone + Emp ID + Email)
+        const allRegisteredSMs = ref([]);
+        const selectedSmDropdownId = ref('');
+        const smSearchQuery = ref('');
+        const matchedSm = ref(null);
+        const isDirectConnectingSm = ref(false);
+        const connectSmError = ref('');
+        const connectSmSuccess = ref('');
+
+        const availableSMs = computed(() => {
+            return allRegisteredSMs.value.filter(sm => sm.id !== currentUser.value?.id);
+        });
+
+        const openConnectSmModal = () => {
+            selectedSmDropdownId.value = '';
+            smSearchQuery.value = '';
+            matchedSm.value = null;
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+            inviteSmError.value = '';
+            inviteSmSuccess.value = '';
+            inviteSmForm.value = { email: '', phone: '', salesLinkId: '', territoryName: '' };
+            showInviteSmModal.value = true;
+        };
+
+        const onSmDropdownChange = () => {
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+            if (!selectedSmDropdownId.value) {
+                matchedSm.value = null;
+                return;
+            }
+            const found = allRegisteredSMs.value.find(s => s.id === selectedSmDropdownId.value);
+            if (found) {
+                matchedSm.value = found;
+                smSearchQuery.value = found.salesLinkId || found.phone || found.employeeCode || found.email || '';
+            }
+        };
+
+        const onSmSearchInput = () => {
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+            const raw = (smSearchQuery.value || '').trim();
+            if (!raw) {
+                matchedSm.value = null;
+                selectedSmDropdownId.value = '';
+                return;
+            }
+
+            const cleanLower = raw.toLowerCase();
+            const cleanDigits = raw.replace(/\D/g, '');
+            const cleanUpper = raw.toUpperCase();
+
+            // Match against allRegisteredSMs in memory (instant search!)
+            const found = allRegisteredSMs.value.find(u => {
+                const matchEmail = u.email && u.email.toLowerCase() === cleanLower;
+                const matchId = u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper;
+                const matchPhone = cleanDigits.length >= 7 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits);
+                const matchEmp = cleanUpper.length >= 3 && u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper;
+                const matchName = raw.length >= 3 && u.name && u.name.toLowerCase().includes(cleanLower);
+                return matchEmail || matchId || matchPhone || matchEmp || matchName;
+            });
+
+            if (found) {
+                matchedSm.value = found;
+                selectedSmDropdownId.value = found.id;
+            } else {
+                matchedSm.value = null;
+                selectedSmDropdownId.value = '';
+            }
+        };
+
+        const directConnectSm = async (smToConnect) => {
+            const sm = smToConnect || matchedSm.value;
+            if (!sm?.id) {
+                connectSmError.value = 'Please select or search for an active Sales Manager first.';
+                return;
+            }
+
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+            isDirectConnectingSm.value = true;
+            try {
+                await db.directConnectSupervisorToSm(currentUser.value, sm.id);
+                connectSmSuccess.value = `✓ Successfully connected ${sm.name || 'Sales Manager'} (${sm.region || 'Branch Hub'}) to your Area Cluster!`;
+                await loadAsmData();
+                setTimeout(() => {
+                    showInviteSmModal.value = false;
+                    selectedSmDropdownId.value = '';
+                    smSearchQuery.value = '';
+                    matchedSm.value = null;
+                    connectSmSuccess.value = '';
+                }, 2200);
+            } catch (e) {
+                console.error("Direct connect error:", e);
+                connectSmError.value = e.message || 'Failed to connect Sales Manager.';
+            } finally {
+                isDirectConnectingSm.value = false;
+            }
+        };
+
+        const openSmWhatsAppNotify = (sm) => {
+            const target = sm || matchedSm.value;
+            if (!target?.phone) return;
+            const cleanPhone = target.phone.replace(/\D/g, '');
+            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            const text = encodeURIComponent(`Hi ${target.name || 'Manager'}, your ${target.region || 'branch'} hub has been connected under my Area Cluster (${currentUser.value?.region || 'Area Jurisdiction'}) on SalesLink. You can view your updated Area ASM directly in your SalesLink Profile.`);
+            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+        };
 
         const loadAsmData = async () => {
             if (!currentUser.value?.id) return;
@@ -2131,6 +2241,14 @@ const app = createApp({
                 areaEods.value = await db.getEODReportsByTenantIds(wsIds);
                 areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
                 pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
+
+                // Fetch all registered SM users for dropdown and live multi-identifier matching
+                try {
+                    const allUsers = await db.getAllUsers();
+                    allRegisteredSMs.value = allUsers.filter(u => u.role === 'sm' && u.id !== currentUser.value.id);
+                } catch (smErr) {
+                    console.warn("Could not load all SMs:", smErr);
+                }
             } catch (e) {
                 console.error('Error loading ASM data:', e);
             }
@@ -2139,9 +2257,12 @@ const app = createApp({
         const sendSmInvitation = async () => {
             inviteSmError.value = '';
             inviteSmSuccess.value = '';
+            connectSmError.value = '';
+            connectSmSuccess.value = '';
+
             const email = (inviteSmForm.value.email || '').trim().toLowerCase();
             if (!email) {
-                inviteSmError.value = 'Please enter a valid Gmail address.';
+                connectSmError.value = 'Please enter a valid Gmail address.';
                 return;
             }
             isInvitingSm.value = true;
@@ -2153,22 +2274,23 @@ const app = createApp({
                     fromRole: 'asm',
                     fromSalesLinkId: currentUser.value.salesLinkId || '',
                     toEmail: email,
+                    toPhone: (inviteSmForm.value.phone || '').trim(),
                     toSalesLinkId: (inviteSmForm.value.salesLinkId || '').trim().toUpperCase(),
                     toRole: 'sm',
                     territoryName: inviteSmForm.value.territoryName || currentUser.value.region || 'Area Hub',
                     bankName: currentUser.value.bankName || 'Axis Bank',
                     division: currentUser.value.division || 'Auto Loans (Car Loans)'
                 });
-                inviteSmSuccess.value = `Invitation successfully sent to ${email}! They will be prompted to accept when they log in.`;
-                inviteSmForm.value = { email: '', salesLinkId: '', territoryName: '' };
+                connectSmSuccess.value = `✓ Invitation successfully queued for ${email}! They will be prompted to connect when they log in.`;
+                inviteSmForm.value = { email: '', phone: '', salesLinkId: '', territoryName: '' };
                 areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
                 setTimeout(() => {
                     showInviteSmModal.value = false;
-                    inviteSmSuccess.value = '';
+                    connectSmSuccess.value = '';
                 }, 2500);
             } catch (e) {
                 console.error('Send invite error:', e);
-                inviteSmError.value = e.message || 'Failed to send invitation.';
+                connectSmError.value = e.message || 'Failed to send invitation.';
             } finally {
                 isInvitingSm.value = false;
             }
@@ -3497,7 +3619,8 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, loadAsmData, sendSmInvitation,
+            allRegisteredSMs, availableSMs, selectedSmDropdownId, smSearchQuery, matchedSm, isDirectConnectingSm, connectSmError, connectSmSuccess, openConnectSmModal, onSmDropdownChange, onSmSearchInput, directConnectSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorInput, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess,
