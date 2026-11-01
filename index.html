@@ -473,7 +473,7 @@
                             </div>
                             <a href="#" @click.prevent="goToTab('asm-team')" :class="[currentTab === 'asm-team' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600 font-semibold', 'flex items-center px-2 py-1.5 rounded-xl transition-all duration-150 text-xs gap-2 cursor-pointer select-none']">
                                 <i class="fas fa-building-columns w-4 text-xs shrink-0"></i>
-                                <span class="truncate">Supervised Hubs</span>
+                                <span class="truncate">Hubs & Managers</span>
                             </a>
                             <button @click="openConnectSmModal()" type="button" class="w-full flex items-center px-2 py-1.5 rounded-xl text-xs gap-2 font-semibold text-indigo-600 hover:bg-indigo-50/80 transition-all duration-150 cursor-pointer text-left">
                                 <i class="fas fa-plus-circle w-4 text-xs shrink-0"></i>
@@ -1698,7 +1698,7 @@
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Hub</label>
                                     <select v-model="asmHubFilter" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All Supervised Hubs</option>
+                                        <option value="All">All Branch Hubs</option>
                                         <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">
                                             {{ hub.region || hub.name }} ({{ hub.name }})
                                         </option>
@@ -1784,8 +1784,8 @@
                     <div v-if="currentTab === 'asm-team' && isASM" class="space-y-6 pb-14 max-w-5xl mx-auto animate-fade-in">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
-                                <h3 class="text-base sm:text-lg font-bold text-slate-900">Supervised Sales Managers & Hubs</h3>
-                                <p class="text-xs text-slate-500 font-medium">Manage connected branch managers and send area link invitations</p>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900">Branch Hubs & Managers</h3>
+                                <p class="text-xs text-slate-500 font-medium">Designated branch locations and Sales Managers connected under your Area</p>
                             </div>
                             <button @click="openConnectSmModal()" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto">
                                 <i class="fas fa-network-wired"></i>
@@ -1798,7 +1798,7 @@
                             <div class="flex items-center gap-2 px-1">
                                 <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
                                 <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">
-                                    Active Supervised Hubs ({{ supervisedSMs.length }})
+                                    Active Branch Hubs & Managers ({{ supervisedSMs.length }})
                                 </h4>
                             </div>
 
@@ -3826,7 +3826,7 @@
                                                     <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
                                                 </div>
                                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800">
-                                                    {{ supervisedSMs.length }} Supervised Hubs
+                                                    {{ supervisedSMs.length }} Branch Hubs & Managers
                                                 </span>
                                             </div>
                                         </div>
@@ -3939,7 +3939,7 @@
                                         <!-- For ASM -->
                                         <div v-if="isASM" class="space-y-2.5">
                                             <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
-                                                <span class="text-xs font-semibold text-slate-600">Supervised Hubs</span>
+                                                <span class="text-xs font-semibold text-slate-600">Branch Hubs & Managers</span>
                                                 <span class="text-sm font-black text-slate-900">{{ supervisedSMs.length }}</span>
                                             </div>
                                             <div class="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
@@ -5188,7 +5188,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-61"></script>
+    <script type="module" src="js/app.js?v=force-update-62"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
