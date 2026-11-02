@@ -3762,7 +3762,7 @@
                     <div v-if="currentTab === 'profile' && currentUser" class="space-y-5 animate-fade-in pb-20 w-full">
                         <!-- Top Navigation Bar & Action Switcher -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200/60">
-                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold transition cursor-pointer">
+                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
                                 <span>Return to Dashboard</span>
                             </button>
@@ -5566,7 +5566,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-70"></script>
+    <script type="module" src="js/app.js?v=force-update-71"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
