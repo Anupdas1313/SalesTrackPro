@@ -2129,7 +2129,7 @@ const app = createApp({
 
         const initProfileForm = () => {
             if (!currentUser.value) return;
-            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'Branch Sales Manager' : 'Relationship Officer')));
+            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'SM (Sales Manager)' : 'Relationship Officer')));
             profileForm.value = {
                 name: currentUser.value.name || currentUser.value.username || '',
                 phone: currentUser.value.phone || '',

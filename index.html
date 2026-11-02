@@ -536,7 +536,7 @@
                             <p class="text-[11px] text-slate-400 font-medium md:hidden flex items-center gap-1.5 mt-0.5">
                                 <span class="truncate max-w-[130px]">{{ currentUser?.name }}</span>
                                 <span>&bull;</span>
-                                <span class="text-slate-500 font-semibold">{{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}</span>
+                                <span class="text-slate-500 font-semibold">{{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM (Sales Manager)' : 'RO'))) }}</span>
                             </p>
                         </div>
                     </div>
@@ -3817,11 +3817,11 @@
                                             <div class="flex items-center justify-center gap-2 flex-wrap">
                                                 <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                                    {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
+                                                    {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM (Sales Manager)' : 'RO'))) }}
                                                 </span>
                                             </div>
                                             <p class="text-xs text-slate-500 font-medium">
-                                                <span class="text-slate-700 font-semibold">{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'Branch Sales Manager' : 'Relationship Officer')))) }}</span>
+                                                <span class="text-slate-700 font-semibold">{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'SM (Sales Manager)' : 'Relationship Officer')))) }}</span>
                                                 <span class="text-slate-300 mx-1.5">&bull;</span>
                                                 <span class="text-slate-500">{{ currentUser.bankName || 'Axis Bank' }}</span>
                                             </p>
@@ -3928,8 +3928,8 @@
                                                     </div>
                                                     <div class="min-w-0">
                                                         <div class="flex items-center gap-1.5 sm:gap-2">
-                                                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'Branch Sales Manager' }}</p>
-                                                            <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM</span>
+                                                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'SM (Sales Manager)' }}</p>
+                                                            <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM (Sales Manager)</span>
                                                         </div>
                                                         <p class="text-[11px] text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
                                                         <p v-if="assignedSm.salesLinkId" class="text-xs font-bold text-indigo-600">SM ID: {{ assignedSm.salesLinkId }}</p>
@@ -3938,11 +3938,11 @@
 
                                                 <!-- RO Contact Actions -->
                                                 <div v-if="assignedSm.phone" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                                    <a :href="'tel:' + assignedSm.phone" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs" title="Call Branch Manager">
+                                                    <a :href="'tel:' + assignedSm.phone" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs" title="Call Sales Manager">
                                                         <i class="fas fa-phone text-xs text-indigo-600"></i>
                                                         <span>Call</span>
                                                     </a>
-                                                    <button @click="openSmWhatsAppChat" type="button" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Branch Manager">
+                                                    <button @click="openSmWhatsAppChat" type="button" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Sales Manager">
                                                         <i class="fab fa-whatsapp text-emerald-600"></i>
                                                         <span>WhatsApp</span>
                                                     </button>
@@ -3994,7 +3994,7 @@
                                                     <p class="text-xs sm:text-sm font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
                                                 </div>
                                                 <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                                    {{ supervisedSMs.length }} Supervised Branch SMs
+                                                    {{ supervisedSMs.length }} Supervised SMs (Sales Managers)
                                                 </span>
                                             </div>
 
@@ -4164,7 +4164,7 @@
                                                     <option value="Relationship Officer (RO)">
                                                     <option value="Senior Relationship Officer">
                                                     <option value="Key Account Manager (KAM)">
-                                                    <option value="Branch Sales Manager (SM)">
+                                                    <option value="SM (Sales Manager)">
                                                     <option value="Senior Branch Manager">
                                                     <option value="Territory Sales Lead">
                                                     <option value="Area Sales Manager (ASM)">
@@ -5572,7 +5572,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-73"></script>
+    <script type="module" src="js/app.js?v=force-update-74"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
