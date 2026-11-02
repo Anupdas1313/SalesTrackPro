@@ -2209,7 +2209,11 @@ const app = createApp({
             profileSaveError.value = '';
             profileSaveSuccess.value = false;
 
-            const trimmedName = profileForm.value.name?.trim();
+            const formatCapitalizeName = (str) => {
+                if (!str) return '';
+                return str.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            };
+            const trimmedName = formatCapitalizeName(profileForm.value.name);
             if (!trimmedName) {
                 profileSaveError.value = 'Full name is mandatory.';
                 return;

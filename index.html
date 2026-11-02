@@ -534,7 +534,7 @@
                         <div>
                             <h2 class="text-base md:text-xl font-bold text-slate-900 tracking-tight leading-tight">{{ getTabTitle(currentTab) }}</h2>
                             <p class="text-[11px] text-slate-400 font-medium md:hidden flex items-center gap-1.5 mt-0.5">
-                                <span class="truncate max-w-[130px]">{{ currentUser?.name }}</span>
+                                <span class="truncate max-w-[130px] capitalize">{{ currentUser?.name }}</span>
                                 <span>&bull;</span>
                                 <span class="text-slate-500 font-semibold">{{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM (Sales Manager)' : 'RO'))) }}</span>
                             </p>
@@ -556,7 +556,7 @@
                             <span class="w-7 h-7 rounded-full bg-[#4F46E5]/10 text-[#4F46E5] font-bold flex items-center justify-center text-xs">
                                 {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
                             </span>
-                            <span class="font-semibold text-slate-700 hover:text-[#4F46E5] transition-colors">{{ currentUser?.name }}</span>
+                            <span class="font-semibold text-slate-700 hover:text-[#4F46E5] transition-colors capitalize">{{ currentUser?.name }}</span>
                             <i class="fas fa-chevron-right text-[9px] text-slate-400 ml-0.5"></i>
                         </div>
                         <button @click="logout" title="Logout" class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition text-xs font-semibold flex items-center gap-1.5">
@@ -3815,7 +3815,7 @@
                                         <!-- Name & Role Hierarchy -->
                                         <div class="mt-2.5 sm:mt-3 space-y-1">
                                             <div class="flex items-center justify-center gap-2 flex-wrap">
-                                                <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
+                                                <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight capitalize">{{ currentUser.name }}</h2>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                                                     {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM (Sales Manager)' : 'RO'))) }}
                                                 </span>
@@ -3928,7 +3928,7 @@
                                                     </div>
                                                     <div class="min-w-0">
                                                         <div class="flex items-center gap-1.5 sm:gap-2">
-                                                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'SM (Sales Manager)' }}</p>
+                                                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate capitalize">{{ defaultSmName || 'SM (Sales Manager)' }}</p>
                                                             <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM (Sales Manager)</span>
                                                         </div>
                                                         <p class="text-[11px] text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
@@ -3958,7 +3958,7 @@
                                                         </div>
                                                         <div class="min-w-0">
                                                             <div class="flex items-center gap-1.5 sm:gap-2">
-                                                                <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ currentUser.supervisorName }}</p>
+                                                                <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate capitalize">{{ currentUser.supervisorName }}</p>
                                                                 <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-full">ASM</span>
                                                             </div>
                                                             <p class="text-xs text-slate-500 font-medium">Area Sales Manager (Supervisor)</p>
@@ -4080,7 +4080,7 @@
                                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner mx-auto">
                                         {{ profileForm.name ? profileForm.name.charAt(0).toUpperCase() : 'U' }}
                                     </div>
-                                    <h2 class="text-base font-bold text-slate-900 tracking-tight mt-2.5 sm:mt-3">{{ profileForm.name || 'Your Name' }}</h2>
+                                    <h2 class="text-base font-bold text-slate-900 tracking-tight mt-2.5 sm:mt-3 capitalize">{{ profileForm.name || 'Your Name' }}</h2>
                                     <p class="text-xs text-slate-500 font-medium mt-0.5">{{ profileForm.designation || 'Designation' }}</p>
                                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                                         {{ profileForm.bankName || 'Axis Bank' }}
@@ -5572,7 +5572,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-74"></script>
+    <script type="module" src="js/app.js?v=force-update-75"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
