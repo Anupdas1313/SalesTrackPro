@@ -178,6 +178,7 @@ const app = createApp({
                 currentTab.value = tab;
                 if (tab === 'profile') {
                     initProfileForm();
+                    profileActiveTab.value = 'overview';
                 }
                 nextTick(() => {
                     const scrollContainer = document.querySelector('.overflow-y-auto');
@@ -2121,6 +2122,7 @@ const app = createApp({
             division: 'Auto Loans (Car Loans)',
             region: ''
         });
+        const profileActiveTab = ref('overview'); // 'overview' | 'edit'
         const isSavingProfile = ref(false);
         const profileSaveSuccess = ref(false);
         const profileSaveError = ref('');
@@ -2270,6 +2272,7 @@ const app = createApp({
                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
 
                 profileSaveSuccess.value = true;
+                profileActiveTab.value = 'overview';
                 setTimeout(() => { profileSaveSuccess.value = false; }, 4000);
             } catch (err) {
                 console.error('Error saving profile:', err);
@@ -4051,7 +4054,7 @@ const app = createApp({
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
             allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
-            profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
+            profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
             onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify
