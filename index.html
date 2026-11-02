@@ -526,7 +526,7 @@
             <!-- Main Content Area -->
             <main class="flex-1 flex flex-col h-full overflow-hidden pb-[72px] md:pb-0 bg-slate-50">
                 <!-- Clean Minimal Header -->
-                <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-4 md:px-8 py-3 flex justify-between items-center z-10 sticky top-0">
+                <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-4 md:px-8 py-2.5 sm:py-3 flex justify-between items-center z-10 sticky top-0">
                     <div class="flex items-center gap-2.5">
                         <div class="md:hidden w-8 h-8 rounded-lg bg-[#4F46E5] text-white flex items-center justify-center font-bold text-xs shadow-xs">
                             SL
@@ -534,11 +534,9 @@
                         <div>
                             <h2 class="text-base md:text-xl font-bold text-slate-900 tracking-tight leading-tight">{{ getTabTitle(currentTab) }}</h2>
                             <p class="text-[11px] text-slate-400 font-medium md:hidden flex items-center gap-1.5 mt-0.5">
-                                <span>{{ currentUser.name }}</span>
-                                <span @click="copySalesLinkId(currentUser?.salesLinkId)" class="font-mono font-bold text-[#4F46E5] bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded text-[9px] cursor-pointer inline-flex items-center gap-1">
-                                    <i class="fas fa-id-badge text-[8px]"></i>
-                                    <span>{{ currentUser?.salesLinkId || 'Syncing...' }}</span>
-                                </span>
+                                <span class="truncate max-w-[130px]">{{ currentUser?.name }}</span>
+                                <span>&bull;</span>
+                                <span class="text-slate-500 font-semibold">{{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}</span>
                             </p>
                         </div>
                     </div>
@@ -547,11 +545,11 @@
                         <div class="text-xs text-slate-400 font-medium hidden md:block">
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
-                        <!-- Personal SalesLink ID Badge (Copyable) -->
-                        <div v-if="currentUser" @click="copySalesLinkId(currentUser?.salesLinkId)" title="Click to copy your personal SalesLink ID" class="cursor-pointer bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-[#4F46E5] px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold flex items-center gap-1.5 transition select-none shadow-2xs">
-                            <i class="fas fa-id-badge text-[11px] text-[#4F46E5]"></i>
+                        <!-- Personal SalesLink ID Badge (Desktop Only) -->
+                        <div v-if="currentUser" @click="copySalesLinkId(currentUser?.salesLinkId)" title="Click to copy your personal SalesLink ID" class="hidden md:flex cursor-pointer bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-[#4F46E5] px-2.5 py-1 rounded-xl text-xs font-bold items-center gap-1.5 transition select-none shadow-2xs">
+                            <i class="fas fa-id-badge text-xs text-[#4F46E5]"></i>
                             <span>{{ currentUser?.salesLinkId || 'Syncing ID...' }}</span>
-                            <i class="fas fa-copy text-[9px] text-slate-400"></i>
+                            <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-600' : 'fas fa-copy text-slate-400 text-[10px]'"></i>
                         </div>
 
                         <div @click="goToTab('profile')" title="View & Edit My Profile" class="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200/60 text-xs cursor-pointer hover:bg-slate-100/80 px-2 py-1 rounded-xl transition select-none">
@@ -3759,9 +3757,9 @@
                     <!-- ============================================== -->
                     <!-- USER PROFILE & ACCOUNT SECTION (All Roles)     -->
                     <!-- ============================================== -->
-                    <div v-if="currentTab === 'profile' && currentUser" class="space-y-5 animate-fade-in pb-20 w-full">
+                    <div v-if="currentTab === 'profile' && currentUser" class="space-y-4 sm:space-y-5 animate-fade-in pb-20 w-full">
                         <!-- Top Navigation Bar & Action Switcher -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200/60">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 sm:border-b sm:border-slate-200/60">
                             <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
                                 <span>Return to Dashboard</span>
@@ -3785,28 +3783,28 @@
                             </span>
                         </div>
 
-                        <!-- Feedback Notifications (Full Width Top) -->
-                        <div v-if="profileSaveSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-2xs">
-                            <i class="fas fa-check-circle text-emerald-600 text-base"></i>
+                        <!-- Feedback Notifications -->
+                        <div v-if="profileSaveSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in shadow-2xs">
+                            <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
                             <span>Profile details updated successfully!</span>
                         </div>
-                        <div v-if="profileResyncSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-2xs">
-                            <i class="fas fa-arrows-rotate text-emerald-600 text-base"></i>
+                        <div v-if="profileResyncSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in shadow-2xs">
+                            <i class="fas fa-arrows-rotate text-emerald-600 text-sm"></i>
                             <span>Workspace data and hierarchy relationships resynced.</span>
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- TAB 1: ACCOUNT OVERVIEW (Full Screen Desktop)  -->
+                        <!-- TAB 1: ACCOUNT OVERVIEW                        -->
                         <!-- ============================================== -->
-                        <div v-if="profileActiveTab === 'overview'" class="space-y-5 animate-fade-in">
+                        <div v-if="profileActiveTab === 'overview'" class="space-y-4 sm:space-y-5 animate-fade-in">
                             <!-- Main Executive Grid (Desktop 2-Column, Mobile Stacked) -->
-                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
                                 <!-- Left Column: Executive Profile Card (4 cols on Desktop) -->
                                 <div class="lg:col-span-4">
-                                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
+                                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
                                         <!-- Avatar with Verification Dot -->
                                         <div class="relative inline-block mx-auto">
-                                            <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-2xl font-black shadow-inner">
+                                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner">
                                                 {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[9px] text-white shadow-2xs" title="Verified Active Session">
@@ -3815,9 +3813,9 @@
                                         </div>
 
                                         <!-- Name & Role Hierarchy -->
-                                        <div class="mt-3 space-y-1">
+                                        <div class="mt-2.5 sm:mt-3 space-y-1">
                                             <div class="flex items-center justify-center gap-2 flex-wrap">
-                                                <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
+                                                <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                                                     {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
                                                 </span>
@@ -3829,32 +3827,31 @@
                                             </p>
                                         </div>
 
-                                        <!-- Quick Contact & SalesLink ID Badges -->
-                                        <div class="mt-4 pt-3.5 border-t border-slate-100 flex flex-col gap-2">
-                                            <!-- SalesLink ID Pill with 1-Tap Copy -->
-                                            <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="w-full inline-flex items-center justify-between px-3 py-1.5 bg-slate-50 hover:bg-slate-100 active:scale-98 border border-slate-200/80 rounded-xl text-xs font-mono font-bold text-slate-700 transition cursor-pointer shadow-2xs" title="Tap to copy SalesLink ID">
-                                                <span class="flex items-center gap-1.5">
-                                                    <i class="fas fa-id-badge text-indigo-500 text-xs"></i>
-                                                    <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">ID:</span>
-                                                    <span>{{ currentUser.salesLinkId || 'Syncing...' }}</span>
+                                        <!-- Quick Contact & SalesLink ID (Single Clean Occurrence) -->
+                                        <div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                            <!-- SalesLink ID Pill with 1-Tap Copy (Native App Font) -->
+                                            <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="w-full inline-flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-indigo-50/50 active:scale-98 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-800 transition cursor-pointer shadow-2xs group" title="Click to copy SalesLink ID">
+                                                <span class="flex items-center gap-2">
+                                                    <i class="fas fa-id-badge text-[#4F46E5] text-xs"></i>
+                                                    <span class="text-slate-700 font-semibold tracking-normal">{{ currentUser.salesLinkId || 'Syncing ID...' }}</span>
                                                 </span>
-                                                <span class="flex items-center gap-1 text-[11px] font-sans font-semibold text-indigo-600">
-                                                    <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-600' : 'fas fa-copy text-slate-400 text-xs'"></i>
-                                                    <span>{{ copiedSalesLinkIdToast ? 'Copied' : 'Copy' }}</span>
+                                                <span class="flex items-center gap-1 text-[11px] font-bold text-indigo-600 group-hover:text-indigo-700">
+                                                    <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-600' : 'fas fa-copy text-indigo-400 text-xs'"></i>
+                                                    <span>{{ copiedSalesLinkIdToast ? 'Copied!' : 'Copy' }}</span>
                                                 </span>
                                             </button>
 
                                             <!-- Direct Phone -->
                                             <a v-if="currentUser.phone" :href="'tel:' + currentUser.phone" class="w-full inline-flex items-center justify-between px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs">
-                                                <span class="flex items-center gap-1.5">
+                                                <span class="flex items-center gap-2">
                                                     <i class="fas fa-phone text-indigo-500 text-xs"></i>
                                                     <span>{{ currentUser.phone }}</span>
                                                 </span>
-                                                <span class="text-[11px] text-indigo-600 font-medium">Call</span>
+                                                <span class="text-[11px] text-indigo-600 font-semibold">Call</span>
                                             </a>
 
                                             <!-- Google Email -->
-                                            <div v-if="currentUser.email" class="w-full inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-500 shadow-2xs min-w-0">
+                                            <div v-if="currentUser.email" class="w-full inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-500 shadow-2xs min-w-0">
                                                 <i class="fas fa-envelope text-slate-400 text-xs shrink-0"></i>
                                                 <span class="truncate">{{ currentUser.email }}</span>
                                             </div>
@@ -3866,14 +3863,14 @@
                                 <div class="lg:col-span-8 space-y-4">
                                     <!-- Workplace & Banking Identity -->
                                     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                                        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
                                             <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                                                 <i class="fas fa-building-columns text-[#4F46E5] text-xs"></i>
                                                 <span>Workplace & Banking Identity</span>
                                             </span>
                                             <button @click="profileActiveTab = 'edit'" type="button" class="px-2.5 py-1 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-100 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
                                                 <i class="fas fa-pen text-[9px]"></i>
-                                                <span>Edit Details</span>
+                                                <span>Edit</span>
                                             </button>
                                         </div>
 
@@ -3881,15 +3878,15 @@
                                         <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
                                             <!-- Column 1 -->
                                             <div class="divide-y divide-slate-100 text-xs">
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium">Staff / Emp Code</span>
-                                                    <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.employeeCode || 'Not Set' }}</span>
+                                                    <span class="font-bold text-slate-900 uppercase">{{ currentUser.employeeCode || 'Not Set' }}</span>
                                                 </div>
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium">Branch SOL ID</span>
-                                                    <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.branchSolId || 'Not Set' }}</span>
+                                                    <span class="font-bold text-slate-900 uppercase">{{ currentUser.branchSolId || 'Not Set' }}</span>
                                                 </div>
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium">Institution / Bank</span>
                                                     <span class="font-bold text-slate-900">{{ currentUser.bankName || 'Axis Bank' }}</span>
                                                 </div>
@@ -3897,17 +3894,17 @@
 
                                             <!-- Column 2 -->
                                             <div class="divide-y divide-slate-100 text-xs">
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium">Asset Vertical</span>
                                                     <span class="font-bold text-slate-900">{{ currentUser.division || 'Auto Loans (Car Loans)' }}</span>
                                                 </div>
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium shrink-0">Operating Region</span>
-                                                    <span class="font-semibold text-slate-800 text-right truncate">{{ currentUser.region || 'Assigned Branch Network' }}</span>
+                                                    <span class="font-bold text-slate-800 text-right truncate">{{ currentUser.region || 'Assigned Branch Network' }}</span>
                                                 </div>
-                                                <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium shrink-0">Office Desk</span>
-                                                    <span class="font-semibold text-slate-800 text-right truncate max-w-[200px]">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
+                                                    <span class="font-bold text-slate-800 text-right truncate max-w-[200px]">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -3915,37 +3912,37 @@
 
                                     <!-- Supervisory & Hierarchy Reporting -->
                                     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                                        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
                                             <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                                                 <i class="fas fa-sitemap text-purple-600 text-xs"></i>
                                                 <span>Supervisory Channel</span>
                                             </span>
                                         </div>
 
-                                        <div class="p-5">
+                                        <div class="p-4 sm:p-5">
                                             <!-- For RO: Assigned SM -->
-                                            <div v-if="isRO" class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
-                                                <div class="flex items-center gap-3.5 min-w-0">
-                                                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                            <div v-if="isRO" class="flex items-center justify-between gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                                                <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                                                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
                                                         <i class="fas fa-user-tie"></i>
                                                     </div>
                                                     <div class="min-w-0">
-                                                        <div class="flex items-center gap-2">
-                                                            <p class="text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'Branch Sales Manager' }}</p>
+                                                        <div class="flex items-center gap-1.5 sm:gap-2">
+                                                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'Branch Sales Manager' }}</p>
                                                             <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM</span>
                                                         </div>
-                                                        <p class="text-xs text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
-                                                        <p v-if="assignedSm.salesLinkId" class="text-[11px] font-mono font-bold text-indigo-600">SalesLink ID: {{ assignedSm.salesLinkId }}</p>
+                                                        <p class="text-[11px] text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
+                                                        <p v-if="assignedSm.salesLinkId" class="text-xs font-bold text-indigo-600">SM ID: {{ assignedSm.salesLinkId }}</p>
                                                     </div>
                                                 </div>
 
                                                 <!-- RO Contact Actions -->
-                                                <div v-if="assignedSm.phone" class="flex items-center gap-2 shrink-0">
-                                                    <a :href="'tel:' + assignedSm.phone" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs" title="Call Branch Manager">
+                                                <div v-if="assignedSm.phone" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                                    <a :href="'tel:' + assignedSm.phone" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs" title="Call Branch Manager">
                                                         <i class="fas fa-phone text-xs text-indigo-600"></i>
-                                                        <span>Call SM</span>
+                                                        <span>Call</span>
                                                     </a>
-                                                    <button @click="openSmWhatsAppChat" type="button" class="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Branch Manager">
+                                                    <button @click="openSmWhatsAppChat" type="button" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Branch Manager">
                                                         <i class="fab fa-whatsapp text-emerald-600"></i>
                                                         <span>WhatsApp</span>
                                                     </button>
@@ -3954,18 +3951,18 @@
 
                                             <!-- For SM: Linked ASM -->
                                             <div v-if="isSM">
-                                                <div v-if="currentUser.supervisorName" class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
-                                                    <div class="flex items-center gap-3.5 min-w-0">
-                                                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                <div v-if="currentUser.supervisorName" class="flex items-center justify-between gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                                                    <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                                                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
                                                             <i class="fas fa-user-shield"></i>
                                                         </div>
                                                         <div class="min-w-0">
-                                                            <div class="flex items-center gap-2">
-                                                                <p class="text-sm font-extrabold text-slate-900 truncate">{{ currentUser.supervisorName }}</p>
+                                                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                                                <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{{ currentUser.supervisorName }}</p>
                                                                 <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-full">ASM</span>
                                                             </div>
                                                             <p class="text-xs text-slate-500 font-medium">Area Sales Manager (Supervisor)</p>
-                                                            <p class="text-[11px] font-mono font-bold text-indigo-600 truncate">{{ currentUser.supervisorSalesLinkId || 'SL-ASM-CONNECTED' }}</p>
+                                                            <p class="text-xs font-bold text-indigo-600 truncate">ASM ID: {{ currentUser.supervisorSalesLinkId || 'SL-ASM-CONNECTED' }}</p>
                                                         </div>
                                                     </div>
                                                     <button @click="unlinkFromSupervisor" type="button" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition cursor-pointer shrink-0">
@@ -3973,9 +3970,9 @@
                                                     </button>
                                                 </div>
 
-                                                <div v-else class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
-                                                    <div class="flex items-center gap-3 min-w-0">
-                                                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shrink-0">
+                                                <div v-else class="flex items-center justify-between gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                                                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shrink-0">
                                                             <i class="fas fa-circle-info"></i>
                                                         </div>
                                                         <div class="min-w-0">
@@ -3983,7 +3980,7 @@
                                                             <p class="text-[11px] text-slate-500">Connect with your Area Sales Manager to enable aggregated branch pipeline reporting.</p>
                                                         </div>
                                                     </div>
-                                                    <button @click="openConnectSupervisorModal()" type="button" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs cursor-pointer shrink-0">
+                                                    <button @click="openConnectSupervisorModal()" type="button" class="px-3.5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs cursor-pointer shrink-0">
                                                         <i class="fas fa-link text-xs"></i>
                                                         <span>Connect ASM</span>
                                                     </button>
@@ -3994,7 +3991,7 @@
                                             <div v-if="isASM" class="flex items-center justify-between">
                                                 <div>
                                                     <p class="text-[10px] uppercase font-bold text-slate-400">Area Cluster Jurisdiction</p>
-                                                    <p class="text-sm font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
+                                                    <p class="text-xs sm:text-sm font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
                                                 </div>
                                                 <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                                                     {{ supervisedSMs.length }} Supervised Branch SMs
@@ -4005,7 +4002,7 @@
                                             <div v-if="isSuperAdmin || isZSM" class="flex items-center justify-between">
                                                 <div>
                                                     <p class="text-[10px] uppercase font-bold text-slate-400">Executive Supervisory Tier</p>
-                                                    <p class="text-sm font-extrabold text-slate-800 mt-0.5">{{ isSuperAdmin ? 'Full System Administrator' : 'Zonal Sales Operations' }}</p>
+                                                    <p class="text-xs sm:text-sm font-extrabold text-slate-800 mt-0.5">{{ isSuperAdmin ? 'Full System Administrator' : 'Zonal Sales Operations' }}</p>
                                                 </div>
                                                 <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
                                                     Level 1 Authority
@@ -4018,7 +4015,7 @@
 
                             <!-- Bottom Row: Security & Quick Actions Card (At the Bottom of Profile) -->
                             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                                <div class="px-5 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
                                     <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                                         <i class="fas fa-shield-halved text-slate-700 text-xs"></i>
                                         <span>Security & Quick Actions</span>
@@ -4029,9 +4026,9 @@
                                 <!-- 3-Column Action Grid on Desktop, Stacked on Mobile -->
                                 <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
                                     <!-- Resync Action -->
-                                    <button @click="triggerProfileResync" type="button" :disabled="isResyncingProfile" class="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer disabled:opacity-75">
+                                    <button @click="triggerProfileResync" type="button" :disabled="isResyncingProfile" class="w-full px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer disabled:opacity-75">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shadow-2xs shrink-0">
+                                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shadow-2xs shrink-0">
                                                 <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin' : 'fas fa-arrows-rotate'"></i>
                                             </div>
                                             <div>
@@ -4043,9 +4040,9 @@
                                     </button>
 
                                     <!-- Install App Row (PWA) -->
-                                    <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer">
+                                    <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
+                                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
                                                 <i class="fas fa-download"></i>
                                             </div>
                                             <div>
@@ -4057,9 +4054,9 @@
                                     </button>
 
                                     <!-- Sign Out Row -->
-                                    <button @click="logout" type="button" :class="isStandalone ? 'sm:col-span-2' : ''" class="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-rose-50/50 transition cursor-pointer group">
+                                    <button @click="logout" type="button" :class="isStandalone ? 'sm:col-span-2' : ''" class="w-full px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between text-left hover:bg-rose-50/50 transition cursor-pointer group">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 group-hover:bg-rose-100 flex items-center justify-center text-xs transition shadow-2xs shrink-0">
+                                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-600 group-hover:bg-rose-100 flex items-center justify-center text-xs transition shadow-2xs shrink-0">
                                                 <i class="fas fa-right-from-bracket"></i>
                                             </div>
                                             <div>
@@ -4079,11 +4076,11 @@
                         <div v-if="profileActiveTab === 'edit'" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start animate-fade-in">
                             <!-- Left Column: Identity Preview & Info (4 cols on Desktop) -->
                             <div class="lg:col-span-4 space-y-4">
-                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
-                                    <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-2xl font-black shadow-inner mx-auto">
+                                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
+                                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner mx-auto">
                                         {{ profileForm.name ? profileForm.name.charAt(0).toUpperCase() : 'U' }}
                                     </div>
-                                    <h2 class="text-base font-black text-slate-900 tracking-tight mt-3">{{ profileForm.name || 'Your Name' }}</h2>
+                                    <h2 class="text-base font-bold text-slate-900 tracking-tight mt-2.5 sm:mt-3">{{ profileForm.name || 'Your Name' }}</h2>
                                     <p class="text-xs text-slate-500 font-medium mt-0.5">{{ profileForm.designation || 'Designation' }}</p>
                                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                                         {{ profileForm.bankName || 'Axis Bank' }}
@@ -4103,7 +4100,7 @@
 
                             <!-- Right Column: Edit Form (8 cols on Desktop) -->
                             <div class="lg:col-span-8">
-                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-5">
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-6 space-y-5">
                                     <!-- Header with Back to Overview -->
                                     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                                         <div class="flex items-center gap-2.5">
@@ -4206,7 +4203,7 @@
                                                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                                                     Staff Code / Emp ID
                                                 </label>
-                                                <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                                <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-bold text-slate-800 transition uppercase">
                                             </div>
 
                                             <!-- Branch SOL ID -->
@@ -4214,7 +4211,7 @@
                                                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                                                     Branch SOL ID / Code
                                                 </label>
-                                                <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                                <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-bold text-slate-800 transition uppercase">
                                             </div>
 
                                             <!-- Branch Office Desk Address -->
@@ -5575,7 +5572,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-72"></script>
+    <script type="module" src="js/app.js?v=force-update-73"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
