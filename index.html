@@ -3883,10 +3883,6 @@
                                                     <span class="font-bold text-slate-900 uppercase">{{ currentUser.employeeCode || 'Not Set' }}</span>
                                                 </div>
                                                 <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
-                                                    <span class="text-slate-500 font-medium">Branch SOL ID</span>
-                                                    <span class="font-bold text-slate-900 uppercase">{{ currentUser.branchSolId || 'Not Set' }}</span>
-                                                </div>
-                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
                                                     <span class="text-slate-500 font-medium">Institution / Bank</span>
                                                     <span class="font-bold text-slate-900">{{ currentUser.bankName || 'Axis Bank' }}</span>
                                                 </div>
@@ -3902,11 +3898,11 @@
                                                     <span class="text-slate-500 font-medium shrink-0">Operating Region</span>
                                                     <span class="font-bold text-slate-800 text-right truncate">{{ currentUser.region || 'Assigned Branch Network' }}</span>
                                                 </div>
-                                                <div class="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
-                                                    <span class="text-slate-500 font-medium shrink-0">Office Desk</span>
-                                                    <span class="font-bold text-slate-800 text-right truncate max-w-[200px]">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
-                                                </div>
                                             </div>
+                                        </div>
+                                        <div class="px-4 sm:px-5 py-2.5 sm:py-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs">
+                                            <span class="text-slate-500 font-medium shrink-0">Office Desk</span>
+                                            <span class="font-bold text-slate-800 text-right truncate">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
                                         </div>
                                     </div>
 
@@ -4093,7 +4089,7 @@
                                         <span>Workplace Information</span>
                                     </p>
                                     <p class="text-slate-600 leading-relaxed text-[11px]">
-                                        Changes made to your SOL ID, Employee Code, or Branch Office will update immediately across all reporting hierarchies and daily loan pipeline tracking.
+                                        Changes made to your Employee Code, Office Desk, or Designation will update immediately across all reporting hierarchies and daily loan pipeline tracking.
                                     </p>
                                 </div>
                             </div>
@@ -4206,28 +4202,20 @@
                                                 <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-bold text-slate-800 transition uppercase">
                                             </div>
 
-                                            <!-- Branch SOL ID -->
-                                            <div>
-                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                    Branch SOL ID / Code
-                                                </label>
-                                                <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-bold text-slate-800 transition uppercase">
-                                            </div>
-
-                                            <!-- Branch Office Desk Address -->
-                                            <div>
-                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                    Branch Desk / Office Address
-                                                </label>
-                                                <input v-model="profileForm.branchAddress" type="text" placeholder="e.g. 3rd Floor, Retail Assets Hub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                            </div>
-
-                                            <!-- Region / Hub Location -->
+                                            <!-- Operating Region / Zone -->
                                             <div>
                                                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                                                     Operating Region / Zone
                                                 </label>
                                                 <input v-model="profileForm.region" type="text" placeholder="e.g. Pune Hub / Mumbai North" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Branch Office Desk Address (Full Width on 2-col) -->
+                                            <div class="sm:col-span-2">
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Branch Desk / Office Address
+                                                </label>
+                                                <input v-model="profileForm.branchAddress" type="text" placeholder="e.g. 3rd Floor, Retail Assets Hub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
                                             </div>
                                         </div>
 
@@ -5572,7 +5560,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-75"></script>
+    <script type="module" src="js/app.js?v=force-update-76"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

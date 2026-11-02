@@ -2115,7 +2115,6 @@ const app = createApp({
             name: '',
             phone: '',
             employeeCode: '',
-            branchSolId: '',
             designation: '',
             branchAddress: '',
             bankName: 'Axis Bank',
@@ -2134,7 +2133,6 @@ const app = createApp({
                 name: currentUser.value.name || currentUser.value.username || '',
                 phone: currentUser.value.phone || '',
                 employeeCode: currentUser.value.employeeCode || '',
-                branchSolId: currentUser.value.branchSolId || '',
                 designation: currentUser.value.designation || defaultRoleDesignation,
                 branchAddress: currentUser.value.branchAddress || '',
                 bankName: currentUser.value.bankName || 'Axis Bank',
@@ -2151,7 +2149,7 @@ const app = createApp({
                 { label: 'Mobile Number', completed: !!(u.phone && u.phone.replace(/\D/g, '').length >= 10), icon: 'fas fa-phone' },
                 { label: 'Bank & Division', completed: !!(u.bankName && u.division), icon: 'fas fa-building-columns' },
                 { label: 'Operating Hub', completed: !!u.region, icon: 'fas fa-location-dot' },
-                { label: 'Staff Code / SOL', completed: !!(u.employeeCode || u.branchSolId), icon: 'fas fa-id-card' },
+                { label: 'Staff Code', completed: !!u.employeeCode, icon: 'fas fa-id-card' },
                 { 
                     label: isRO.value ? 'Supervisor Linked' : (isSM.value ? 'Area ASM Connected' : 'Jurisdiction Defined'), 
                     completed: isRO.value ? !!defaultSmName.value : (isSM.value ? !!u.supervisorName : !!u.region),
@@ -2235,7 +2233,6 @@ const app = createApp({
                     name: trimmedName,
                     phone: trimmedPhone,
                     employeeCode: (profileForm.value.employeeCode || '').trim().toUpperCase(),
-                    branchSolId: (profileForm.value.branchSolId || '').trim().toUpperCase(),
                     designation: (profileForm.value.designation || '').trim(),
                     branchAddress: (profileForm.value.branchAddress || '').trim(),
                     bankName: profileForm.value.bankName?.trim() || 'Axis Bank',
@@ -2255,7 +2252,6 @@ const app = createApp({
                             bankName: updatePayload.bankName,
                             division: updatePayload.division,
                             region: updatePayload.region,
-                            branchSolId: updatePayload.branchSolId,
                             branchAddress: updatePayload.branchAddress
                         });
                     } catch (wsErr) {
@@ -2267,7 +2263,6 @@ const app = createApp({
                 currentUser.value.name = trimmedName;
                 currentUser.value.phone = updatePayload.phone;
                 currentUser.value.employeeCode = updatePayload.employeeCode;
-                currentUser.value.branchSolId = updatePayload.branchSolId;
                 currentUser.value.designation = updatePayload.designation;
                 currentUser.value.branchAddress = updatePayload.branchAddress;
                 currentUser.value.bankName = updatePayload.bankName;
@@ -2948,7 +2943,6 @@ const app = createApp({
                 division: user.division,
                 region: user.region,
                 employeeCode: user.employeeCode || '',
-                branchSolId: user.branchSolId || '',
                 designation: user.designation || '',
                 branchAddress: user.branchAddress || '',
                 createdAt: user.createdAt || ''
@@ -3247,7 +3241,6 @@ const app = createApp({
                     division: user.division,
                     region: user.region,
                     employeeCode: user.employeeCode || '',
-                    branchSolId: user.branchSolId || '',
                     designation: user.designation || '',
                     branchAddress: user.branchAddress || '',
                     createdAt: user.createdAt || ''
@@ -3992,7 +3985,6 @@ const app = createApp({
                                 if (fresh.bankName) currentUser.value.bankName = fresh.bankName;
                                 if (fresh.division) currentUser.value.division = fresh.division;
                                 if (fresh.employeeCode) currentUser.value.employeeCode = fresh.employeeCode;
-                                if (fresh.branchSolId) currentUser.value.branchSolId = fresh.branchSolId;
                                 if (fresh.designation) currentUser.value.designation = fresh.designation;
                                 if (fresh.branchAddress) currentUser.value.branchAddress = fresh.branchAddress;
                                 if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
