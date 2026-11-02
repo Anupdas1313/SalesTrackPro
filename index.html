@@ -3759,439 +3759,486 @@
                     <!-- ============================================== -->
                     <!-- USER PROFILE & ACCOUNT SECTION (All Roles)     -->
                     <!-- ============================================== -->
-                    <div v-if="currentTab === 'profile' && currentUser" class="space-y-4 animate-fade-in pb-20 max-w-xl mx-auto">
-                        <!-- Top Navigation Bar & Active Status -->
-                        <div class="flex items-center justify-between px-1">
+                    <div v-if="currentTab === 'profile' && currentUser" class="space-y-5 animate-fade-in pb-20 w-full">
+                        <!-- Top Navigation Bar & Action Switcher -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200/60">
                             <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
                                 <span>Return to Dashboard</span>
                             </button>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
+
+                            <!-- Segmented Switcher in Top Bar -->
+                            <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl border border-slate-200/70 shadow-2xs w-full sm:w-72">
+                                <button @click="profileActiveTab = 'overview'" type="button" :class="profileActiveTab === 'overview' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/60' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-id-card text-[11px]" :class="profileActiveTab === 'overview' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
+                                    <span>Account Overview</span>
+                                </button>
+                                <button @click="profileActiveTab = 'edit'" type="button" :class="profileActiveTab === 'edit' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/60' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-user-pen text-[11px]" :class="profileActiveTab === 'edit' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                            </div>
+
+                            <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 <span>Active Session</span>
                             </span>
                         </div>
 
-                        <!-- Segmented Navigation Switcher: Overview vs Edit -->
-                        <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl border border-slate-200/70 shadow-2xs">
-                            <button @click="profileActiveTab = 'overview'" type="button" :class="profileActiveTab === 'overview' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/60' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-id-card text-[11px]" :class="profileActiveTab === 'overview' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
-                                <span>Account Overview</span>
-                            </button>
-                            <button @click="profileActiveTab = 'edit'" type="button" :class="profileActiveTab === 'edit' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/60' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-user-pen text-[11px]" :class="profileActiveTab === 'edit' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
-                                <span>Edit Profile</span>
-                            </button>
-                        </div>
-
-                        <!-- Feedback Notifications -->
-                        <div v-if="profileSaveSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in shadow-2xs">
-                            <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                        <!-- Feedback Notifications (Full Width Top) -->
+                        <div v-if="profileSaveSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-2xs">
+                            <i class="fas fa-check-circle text-emerald-600 text-base"></i>
                             <span>Profile details updated successfully!</span>
                         </div>
-                        <div v-if="profileResyncSuccess" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in shadow-2xs">
-                            <i class="fas fa-arrows-rotate text-emerald-600 text-sm"></i>
+                        <div v-if="profileResyncSuccess" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 animate-fade-in shadow-2xs">
+                            <i class="fas fa-arrows-rotate text-emerald-600 text-base"></i>
                             <span>Workspace data and hierarchy relationships resynced.</span>
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- TAB 1: ACCOUNT OVERVIEW                        -->
+                        <!-- TAB 1: ACCOUNT OVERVIEW (Full Screen Desktop)  -->
                         <!-- ============================================== -->
-                        <div v-if="profileActiveTab === 'overview'" class="space-y-4 animate-fade-in">
-                            <!-- Executive Profile Card (Compact & Centered) -->
-                            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
-                                <!-- Avatar with Verification Dot -->
-                                <div class="relative inline-block mx-auto">
-                                    <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-2xl font-black shadow-inner">
-                                        {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
+                        <div v-if="profileActiveTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start animate-fade-in">
+                            <!-- Left Column: Identity & Security Actions (4 cols on Desktop) -->
+                            <div class="lg:col-span-4 space-y-4">
+                                <!-- Executive Profile Card -->
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
+                                    <!-- Avatar with Verification Dot -->
+                                    <div class="relative inline-block mx-auto">
+                                        <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-2xl font-black shadow-inner">
+                                            {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
+                                        </div>
+                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[9px] text-white shadow-2xs" title="Verified Active Session">
+                                            <i class="fas fa-check"></i>
+                                        </div>
                                     </div>
-                                    <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[9px] text-white shadow-2xs" title="Verified Active Session">
-                                        <i class="fas fa-check"></i>
+
+                                    <!-- Name & Role Hierarchy -->
+                                    <div class="mt-3 space-y-1">
+                                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                                            <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                                {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 font-medium">
+                                            <span class="text-slate-700 font-semibold">{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'Branch Sales Manager' : 'Relationship Officer')))) }}</span>
+                                            <span class="text-slate-300 mx-1.5">&bull;</span>
+                                            <span class="text-slate-500">{{ currentUser.bankName || 'Axis Bank' }}</span>
+                                        </p>
+                                    </div>
+
+                                    <!-- Quick Contact & SalesLink ID Badges -->
+                                    <div class="mt-4 pt-3.5 border-t border-slate-100 flex flex-col gap-2">
+                                        <!-- SalesLink ID Pill with 1-Tap Copy -->
+                                        <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="w-full inline-flex items-center justify-between px-3 py-1.5 bg-slate-50 hover:bg-slate-100 active:scale-98 border border-slate-200/80 rounded-xl text-xs font-mono font-bold text-slate-700 transition cursor-pointer shadow-2xs" title="Tap to copy SalesLink ID">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fas fa-id-badge text-indigo-500 text-xs"></i>
+                                                <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">ID:</span>
+                                                <span>{{ currentUser.salesLinkId || 'Syncing...' }}</span>
+                                            </span>
+                                            <span class="flex items-center gap-1 text-[11px] font-sans font-semibold text-indigo-600">
+                                                <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-600' : 'fas fa-copy text-slate-400 text-xs'"></i>
+                                                <span>{{ copiedSalesLinkIdToast ? 'Copied' : 'Copy' }}</span>
+                                            </span>
+                                        </button>
+
+                                        <!-- Direct Phone -->
+                                        <a v-if="currentUser.phone" :href="'tel:' + currentUser.phone" class="w-full inline-flex items-center justify-between px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fas fa-phone text-indigo-500 text-xs"></i>
+                                                <span>{{ currentUser.phone }}</span>
+                                            </span>
+                                            <span class="text-[11px] text-indigo-600 font-medium">Call</span>
+                                        </a>
+
+                                        <!-- Google Email -->
+                                        <div v-if="currentUser.email" class="w-full inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-500 shadow-2xs min-w-0">
+                                            <i class="fas fa-envelope text-slate-400 text-xs shrink-0"></i>
+                                            <span class="truncate">{{ currentUser.email }}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Name & Role Hierarchy -->
-                                <div class="mt-3 space-y-1">
-                                    <div class="flex items-center justify-center gap-2 flex-wrap">
-                                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">{{ currentUser.name }}</h2>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                            {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
+                                <!-- Security & Quick Actions Card -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden divide-y divide-slate-100">
+                                    <div class="px-4 py-2.5 bg-slate-50/70 border-b border-slate-100">
+                                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Quick Actions</p>
+                                    </div>
+
+                                    <!-- Resync Action Row -->
+                                    <button @click="triggerProfileResync" type="button" :disabled="isResyncingProfile" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer disabled:opacity-75">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shadow-2xs shrink-0">
+                                                <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin' : 'fas fa-arrows-rotate'"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-slate-900">{{ isResyncingProfile ? 'Resyncing...' : 'Resync App Data' }}</p>
+                                                <p class="text-[10px] text-slate-400">Refresh cache & hierarchy</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                                    </button>
+
+                                    <!-- Install App Row (PWA) -->
+                                    <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
+                                                <i class="fas fa-download"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-slate-900">Install SalesLink App</p>
+                                                <p class="text-[10px] text-slate-400">Add to device home screen</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                                    </button>
+
+                                    <!-- Sign Out Row -->
+                                    <button @click="logout" type="button" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-rose-50/50 transition cursor-pointer group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 group-hover:bg-rose-100 flex items-center justify-center text-xs transition shadow-2xs shrink-0">
+                                                <i class="fas fa-right-from-bracket"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-rose-600">Sign Out</p>
+                                                <p class="text-[10px] text-slate-400">End active session</p>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-[10px] text-rose-300"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Workplace Details & Hierarchy (8 cols on Desktop) -->
+                            <div class="lg:col-span-8 space-y-4">
+                                <!-- Workplace & Banking Identity -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                                    <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                            <i class="fas fa-building-columns text-[#4F46E5] text-xs"></i>
+                                            <span>Workplace & Banking Identity</span>
+                                        </span>
+                                        <button @click="profileActiveTab = 'edit'" type="button" class="px-2.5 py-1 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-100 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                                            <i class="fas fa-pen text-[9px]"></i>
+                                            <span>Edit Details</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Inset Grid: 2 columns on Desktop / Tablet -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                                        <!-- Column 1 -->
+                                        <div class="divide-y divide-slate-100 text-xs">
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium">Staff / Emp Code</span>
+                                                <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.employeeCode || 'Not Set' }}</span>
+                                            </div>
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium">Branch SOL ID</span>
+                                                <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.branchSolId || 'Not Set' }}</span>
+                                            </div>
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium">Institution / Bank</span>
+                                                <span class="font-bold text-slate-900">{{ currentUser.bankName || 'Axis Bank' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Column 2 -->
+                                        <div class="divide-y divide-slate-100 text-xs">
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium">Asset Vertical</span>
+                                                <span class="font-bold text-slate-900">{{ currentUser.division || 'Auto Loans (Car Loans)' }}</span>
+                                            </div>
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium shrink-0">Operating Region</span>
+                                                <span class="font-semibold text-slate-800 text-right truncate">{{ currentUser.region || 'Assigned Branch Network' }}</span>
+                                            </div>
+                                            <div class="px-5 py-3 flex items-center justify-between gap-3">
+                                                <span class="text-slate-500 font-medium shrink-0">Office Desk</span>
+                                                <span class="font-semibold text-slate-800 text-right truncate max-w-[200px]">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Supervisory & Hierarchy Reporting -->
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                                    <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                            <i class="fas fa-sitemap text-purple-600 text-xs"></i>
+                                            <span>Supervisory Channel</span>
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-500 font-medium">
-                                        <span class="text-slate-700 font-semibold">{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'Branch Sales Manager' : 'Relationship Officer')))) }}</span>
-                                        <span class="text-slate-300 mx-1.5">&bull;</span>
-                                        <span class="text-slate-500">{{ currentUser.bankName || 'Axis Bank' }}</span>
-                                    </p>
-                                </div>
 
-                                <!-- Quick Contact & SalesLink ID Badges -->
-                                <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-center gap-2 flex-wrap">
-                                    <!-- SalesLink ID Pill with 1-Tap Copy -->
-                                    <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 hover:bg-slate-100 active:scale-95 border border-slate-200/80 rounded-full text-xs font-mono font-bold text-slate-700 transition cursor-pointer shadow-2xs" title="Tap to copy SalesLink ID">
-                                        <i class="fas fa-id-badge text-indigo-500 text-xs"></i>
-                                        <span>{{ currentUser.salesLinkId || 'Syncing...' }}</span>
-                                        <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-600' : 'fas fa-copy text-slate-400 text-[10px]'"></i>
-                                    </button>
-
-                                    <!-- Direct Phone -->
-                                    <a v-if="currentUser.phone" :href="'tel:' + currentUser.phone" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-full text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs">
-                                        <i class="fas fa-phone text-indigo-500 text-[10px]"></i>
-                                        <span>{{ currentUser.phone }}</span>
-                                    </a>
-
-                                    <!-- Google Email -->
-                                    <span v-if="currentUser.email" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-full text-xs font-medium text-slate-500 shadow-2xs max-w-full truncate">
-                                        <i class="fas fa-envelope text-slate-400 text-[10px]"></i>
-                                        <span class="truncate">{{ currentUser.email }}</span>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Grouped Inset Card 1: Workplace & Banking Identity -->
-                            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                                <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                        <i class="fas fa-building-columns text-[#4F46E5] text-xs"></i>
-                                        <span>Workplace Identity</span>
-                                    </span>
-                                    <button @click="profileActiveTab = 'edit'" type="button" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition cursor-pointer flex items-center gap-1">
-                                        <i class="fas fa-pen text-[9px]"></i>
-                                        <span>Edit</span>
-                                    </button>
-                                </div>
-
-                                <!-- Clean Inset List with divide-y -->
-                                <div class="divide-y divide-slate-100 text-xs">
-                                    <!-- Staff Code -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium">Staff / Emp Code</span>
-                                        <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.employeeCode || 'Not Set' }}</span>
-                                    </div>
-
-                                    <!-- Branch SOL ID -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium">Branch SOL ID</span>
-                                        <span class="font-mono font-bold text-slate-900 uppercase">{{ currentUser.branchSolId || 'Not Set' }}</span>
-                                    </div>
-
-                                    <!-- Institution / Bank -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium">Institution / Bank</span>
-                                        <span class="font-bold text-slate-900">{{ currentUser.bankName || 'Axis Bank' }}</span>
-                                    </div>
-
-                                    <!-- Asset Vertical -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium">Asset Vertical</span>
-                                        <span class="font-bold text-slate-900">{{ currentUser.division || 'Auto Loans (Car Loans)' }}</span>
-                                    </div>
-
-                                    <!-- Desk / Address -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium shrink-0">Office Desk</span>
-                                        <span class="font-semibold text-slate-800 text-right truncate max-w-[220px]">{{ currentUser.branchAddress || 'Main Branch Office' }}</span>
-                                    </div>
-
-                                    <!-- Region / Hub -->
-                                    <div class="px-4 py-2.5 flex items-center justify-between gap-3">
-                                        <span class="text-slate-500 font-medium shrink-0">Operating Region</span>
-                                        <span class="font-semibold text-slate-800 text-right">{{ currentUser.region || 'Assigned Branch Network' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Grouped Inset Card 2: Supervisory & Hierarchy Reporting -->
-                            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                                <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                        <i class="fas fa-sitemap text-purple-600 text-xs"></i>
-                                        <span>Supervisory Channel</span>
-                                    </span>
-                                </div>
-
-                                <div class="p-3.5">
-                                    <!-- For RO: Assigned SM -->
-                                    <div v-if="isRO" class="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
-                                                <i class="fas fa-user-tie"></i>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <div class="flex items-center gap-1.5">
-                                                    <p class="text-xs font-extrabold text-slate-900 truncate">{{ defaultSmName || 'Branch Sales Manager' }}</p>
-                                                    <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM</span>
-                                                </div>
-                                                <p class="text-[11px] text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
-                                                <p v-if="assignedSm.salesLinkId" class="text-[10px] font-mono font-bold text-indigo-600">ID: {{ assignedSm.salesLinkId }}</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- RO Contact Actions -->
-                                        <div v-if="assignedSm.phone" class="flex items-center gap-1.5 shrink-0">
-                                            <a :href="'tel:' + assignedSm.phone" class="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center justify-center border border-slate-200 shadow-2xs" title="Call Branch Manager">
-                                                <i class="fas fa-phone text-xs text-indigo-600"></i>
-                                            </a>
-                                            <button @click="openSmWhatsAppChat" type="button" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Branch Manager">
-                                                <i class="fab fa-whatsapp text-emerald-600"></i>
-                                                <span>Chat</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- For SM: Linked ASM -->
-                                    <div v-if="isSM">
-                                        <div v-if="currentUser.supervisorName" class="flex items-center justify-between gap-3">
-                                            <div class="flex items-center gap-3 min-w-0">
-                                                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                                    <i class="fas fa-user-shield"></i>
+                                    <div class="p-5">
+                                        <!-- For RO: Assigned SM -->
+                                        <div v-if="isRO" class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                                            <div class="flex items-center gap-3.5 min-w-0">
+                                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                    <i class="fas fa-user-tie"></i>
                                                 </div>
                                                 <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5">
-                                                        <p class="text-xs font-extrabold text-slate-900 truncate">{{ currentUser.supervisorName }}</p>
-                                                        <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-full">ASM</span>
+                                                    <div class="flex items-center gap-2">
+                                                        <p class="text-sm font-extrabold text-slate-900 truncate">{{ defaultSmName || 'Branch Sales Manager' }}</p>
+                                                        <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-1.5 py-0.2 rounded-full">SM</span>
                                                     </div>
-                                                    <p class="text-[10px] font-mono font-bold text-indigo-600 truncate">{{ currentUser.supervisorSalesLinkId || 'SL-ASM-CONNECTED' }}</p>
+                                                    <p class="text-xs text-slate-500 font-medium truncate">{{ currentUser.bankName || 'Axis Bank' }} &bull; {{ currentUser.region || 'Branch Hub' }}</p>
+                                                    <p v-if="assignedSm.salesLinkId" class="text-[11px] font-mono font-bold text-indigo-600">SalesLink ID: {{ assignedSm.salesLinkId }}</p>
                                                 </div>
                                             </div>
-                                            <button @click="unlinkFromSupervisor" type="button" class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition cursor-pointer shrink-0">
-                                                Disconnect
-                                            </button>
-                                        </div>
 
-                                        <div v-else class="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
-                                            <div class="flex items-center gap-2.5 min-w-0">
-                                                <i class="fas fa-circle-info text-amber-500 text-sm shrink-0"></i>
-                                                <div class="min-w-0">
-                                                    <p class="text-xs font-bold text-slate-800">No Area ASM Linked</p>
-                                                    <p class="text-[10px] text-slate-400">Connect to your Area Sales Manager for hub reporting.</p>
-                                                </div>
+                                            <!-- RO Contact Actions -->
+                                            <div v-if="assignedSm.phone" class="flex items-center gap-2 shrink-0">
+                                                <a :href="'tel:' + assignedSm.phone" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs" title="Call Branch Manager">
+                                                    <i class="fas fa-phone text-xs text-indigo-600"></i>
+                                                    <span>Call SM</span>
+                                                </a>
+                                                <button @click="openSmWhatsAppChat" type="button" class="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer shadow-2xs" title="WhatsApp Branch Manager">
+                                                    <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                    <span>WhatsApp</span>
+                                                </button>
                                             </div>
-                                            <button @click="openConnectSupervisorModal()" type="button" class="px-3 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0">
-                                                <i class="fas fa-link text-[10px]"></i>
-                                                <span>Connect ASM</span>
-                                            </button>
                                         </div>
-                                    </div>
 
-                                    <!-- For ASM: Cluster Summary -->
-                                    <div v-if="isASM" class="flex items-center justify-between">
-                                        <div>
-                                            <p class="text-[9px] uppercase font-bold text-slate-400">Area Cluster Jurisdiction</p>
-                                            <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
-                                        </div>
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                                            {{ supervisedSMs.length }} Supervised Branch SMs
-                                        </span>
-                                    </div>
+                                        <!-- For SM: Linked ASM -->
+                                        <div v-if="isSM">
+                                            <div v-if="currentUser.supervisorName" class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                                                <div class="flex items-center gap-3.5 min-w-0">
+                                                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                        <i class="fas fa-user-shield"></i>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-2">
+                                                            <p class="text-sm font-extrabold text-slate-900 truncate">{{ currentUser.supervisorName }}</p>
+                                                            <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-full">ASM</span>
+                                                        </div>
+                                                        <p class="text-xs text-slate-500 font-medium">Area Sales Manager (Supervisor)</p>
+                                                        <p class="text-[11px] font-mono font-bold text-indigo-600 truncate">{{ currentUser.supervisorSalesLinkId || 'SL-ASM-CONNECTED' }}</p>
+                                                    </div>
+                                                </div>
+                                                <button @click="unlinkFromSupervisor" type="button" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition cursor-pointer shrink-0">
+                                                    Disconnect
+                                                </button>
+                                            </div>
 
-                                    <!-- For Super Admin / ZSM -->
-                                    <div v-if="isSuperAdmin || isZSM" class="flex items-center justify-between">
-                                        <div>
-                                            <p class="text-[9px] uppercase font-bold text-slate-400">Executive Supervisory Tier</p>
-                                            <p class="text-xs font-extrabold text-slate-800 mt-0.5">{{ isSuperAdmin ? 'Full System Administrator' : 'Zonal Sales Operations' }}</p>
+                                            <div v-else class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shrink-0">
+                                                        <i class="fas fa-circle-info"></i>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-bold text-slate-800">No Area ASM Linked Yet</p>
+                                                        <p class="text-[11px] text-slate-500">Connect with your Area Sales Manager to enable aggregated branch pipeline reporting.</p>
+                                                    </div>
+                                                </div>
+                                                <button @click="openConnectSupervisorModal()" type="button" class="px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs cursor-pointer shrink-0">
+                                                    <i class="fas fa-link text-xs"></i>
+                                                    <span>Connect ASM</span>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
-                                            Level 1 Authority
-                                        </span>
+
+                                        <!-- For ASM: Cluster Summary -->
+                                        <div v-if="isASM" class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-[10px] uppercase font-bold text-slate-400">Area Cluster Jurisdiction</p>
+                                                <p class="text-sm font-extrabold text-slate-800 mt-0.5">{{ currentUser.region || 'Area Supervisory Cluster' }}</p>
+                                            </div>
+                                            <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                                {{ supervisedSMs.length }} Supervised Branch SMs
+                                            </span>
+                                        </div>
+
+                                        <!-- For Super Admin / ZSM -->
+                                        <div v-if="isSuperAdmin || isZSM" class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-[10px] uppercase font-bold text-slate-400">Executive Supervisory Tier</p>
+                                                <p class="text-sm font-extrabold text-slate-800 mt-0.5">{{ isSuperAdmin ? 'Full System Administrator' : 'Zonal Sales Operations' }}</p>
+                                            </div>
+                                            <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                                Level 1 Authority
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Grouped Inset Card 3: Security & Quick Actions -->
-                            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden divide-y divide-slate-100">
-                                <!-- Resync Action Row -->
-                                <button @click="triggerProfileResync" type="button" :disabled="isResyncingProfile" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer disabled:opacity-75">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shadow-2xs">
-                                            <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin' : 'fas fa-arrows-rotate'"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-900">{{ isResyncingProfile ? 'Resyncing Workspace Data...' : 'Resync App Data' }}</p>
-                                            <p class="text-[10px] text-slate-400">Force refresh cache and hierarchy links</p>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
-                                </button>
-
-                                <!-- Install App Row (PWA) -->
-                                <button v-if="!isStandalone" @click="installPwaApp" type="button" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xs shadow-2xs">
-                                            <i class="fas fa-download"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-900">Install SalesLink App</p>
-                                            <p class="text-[10px] text-slate-400">Add to your device home screen</p>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
-                                </button>
-
-                                <!-- Sign Out Row -->
-                                <button @click="logout" type="button" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-rose-50/50 transition cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 group-hover:bg-rose-100 flex items-center justify-center text-xs transition shadow-2xs">
-                                            <i class="fas fa-right-from-bracket"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold text-rose-600">Sign Out of SalesLink</p>
-                                            <p class="text-[10px] text-slate-400">Securely end active banking session</p>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-[10px] text-rose-300"></i>
-                                </button>
                             </div>
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- TAB 2: EDIT PROFILE                            -->
+                        <!-- TAB 2: EDIT PROFILE (Full Screen Desktop)      -->
                         <!-- ============================================== -->
-                        <div v-if="profileActiveTab === 'edit'" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 animate-fade-in">
-                            <!-- Header with Back to Overview -->
-                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs font-bold shadow-2xs">
-                                        <i class="fas fa-user-pen"></i>
+                        <div v-if="profileActiveTab === 'edit'" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start animate-fade-in">
+                            <!-- Left Column: Identity Preview & Info (4 cols on Desktop) -->
+                            <div class="lg:col-span-4 space-y-4">
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs text-center relative overflow-hidden">
+                                    <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-2xl font-black shadow-inner mx-auto">
+                                        {{ profileForm.name ? profileForm.name.charAt(0).toUpperCase() : 'U' }}
                                     </div>
-                                    <div>
-                                        <h3 class="text-sm font-extrabold text-slate-900">Edit Profile Details</h3>
-                                        <p class="text-[11px] text-slate-400 font-medium">Update your branch workplace identity</p>
-                                    </div>
+                                    <h2 class="text-base font-black text-slate-900 tracking-tight mt-3">{{ profileForm.name || 'Your Name' }}</h2>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">{{ profileForm.designation || 'Designation' }}</p>
+                                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                        {{ profileForm.bankName || 'Axis Bank' }}
+                                    </span>
                                 </div>
-                                <button @click="profileActiveTab = 'overview'" type="button" class="text-xs text-slate-500 hover:text-slate-800 font-bold transition flex items-center gap-1 cursor-pointer">
-                                    <i class="fas fa-times text-[10px]"></i>
-                                    <span>Cancel</span>
-                                </button>
+
+                                <div class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-100 text-xs text-indigo-900 space-y-2">
+                                    <p class="font-bold flex items-center gap-1.5 text-[#4F46E5]">
+                                        <i class="fas fa-shield-halved"></i>
+                                        <span>Workplace Information</span>
+                                    </p>
+                                    <p class="text-slate-600 leading-relaxed text-[11px]">
+                                        Changes made to your SOL ID, Employee Code, or Branch Office will update immediately across all reporting hierarchies and daily loan pipeline tracking.
+                                    </p>
+                                </div>
                             </div>
 
-                            <!-- Error Alert -->
-                            <div v-if="profileSaveError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in">
-                                <i class="fas fa-circle-exclamation text-rose-600 text-sm"></i>
-                                <span>{{ profileSaveError }}</span>
+                            <!-- Right Column: Edit Form (8 cols on Desktop) -->
+                            <div class="lg:col-span-8">
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-5">
+                                    <!-- Header with Back to Overview -->
+                                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs font-bold shadow-2xs">
+                                                <i class="fas fa-user-pen"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-sm font-extrabold text-slate-900">Edit Profile & Workplace Details</h3>
+                                                <p class="text-[11px] text-slate-400 font-medium">Update your branch workplace identity</p>
+                                            </div>
+                                        </div>
+                                        <button @click="profileActiveTab = 'overview'" type="button" class="text-xs text-slate-500 hover:text-slate-800 font-bold transition flex items-center gap-1 cursor-pointer">
+                                            <i class="fas fa-times text-[10px]"></i>
+                                            <span>Cancel</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Error Alert -->
+                                    <div v-if="profileSaveError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in">
+                                        <i class="fas fa-circle-exclamation text-rose-600 text-sm"></i>
+                                        <span>{{ profileSaveError }}</span>
+                                    </div>
+
+                                    <!-- Edit Form -->
+                                    <form @submit.prevent="saveUserProfile" class="space-y-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <!-- Full Name -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Full Name <span class="text-rose-500">*</span>
+                                                </label>
+                                                <input v-model="profileForm.name" type="text" required placeholder="Your full name" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Phone Number -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Phone / WhatsApp <span class="text-rose-500">*</span>
+                                                </label>
+                                                <input v-model="profileForm.phone" type="tel" required placeholder="10-digit mobile number" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Google Email (Readonly) -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Google Email
+                                                </label>
+                                                <div class="relative">
+                                                    <input :value="currentUser.email" type="email" readonly disabled class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 cursor-not-allowed">
+                                                    <i class="fas fa-lock absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- Official Designation -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Designation
+                                                </label>
+                                                <input v-model="profileForm.designation" list="designationList" type="text" placeholder="e.g. Relationship Officer" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                                <datalist id="designationList">
+                                                    <option value="Relationship Officer (RO)">
+                                                    <option value="Senior Relationship Officer">
+                                                    <option value="Key Account Manager (KAM)">
+                                                    <option value="Branch Sales Manager (SM)">
+                                                    <option value="Senior Branch Manager">
+                                                    <option value="Territory Sales Lead">
+                                                    <option value="Area Sales Manager (ASM)">
+                                                    <option value="Zonal Sales Manager (ZSM)">
+                                                    <option value="Assistant Vice President (AVP)">
+                                                    <option value="Vice President (VP)">
+                                                </datalist>
+                                            </div>
+
+                                            <!-- Institution / Bank -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Bank Name
+                                                </label>
+                                                <select v-model="profileForm.bankName" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
+                                                    <option value="Axis Bank">Axis Bank</option>
+                                                    <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
+                                                    <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
+                                                    <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
+                                                    <option value="Other">Other Bank / NBFC</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Asset Vertical -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Asset Vertical
+                                                </label>
+                                                <select v-model="profileForm.division" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
+                                                    <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Staff Code -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Staff Code / Emp ID
+                                                </label>
+                                                <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                            </div>
+
+                                            <!-- Branch SOL ID -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Branch SOL ID / Code
+                                                </label>
+                                                <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
+                                            </div>
+
+                                            <!-- Branch Office Desk Address -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Branch Desk / Office Address
+                                                </label>
+                                                <input v-model="profileForm.branchAddress" type="text" placeholder="e.g. 3rd Floor, Retail Assets Hub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+
+                                            <!-- Region / Hub Location -->
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                                    Operating Region / Zone
+                                                </label>
+                                                <input v-model="profileForm.region" type="text" placeholder="e.g. Pune Hub / Mumbai North" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
+                                            </div>
+                                        </div>
+
+                                        <!-- Form Actions -->
+                                        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                                            <button @click="profileActiveTab = 'overview'" type="button" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" :disabled="isSavingProfile" class="px-5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
+                                                <i v-if="isSavingProfile" class="fas fa-spinner fa-spin text-xs"></i>
+                                                <i v-else class="fas fa-check text-xs"></i>
+                                                <span>{{ isSavingProfile ? 'Saving Changes...' : 'Save Profile Changes' }}</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-
-                            <!-- Edit Form -->
-                            <form @submit.prevent="saveUserProfile" class="space-y-4">
-                                <div class="space-y-3.5">
-                                    <!-- Full Name -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Full Name <span class="text-rose-500">*</span>
-                                        </label>
-                                        <input v-model="profileForm.name" type="text" required placeholder="Your full name" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                    </div>
-
-                                    <!-- Phone Number -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Phone / WhatsApp <span class="text-rose-500">*</span>
-                                        </label>
-                                        <input v-model="profileForm.phone" type="tel" required placeholder="10-digit mobile number" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                    </div>
-
-                                    <!-- Google Email (Readonly) -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Google Email
-                                        </label>
-                                        <div class="relative">
-                                            <input :value="currentUser.email" type="email" readonly disabled class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 cursor-not-allowed">
-                                            <i class="fas fa-lock absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                        <!-- Official Designation -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                Designation
-                                            </label>
-                                            <input v-model="profileForm.designation" list="designationList" type="text" placeholder="e.g. Relationship Officer" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                            <datalist id="designationList">
-                                                <option value="Relationship Officer (RO)">
-                                                <option value="Senior Relationship Officer">
-                                                <option value="Key Account Manager (KAM)">
-                                                <option value="Branch Sales Manager (SM)">
-                                                <option value="Senior Branch Manager">
-                                                <option value="Territory Sales Lead">
-                                                <option value="Area Sales Manager (ASM)">
-                                                <option value="Zonal Sales Manager (ZSM)">
-                                                <option value="Assistant Vice President (AVP)">
-                                                <option value="Vice President (VP)">
-                                            </datalist>
-                                        </div>
-
-                                        <!-- Institution / Bank -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                Bank Name
-                                            </label>
-                                            <select v-model="profileForm.bankName" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
-                                                <option value="Axis Bank">Axis Bank</option>
-                                                <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
-                                                <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
-                                                <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
-                                                <option value="Other">Other Bank / NBFC</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- Staff Code -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                Staff Code / Emp ID
-                                            </label>
-                                            <input v-model="profileForm.employeeCode" type="text" placeholder="e.g. EMP-10482" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
-                                        </div>
-
-                                        <!-- Branch SOL ID -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                                Branch SOL ID / Code
-                                            </label>
-                                            <input v-model="profileForm.branchSolId" type="text" placeholder="e.g. SOL-0412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-mono font-semibold text-slate-800 transition uppercase">
-                                        </div>
-                                    </div>
-
-                                    <!-- Asset Vertical -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Asset Vertical
-                                        </label>
-                                        <select v-model="profileForm.division" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition cursor-pointer">
-                                            <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Branch Office Desk Address -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Branch Desk / Office Address
-                                        </label>
-                                        <input v-model="profileForm.branchAddress" type="text" placeholder="e.g. 3rd Floor, Retail Assets Hub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                    </div>
-
-                                    <!-- Region / Hub Location -->
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                            Operating Region / Zone
-                                        </label>
-                                        <input v-model="profileForm.region" type="text" placeholder="e.g. Pune Hub / Mumbai North" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800 transition">
-                                    </div>
-                                </div>
-
-                                <!-- Form Actions -->
-                                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                                    <button @click="profileActiveTab = 'overview'" type="button" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" :disabled="isSavingProfile" class="px-5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-75">
-                                        <i v-if="isSavingProfile" class="fas fa-spinner fa-spin text-xs"></i>
-                                        <i v-else class="fas fa-check text-xs"></i>
-                                        <span>{{ isSavingProfile ? 'Saving Changes...' : 'Save Profile Changes' }}</span>
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     </div>
 
@@ -5519,7 +5566,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-69"></script>
+    <script type="module" src="js/app.js?v=force-update-70"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
