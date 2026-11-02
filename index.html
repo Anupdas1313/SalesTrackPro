@@ -3772,73 +3772,68 @@
                             </div>
                         </div>
 
-                        <!-- Executive Profile Hero Card -->
-                        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white shadow-md relative overflow-hidden border border-slate-800">
-                            <!-- Subtle glow background accent -->
-                            <div class="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-                                <!-- User Info Left -->
-                                <div class="flex items-center gap-3.5 min-w-0">
-                                    <!-- Avatar with Role Badge -->
-                                    <div class="relative shrink-0">
-                                        <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white flex items-center justify-center text-xl font-black shadow-md border-2 border-white/20">
-                                            {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
-                                        </div>
-                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center text-[9px] text-white" title="Verified Active">
-                                            <i class="fas fa-check"></i>
-                                        </div>
+                        <!-- Executive Profile Hero Card (Clean White Theme matching SalesLink UI) -->
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <!-- User Info Left -->
+                            <div class="flex items-center gap-3.5 min-w-0">
+                                <!-- Avatar with Active Status Indicator -->
+                                <div class="relative shrink-0">
+                                    <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl font-black shadow-2xs">
+                                        {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
                                     </div>
-
-                                    <!-- Name, Role & Bank Tags -->
-                                    <div class="min-w-0 space-y-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <h2 class="text-base sm:text-lg font-black text-white tracking-tight truncate">{{ currentUser.name }}</h2>
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                                                {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
-                                            </span>
-                                        </div>
-                                        <p class="text-xs text-slate-300 font-medium truncate flex items-center gap-1.5">
-                                            <span>{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'Branch Sales Manager' : 'Relationship Officer')))) }}</span>
-                                            <span>&bull;</span>
-                                            <span class="text-slate-400">{{ currentUser.bankName || 'Axis Bank' }}</span>
-                                        </p>
-                                        <div class="flex items-center gap-2 text-[11px] text-slate-300 flex-wrap">
-                                            <a v-if="currentUser.phone" :href="'tel:' + currentUser.phone" class="inline-flex items-center gap-1 text-indigo-300 hover:text-white transition">
-                                                <i class="fas fa-phone text-[9px]"></i>
-                                                <span>{{ currentUser.phone }}</span>
-                                            </a>
-                                            <span v-if="currentUser.phone && currentUser.email" class="text-slate-600">&bull;</span>
-                                            <span v-if="currentUser.email" class="inline-flex items-center gap-1 text-slate-300 truncate max-w-[200px] sm:max-w-xs">
-                                                <i class="fas fa-envelope text-[9px] text-slate-400"></i>
-                                                <span class="truncate">{{ currentUser.email }}</span>
-                                            </span>
-                                        </div>
+                                    <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[9px] text-white shadow-2xs" title="Verified Active">
+                                        <i class="fas fa-check"></i>
                                     </div>
                                 </div>
 
-                                <!-- Personal SalesLink ID Display & Copy -->
-                                <div class="w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between gap-2 pt-3 sm:pt-0 border-t border-white/10 sm:border-0 shrink-0">
-                                    <div class="text-left sm:text-right">
-                                        <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">SalesLink ID</p>
-                                        <p class="text-xs font-mono font-black text-indigo-300">{{ currentUser.salesLinkId || 'Syncing...' }}</p>
+                                <!-- Name, Role & Bank Tags -->
+                                <div class="min-w-0 space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate">{{ currentUser.name }}</h2>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                            {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'Branch SM' : 'RO'))) }}
+                                        </span>
                                     </div>
-                                    <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
-                                        <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-300' : 'fas fa-copy text-xs'"></i>
-                                        <span>{{ copiedSalesLinkIdToast ? 'Copied!' : 'Copy ID' }}</span>
-                                    </button>
+                                    <p class="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5">
+                                        <span class="text-slate-700 font-semibold">{{ currentUser.designation || (isSuperAdmin ? 'Platform Administrator' : (isZSM ? 'Zonal Sales Manager' : (isASM ? 'Area Sales Manager' : (isSM ? 'Branch Sales Manager' : 'Relationship Officer')))) }}</span>
+                                        <span>&bull;</span>
+                                        <span class="text-slate-500">{{ currentUser.bankName || 'Axis Bank' }}</span>
+                                    </p>
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap">
+                                        <a v-if="currentUser.phone" :href="'tel:' + currentUser.phone" class="inline-flex items-center gap-1 text-slate-600 hover:text-indigo-600 transition font-medium">
+                                            <i class="fas fa-phone text-[9px] text-indigo-500"></i>
+                                            <span>{{ currentUser.phone }}</span>
+                                        </a>
+                                        <span v-if="currentUser.phone && currentUser.email" class="text-slate-300">&bull;</span>
+                                        <span v-if="currentUser.email" class="inline-flex items-center gap-1 text-slate-500 truncate max-w-[200px] sm:max-w-xs font-medium">
+                                            <i class="fas fa-envelope text-[9px] text-slate-400"></i>
+                                            <span class="truncate">{{ currentUser.email }}</span>
+                                        </span>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- SalesLink ID Display & 1-Tap Copy -->
+                            <div class="w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between gap-2 pt-3 sm:pt-0 border-t border-slate-100 sm:border-0 shrink-0">
+                                <div class="text-left sm:text-right">
+                                    <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">SalesLink ID</p>
+                                    <p class="text-xs font-mono font-black text-indigo-600">{{ currentUser.salesLinkId || 'Syncing...' }}</p>
+                                </div>
+                                <button @click="copySalesLinkId(currentUser.salesLinkId)" type="button" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                    <i :class="copiedSalesLinkIdToast ? 'fas fa-check text-emerald-400' : 'fas fa-copy text-xs text-slate-300'"></i>
+                                    <span>{{ copiedSalesLinkIdToast ? 'Copied!' : 'Copy ID' }}</span>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Segmented Navigation Switcher: Overview vs Edit -->
-                        <div class="flex items-center p-1 bg-slate-200/80 rounded-xl max-w-sm">
-                            <button @click="profileActiveTab = 'overview'" type="button" :class="profileActiveTab === 'overview' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="flex-1 py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-id-card text-[11px]"></i>
+                        <div class="flex items-center p-1 bg-slate-100 rounded-xl max-w-sm border border-slate-200/60">
+                            <button @click="profileActiveTab = 'overview'" type="button" :class="profileActiveTab === 'overview' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/50' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="flex-1 py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-id-card text-[11px]" :class="profileActiveTab === 'overview' ? 'text-indigo-600' : 'text-slate-400'"></i>
                                 <span>Account Overview</span>
                             </button>
-                            <button @click="profileActiveTab = 'edit'" type="button" :class="profileActiveTab === 'edit' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="flex-1 py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-user-pen text-[11px]"></i>
+                            <button @click="profileActiveTab = 'edit'" type="button" :class="profileActiveTab === 'edit' ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/50' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="flex-1 py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-user-pen text-[11px]" :class="profileActiveTab === 'edit' ? 'text-indigo-600' : 'text-slate-400'"></i>
                                 <span>Edit Profile</span>
                             </button>
                         </div>
@@ -5498,7 +5493,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-67"></script>
+    <script type="module" src="js/app.js?v=force-update-68"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
