@@ -453,6 +453,43 @@ const app = createApp({
             return (roUsers.value || []).filter(u => u.status === 'resigned');
         });
 
+        // SM User Management Filter & Tab State
+        const smUsersTab = ref('active'); // 'active' | 'suspended' | 'resigned'
+        const smUsersSearch = ref('');
+
+        const filteredActiveRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return activeRoUsers.value;
+            return activeRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.phone && String(u.phone).includes(q))
+            );
+        });
+
+        const filteredSuspendedRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return suspendedRoUsers.value;
+            return suspendedRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.phone && String(u.phone).includes(q))
+            );
+        });
+
+        const filteredResignedRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return resignedRoUsers.value;
+            return resignedRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.transferredToRoName && u.transferredToRoName.toLowerCase().includes(q))
+            );
+        });
+
         // --- Employee Resignation & Pipeline Handoff State ---
         const showOffboardModal = ref(false);
         const userToOffboard = ref(null);
@@ -4025,7 +4062,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, resignedRoUsers, myFiles, allWorkspaces, allFiles,
+            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, resignedRoUsers, smUsersTab, smUsersSearch, filteredActiveRos, filteredSuspendedRos, filteredResignedRos, myFiles, allWorkspaces, allFiles,
             showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
