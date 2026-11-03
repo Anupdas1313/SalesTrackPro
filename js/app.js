@@ -920,6 +920,8 @@ const app = createApp({
                 id: user.id || '',
                 name: user.name || '',
                 email: user.email || '',
+                employeeCode: user.employeeCode || '',
+                phone: user.phone || '',
                 tenantId: user.tenantId || '',
                 role: user.role || 'ro'
             };
@@ -928,8 +930,10 @@ const app = createApp({
 
         const saveUserEdit = async () => {
             try {
-                const cleanedName = (editUserForm.value.name || '').trim();
+                const cleanedName = formatCapitalizeName(editUserForm.value.name);
                 const cleanedEmail = (editUserForm.value.email || '').trim().toLowerCase();
+                const cleanedEmp = (editUserForm.value.employeeCode || '').trim().toUpperCase();
+                const cleanedPhone = (editUserForm.value.phone || '').trim().replace(/\D/g, '').slice(-10);
 
                 if (!cleanedName) {
                     alert("User full name is required.");
@@ -940,9 +944,29 @@ const app = createApp({
                     return;
                 }
 
+                // Verify Employee ID uniqueness across other users/SMs
+                if (cleanedEmp) {
+                    const existingEmp = await db.getUserByEmployeeCode(cleanedEmp);
+                    if (existingEmp && existingEmp.id !== editUserForm.value.id) {
+                        const supName = await db.getSupervisorNameForUser(existingEmp);
+                        alert(`⚠️ This Employee ID (${cleanedEmp}) is already linked with another Sales Manager (${supName}) for officer "${existingEmp.name || 'Staff'}". Duplicate Employee IDs cannot be assigned.`);
+                        return;
+                    }
+                }
+
+                // Verify Email uniqueness across other users/SMs
+                const existingEmail = await db.getUserByEmail(cleanedEmail);
+                if (existingEmail && existingEmail.id !== editUserForm.value.id) {
+                    const supName = await db.getSupervisorNameForUser(existingEmail);
+                    alert(`⚠️ Google email (${cleanedEmail}) is already linked with another Sales Manager (${supName}).`);
+                    return;
+                }
+
                 const updatePayload = {
                     name: cleanedName,
-                    email: cleanedEmail
+                    email: cleanedEmail,
+                    employeeCode: cleanedEmp,
+                    phone: cleanedPhone
                 };
                 if (editUserForm.value.role) {
                     updatePayload.role = editUserForm.value.role;
@@ -959,6 +983,8 @@ const app = createApp({
                         ...roUsers.value[index],
                         name: cleanedName,
                         email: cleanedEmail,
+                        employeeCode: cleanedEmp,
+                        phone: cleanedPhone,
                         role: updatePayload.role || roUsers.value[index].role,
                         tenantId: updatePayload.tenantId !== undefined ? updatePayload.tenantId : roUsers.value[index].tenantId
                     };
@@ -2327,12 +2353,22 @@ const app = createApp({
                 return;
             }
 
+            const empCode = (profileForm.value.employeeCode || '').trim().toUpperCase();
+            if (empCode) {
+                const existingEmp = await db.getUserByEmployeeCode(empCode);
+                if (existingEmp && existingEmp.id !== currentUser.value.id) {
+                    const supName = await db.getSupervisorNameForUser(existingEmp);
+                    profileSaveError.value = `This Employee ID (${empCode}) is already linked with another account under Sales Manager (${supName}). Duplicate Employee IDs are not permitted.`;
+                    return;
+                }
+            }
+
             isSavingProfile.value = true;
             try {
                 const updatePayload = {
                     name: trimmedName,
                     phone: trimmedPhone,
-                    employeeCode: (profileForm.value.employeeCode || '').trim().toUpperCase(),
+                    employeeCode: empCode,
                     designation: (profileForm.value.designation || '').trim(),
                     branchAddress: (profileForm.value.branchAddress || '').trim(),
                     bankName: profileForm.value.bankName?.trim() || 'Axis Bank',
@@ -3006,6 +3042,23 @@ const app = createApp({
 
         const loadData = async () => {
             if (!currentUser.value) return;
+
+            // Real-Time Security Gatekeeper: Verify current user status directly from Firestore
+            if (currentUser.value?.id) {
+                try {
+                    const freshUser = await db.getUserById(currentUser.value.id);
+                    if (freshUser && (freshUser.status === 'suspended' || freshUser.status === 'resigned' || freshUser.status === 'inactive')) {
+                        console.warn("Security Kill-Switch: Account suspended or revoked by supervisor.");
+                        localStorage.removeItem('axis_user');
+                        currentUser.value = null;
+                        alert("⚠️ Access Revoked: Your account has been locked by your Sales Manager. All session data has been wiped.");
+                        window.location.reload();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("User status check error in loadData:", e);
+                }
+            }
             if (isSuperAdmin.value) {
                 await loadSuperAdminData();
             } else if (isZSM.value) {
@@ -3298,8 +3351,14 @@ const app = createApp({
             }
             
             if (user) {
-                if (user.status === 'suspended' || user.status === 'resigned' || user.status === 'inactive') {
-                    loginError.value = 'Account has been deactivated due to resignation or suspension. Access is revoked.';
+                // Check if account has been frozen/locked or resigned
+                if (user.status === 'suspended') {
+                    const sup = user.supervisorName || 'your Sales Manager';
+                    loginError.value = `⛔ Account Locked: Your access has been frozen by your Sales Manager (${sup}). Please contact your supervisor to unlock your account.`;
+                    return;
+                }
+                if (user.status === 'resigned' || user.status === 'inactive') {
+                    loginError.value = '⛔ Access Revoked: This account has been offboarded due to resignation. Pipeline has been reassigned.';
                     return;
                 }
 
@@ -3307,10 +3366,35 @@ const app = createApp({
                 if (user.role !== 'super_admin' && user.tenantId) {
                     const workspace = await db.getWorkspace(user.tenantId);
                     if (workspace && workspace.status === 'frozen') {
-                        loginError.value = 'Your workspace is currently frozen. Contact support.';
+                        loginError.value = '⛔ Branch Workspace Locked: Your branch workspace is currently frozen by the administrator.';
                         return;
                     }
                 }
+
+                // If RO, ensure supervisor linkage is maintained
+                if (user.role === 'ro' && user.tenantId && (!user.supervisorId || !user.supervisorName)) {
+                    try {
+                        const allUsers = await db.getAllUsers();
+                        const smUser = allUsers.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                        if (smUser) {
+                            user.supervisorId = smUser.id;
+                            user.supervisorName = smUser.name;
+                            user.supervisorSalesLinkId = smUser.salesLinkId || null;
+                            await db.updateUser(user.id, {
+                                supervisorId: smUser.id,
+                                supervisorName: smUser.name,
+                                supervisorSalesLinkId: smUser.salesLinkId || null
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not backfill supervisor on login:", e);
+                    }
+                }
+
+                // Record login timestamp
+                try {
+                    await db.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
+                } catch (e) {}
 
                 // Auto assign SalesLink ID if missing (backward compatibility)
                 if (!user.salesLinkId) {
@@ -3357,7 +3441,7 @@ const app = createApp({
 
                 await loadData();
             } else {
-                loginError.value = 'Account not found. Ask your manager to invite you.';
+                loginError.value = `⛔ Access Denied: The Google account (${email}) is not registered in SalesLink. Only officers added by their Sales Manager in the SM portal are authorized to log in.`;
             }
         };
 
@@ -3439,9 +3523,32 @@ const app = createApp({
 
             try {
                 isSavingRo.value = true;
-                const existing = await db.getUserByEmail(rawEmail);
-                if (existing) {
-                    addRoError.value = `Account with ${rawEmail} is already registered on SalesLink.`;
+
+                // 1. Check if Employee ID is entered and already linked with another user / SM
+                if (empCode) {
+                    const existingEmp = await db.getUserByEmployeeCode(empCode);
+                    if (existingEmp) {
+                        const supName = await db.getSupervisorNameForUser(existingEmp);
+                        addRoError.value = `⚠️ This Employee ID (${empCode}) is already linked with another Sales Manager (${supName}) for officer "${existingEmp.name || 'Staff'}". Duplicate Employee IDs are not permitted.`;
+                        isSavingRo.value = false;
+                        return;
+                    }
+                }
+
+                // 2. Check if Email already exists in the system
+                const existingEmail = await db.getUserByEmail(rawEmail);
+                if (existingEmail) {
+                    const supName = await db.getSupervisorNameForUser(existingEmail);
+                    addRoError.value = `⚠️ Account with Google email (${rawEmail}) is already registered under Sales Manager "${supName}". Duplicate email accounts are not permitted.`;
+                    isSavingRo.value = false;
+                    return;
+                }
+
+                // 3. Check if Mobile / Phone is already linked to another officer
+                const existingPhone = await db.getUserByPhone(phone);
+                if (existingPhone) {
+                    const supName = await db.getSupervisorNameForUser(existingPhone);
+                    addRoError.value = `⚠️ Mobile number (+91 ${phone}) is already registered under Sales Manager "${supName}" for officer "${existingPhone.name}".`;
                     isSavingRo.value = false;
                     return;
                 }
@@ -3456,6 +3563,9 @@ const app = createApp({
                     employeeCode: empCode,
                     salesLinkId: generatedSalesLinkId,
                     tenantId: currentUser.value.tenantId,
+                    supervisorId: currentUser.value.id || null,
+                    supervisorName: currentUser.value.name || 'Sales Manager',
+                    supervisorSalesLinkId: currentUser.value.salesLinkId || null,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 };
@@ -3477,9 +3587,39 @@ const app = createApp({
         };
 
         const toggleUserStatus = async (user) => {
-            const newStatus = user.status === 'active' ? 'suspended' : 'active';
-            await db.updateUser(user.id, { status: newStatus });
-            await loadData();
+            const isLocking = user.status === 'active';
+            const actionVerb = isLocking ? 'FREEZE & LOCK' : 'ACTIVATE & UNLOCK';
+            const confirmMsg = isLocking 
+                ? `Are you sure you want to FREEZE & LOCK ${user.name}'s account?\n\n• Their login access will be blocked immediately.\n• Active sessions will be revoked.\n• Customer files will remain safely preserved.`
+                : `Are you sure you want to UNLOCK ${user.name}'s account?\n\n• Their login access will be restored immediately.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const now = new Date().toISOString();
+                const updatePayload = {
+                    status: isLocking ? 'suspended' : 'active',
+                    statusUpdatedAt: now,
+                    statusUpdatedBy: currentUser.value?.id || '',
+                    statusUpdatedByName: currentUser.value?.name || 'Sales Manager'
+                };
+                if (isLocking) {
+                    updatePayload.suspendedAt = now;
+                    updatePayload.suspendedBy = currentUser.value?.id || '';
+                    updatePayload.suspendedByName = currentUser.value?.name || 'Sales Manager';
+                } else {
+                    updatePayload.reactivatedAt = now;
+                    updatePayload.reactivatedBy = currentUser.value?.id || '';
+                }
+
+                await db.updateUser(user.id, updatePayload);
+                await loadData();
+
+                alert(`✅ Account for ${user.name} has been ${isLocking ? 'LOCKED / FROZEN' : 'UNLOCKED / ACTIVATED'} successfully.`);
+            } catch (err) {
+                console.error("Toggle user status error:", err);
+                alert("Failed to update officer status: " + err.message);
+            }
         };
 
         const deleteRoUser = async (user) => {

@@ -103,6 +103,66 @@ export const getUserByEmail = async (email) => {
     return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
+export const getUserByEmployeeCode = async (employeeCode) => {
+    if (!employeeCode) return null;
+    const clean = employeeCode.trim().toUpperCase();
+    if (!clean) return null;
+    try {
+        const q = query(usersCol, where('employeeCode', '==', clean), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    } catch (e) {
+        console.warn("Index query for employeeCode failed, falling back to full scan:", e);
+    }
+    try {
+        const all = await getAllUsers();
+        return all.find(u => u.employeeCode && u.employeeCode.trim().toUpperCase() === clean) || null;
+    } catch (e) {
+        return null;
+    }
+};
+
+export const getUserByPhone = async (phone) => {
+    if (!phone) return null;
+    const cleanDigits = String(phone).replace(/\D/g, '').slice(-10);
+    if (!cleanDigits || cleanDigits.length < 10) return null;
+    try {
+        const q = query(usersCol, where('phone', '==', cleanDigits), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    } catch (e) {
+        console.warn("Index query for phone failed, falling back to full scan:", e);
+    }
+    try {
+        const all = await getAllUsers();
+        return all.find(u => u.phone && String(u.phone).replace(/\D/g, '').endsWith(cleanDigits)) || null;
+    } catch (e) {
+        return null;
+    }
+};
+
+export const getSupervisorNameForUser = async (user) => {
+    if (!user) return 'another Sales Manager';
+    if (user.supervisorName) return user.supervisorName;
+    if (user.supervisorId) {
+        try {
+            const sup = await getUserById(user.supervisorId);
+            if (sup && sup.name) return sup.name;
+        } catch (e) {}
+    }
+    if (user.role === 'sm' || user.role === 'admin') {
+        return user.name ? `${user.name} (Sales Manager)` : 'a Sales Manager';
+    }
+    if (user.tenantId) {
+        try {
+            const all = await getAllUsers();
+            const sm = all.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
+            if (sm && sm.name) return sm.name;
+        } catch (e) {}
+    }
+    return 'another Sales Manager';
+};
+
 export const getUserById = async (id) => {
     if (!id) return null;
     try {
