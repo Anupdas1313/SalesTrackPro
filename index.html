@@ -4646,204 +4646,7 @@
 
                 </div>
 
-                <!-- ============================================== -->
                     <!-- ============================================== -->
-                    <!-- MORE OPTIONS & APP SECTIONS DIRECTORY          -->
-                    <!-- ============================================== -->
-                    <div v-if="currentTab === 'more' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
-                        
-                        <!-- User Identity Card -->
-                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center gap-3.5 sm:gap-4">
-                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl font-black shrink-0 shadow-inner">
-                                {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h2 class="text-base font-black text-slate-900 tracking-tight capitalize leading-tight">{{ currentUser.name }}</h2>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-[#4F46E5] border border-indigo-100">
-                                        {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM' : 'RO'))) }}
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-500 font-medium truncate mt-0.5">{{ currentUser.email }}</p>
-                                <p class="text-[11px] text-slate-400 mt-0.5">
-                                    <span>{{ currentUser.bankName || 'Axis Bank' }}</span> &bull; <span>{{ currentUser.region || 'Branch Network' }}</span>
-                                </p>
-                            </div>
-                            <button @click="goToTab('profile')" class="p-2 text-slate-400 hover:text-slate-700 transition cursor-pointer" title="View Full Profile">
-                                <i class="fas fa-chevron-right text-sm"></i>
-                            </button>
-                        </div>
-
-                        <!-- Menu Group 1: Performance & Quotas -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Performance & Quotas</span>
-                            </div>
-                            <div class="divide-y divide-slate-100">
-                                <!-- Sales Targets -->
-                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-bullseye"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Sales Targets & Quotas</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Monthly login volume & run-rate pacing</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span v-if="roOfficialTarget && roOfficialTarget.targetFiles > 0" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-[#4F46E5]">
-                                            {{ roOfficialTarget.achievedPct }}%
-                                        </span>
-                                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                    </div>
-                                </button>
-
-                                <!-- Sales Drives & Contests -->
-                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'drives';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-rocket"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Sales Drives & Contests</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Active campaign blitzes & rewards</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span v-if="activeSalesDrivesCount > 0" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            {{ activeSalesDrivesCount }} Active
-                                        </span>
-                                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                    </div>
-                                </button>
-
-                                <!-- Innovation Hub Roadmap -->
-                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'upcoming';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-sparkles"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Upcoming Features Lab</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Vote on upcoming AI OCR & automations</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Menu Group 2: Account & Workplace -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account & Workplace</span>
-                            </div>
-                            <div class="divide-y divide-slate-100">
-                                <!-- My Profile -->
-                                <button @click="goToTab('profile')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-id-card"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">My Profile</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Employee details, contact & edit info</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-
-                    <!-- Supervisory Reporting Line -->
-                                <button @click="goToTab('profile')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-sitemap"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Supervisory Reporting</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">{{ isRO ? 'Connected Branch Manager' : (isSM ? 'Linked Area Sales Manager (ASM)' : 'Zonal / Area Tier') }}</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Menu Group 3: Preferences & System -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferences & System</span>
-                            </div>
-                            <div class="divide-y divide-slate-100">
-                                <!-- Settings -->
-                                <button @click="goToTab('settings')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-gear"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Settings & Preferences</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Notifications, currency & offline cache</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-
-                                <!-- Resync Workspace Data -->
-                                <button @click="triggerProfileResync" :disabled="isResyncingProfile" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin text-indigo-600' : 'fas fa-arrows-rotate'"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">{{ isResyncingProfile ? 'Resyncing Data...' : 'Resync Workspace Data' }}</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Refresh cached counts & records from server</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-
-                                <!-- Install Native PWA -->
-                                <button v-if="!isStandalone" @click="installPwaApp" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                            <i class="fas fa-download"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-800">Install SalesLink App</div>
-                                            <div class="text-[11px] text-slate-400 font-medium">Add to phone home screen for offline access</div>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Menu Group 4: Sign Out -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                            <button @click="logout" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-rose-50/50 transition text-left cursor-pointer group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
-                                        <i class="fas fa-right-from-bracket"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs font-bold text-rose-600">Sign Out</div>
-                                        <div class="text-[11px] text-rose-400 font-medium">Securely end Google Workspace session</div>
-                                    </div>
-                                </div>
-                                <i class="fas fa-chevron-right text-rose-300 text-xs"></i>
-                            </button>
-                        </div>
-
-                        <!-- Footer Info -->
-                        <div class="text-center py-2 text-[11px] text-slate-400 font-medium space-y-1">
-                            <div>SalesTrackPro v2.4.0 &bull; Axis Bank Edition</div>
-                            <div class="text-[10px] text-slate-300">PWA Engine: saleslink-v12</div>
-                        </div>
-
-                    </div>
-
                     <!-- APP SETTINGS & PREFERENCES SECTION             -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'settings' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
@@ -5037,6 +4840,8 @@
 
                     </div>
 
+                </div>
+
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isASM">
@@ -5152,17 +4957,6 @@
                             <span class="font-semibold text-slate-800 text-sm">Targets & Drives</span>
                         </div>
                         <span v-if="activeSalesDrivesCount > 0" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    </button>
-
-                    <!-- Supervisory Reporting Line -->
-                    <button @click="goToTab('profile'); showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-6 text-center text-slate-400 group-hover:text-[#4F46E5] transition-colors">
-                                <i class="fas fa-sitemap text-base"></i>
-                            </div>
-                            <span class="font-semibold text-slate-800 text-sm">Reporting Line</span>
-                        </div>
-                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
                     </button>
 
                     <!-- Settings -->
@@ -6753,7 +6547,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-100"></script>
+    <script type="module" src="js/app.js?v=force-update-101"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
