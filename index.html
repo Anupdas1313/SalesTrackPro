@@ -520,6 +520,10 @@
                             <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer']">
                                 <i class="fas fa-id-card w-5 text-sm"></i> My Profile
                             </a>
+                        
+                            <a href="#" @click.prevent="goToTab('settings')" :class="[currentTab === 'settings' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer']">
+                                <i class="fas fa-gear w-5 text-sm"></i> Settings
+                            </a>
                         </div>
                     </nav>
 
@@ -3945,6 +3949,19 @@
                     <!-- SALES TARGETS & SALES DRIVES MODULE (All Roles)   -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'targets-drives' && currentUser" class="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                        <!-- Unified Account & Hub Sub-Switcher -->
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
+                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-id-card text-[11px]"></i> Profile
+                            </button>
+                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
+                            </button>
+                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-gear text-[11px]"></i> Settings
+                            </button>
+                        </div>
+
                         
                         <!-- Top Navigation & Sub-Tab Switcher -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
@@ -4434,6 +4451,19 @@
                     <!-- PROFILE & WORKPLACE IDENTITY (Minimalist & Focused) -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'profile' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                        <!-- Unified Account & Hub Sub-Switcher -->
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
+                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-id-card text-[11px]"></i> Profile
+                            </button>
+                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
+                            </button>
+                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-gear text-[11px]"></i> Settings
+                            </button>
+                        </div>
+
                         
                         <!-- Top Bar: Clean Return & Edit Toggle -->
                         <div class="flex items-center justify-between pb-1 sm:pb-2">
@@ -4752,6 +4782,190 @@
 
                 </div>
 
+                <!-- ============================================== -->
+                    <!-- APP SETTINGS & PREFERENCES SECTION             -->
+                    <!-- ============================================== -->
+                    <div v-if="currentTab === 'settings' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                        
+                        <!-- Unified Hub Sub-Switcher (Profile | Targets | Settings) -->
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
+                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-id-card text-[11px]"></i> Profile
+                            </button>
+                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
+                            </button>
+                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-gear text-[11px]"></i> Settings
+                            </button>
+                        </div>
+
+                        <!-- Header with Return to Dashboard -->
+                        <div class="flex items-center justify-between pb-1">
+                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                                <i class="fas fa-arrow-left text-[11px]"></i>
+                                <span>Dashboard</span>
+                            </button>
+                            <span class="text-xs text-slate-400 font-medium">Preferences & Configuration</span>
+                        </div>
+
+                        <!-- Feedback Toast -->
+                        <div v-if="settingsSaveToast" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in shadow-2xs">
+                            <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                            <span>Preferences saved successfully!</span>
+                        </div>
+
+                        <!-- Notification & Alert Preferences -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                            <div class="border-b border-slate-100 pb-2">
+                                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-bell text-[#4F46E5]"></i>
+                                    <span>Notifications & Alerts</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">Configure daily triggers and supervisor alerts</p>
+                            </div>
+
+                            <div class="divide-y divide-slate-100 text-xs">
+                                <!-- EOD Reminder -->
+                                <div class="py-3 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Daily EOD Reminder (8:00 PM)</p>
+                                        <p class="text-[11px] text-slate-400">Receive alert if daily EOD log is pending</p>
+                                    </div>
+                                    <button @click="updateSetting('notifyEodReminder', !appSettings.notifyEodReminder)" type="button" :class="appSettings.notifyEodReminder ? 'bg-[#4F46E5]' : 'bg-slate-300'" class="w-11 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 shrink-0">
+                                        <div :class="appSettings.notifyEodReminder ? 'translate-x-5' : 'translate-x-0'" class="w-5 h-5 rounded-full bg-white shadow-md transition-transform"></div>
+                                    </button>
+                                </div>
+
+                                <!-- Stalled Case Alerts -->
+                                <div class="py-3 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Stalled Case Alerts</p>
+                                        <p class="text-[11px] text-slate-400">Highlight files idle in FI / FCU / UW &gt; 48 hours</p>
+                                    </div>
+                                    <button @click="updateSetting('notifyStalledCases', !appSettings.notifyStalledCases)" type="button" :class="appSettings.notifyStalledCases ? 'bg-[#4F46E5]' : 'bg-slate-300'" class="w-11 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 shrink-0">
+                                        <div :class="appSettings.notifyStalledCases ? 'translate-x-5' : 'translate-x-0'" class="w-5 h-5 rounded-full bg-white shadow-md transition-transform"></div>
+                                    </button>
+                                </div>
+
+                                <!-- Sales Drives Alerts -->
+                                <div class="py-3 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Sales Drives & Contests</p>
+                                        <p class="text-[11px] text-slate-400">Get notified when new sprint campaigns or blitzes launch</p>
+                                    </div>
+                                    <button @click="updateSetting('notifyNewDrives', !appSettings.notifyNewDrives)" type="button" :class="appSettings.notifyNewDrives ? 'bg-[#4F46E5]' : 'bg-slate-300'" class="w-11 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 shrink-0">
+                                        <div :class="appSettings.notifyNewDrives ? 'translate-x-5' : 'translate-x-0'" class="w-5 h-5 rounded-full bg-white shadow-md transition-transform"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Workspace & Display Preferences -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                            <div class="border-b border-slate-100 pb-2">
+                                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-sliders text-[#4F46E5]"></i>
+                                    <span>Display & Workspace</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">Customize how data and tables are presented</p>
+                            </div>
+
+                            <div class="space-y-3.5 text-xs">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Default Pipeline Timeline</label>
+                                    <select :value="appSettings.defaultTimeline" @change="updateSetting('defaultTimeline', $event.target.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                                        <option value="today">Today</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="this-month">This Month</option>
+                                        <option value="all">All Time</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Currency Format Display</label>
+                                    <select :value="appSettings.currencyFormat" @change="updateSetting('currencyFormat', $event.target.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                                        <option value="lakhs">₹ in Lakhs (e.g. ₹ 25.50 L)</option>
+                                        <option value="full">Full Amount (e.g. ₹ 25,50,000)</option>
+                                    </select>
+                                </div>
+
+                                <div class="pt-2 flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Compact Table Density</p>
+                                        <p class="text-[11px] text-slate-400">Tighter row padding to view more records on screen</p>
+                                    </div>
+                                    <button @click="updateSetting('compactView', !appSettings.compactView)" type="button" :class="appSettings.compactView ? 'bg-[#4F46E5]' : 'bg-slate-300'" class="w-11 h-6 rounded-full transition-colors relative cursor-pointer p-0.5 shrink-0">
+                                        <div :class="appSettings.compactView ? 'translate-x-5' : 'translate-x-0'" class="w-5 h-5 rounded-full bg-white shadow-md transition-transform"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Storage & Offline Health -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                            <div class="border-b border-slate-100 pb-2">
+                                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-database text-[#4F46E5]"></i>
+                                    <span>Storage & Offline Sync</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">Local cache and sync health</p>
+                            </div>
+
+                            <div class="space-y-3 text-xs">
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/70">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                        <span class="font-bold text-slate-700">Offline PWA Engine</span>
+                                    </div>
+                                    <span class="font-black text-slate-500 uppercase tracking-wider text-[10px]">Active (saleslink-v11)</span>
+                                </div>
+
+                                <div class="pt-1">
+                                    <button @click="clearAppCacheAndReload" type="button" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer border border-slate-200/80">
+                                        <i class="fas fa-trash-can text-slate-500"></i>
+                                        <span>Clear Cache & Resync Workspace</span>
+                                    </button>
+                                    <p class="text-[10px] text-slate-400 text-center mt-1.5">Purges stale local browser storage and pulls fresh data from server</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- App Environment & Security Info -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3 text-xs">
+                            <div class="border-b border-slate-100 pb-2">
+                                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-shield-halved text-[#4F46E5]"></i>
+                                    <span>Environment & Security</span>
+                                </h3>
+                            </div>
+
+                            <div class="divide-y divide-slate-100">
+                                <div class="py-2 flex items-center justify-between">
+                                    <span class="text-slate-500 font-medium">Authentication</span>
+                                    <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fab fa-google text-indigo-600"></i> Google Workspace SSO
+                                    </span>
+                                </div>
+                                <div class="py-2 flex items-center justify-between">
+                                    <span class="text-slate-500 font-medium">Logged In Account</span>
+                                    <span class="font-semibold text-slate-700 truncate max-w-[200px]">{{ currentUser.email }}</span>
+                                </div>
+                                <div class="py-2 flex items-center justify-between">
+                                    <span class="text-slate-500 font-medium">App Version</span>
+                                    <span class="font-bold text-slate-800">SalesTrackPro v2.4.0</span>
+                                </div>
+                                <div class="py-2 flex items-center justify-between">
+                                    <span class="text-slate-500 font-medium">PWA Display Mode</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="isStandalone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'">
+                                        {{ isStandalone ? 'Standalone App' : 'Browser Mode' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isASM">
@@ -4771,9 +4985,9 @@
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Profile</span>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Account</span>
                         </a>
                     </template>
                     <template v-else-if="isSM">
@@ -4793,9 +5007,9 @@
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Profile</span>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Account</span>
                         </a>
                     </template>
                     <template v-else>
@@ -4815,9 +5029,9 @@
                             <i class="fas fa-clipboard-list text-lg mb-0.5"></i>
                             <span class="text-[10px]">EOD</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium hover:text-slate-600', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Profile</span>
+                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
+                            <span class="text-[10px]">Account</span>
                         </a>
                     </template>
                 </nav>
@@ -6375,7 +6589,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-96"></script>
+    <script type="module" src="js/app.js?v=force-update-97"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

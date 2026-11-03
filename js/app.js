@@ -1338,6 +1338,7 @@ const app = createApp({
                 case 'zsm-team': return 'Supervised Area Managers';
                 case 'targets-drives': return 'Sales Targets & Drives';
                 case 'profile': return 'My Profile & Account';
+                case 'settings': return 'Settings & Preferences';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
         };
@@ -4698,7 +4699,60 @@ const app = createApp({
         };
 
         // --- Lifecycle ---
+        
+        // =========================================================
+        // APP SETTINGS & PREFERENCES MODULE
+        // =========================================================
+        const appSettings = ref({
+            notifyEodReminder: true,
+            notifyStalledCases: true,
+            notifyNewDrives: true,
+            compactView: false,
+            currencyFormat: 'lakhs', // 'lakhs' | 'full'
+            defaultTimeline: 'this-month' // 'today' | 'this-month'
+        });
+
+        const settingsSaveToast = ref(false);
+
+        const loadAppSettings = () => {
+            try {
+                const saved = localStorage.getItem('saleslink_user_settings');
+                if (saved) {
+                    appSettings.value = { ...appSettings.value, ...JSON.parse(saved) };
+                }
+            } catch (e) {
+                console.warn('Could not load user settings', e);
+            }
+        };
+
+        const updateSetting = (key, val) => {
+            appSettings.value[key] = val;
+            try {
+                localStorage.setItem('saleslink_user_settings', JSON.stringify(appSettings.value));
+                settingsSaveToast.value = true;
+                setTimeout(() => { settingsSaveToast.value = false; }, 2000);
+            } catch (e) {
+                console.warn('Could not save setting', e);
+            }
+        };
+
+        const clearAppCacheAndReload = async () => {
+            try {
+                if ('caches' in window) {
+                    const cacheKeys = await caches.keys();
+                    await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                }
+                localStorage.removeItem('cached_all_files');
+                localStorage.removeItem('cached_all_eods');
+                window.location.reload();
+            } catch (e) {
+                console.error('Error clearing cache', e);
+                window.location.reload();
+            }
+        };
+
         onMounted(async () => {
+            loadAppSettings();
             // PWA Standalone & Install detection
             isStandalone.value = checkStandalone();
             isIos.value = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
