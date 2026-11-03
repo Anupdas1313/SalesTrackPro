@@ -196,8 +196,70 @@ const app = createApp({
 
         // Modals & Forms
         const showAddRoModal = ref(false);
-        const newRoForm = ref({ name: '', email: '', phone: '' });
+        const addRoStep = ref('form'); // 'form' | 'success'
+        const newRoForm = ref({ name: '', email: '', phone: '', employeeCode: '' });
         const addRoError = ref('');
+        const isSavingRo = ref(false);
+        const newlyCreatedRo = ref(null);
+        const copyRoInviteSuccess = ref(false);
+
+        const openAddRoModal = () => {
+            addRoStep.value = 'form';
+            newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
+            addRoError.value = '';
+            newlyCreatedRo.value = null;
+            copyRoInviteSuccess.value = false;
+            showAddRoModal.value = true;
+        };
+
+        const closeAddRoModal = () => {
+            showAddRoModal.value = false;
+            addRoStep.value = 'form';
+            newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
+            addRoError.value = '';
+            newlyCreatedRo.value = null;
+            copyRoInviteSuccess.value = false;
+        };
+
+        const appendGmailDomain = () => {
+            if (!newRoForm.value.email) {
+                newRoForm.value.email = '@gmail.com';
+                return;
+            }
+            const clean = newRoForm.value.email.trim();
+            if (!clean.includes('@')) {
+                newRoForm.value.email = clean + '@gmail.com';
+            }
+        };
+
+        const getRoInviteWhatsAppText = (ro) => {
+            if (!ro) return '';
+            const smName = currentUser.value ? (currentUser.value.name || 'Sales Manager') : 'Sales Manager';
+            const staffCodeLine = ro.employeeCode ? `\n👔 *Staff Code:* ${ro.employeeCode}` : '';
+            return `👋 *Hi ${ro.name}*,\n\nWelcome to the team! You have been onboarded as a Relationship Officer on *SalesLink*.\n\n🔗 *Login Portal:* https://saleslink.in\n📧 *Google Account:* ${ro.email}\n🆔 *SalesLink ID:* ${ro.salesLinkId || 'Pending'}${staffCodeLine}\n\n👉 *Instructions:* Tap the login link above and click *"Sign in with Google"* using ${ro.email} to start logging customer files & daily EOD.\n\nBest regards,\n${smName}`;
+        };
+
+        const shareRoInviteWhatsApp = (ro) => {
+            if (!ro || !ro.phone) return;
+            const text = getRoInviteWhatsAppText(ro);
+            const phone = String(ro.phone).replace(/\D/g, '').slice(-10);
+            const url = `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        };
+
+        const copyRoInviteMessage = async (ro) => {
+            if (!ro) return;
+            const text = getRoInviteWhatsAppText(ro);
+            try {
+                await navigator.clipboard.writeText(text);
+                copyRoInviteSuccess.value = true;
+                setTimeout(() => {
+                    copyRoInviteSuccess.value = false;
+                }, 2500);
+            } catch (e) {
+                console.error('Clipboard copy error:', e);
+            }
+        };
 
         // Date Helpers
         const getTodayDateStr = () => {
@@ -1125,6 +1187,11 @@ const app = createApp({
             if (!isoString) return '';
             const d = new Date(isoString);
             return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        };
+
+        const formatCapitalizeName = (str) => {
+            if (!str) return '';
+            return str.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         };
 
         const getStatusBadgeClass = (status) => {
@@ -2244,10 +2311,6 @@ const app = createApp({
             profileSaveError.value = '';
             profileSaveSuccess.value = false;
 
-            const formatCapitalizeName = (str) => {
-                if (!str) return '';
-                return str.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            };
             const trimmedName = formatCapitalizeName(profileForm.value.name);
             if (!trimmedName) {
                 profileSaveError.value = 'Full name is mandatory.';
@@ -3348,41 +3411,69 @@ const app = createApp({
         // Admin/SM: Users & Workspaces
         const saveNewRo = async () => {
             addRoError.value = '';
-            const email = (newRoForm.value.email || '').trim().toLowerCase();
-            const phone = (newRoForm.value.phone || '').trim();
-            if (!email) {
-                addRoError.value = 'Please provide a valid Gmail address';
-                return;
-            }
-            if (!phone) {
-                addRoError.value = 'Contact Phone / WhatsApp number is mandatory';
-                return;
-            }
-            if (phone.replace(/\D/g, '').length < 10) {
-                addRoError.value = 'Please provide a valid 10-digit mobile number';
+            if (isSavingRo.value) return;
+
+            const rawName = (newRoForm.value.name || '').trim();
+            const rawEmail = (newRoForm.value.email || '').trim().toLowerCase();
+            const rawPhone = (newRoForm.value.phone || '').trim();
+            const empCode = (newRoForm.value.employeeCode || '').trim().toUpperCase();
+
+            if (!rawName) {
+                addRoError.value = 'Officer full name is mandatory.';
                 return;
             }
 
-            const existing = await db.getUserByEmail(email);
-            if (existing) {
-                addRoError.value = 'Email already exists. They are already in the system.';
+            const name = formatCapitalizeName(rawName);
+
+            if (!rawEmail || !rawEmail.includes('@')) {
+                addRoError.value = 'Please provide a valid Gmail address.';
                 return;
             }
-            
-            await db.addUser({
-                email: email,
-                role: 'ro',
-                name: (newRoForm.value.name || '').trim().toUpperCase(),
-                phone: phone,
-                salesLinkId: db.generateSalesLinkId('ro'),
-                tenantId: currentUser.value.tenantId,
-                status: 'active',
-                createdAt: new Date().toISOString()
-            });
-            
-            showAddRoModal.value = false;
-            newRoForm.value = { name: '', email: '', phone: '' };
-            await loadData();
+
+            const cleanDigits = rawPhone.replace(/\D/g, '');
+            if (cleanDigits.length < 10) {
+                addRoError.value = 'Please enter a valid 10-digit mobile number.';
+                return;
+            }
+            const phone = cleanDigits.slice(-10);
+
+            try {
+                isSavingRo.value = true;
+                const existing = await db.getUserByEmail(rawEmail);
+                if (existing) {
+                    addRoError.value = `Account with ${rawEmail} is already registered on SalesLink.`;
+                    isSavingRo.value = false;
+                    return;
+                }
+
+                const generatedSalesLinkId = db.generateSalesLinkId ? db.generateSalesLinkId('ro') : ('RO-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+
+                const newRoData = {
+                    email: rawEmail,
+                    role: 'ro',
+                    name: name,
+                    phone: phone,
+                    employeeCode: empCode,
+                    salesLinkId: generatedSalesLinkId,
+                    tenantId: currentUser.value.tenantId,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                };
+
+                const docRef = await db.addUser(newRoData);
+                newlyCreatedRo.value = {
+                    id: (docRef && docRef.id) ? docRef.id : '',
+                    ...newRoData
+                };
+
+                addRoStep.value = 'success';
+                await loadData();
+            } catch (err) {
+                console.error('Error adding RO:', err);
+                addRoError.value = err.message || 'Failed to add Relationship Officer. Please try again.';
+            } finally {
+                isSavingRo.value = false;
+            }
         };
 
         const toggleUserStatus = async (user) => {
@@ -4067,7 +4158,7 @@ const app = createApp({
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
             showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
-            showAddRoModal, newRoForm, addRoError,
+            showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
