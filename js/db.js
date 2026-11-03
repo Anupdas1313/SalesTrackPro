@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 const workspacesCol = collection(db, 'workspaces');
@@ -173,6 +173,20 @@ export const getUserById = async (id) => {
         console.warn("Error fetching user by ID:", e);
         return null;
     }
+};
+
+export const onUserSnapshot = (userId, callback) => {
+    if (!userId) return () => {};
+    const docRef = doc(db, 'users', userId);
+    return onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            callback({ id: docSnap.id, ...docSnap.data() });
+        } else {
+            callback(null);
+        }
+    }, (err) => {
+        console.warn("User security snapshot error:", err);
+    });
 };
 
 export const updateUser = async (id, updateData) => {
