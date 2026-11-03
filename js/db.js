@@ -61,8 +61,78 @@ export const getAllUsers = async () => {
     return mapSnapshot(snapshot);
 };
 
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { signInWithPopup, signInWithRedirect, getRedirectResult, RecaptchaVerifier, signInWithPhoneNumber, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
+
+// --- Phone Auth & reCAPTCHA Gatekeeper ---
+let appRecaptchaVerifier = null;
+
+export const initRecaptchaVerifier = (containerId = 'recaptcha-container') => {
+    if (appRecaptchaVerifier) {
+        try {
+            appRecaptchaVerifier.clear();
+        } catch (e) {
+            console.warn("Could not clear previous reCAPTCHA:", e);
+        }
+        appRecaptchaVerifier = null;
+    }
+
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        document.body.appendChild(container);
+    }
+
+    appRecaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: () => {
+            // reCAPTCHA solved silently
+        },
+        'expired-callback': () => {
+            console.warn("reCAPTCHA token expired. Will re-render on next OTP request.");
+            if (appRecaptchaVerifier) {
+                try {
+                    appRecaptchaVerifier.clear();
+                } catch(e) {}
+                appRecaptchaVerifier = null;
+            }
+        }
+    });
+
+    return appRecaptchaVerifier;
+};
+
+export const sendPhoneOtp = async (phone, containerId = 'recaptcha-container') => {
+    const cleanDigits = String(phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanDigits || cleanDigits.length < 10) {
+        throw new Error("Please enter a valid 10-digit mobile number.");
+    }
+    const formattedPhone = `+91${cleanDigits}`;
+    const verifier = initRecaptchaVerifier(containerId);
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+    return confirmationResult;
+};
+
+export const verifyPhoneOtp = async (confirmationResult, otpCode) => {
+    if (!confirmationResult || typeof confirmationResult.confirm !== 'function') {
+        throw new Error("OTP session expired or invalid. Please request a new OTP.");
+    }
+    const cleanOtp = String(otpCode || '').trim().replace(/\D/g, '');
+    if (cleanOtp.length !== 6) {
+        throw new Error("Please enter the complete 6-digit OTP code sent to your phone.");
+    }
+    const result = await confirmationResult.confirm(cleanOtp);
+    return result.user;
+};
+
+export const logoutUser = async () => {
+    try {
+        await signOut(auth);
+    } catch (e) {
+        console.warn("Firebase signout error:", e);
+    }
+};
 
 export const loginWithGoogle = async () => {
     googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -131,8 +201,13 @@ export const getUserByPhone = async (phone) => {
         const snapshot = await getDocs(q);
         if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
     } catch (e) {
-        console.warn("Index query for phone failed, falling back to full scan:", e);
+        console.warn("Index query for phone failed, checking alternate formats:", e);
     }
+    try {
+        const q2 = query(usersCol, where('phone', '==', '+91' + cleanDigits), limit(1));
+        const snapshot2 = await getDocs(q2);
+        if (!snapshot2.empty) return { id: snapshot2.docs[0].id, ...snapshot2.docs[0].data() };
+    } catch (e) {}
     try {
         const all = await getAllUsers();
         return all.find(u => u.phone && String(u.phone).replace(/\D/g, '').endsWith(cleanDigits)) || null;

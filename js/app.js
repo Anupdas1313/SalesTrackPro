@@ -1,4 +1,4 @@
-﻿import * as db from './db.js';
+import * as db from './db.js';
 const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 const app = createApp({
@@ -110,11 +110,24 @@ const app = createApp({
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
         const isLoggingIn = ref(false);
-        const loginStage = ref(''); // '' | 'selecting' | 'verifying'
+        const loginStage = ref(''); // '' | 'selecting' | 'verifying' | 'enter_otp' | 'linking_phone'
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
         const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+
+        // Mandatory Phone OTP & 2-Factor Authentication Gatekeeper State
+        const phoneLoginForm = ref({ phone: '' });
+        const otpCode = ref('');
+        const phoneConfirmationResult = ref(null);
+        const pendingOtpUser = ref(null);
+        const otpTargetPhoneDisplay = ref('');
+        const isSendingOtp = ref(false);
+        const isVerifyingOtp = ref(false);
+        const otpResendCountdown = ref(0);
+        let otpCountdownTimer = null;
+        const missingPhoneInput = ref('');
+        const showMissingPhoneModal = ref(false);
         const divisionOptions = [
             'Auto Loans (Car Loans)',
             'Personal Loans (PL)',
@@ -3417,7 +3430,265 @@ const app = createApp({
             }
         };
 
-        const processUserLogin = async (googleUser) => {
+        // --- OTP Resend Timer Helper ---
+        const startOtpCountdown = (seconds = 30) => {
+            if (otpCountdownTimer) clearInterval(otpCountdownTimer);
+            otpResendCountdown.value = seconds;
+            otpCountdownTimer = setInterval(() => {
+                if (otpResendCountdown.value > 0) {
+                    otpResendCountdown.value--;
+                } else {
+                    clearInterval(otpCountdownTimer);
+                    otpCountdownTimer = null;
+                }
+            }, 1000);
+        };
+
+        const handleCancelOtp = () => {
+            loginStage.value = '';
+            phoneConfirmationResult.value = null;
+            pendingOtpUser.value = null;
+            otpCode.value = '';
+            loginError.value = '';
+            showMissingPhoneModal.value = false;
+            missingPhoneInput.value = '';
+            if (otpCountdownTimer) {
+                clearInterval(otpCountdownTimer);
+                otpCountdownTimer = null;
+            }
+        };
+
+        // Complete verified login and bind device session
+        const completeLogin = async (user) => {
+            if (!user) return;
+
+            // Check workspace status for SM and RO
+            if (user.role !== 'super_admin' && user.tenantId) {
+                const workspace = await db.getWorkspace(user.tenantId);
+                if (workspace && workspace.status === 'frozen') {
+                    loginError.value = '⛔ Branch Workspace Locked: Your branch workspace is currently frozen by the administrator.';
+                    return;
+                }
+            }
+
+            // If RO, ensure supervisor linkage is maintained
+            if (user.role === 'ro' && user.tenantId && (!user.supervisorId || !user.supervisorName)) {
+                try {
+                    const allUsers = await db.getAllUsers();
+                    const smUser = allUsers.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                    if (smUser) {
+                        user.supervisorId = smUser.id;
+                        user.supervisorName = smUser.name;
+                        user.supervisorSalesLinkId = smUser.salesLinkId || null;
+                        await db.updateUser(user.id, {
+                            supervisorId: smUser.id,
+                            supervisorName: smUser.name,
+                            supervisorSalesLinkId: smUser.salesLinkId || null
+                        });
+                    }
+                } catch (e) {
+                    console.warn("Could not backfill supervisor on login:", e);
+                }
+            }
+
+            // Record login timestamp
+            try {
+                await db.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
+            } catch (e) {}
+
+            // Auto assign SalesLink ID if missing (backward compatibility)
+            if (!user.salesLinkId) {
+                try {
+                    const newSalesLinkId = db.generateSalesLinkId(user.role);
+                    await db.updateUser(user.id, { salesLinkId: newSalesLinkId });
+                    user.salesLinkId = newSalesLinkId;
+                } catch (e) {
+                    console.warn('Could not backfill salesLinkId:', e);
+                }
+            }
+
+            // Generate & Bind Single-Device Session ID
+            const newSessionId = generateSessionId();
+            localStorage.setItem('axis_active_session_id', newSessionId);
+            try {
+                await db.updateUser(user.id, {
+                    activeSessionId: newSessionId,
+                    lastLoginAt: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn("Could not write activeSessionId to Firestore:", e);
+            }
+
+            // Store user session
+            const sessionUser = {
+                id: user.id,
+                email: user.email || '',
+                username: user.name,
+                role: user.role,
+                name: user.name,
+                salesLinkId: user.salesLinkId,
+                supervisorId: user.supervisorId || null,
+                supervisorName: user.supervisorName || null,
+                supervisorRole: user.supervisorRole || null,
+                supervisorSalesLinkId: user.supervisorSalesLinkId || null,
+                tenantId: user.tenantId || null,
+                phone: user.phone || '',
+                bankName: user.bankName,
+                division: user.division,
+                region: user.region,
+                employeeCode: user.employeeCode || '',
+                designation: user.designation || '',
+                branchAddress: user.branchAddress || '',
+                createdAt: user.createdAt || '',
+                activeSessionId: newSessionId
+            };
+            localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+            currentUser.value = sessionUser;
+            initUserSm();
+
+            // Start real-time security gatekeeper
+            startUserSecurityListener(user.id);
+            
+            if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
+            else if (isZSM.value) currentTab.value = 'zsm-dashboard';
+            else if (isASM.value) currentTab.value = 'asm-dashboard';
+            else if (isSM.value) currentTab.value = 'dashboard';
+            else currentTab.value = 'ro-dashboard';
+
+            await loadData();
+        };
+
+        // --- Direct Phone Number + SMS OTP Sign-In ---
+        const handleSendPhoneOtp = async () => {
+            loginError.value = '';
+            const rawPhone = phoneLoginForm.value.phone;
+            const cleanDigits = String(rawPhone || '').replace(/\D/g, '').slice(-10);
+
+            if (!cleanDigits || cleanDigits.length < 10) {
+                loginError.value = 'Please enter a valid 10-digit Indian mobile number.';
+                return;
+            }
+
+            isSendingOtp.value = true;
+            try {
+                // Step 1: Pre-verify user exists in database
+                const user = await db.getUserByPhone(cleanDigits);
+                if (!user) {
+                    loginError.value = `⛔ Access Denied: Mobile number (+91 ${cleanDigits}) is not registered in SalesLink. Only officers onboarded by their Sales Manager or registered Managers can sign in.`;
+                    isSendingOtp.value = false;
+                    return;
+                }
+
+                // Step 2: Check account status
+                if (user.status === 'suspended') {
+                    const sup = user.supervisorName || 'your Sales Manager';
+                    loginError.value = `⛔ Account Locked: Your access has been frozen by your Sales Manager (${sup}). Please contact your supervisor to unlock your account.`;
+                    isSendingOtp.value = false;
+                    return;
+                }
+                if (user.status === 'resigned' || user.status === 'inactive') {
+                    loginError.value = '⛔ Access Revoked: This account has been offboarded due to resignation.';
+                    isSendingOtp.value = false;
+                    return;
+                }
+
+                // Step 3: Trigger Firebase Phone Auth OTP
+                const confirmation = await db.sendPhoneOtp(cleanDigits, 'recaptcha-container');
+                phoneConfirmationResult.value = confirmation;
+                pendingOtpUser.value = user;
+                otpTargetPhoneDisplay.value = `+91 ${cleanDigits.slice(0, 2)}••••${cleanDigits.slice(-4)}`;
+                otpCode.value = '';
+                loginStage.value = 'enter_otp';
+                startOtpCountdown(30);
+            } catch (error) {
+                console.error("Phone OTP Send Error:", error);
+                if (error.code === 'auth/invalid-phone-number') {
+                    loginError.value = 'Invalid phone number format.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    loginError.value = 'Too many attempts. Please wait a few minutes before trying again.';
+                } else if (error.code === 'auth/quota-exceeded') {
+                    loginError.value = 'SMS service quota exceeded. Please contact platform support.';
+                } else if (error.code === 'auth/captcha-check-failed') {
+                    loginError.value = 'reCAPTCHA verification failed. Please refresh the page and try again.';
+                } else {
+                    loginError.value = error.message || 'Failed to send OTP. Please check your connection and try again.';
+                }
+            } finally {
+                isSendingOtp.value = false;
+            }
+        };
+
+        const handleResendOtp = async () => {
+            if (otpResendCountdown.value > 0 || isSendingOtp.value) return;
+            loginError.value = '';
+            isSendingOtp.value = true;
+            try {
+                const phone = pendingOtpUser.value?.phone || phoneLoginForm.value.phone || missingPhoneInput.value;
+                const cleanDigits = String(phone).replace(/\D/g, '').slice(-10);
+                const confirmation = await db.sendPhoneOtp(cleanDigits, 'recaptcha-container');
+                phoneConfirmationResult.value = confirmation;
+                startOtpCountdown(30);
+            } catch (error) {
+                console.error("Resend OTP Error:", error);
+                loginError.value = error.message || 'Failed to resend OTP.';
+            } finally {
+                isSendingOtp.value = false;
+            }
+        };
+
+        const handleVerifyOtp = async () => {
+            if (isVerifyingOtp.value) return;
+            loginError.value = '';
+
+            const cleanOtp = String(otpCode.value || '').trim().replace(/\D/g, '');
+            if (cleanOtp.length !== 6) {
+                loginError.value = 'Please enter the complete 6-digit OTP code.';
+                return;
+            }
+
+            if (!phoneConfirmationResult.value) {
+                loginError.value = 'OTP session has expired. Please request a new OTP.';
+                loginStage.value = '';
+                return;
+            }
+
+            isVerifyingOtp.value = true;
+            try {
+                await db.verifyPhoneOtp(phoneConfirmationResult.value, cleanOtp);
+
+                if (!pendingOtpUser.value) {
+                    throw new Error("User record not found for verified number.");
+                }
+
+                // Finalize session into dashboard
+                await completeLogin(pendingOtpUser.value);
+
+                // Clean up OTP state
+                loginStage.value = '';
+                phoneConfirmationResult.value = null;
+                pendingOtpUser.value = null;
+                otpCode.value = '';
+                phoneLoginForm.value = { phone: '' };
+                if (otpCountdownTimer) {
+                    clearInterval(otpCountdownTimer);
+                    otpCountdownTimer = null;
+                }
+            } catch (error) {
+                console.error("OTP Verification Error:", error);
+                if (error.code === 'auth/invalid-verification-code') {
+                    loginError.value = 'Incorrect 6-digit OTP code. Please check SMS and enter again.';
+                } else if (error.code === 'auth/code-expired') {
+                    loginError.value = 'The OTP code has expired. Please tap "Resend OTP" to get a fresh code.';
+                } else {
+                    loginError.value = error.message || 'OTP verification failed. Please try again.';
+                }
+            } finally {
+                isVerifyingOtp.value = false;
+            }
+        };
+
+        // --- Google SSO with Mandatory 2-Factor OTP Gatekeeper ---
+        const processGoogleUserWithOtp = async (googleUser) => {
             const email = googleUser.email.toLowerCase();
             let user = await db.getUserByEmail(email);
 
@@ -3433,115 +3704,78 @@ const app = createApp({
                 await db.addUser(ownerData);
                 user = await db.getUserByEmail(email);
             }
-            
-            if (user) {
-                // Check if account has been frozen/locked or resigned
-                if (user.status === 'suspended') {
-                    const sup = user.supervisorName || 'your Sales Manager';
-                    loginError.value = `⛔ Account Locked: Your access has been frozen by your Sales Manager (${sup}). Please contact your supervisor to unlock your account.`;
-                    return;
-                }
-                if (user.status === 'resigned' || user.status === 'inactive') {
-                    loginError.value = '⛔ Access Revoked: This account has been offboarded due to resignation. Pipeline has been reassigned.';
-                    return;
-                }
 
-                // Check workspace status for SM and RO
-                if (user.role !== 'super_admin' && user.tenantId) {
-                    const workspace = await db.getWorkspace(user.tenantId);
-                    if (workspace && workspace.status === 'frozen') {
-                        loginError.value = '⛔ Branch Workspace Locked: Your branch workspace is currently frozen by the administrator.';
-                        return;
-                    }
-                }
-
-                // If RO, ensure supervisor linkage is maintained
-                if (user.role === 'ro' && user.tenantId && (!user.supervisorId || !user.supervisorName)) {
-                    try {
-                        const allUsers = await db.getAllUsers();
-                        const smUser = allUsers.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
-                        if (smUser) {
-                            user.supervisorId = smUser.id;
-                            user.supervisorName = smUser.name;
-                            user.supervisorSalesLinkId = smUser.salesLinkId || null;
-                            await db.updateUser(user.id, {
-                                supervisorId: smUser.id,
-                                supervisorName: smUser.name,
-                                supervisorSalesLinkId: smUser.salesLinkId || null
-                            });
-                        }
-                    } catch (e) {
-                        console.warn("Could not backfill supervisor on login:", e);
-                    }
-                }
-
-                // Record login timestamp
-                try {
-                    await db.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
-                } catch (e) {}
-
-                // Auto assign SalesLink ID if missing (backward compatibility)
-                if (!user.salesLinkId) {
-                    try {
-                        const newSalesLinkId = db.generateSalesLinkId(user.role);
-                        await db.updateUser(user.id, { salesLinkId: newSalesLinkId });
-                        user.salesLinkId = newSalesLinkId;
-                    } catch (e) {
-                        console.warn('Could not backfill salesLinkId:', e);
-                    }
-                }
-
-                // Generate & Bind Single-Device Session ID
-                const newSessionId = generateSessionId();
-                localStorage.setItem('axis_active_session_id', newSessionId);
-                try {
-                    await db.updateUser(user.id, {
-                        activeSessionId: newSessionId,
-                        lastLoginAt: new Date().toISOString()
-                    });
-                } catch (e) {
-                    console.warn("Could not write activeSessionId to Firestore:", e);
-                }
-
-                // Store user session
-                const sessionUser = {
-                    id: user.id,
-                    email: user.email,
-                    username: user.name,
-                    role: user.role,
-                    name: user.name,
-                    salesLinkId: user.salesLinkId,
-                    supervisorId: user.supervisorId || null,
-                    supervisorName: user.supervisorName || null,
-                    supervisorRole: user.supervisorRole || null,
-                    supervisorSalesLinkId: user.supervisorSalesLinkId || null,
-                    tenantId: user.tenantId || null,
-                    phone: user.phone || '',
-                    bankName: user.bankName,
-                    division: user.division,
-                    region: user.region,
-                    employeeCode: user.employeeCode || '',
-                    designation: user.designation || '',
-                    branchAddress: user.branchAddress || '',
-                    createdAt: user.createdAt || '',
-                    activeSessionId: newSessionId
-                };
-                localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                currentUser.value = sessionUser;
-                initUserSm();
-
-                // Start real-time security gatekeeper
-                startUserSecurityListener(user.id);
-                
-                if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
-                else if (isZSM.value) currentTab.value = 'zsm-dashboard';
-                else if (isASM.value) currentTab.value = 'asm-dashboard';
-                else if (isSM.value) currentTab.value = 'dashboard';
-                else currentTab.value = 'ro-dashboard';
-
-                await loadData();
-            } else {
+            if (!user) {
                 loginError.value = `⛔ Access Denied: The Google account (${email}) is not registered in SalesLink. Only officers added by their Sales Manager in the SM portal are authorized to log in.`;
+                loginStage.value = '';
+                return;
+            }
+
+            if (user.status === 'suspended') {
+                const sup = user.supervisorName || 'your Sales Manager';
+                loginError.value = `⛔ Account Locked: Your access has been frozen by your Sales Manager (${sup}). Please contact your supervisor to unlock your account.`;
+                loginStage.value = '';
+                return;
+            }
+            if (user.status === 'resigned' || user.status === 'inactive') {
+                loginError.value = '⛔ Access Revoked: This account has been offboarded due to resignation. Pipeline has been reassigned.';
+                loginStage.value = '';
+                return;
+            }
+
+            // MANDATORY OTP VERIFICATION:
+            // All users from RO to ZSM must complete phone OTP verification
+            if (user.phone && String(user.phone).replace(/\D/g, '').length >= 10) {
+                const cleanDigits = String(user.phone).replace(/\D/g, '').slice(-10);
+                try {
+                    isSendingOtp.value = true;
+                    const confirmation = await db.sendPhoneOtp(cleanDigits, 'recaptcha-container');
+                    phoneConfirmationResult.value = confirmation;
+                    pendingOtpUser.value = user;
+                    otpTargetPhoneDisplay.value = `+91 ${cleanDigits.slice(0, 2)}••••${cleanDigits.slice(-4)}`;
+                    otpCode.value = '';
+                    loginStage.value = 'enter_otp';
+                    startOtpCountdown(30);
+                } catch (err) {
+                    console.error("Error sending 2FA OTP to Google user:", err);
+                    loginError.value = `Failed to send mandatory SMS OTP to registered phone (+91 ${cleanDigits}): ${err.message}`;
+                    loginStage.value = '';
+                } finally {
+                    isSendingOtp.value = false;
+                }
+            } else {
+                // If user is missing a phone number in DB, prompt to link their mobile number for 2FA
+                pendingOtpUser.value = user;
+                missingPhoneInput.value = '';
+                showMissingPhoneModal.value = true;
+                loginStage.value = 'linking_phone';
+            }
+        };
+
+        const handleLinkPhoneAndSendOtp = async () => {
+            const cleanDigits = String(missingPhoneInput.value || '').replace(/\D/g, '').slice(-10);
+            if (!cleanDigits || cleanDigits.length < 10) {
+                loginError.value = 'Please enter a valid 10-digit mobile number.';
+                return;
+            }
+            isSendingOtp.value = true;
+            try {
+                const confirmation = await db.sendPhoneOtp(cleanDigits, 'recaptcha-container');
+                phoneConfirmationResult.value = confirmation;
+                if (pendingOtpUser.value) {
+                    pendingOtpUser.value.phone = cleanDigits;
+                    await db.updateUser(pendingOtpUser.value.id, { phone: cleanDigits });
+                }
+                otpTargetPhoneDisplay.value = `+91 ${cleanDigits.slice(0, 2)}••••${cleanDigits.slice(-4)}`;
+                otpCode.value = '';
+                showMissingPhoneModal.value = false;
+                loginStage.value = 'enter_otp';
+                startOtpCountdown(30);
+            } catch (err) {
+                console.error("Error sending OTP for phone linking:", err);
+                loginError.value = err.message || 'Failed to send OTP.';
+            } finally {
+                isSendingOtp.value = false;
             }
         };
 
@@ -3553,17 +3787,16 @@ const app = createApp({
             try {
                 const googleUser = await db.loginWithGoogle();
                 loginStage.value = 'verifying';
-                await processUserLogin(googleUser);
+                await processGoogleUserWithOtp(googleUser);
             } catch (error) {
                 console.error("Login Error:", error);
                 if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
-                    // User closed popup without selecting an account
                     return;
                 }
                 loginError.value = error.message;
+                loginStage.value = '';
             } finally {
                 isLoggingIn.value = false;
-                loginStage.value = '';
             }
         };
 
@@ -3590,10 +3823,16 @@ const app = createApp({
                 clearTimeout(inactivityTimer);
                 inactivityTimer = null;
             }
+            db.logoutUser();
             localStorage.removeItem('axis_user');
             localStorage.removeItem('axis_active_session_id');
             currentUser.value = null;
             loginForm.value = { username: '', password: '' };
+            phoneLoginForm.value = { phone: '' };
+            otpCode.value = '';
+            phoneConfirmationResult.value = null;
+            pendingOtpUser.value = null;
+            loginStage.value = '';
             allWorkspaces.value = [];
             roUsers.value = [];
             allFiles.value = [];
@@ -4313,9 +4552,8 @@ const app = createApp({
                 if (redirectUser) {
                     isLoggingIn.value = true;
                     loginStage.value = 'verifying';
-                    await processUserLogin(redirectUser);
+                    await processGoogleUserWithOtp(redirectUser);
                     isLoggingIn.value = false;
-                    loginStage.value = '';
                 }
             } catch (e) {
                 console.error("Redirect login processing error:", e);
@@ -4417,6 +4655,7 @@ const app = createApp({
         // Return everything needed by the template
         return {
             currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
+            phoneLoginForm, otpCode, phoneConfirmationResult, pendingOtpUser, otpTargetPhoneDisplay, isSendingOtp, isVerifyingOtp, otpResendCountdown, handleSendPhoneOtp, handleResendOtp, handleVerifyOtp, handleCancelOtp, missingPhoneInput, showMissingPhoneModal, handleLinkPhoneAndSendOtp,
             isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, resignedRoUsers, smUsersTab, smUsersSearch, filteredActiveRos, filteredSuspendedRos, filteredResignedRos, myFiles, allWorkspaces, allFiles,
             showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
