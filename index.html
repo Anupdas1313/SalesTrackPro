@@ -2154,29 +2154,51 @@
 
 
                     <!-- ADMIN: USER MANAGEMENT -->
-                                        <div v-if="currentTab === 'users' && isSM" class="space-y-6">
+                                                            <div v-if="currentTab === 'users' && isSM" class="space-y-4 sm:space-y-6">
                         <!-- Top Header & Action Bar -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#4F46E5] shrink-0">
-                                    <i class="fas fa-users-gear text-base"></i>
+                        <div class="flex items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#4F46E5] shrink-0">
+                                    <i class="fas fa-users-gear text-sm sm:text-base"></i>
                                 </div>
-                                <div>
-                                    <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Team Officers & User Management</h3>
-                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Manage relationship officers, access permissions, performance cockpit & pipeline handoffs</p>
+                                <div class="min-w-0">
+                                    <h3 class="text-sm sm:text-lg font-bold text-slate-900 leading-tight truncate">Team User Management</h3>
+                                    <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">Officers, permissions, cockpit & handoffs</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                            <div class="shrink-0">
                                 <button @click="openAddRoModal"
-                                    class="px-4 py-2.5 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer active:scale-95">
+                                    class="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95">
                                     <i class="fas fa-user-plus text-xs"></i>
-                                    <span>Add New RO</span>
+                                    <span>Add RO</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Segment / Status Switcher Cards -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Mobile Status Switcher Bar (Slim, 1-row segmented control) -->
+                        <div class="sm:hidden grid grid-cols-3 gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 text-xs font-bold">
+                            <button @click="smUsersTab = 'active'"
+                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                :class="smUsersTab === 'active' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500" :class="smUsersTab === 'active' ? 'animate-pulse' : ''"></span>
+                                <span>Active ({{ activeRoUsers.length }})</span>
+                            </button>
+                            <button @click="smUsersTab = 'suspended'"
+                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                :class="smUsersTab === 'suspended' ? 'bg-white text-amber-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>Frozen ({{ suspendedRoUsers.length }})</span>
+                            </button>
+                            <button @click="smUsersTab = 'resigned'"
+                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                :class="smUsersTab === 'resigned' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span>Exit ({{ resignedRoUsers.length }})</span>
+                            </button>
+                        </div>
+
+                        <!-- Desktop Status Switcher Cards -->
+                        <div class="hidden sm:grid sm:grid-cols-3 gap-3">
                             <!-- Active Tab Card -->
                             <button @click="smUsersTab = 'active'"
                                 class="text-left p-4 rounded-2xl border transition relative flex items-center justify-between cursor-pointer group"
@@ -2230,29 +2252,40 @@
                         </div>
 
                         <!-- Live Search & Filter Bar -->
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <div class="bg-white p-2.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
                             <div class="relative flex-1">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                                 <input type="text"
                                     v-model="smUsersSearch"
-                                    placeholder="Search by name, email, employee code, or phone..."
-                                    class="w-full pl-9 pr-9 py-2 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition" />
+                                    placeholder="Search by name, email, code..."
+                                    class="w-full pl-8 pr-8 py-1.5 sm:py-2 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition" />
                                 <button v-if="smUsersSearch"
                                     @click="smUsersSearch = ''"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
                                     title="Clear Search">
                                     <i class="fas fa-times text-xs"></i>
                                 </button>
                             </div>
-                            <div class="text-[11px] text-slate-500 font-semibold flex items-center justify-between sm:justify-end gap-2 px-1 shrink-0">
-                                <span v-if="smUsersTab === 'active'">
-                                    Showing <strong class="text-slate-900">{{ filteredActiveRos.length }}</strong> of {{ activeRoUsers.length }} active
+                            <div class="text-[11px] text-slate-500 font-semibold shrink-0">
+                                <span v-if="smUsersTab === 'active'" class="hidden sm:inline">
+                                    Showing <strong class="text-slate-900">{{ filteredActiveRos.length }}</strong> of {{ activeRoUsers.length }}
                                 </span>
-                                <span v-else-if="smUsersTab === 'suspended'">
-                                    Showing <strong class="text-slate-900">{{ filteredSuspendedRos.length }}</strong> of {{ suspendedRoUsers.length }} suspended
+                                <span v-if="smUsersTab === 'active'" class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
+                                    {{ filteredActiveRos.length }}/{{ activeRoUsers.length }}
                                 </span>
-                                <span v-else>
-                                    Showing <strong class="text-slate-900">{{ filteredResignedRos.length }}</strong> of {{ resignedRoUsers.length }} offboarded
+
+                                <span v-else-if="smUsersTab === 'suspended'" class="hidden sm:inline">
+                                    Showing <strong class="text-slate-900">{{ filteredSuspendedRos.length }}</strong> of {{ suspendedRoUsers.length }}
+                                </span>
+                                <span v-else-if="smUsersTab === 'suspended'" class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
+                                    {{ filteredSuspendedRos.length }}/{{ suspendedRoUsers.length }}
+                                </span>
+
+                                <span v-else class="hidden sm:inline">
+                                    Showing <strong class="text-slate-900">{{ filteredResignedRos.length }}</strong> of {{ resignedRoUsers.length }}
+                                </span>
+                                <span v-else class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
+                                    {{ filteredResignedRos.length }}/{{ resignedRoUsers.length }}
                                 </span>
                             </div>
                         </div>
@@ -2346,65 +2379,72 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card List -->
-                            <div class="md:hidden space-y-3">
-                                <div v-for="user in filteredActiveRos" :key="'active-mob-'+user.id"
-                                    class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-emerald-200/60">
+                            <!-- Mobile Compact List (High Density, Zero Clutter) -->
+                            <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
+                                <div v-for="user in filteredActiveRos" :key="'active-mob-'+user.id" class="p-3 hover:bg-slate-50/60 transition space-y-2">
+                                    <!-- Row 1: Avatar + Name + Code + Cockpit Button -->
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-emerald-200/60">
                                                 {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                             </div>
-                                            <div>
-                                                <h4 class="font-bold text-slate-900 text-xs leading-snug capitalize">{{ user.name }}</h4>
-                                                <p class="text-[11px] text-slate-500 font-medium">@{{ user.email }}</p>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <h4 class="font-bold text-slate-900 text-xs capitalize truncate leading-tight">{{ user.name }}</h4>
+                                                    <span v-if="user.employeeCode" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                                        {{ user.employeeCode }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                                                    <span class="truncate">{{ user.email }}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-[10px] font-bold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
-                                        </span>
+                                        <!-- Primary Cockpit Button -->
+                                        <button @click="openRoInspector(user)"
+                                            class="px-2.5 py-1.5 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-2xs flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                                            title="Performance Cockpit">
+                                            <i class="fas fa-chart-line text-[10px]"></i> Cockpit
+                                        </button>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                                        <div>
-                                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Joined</span>
-                                            <span class="text-slate-700 font-medium">{{ formatDate(user.createdAt) }}</span>
+                                    <!-- Row 2: Contact info & Action Pills -->
+                                    <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-100 text-[10px]">
+                                        <div class="text-slate-500 font-medium flex items-center gap-1 shrink-0">
+                                            <span v-if="user.phone" class="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                                                <i class="fab fa-whatsapp text-[10px]"></i>
+                                                <a :href="'https://wa.me/91' + String(user.phone).replace(/\D/g,'')" target="_blank" class="hover:underline">
+                                                    {{ user.phone }}
+                                                </a>
+                                            </span>
+                                            <span v-else class="text-slate-400">{{ formatDateOnly(user.createdAt) }}</span>
                                         </div>
-                                        <div>
-                                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Staff Code</span>
-                                            <span class="text-slate-700 font-medium">{{ user.employeeCode || 'Not Set' }}</span>
+
+                                        <!-- Clean action pills -->
+                                        <div class="flex items-center gap-1">
+                                            <button @click="openEditUserModal(user)"
+                                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                                Edit
+                                            </button>
+                                            <button @click="toggleUserStatus(user)"
+                                                class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                                Freeze
+                                            </button>
+                                            <button @click="openOffboardModal(user)"
+                                                class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/60 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                                Exit
+                                            </button>
+                                            <button @click="deleteRoUser(user)"
+                                                class="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                                                title="Delete Profile">
+                                                <i class="fas fa-trash-alt text-[10px]"></i>
+                                            </button>
                                         </div>
-                                    </div>
-
-                                    <!-- Primary Action: Cockpit -->
-                                    <button @click="openRoInspector(user)"
-                                        class="w-full py-2 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
-                                        <i class="fas fa-chart-line text-xs"></i> Open Performance Cockpit
-                                    </button>
-
-                                    <!-- Secondary Actions -->
-                                    <div class="grid grid-cols-4 gap-1.5 pt-1 border-t border-slate-100">
-                                        <button @click="openEditUserModal(user)"
-                                            class="py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer">
-                                            <i class="fas fa-edit text-[10px]"></i> Edit
-                                        </button>
-                                        <button @click="toggleUserStatus(user)"
-                                            class="py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer">
-                                            <i class="fas fa-user-lock text-[10px]"></i> Freeze
-                                        </button>
-                                        <button @click="openOffboardModal(user)"
-                                            class="py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/60 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer">
-                                            <i class="fas fa-arrow-right-from-bracket text-[10px]"></i> Exit
-                                        </button>
-                                        <button @click="deleteRoUser(user)"
-                                            class="py-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer">
-                                            <i class="fas fa-trash-alt text-[10px]"></i> Delete
-                                        </button>
                                     </div>
                                 </div>
                                 <!-- Empty state mobile -->
-                                <div v-if="filteredActiveRos.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80">
-                                    <i class="fas fa-users-slash text-2xl mb-2 text-slate-300"></i>
+                                <div v-if="filteredActiveRos.length === 0" class="p-8 text-center text-slate-400">
+                                    <i class="fas fa-users-slash text-2xl mb-1.5 text-slate-300"></i>
                                     <p class="font-bold text-slate-600 text-xs">No active officers found</p>
                                 </div>
                             </div>
@@ -2492,55 +2532,48 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card List -->
-                            <div class="md:hidden space-y-3">
-                                <div v-for="user in filteredSuspendedRos" :key="'susp-mob-'+user.id"
-                                    class="bg-white border border-amber-200/70 rounded-2xl p-4 shadow-xs space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-amber-200">
+                            <!-- Mobile Compact List -->
+                            <div class="md:hidden bg-white border border-amber-200/80 rounded-2xl divide-y divide-amber-100 shadow-xs overflow-hidden">
+                                <div v-for="user in filteredSuspendedRos" :key="'susp-mob-'+user.id" class="p-3 hover:bg-amber-50/30 transition space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-amber-200">
                                                 {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                             </div>
-                                            <div>
-                                                <h4 class="font-bold text-slate-900 text-xs leading-snug capitalize">{{ user.name }}</h4>
-                                                <p class="text-[11px] text-slate-500 font-medium">@{{ user.email }}</p>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <h4 class="font-bold text-slate-800 text-xs capitalize truncate leading-tight">{{ user.name }}</h4>
+                                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                                        Frozen
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-400 truncate mt-0.5">{{ user.email }}</p>
                                             </div>
                                         </div>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[10px] font-bold">
-                                            <i class="fas fa-lock text-[9px]"></i> Suspended
-                                        </span>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                                        <div>
-                                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Created</span>
-                                            <span class="text-slate-700 font-medium">{{ formatDate(user.createdAt) }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Access</span>
-                                            <span class="text-rose-600 font-bold">Login Blocked</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Secondary Actions Row -->
-                                    <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100">
+                                        <!-- Activate Button -->
                                         <button @click="toggleUserStatus(user)"
-                                            class="py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                            <i class="fas fa-check text-xs"></i> Activate
+                                            class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer">
+                                            <i class="fas fa-check text-[10px]"></i> Activate
                                         </button>
-                                        <button @click="openRoInspector(user)"
-                                            class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                            <i class="fas fa-history text-xs"></i> History
-                                        </button>
-                                        <button @click="deleteRoUser(user)"
-                                            class="py-2 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                            <i class="fas fa-trash-alt text-xs"></i> Delete
-                                        </button>
+                                    </div>
+
+                                    <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-amber-100 text-[10px]">
+                                        <span class="text-slate-400">{{ user.phone || formatDateOnly(user.createdAt) }}</span>
+                                        <div class="flex items-center gap-1">
+                                            <button @click="openRoInspector(user)"
+                                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                                History
+                                            </button>
+                                            <button @click="deleteRoUser(user)"
+                                                class="px-2 py-1 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Empty state mobile -->
-                                <div v-if="filteredSuspendedRos.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80">
-                                    <i class="fas fa-user-check text-2xl mb-2 text-slate-300"></i>
+                                <div v-if="filteredSuspendedRos.length === 0" class="p-8 text-center text-slate-400">
+                                    <i class="fas fa-user-check text-2xl mb-1.5 text-slate-300"></i>
                                     <p class="font-bold text-slate-600 text-xs">No suspended accounts</p>
                                 </div>
                             </div>
@@ -2549,14 +2582,14 @@
                         <!-- TAB 3: RESIGNED / OFFBOARDED OFFICERS -->
                         <div v-if="smUsersTab === 'resigned'">
                             <!-- Info Banner -->
-                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex items-start gap-3 mb-4">
-                                <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 text-sm mt-0.5">
+                            <div class="bg-slate-50 rounded-2xl p-3 sm:p-4 border border-slate-200/80 flex items-start gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 text-xs sm:text-sm mt-0.5">
                                     <i class="fas fa-shield-alt"></i>
                                 </div>
-                                <div class="text-xs">
+                                <div class="text-[11px] sm:text-xs">
                                     <h4 class="font-bold text-slate-800">Offboarded Officer Audit Log</h4>
                                     <p class="text-slate-500 mt-0.5 leading-relaxed">
-                                        Offboarded officers have had their Google session tokens permanently wiped and login privileges revoked. Their customer pipeline has been transferred to preserve loan turnaround times.
+                                        Tokens wiped, privileges revoked & customer pipeline reassigned.
                                     </p>
                                 </div>
                             </div>
@@ -2622,55 +2655,45 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card List for Resigned Users -->
-                            <div class="md:hidden space-y-3">
-                                <div v-for="user in filteredResignedRos" :key="'res-mob-'+user.id"
-                                    class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                            <!-- Mobile Compact List -->
+                            <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
+                                <div v-for="user in filteredResignedRos" :key="'res-mob-'+user.id" class="p-3 hover:bg-slate-50/60 transition space-y-1.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center shrink-0">
                                                 {{ user.name ? user.name.charAt(0).toUpperCase() : 'F' }}
                                             </div>
-                                            <div>
-                                                <h4 class="font-bold text-slate-900 text-xs leading-snug capitalize">{{ user.name }}</h4>
-                                                <p class="text-[11px] text-slate-500 font-medium">@{{ user.email }}</p>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5">
+                                                    <h4 class="font-bold text-slate-900 text-xs capitalize truncate leading-tight">{{ user.name }}</h4>
+                                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">Exit</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-400 truncate mt-0.5">{{ user.email }}</p>
                                             </div>
                                         </div>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[10px] font-bold">
-                                            <i class="fas fa-user-slash text-[9px]"></i> Resigned
+                                        <span class="inline-flex items-center gap-1 text-emerald-700 font-bold text-[10px] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+                                            <i class="fas fa-shield-check text-[9px]"></i> Revoked
                                         </span>
                                     </div>
 
-                                    <div class="space-y-2 text-[11px] bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-slate-400 uppercase font-bold text-[10px]">Offboarded</span>
-                                            <span class="text-slate-700 font-semibold">{{ formatDateOnly(user.resignedAt || user.updatedAt || user.createdAt) }}</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-slate-400 uppercase font-bold text-[10px]">Security</span>
-                                            <span class="text-emerald-700 font-bold inline-flex items-center gap-1">
-                                                <i class="fas fa-shield-check text-[9px]"></i> Session Revoked
-                                            </span>
-                                        </div>
-                                        <div class="pt-1.5 border-t border-slate-200/60">
-                                            <span class="text-slate-400 uppercase font-bold text-[10px] block mb-1">Pipeline Handoff</span>
-                                            <div v-if="user.transferredToRoName" class="text-[#4F46E5] font-bold flex items-center gap-1 text-xs">
-                                                <i class="fas fa-arrow-right text-[10px]"></i>
-                                                <span class="capitalize">{{ user.transferredToRoName }}</span>
-                                                <span class="text-[10px] text-slate-500 font-normal">({{ user.transferredFilesCount || 0 }} files)</span>
-                                            </div>
-                                            <div v-else class="text-slate-400 italic text-xs">Direct offboard (no files transferred)</div>
-                                        </div>
+                                    <div v-if="user.transferredToRoName" class="text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between">
+                                        <span class="text-slate-400 text-[10px]">Pipeline Reassigned:</span>
+                                        <span class="text-[#4F46E5] font-bold flex items-center gap-1">
+                                            <i class="fas fa-arrow-right text-[9px]"></i>
+                                            <span class="capitalize">{{ user.transferredToRoName }}</span>
+                                            <span class="text-[10px] text-slate-500 font-normal">({{ user.transferredFilesCount || 0 }} files)</span>
+                                        </span>
                                     </div>
                                 </div>
                                 <!-- Empty state mobile -->
-                                <div v-if="filteredResignedRos.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80">
-                                    <i class="fas fa-user-shield text-2xl mb-2 text-slate-300"></i>
+                                <div v-if="filteredResignedRos.length === 0" class="p-8 text-center text-slate-400">
+                                    <i class="fas fa-user-shield text-2xl mb-1.5 text-slate-300"></i>
                                     <p class="font-bold text-slate-600 text-xs">No offboarded officers</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
 
 
@@ -5933,7 +5956,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-80"></script>
+    <script type="module" src="js/app.js?v=force-update-81"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
