@@ -1564,7 +1564,6 @@ const app = createApp({
         // =========================================================
         // CASCADING SALES TARGETS & SALES DRIVES MODULE
         // =========================================================
-        const showQuickHubDrawer = ref(false);
         const targetsDrivesSubTab = ref('targets'); // 'targets' | 'drives' | 'upcoming'
         const allSalesTargets = ref([]);
         const allSalesDrives = ref([]);
@@ -4879,7 +4878,7 @@ const app = createApp({
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
             onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify,
-            showQuickHubDrawer, targetsDrivesSubTab, allSalesTargets, allSalesDrives, currentMonthKey,
+            targetsDrivesSubTab, allSalesTargets, allSalesDrives, currentMonthKey,
             smRoTargetsList, asmSmTargetsList, zsmAsmTargetsList, roOfficialTarget,
             drivesWithProgress, activeSalesDrivesCount, showSetTargetModal, targetModalForm,
             isSavingTarget, targetSaveSuccess, targetSaveError, openSetTargetModal, saveSalesTarget,

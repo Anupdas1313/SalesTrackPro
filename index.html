@@ -4752,90 +4752,6 @@
 
                 </div>
 
-                <!-- Floating Quick Hub Action Button (Mobile Only) -->
-                <div class="md:hidden fixed bottom-18 right-4 z-40">
-                    <button @click="showQuickHubDrawer = !showQuickHubDrawer" 
-                            type="button" 
-                            class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-900 to-[#4F46E5] text-white shadow-lg flex items-center justify-center transition-transform active:scale-95 cursor-pointer relative"
-                            title="SalesLink Hub">
-                        <i :class="showQuickHubDrawer ? 'fa-times' : 'fa-compass'" class="fas text-lg transition-all duration-200"></i>
-                        <span v-if="activeSalesDrivesCount > 0" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse"></span>
-                    </button>
-                </div>
-
-                <!-- Slide-up Modern App Sheet (SalesLink Quick Hub) -->
-                <div v-if="showQuickHubDrawer" class="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
-                    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" @click="showQuickHubDrawer = false"></div>
-                    <div class="relative bg-white rounded-t-3xl p-5 shadow-2xl border-t border-slate-200/70 z-10 animate-in slide-in-from-bottom duration-200 max-h-[85vh] overflow-y-auto">
-                        <!-- Handle bar -->
-                        <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-4"></div>
-
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="text-base font-black text-slate-900 leading-tight">SalesLink Hub</h3>
-                                <p class="text-xs text-slate-500 font-medium">Quick navigation & active drives</p>
-                            </div>
-                            <span v-if="activeSalesDrivesCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 uppercase tracking-wider">
-                                {{ activeSalesDrivesCount }} Active Drive{{ activeSalesDrivesCount > 1 ? 's' : '' }}
-                            </span>
-                        </div>
-
-                        <!-- 2x2 Sleek Shortcut Grid -->
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showQuickHubDrawer = false;" 
-                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50/50 border border-indigo-100 text-left hover:shadow-xs transition active:scale-98">
-                                <div class="w-9 h-9 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center text-sm shadow-xs mb-2">
-                                    <i class="fas fa-bullseye"></i>
-                                </div>
-                                <div class="text-xs font-black text-slate-800">Sales Targets</div>
-                                <div class="text-[10px] text-slate-500 font-medium">Monthly goals & pacing</div>
-                            </button>
-
-                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'drives'; showQuickHubDrawer = false;" 
-                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100 text-left hover:shadow-xs transition active:scale-98">
-                                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs mb-2">
-                                    <i class="fas fa-rocket"></i>
-                                </div>
-                                <div class="text-xs font-black text-slate-800">Sales Drives</div>
-                                <div class="text-[10px] text-slate-500 font-medium">Contests & incentives</div>
-                            </button>
-
-                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'upcoming'; showQuickHubDrawer = false;" 
-                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50/50 border border-purple-100 text-left hover:shadow-xs transition active:scale-98">
-                                <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shadow-xs mb-2">
-                                    <i class="fas fa-sparkles"></i>
-                                </div>
-                                <div class="text-xs font-black text-slate-800">Upcoming Hub</div>
-                                <div class="text-[10px] text-slate-500 font-medium">Vote future features</div>
-                            </button>
-
-                            <button @click="goToTab(isRO ? 'ro-eod' : (isSM ? 'sm-eod' : (isASM ? 'asm-eod' : 'zsm-eod'))); showQuickHubDrawer = false;" 
-                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-100 text-left hover:shadow-xs transition active:scale-98">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shadow-xs mb-2">
-                                    <i class="fas fa-clipboard-check"></i>
-                                </div>
-                                <div class="text-xs font-black text-slate-800">Daily EOD</div>
-                                <div class="text-[10px] text-slate-500 font-medium">Submit / verify logs</div>
-                            </button>
-                        </div>
-
-                        <!-- Active Campaign Preview Card in Drawer if any -->
-                        <div v-if="drivesWithProgress.length > 0" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 mb-3">
-                            <div class="flex items-center justify-between text-xs mb-1.5">
-                                <span class="font-bold text-slate-700 truncate max-w-[200px]">{{ drivesWithProgress[0].title }}</span>
-                                <span class="text-[10px] font-black text-[#4F46E5]">{{ drivesWithProgress[0].pct }}%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-gradient-to-r from-[#4F46E5] to-emerald-500 h-1.5 rounded-full transition-all" :style="{ width: drivesWithProgress[0].pct + '%' }"></div>
-                            </div>
-                        </div>
-
-                        <button @click="showQuickHubDrawer = false" type="button" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-                            Close
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
                 <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/60 flex justify-around items-center z-40 pb-safe shadow-xs">
                     <template v-if="isASM">
@@ -6459,7 +6375,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-95"></script>
+    <script type="module" src="js/app.js?v=force-update-96"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
