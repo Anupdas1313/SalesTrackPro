@@ -1339,6 +1339,7 @@ const app = createApp({
                 case 'targets-drives': return 'Sales Targets & Drives';
                 case 'profile': return 'My Profile & Account';
                 case 'settings': return 'Settings & Preferences';
+                case 'more': return 'More Options';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
         };

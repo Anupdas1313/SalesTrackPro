@@ -3949,25 +3949,11 @@
                     <!-- SALES TARGETS & SALES DRIVES MODULE (All Roles)   -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'targets-drives' && currentUser" class="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
-                        <!-- Unified Account & Hub Sub-Switcher -->
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
-                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-id-card text-[11px]"></i> Profile
-                            </button>
-                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
-                            </button>
-                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-gear text-[11px]"></i> Settings
-                            </button>
-                        </div>
-
-                        
                         <!-- Top Navigation & Sub-Tab Switcher -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                            <button @click="goToTab('more')" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
-                                <span>Dashboard</span>
+                                <span>Back to More</span>
                             </button>
 
                             <!-- Modern Segmented Navigation Ribbon -->
@@ -4451,25 +4437,14 @@
                     <!-- PROFILE & WORKPLACE IDENTITY (Minimalist & Focused) -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'profile' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
-                        <!-- Unified Account & Hub Sub-Switcher -->
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
-                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-id-card text-[11px]"></i> Profile
-                            </button>
-                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
-                            </button>
-                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-gear text-[11px]"></i> Settings
-                            </button>
-                        </div>
+                        
 
                         
                         <!-- Top Bar: Clean Return & Edit Toggle -->
                         <div class="flex items-center justify-between pb-1 sm:pb-2">
-                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                            <button @click="goToTab('more')" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
-                                <span>Dashboard</span>
+                                <span>Back to More</span>
                             </button>
 
                             <div class="flex items-center gap-2">
@@ -4783,28 +4758,214 @@
                 </div>
 
                 <!-- ============================================== -->
+                    <!-- ============================================== -->
+                    <!-- MORE OPTIONS & APP SECTIONS DIRECTORY          -->
+                    <!-- ============================================== -->
+                    <div v-if="currentTab === 'more' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                        
+                        <!-- User Identity Card -->
+                        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex items-center gap-3.5 sm:gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] border border-indigo-100 flex items-center justify-center text-xl font-black shrink-0 shadow-inner">
+                                {{ currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h2 class="text-base font-black text-slate-900 tracking-tight capitalize leading-tight">{{ currentUser.name }}</h2>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-indigo-50 text-[#4F46E5] border border-indigo-100">
+                                        {{ isSuperAdmin ? 'Super Admin' : (isZSM ? 'ZSM' : (isASM ? 'ASM' : (isSM ? 'SM' : 'RO'))) }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium truncate mt-0.5">{{ currentUser.email }}</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                    <span>{{ currentUser.bankName || 'Axis Bank' }}</span> &bull; <span>{{ currentUser.region || 'Branch Network' }}</span>
+                                </p>
+                            </div>
+                            <button @click="goToTab('profile')" class="p-2 text-slate-400 hover:text-slate-700 transition cursor-pointer" title="View Full Profile">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Menu Group 1: Performance & Quotas -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Performance & Quotas</span>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <!-- Sales Targets -->
+                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-bullseye"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Sales Targets & Quotas</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Monthly login volume & run-rate pacing</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span v-if="roOfficialTarget && roOfficialTarget.targetFiles > 0" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-[#4F46E5]">
+                                            {{ roOfficialTarget.achievedPct }}%
+                                        </span>
+                                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                    </div>
+                                </button>
+
+                                <!-- Sales Drives & Contests -->
+                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'drives';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-rocket"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Sales Drives & Contests</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Active campaign blitzes & rewards</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span v-if="activeSalesDrivesCount > 0" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            {{ activeSalesDrivesCount }} Active
+                                        </span>
+                                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                    </div>
+                                </button>
+
+                                <!-- Innovation Hub Roadmap -->
+                                <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'upcoming';" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-sparkles"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Upcoming Features Lab</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Vote on upcoming AI OCR & automations</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Menu Group 2: Account & Workplace -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account & Workplace</span>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <!-- My Profile -->
+                                <button @click="goToTab('profile')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-id-card"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">My Profile</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Employee details, contact & edit info</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+
+                                <!-- Supervisory Reporting Line -->
+                                <button @click="goToTab('profile')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-sitemap"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Supervisory Reporting</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">{{ isRO ? 'Connected Branch Manager' : (isSM ? 'Linked Area Sales Manager (ASM)' : 'Zonal / Area Tier') }}</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Menu Group 3: Preferences & System -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferences & System</span>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <!-- Settings -->
+                                <button @click="goToTab('settings')" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-gear"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Settings & Preferences</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Notifications, currency & offline cache</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+
+                                <!-- Resync Workspace Data -->
+                                <button @click="triggerProfileResync" :disabled="isResyncingProfile" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i :class="isResyncingProfile ? 'fas fa-spinner fa-spin text-indigo-600' : 'fas fa-arrows-rotate'"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">{{ isResyncingProfile ? 'Resyncing Data...' : 'Resync Workspace Data' }}</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Refresh cached counts & records from server</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+
+                                <!-- Install Native PWA -->
+                                <button v-if="!isStandalone" @click="installPwaApp" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition text-left cursor-pointer group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                            <i class="fas fa-download"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Install SalesLink App</div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Add to phone home screen for offline access</div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Menu Group 4: Sign Out -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                            <button @click="logout" class="w-full px-5 py-3.5 flex items-center justify-between hover:bg-rose-50/50 transition text-left cursor-pointer group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-right-from-bracket"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-rose-600">Sign Out</div>
+                                        <div class="text-[11px] text-rose-400 font-medium">Securely end Google Workspace session</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-rose-300 text-xs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Footer Info -->
+                        <div class="text-center py-2 text-[11px] text-slate-400 font-medium space-y-1">
+                            <div>SalesTrackPro v2.4.0 &bull; Axis Bank Edition</div>
+                            <div class="text-[10px] text-slate-300">PWA Engine: saleslink-v12</div>
+                        </div>
+
+                    </div>
+
                     <!-- APP SETTINGS & PREFERENCES SECTION             -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'settings' && currentUser" class="max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
                         
-                        <!-- Unified Hub Sub-Switcher (Profile | Targets | Settings) -->
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl max-w-md mx-auto mb-3 text-xs font-bold">
-                            <button @click="goToTab('profile')" :class="currentTab === 'profile' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-id-card text-[11px]"></i> Profile
-                            </button>
-                            <button @click="goToTab('targets-drives')" :class="currentTab === 'targets-drives' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-bullseye text-[11px]"></i> Targets & Drives
-                            </button>
-                            <button @click="goToTab('settings')" :class="currentTab === 'settings' ? 'bg-white text-[#4F46E5] shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2 rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-gear text-[11px]"></i> Settings
-                            </button>
-                        </div>
+                        
 
-                        <!-- Header with Return to Dashboard -->
+                        <!-- Header with Return to More -->
                         <div class="flex items-center justify-between pb-1">
-                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                            <button @click="goToTab('more')" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
                                 <i class="fas fa-arrow-left text-[11px]"></i>
-                                <span>Dashboard</span>
+                                <span>Back to More</span>
                             </button>
                             <span class="text-xs text-slate-400 font-medium">Preferences & Configuration</span>
                         </div>
@@ -4985,9 +5146,9 @@
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Account</span>
+                        <a href="#" @click.prevent="goToTab('more')" :class="[currentTab === 'more' || currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-bars text-lg mb-0.5"></i>
+                            <span class="text-[10px]">More</span>
                         </a>
                     </template>
                     <template v-else-if="isSM">
@@ -5007,9 +5168,9 @@
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Account</span>
+                        <a href="#" @click.prevent="goToTab('more')" :class="[currentTab === 'more' || currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-bars text-lg mb-0.5"></i>
+                            <span class="text-[10px]">More</span>
                         </a>
                     </template>
                     <template v-else>
@@ -5029,9 +5190,9 @@
                             <i class="fas fa-clipboard-list text-lg mb-0.5"></i>
                             <span class="text-[10px]">EOD</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
-                            <i class="fas fa-circle-user text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Account</span>
+                        <a href="#" @click.prevent="goToTab('more')" :class="[currentTab === 'more' || currentTab === 'profile' || currentTab === 'settings' || currentTab === 'targets-drives' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors cursor-pointer']">
+                            <i class="fas fa-bars text-lg mb-0.5"></i>
+                            <span class="text-[10px]">More</span>
                         </a>
                     </template>
                 </nav>
@@ -6589,7 +6750,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-97"></script>
+    <script type="module" src="js/app.js?v=force-update-98"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
