@@ -835,3 +835,75 @@ export const offboardAndReassignRo = async ({ resignedUserId, replacementUserId,
         totalFilesCount: targetFiles.length
     };
 };
+
+
+// --- Cascading Sales Targets & Sales Drives ---
+const salesTargetsCol = collection(db, 'salesTargets');
+const salesDrivesCol = collection(db, 'salesDrives');
+
+export const saveSalesTarget = async (targetData) => {
+    const cleanData = {
+        ...targetData,
+        updatedAt: new Date().toISOString()
+    };
+    if (targetData.id) {
+        const docRef = doc(db, 'salesTargets', targetData.id);
+        await setDoc(docRef, cleanData, { merge: true });
+        return targetData.id;
+    } else {
+        cleanData.createdAt = new Date().toISOString();
+        const docRef = await addDoc(salesTargetsCol, cleanData);
+        return docRef.id;
+    }
+};
+
+export const getSalesTargets = async (month) => {
+    try {
+        let q;
+        if (month) {
+            q = query(salesTargetsCol, where('month', '==', month));
+        } else {
+            q = salesTargetsCol;
+        }
+        const snap = await getDocs(q);
+        return mapSnapshot(snap);
+    } catch (e) {
+        console.warn('Could not fetch sales targets:', e);
+        return [];
+    }
+};
+
+export const saveSalesDrive = async (driveData) => {
+    const cleanData = {
+        ...driveData,
+        updatedAt: new Date().toISOString()
+    };
+    if (driveData.id) {
+        const docRef = doc(db, 'salesDrives', driveData.id);
+        await setDoc(docRef, cleanData, { merge: true });
+        return driveData.id;
+    } else {
+        cleanData.createdAt = new Date().toISOString();
+        const docRef = await addDoc(salesDrivesCol, cleanData);
+        return docRef.id;
+    }
+};
+
+export const getAllSalesDrives = async () => {
+    try {
+        const snap = await getDocs(salesDrivesCol);
+        return mapSnapshot(snap);
+    } catch (e) {
+        console.warn('Could not fetch sales drives:', e);
+        return [];
+    }
+};
+
+export const deleteSalesDrive = async (id) => {
+    try {
+        const docRef = doc(db, 'salesDrives', id);
+        await deleteDoc(docRef);
+    } catch (e) {
+        console.warn('Could not delete sales drive:', e);
+    }
+};

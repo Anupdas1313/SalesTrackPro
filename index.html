@@ -505,6 +505,16 @@
                             </a>
                         </template>
 
+                        <!-- Targets & Drives Navigation Item (For All Roles) -->
+                        <div class="pt-2 mt-1 border-t border-slate-100">
+                            <a href="#" @click.prevent="goToTab('targets-drives')" :class="[currentTab === 'targets-drives' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer mb-1']">
+                                <div class="flex items-center">
+                                    <i class="fas fa-bullseye w-5 text-sm"></i> Targets & Drives
+                                </div>
+                                <span v-if="activeSalesDrivesCount > 0" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Active Drive Live"></span>
+                            </a>
+                        </div>
+
                         <!-- Profile Navigation Item (For All Roles) -->
                         <div class="pt-2 mt-1 border-t border-slate-100">
                             <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer']">
@@ -537,6 +547,14 @@
                         <div class="text-xs text-slate-400 font-medium hidden md:block">
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
+
+                        <!-- Top Header Quick Launcher: Targets & Drives -->
+                        <button @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-indigo-50/80 hover:bg-indigo-100 text-[#4F46E5] border border-indigo-100'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
+                            <i class="fas fa-bullseye text-[11px]"></i>
+                            <span class="hidden sm:inline">Targets & Drives</span>
+                            <span class="sm:hidden">Targets</span>
+                            <span v-if="activeSalesDrivesCount > 0" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Active Campaign Drive Live"></span>
+                        </button>
 
                         <!-- Profile Avatar Pill (Tapping goes to Profile) -->
                         <div @click="goToTab('profile')" title="View & Edit My Profile" class="flex items-center gap-2 text-xs cursor-pointer hover:bg-slate-100/80 p-1 sm:px-2 sm:py-1 rounded-xl transition select-none">
@@ -3923,6 +3941,495 @@
                     <!-- ============================================== -->
                     <!-- USER PROFILE & ACCOUNT SECTION (All Roles)     -->
                     <!-- ============================================== -->
+                                        <!-- ============================================== -->
+                    <!-- SALES TARGETS & SALES DRIVES MODULE (All Roles)   -->
+                    <!-- ============================================== -->
+                    <div v-if="currentTab === 'targets-drives' && currentUser" class="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                        
+                        <!-- Top Navigation & Sub-Tab Switcher -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+                            <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
+                                <i class="fas fa-arrow-left text-[11px]"></i>
+                                <span>Dashboard</span>
+                            </button>
+
+                            <!-- Modern Segmented Navigation Ribbon -->
+                            <div class="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80 shadow-2xs w-full sm:w-auto">
+                                <button @click="targetsDrivesSubTab = 'targets'" type="button" :class="targetsDrivesSubTab === 'targets' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-bullseye text-[11px]" :class="targetsDrivesSubTab === 'targets' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
+                                    <span>Sales Targets</span>
+                                </button>
+                                <button @click="targetsDrivesSubTab = 'drives'" type="button" :class="targetsDrivesSubTab === 'drives' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer relative">
+                                    <i class="fas fa-fire text-[11px]" :class="targetsDrivesSubTab === 'drives' ? 'text-amber-500' : 'text-slate-400'"></i>
+                                    <span>Sales Drives</span>
+                                    <span v-if="activeSalesDrivesCount > 0" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                </button>
+                                <button @click="targetsDrivesSubTab = 'upcoming'" type="button" :class="targetsDrivesSubTab === 'upcoming' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-semibold'" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-sparkles text-[11px]" :class="targetsDrivesSubTab === 'upcoming' ? 'text-purple-600' : 'text-slate-400'"></i>
+                                    <span>Upcoming Hub</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ============================================== -->
+                        <!-- SUBTAB 1: CASCADING SALES TARGETS             -->
+                        <!-- ============================================== -->
+                        <div v-if="targetsDrivesSubTab === 'targets'" class="space-y-4 animate-fade-in">
+
+                            <!-- Header Summary Card -->
+                            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-white/10 text-indigo-200 border border-white/10">
+                                            Month: {{ currentMonthKey }}
+                                        </span>
+                                        <span class="text-xs text-indigo-200/80 font-medium">Cascading Sales Hierarchy</span>
+                                    </div>
+                                    <h2 class="text-base sm:text-lg font-black tracking-tight">
+                                        {{ isRO ? 'My Official Monthly Target' : (isSM ? 'Branch Officer Targets (SM → RO)' : (isASM ? 'Area Hub Targets (ASM → SM)' : 'Zonal Targets (ZSM → ASM)')) }}
+                                    </h2>
+                                    <p class="text-xs text-indigo-200/90 font-medium mt-0.5">
+                                        {{ isRO ? 'Official targets set by your branch Sales Manager' : 'Set and monitor monthly disbursal volume and file quotas' }}
+                                    </p>
+                                </div>
+
+                                <div v-if="!isRO" class="shrink-0 flex items-center gap-2">
+                                    <span class="text-xs font-semibold text-indigo-200 hidden sm:inline">
+                                        {{ isSM ? `${smRoTargetsList.length} Branch ROs` : (isASM ? `${asmSmTargetsList.length} Hub SMs` : `${zsmAsmTargetsList.length} Area ASMs`) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- VIEW FOR RO: PERSONAL TARGET COCKPIT -->
+                            <div v-if="isRO && roOfficialTarget" class="space-y-4">
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+                                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-bold text-xs shadow-2xs">
+                                                <i class="fas fa-bullseye"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-sm font-black text-slate-900">Current Monthly Goal</h3>
+                                                <p class="text-[11px] text-slate-500 font-medium">Assigned by: <strong class="text-slate-800">{{ roOfficialTarget.assignedByName }}</strong></p>
+                                            </div>
+                                        </div>
+                                        <span :class="roTargetPacing.paceColorClass" class="px-2.5 py-1 rounded-full text-xs font-bold border">
+                                            {{ roTargetPacing.paceBadgeText }}
+                                        </span>
+                                    </div>
+
+                                    <!-- 2 Big Metric Gauges -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- Metric 1: Disbursed Files -->
+                                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-2">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Disbursed Files Target</span>
+                                                <span class="font-black text-[#4F46E5]">{{ Math.min(100, Math.round((mtdFilesCount / roOfficialTarget.targetFiles) * 100)) }}%</span>
+                                            </div>
+                                            <div class="flex items-baseline gap-2">
+                                                <span class="text-2xl sm:text-3xl font-black text-slate-900">{{ mtdFilesCount }}</span>
+                                                <span class="text-xs font-bold text-slate-400">/ {{ roOfficialTarget.targetFiles }} Files Goal</span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-[#4F46E5] h-full rounded-full transition-all duration-500" :style="{ width: Math.min(100, Math.round((mtdFilesCount / roOfficialTarget.targetFiles) * 100)) + '%' }"></div>
+                                            </div>
+                                            <div class="text-[11px] text-slate-500 pt-1 flex justify-between">
+                                                <span>Remaining: <strong>{{ Math.max(0, roOfficialTarget.targetFiles - mtdFilesCount) }} Files</strong></span>
+                                                <span>Run Rate: <strong>{{ roTargetPacing.requiredDailyFiles }}/day</strong></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Metric 2: Disbursed Volume -->
+                                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-2">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Disbursal Volume Target</span>
+                                                <span class="font-black text-emerald-600">{{ Math.min(100, Math.round((mtdVolumeLakhs / roOfficialTarget.targetVolume) * 100)) }}%</span>
+                                            </div>
+                                            <div class="flex items-baseline gap-2">
+                                                <span class="text-2xl sm:text-3xl font-black text-slate-900">₹{{ mtdVolumeLakhs }}L</span>
+                                                <span class="text-xs font-bold text-slate-400">/ ₹{{ roOfficialTarget.targetVolume }}L Goal</span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" :style="{ width: Math.min(100, Math.round((mtdVolumeLakhs / roOfficialTarget.targetVolume) * 100)) + '%' }"></div>
+                                            </div>
+                                            <div class="text-[11px] text-slate-500 pt-1 flex justify-between">
+                                                <span>Remaining: <strong>₹{{ Math.max(0, (roOfficialTarget.targetVolume - mtdVolumeLakhs).toFixed(1)) }}L</strong></span>
+                                                <span>Run Rate: <strong>₹{{ roTargetPacing.requiredDailyVolume }}L/day</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Manager Remarks / Coaching Note -->
+                                    <div v-if="roOfficialTarget.remarks" class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-start gap-2.5 text-xs text-indigo-900">
+                                        <i class="fas fa-quote-left text-indigo-400 text-xs shrink-0 mt-0.5"></i>
+                                        <div>
+                                            <span class="font-bold">Manager Directive: </span>
+                                            <span class="text-slate-700">{{ roOfficialTarget.remarks }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VIEW FOR SM: MANAGE RO TARGETS -->
+                            <div v-else-if="isSM" class="space-y-3">
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                                    <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Relationship Officer Targets</span>
+                                        <span class="text-[11px] text-slate-500 font-medium">Click "Set Target" to assign monthly goals</span>
+                                    </div>
+
+                                    <div v-if="smRoTargetsList.length === 0" class="p-8 text-center text-slate-400 text-xs font-medium">
+                                        No active Relationship Officers found in your branch yet. Onboard officers in "Users" tab.
+                                    </div>
+
+                                    <div v-else class="divide-y divide-slate-100">
+                                        <div v-for="ro in smRoTargetsList" :key="ro.id" class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition">
+                                            <!-- Officer Identity -->
+                                            <div class="min-w-0 flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                    {{ ro.name ? ro.name.charAt(0).toUpperCase() : 'O' }}
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate capitalize">{{ ro.name }}</h4>
+                                                        <span :class="ro.statusClass" class="text-[9px] font-bold px-2 py-0.5 rounded-full border">
+                                                            {{ ro.statusBadge }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-400 font-medium truncate">{{ ro.salesLinkId || 'SL-RO' }} &bull; {{ ro.phone || 'No Phone' }}</p>
+                                                    <p v-if="ro.remarks" class="text-[10px] text-indigo-600 font-medium truncate mt-0.5">Note: {{ ro.remarks }}</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Target vs Actual Metrics -->
+                                            <div class="flex items-center gap-4 sm:gap-6 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+                                                <!-- Files -->
+                                                <div class="text-left sm:text-right min-w-[90px]">
+                                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Files Goal</div>
+                                                    <div class="text-xs font-bold text-slate-800">
+                                                        <span class="text-slate-900 font-black">{{ ro.actualFiles }}</span> / {{ ro.targetFiles }}
+                                                        <span class="text-[10px] font-medium text-slate-400 ml-0.5">({{ ro.percentFiles }}%)</span>
+                                                    </div>
+                                                    <div class="w-20 sm:w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                                        <div class="bg-[#4F46E5] h-full rounded-full" :style="{ width: ro.percentFiles + '%' }"></div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Volume -->
+                                                <div class="text-left sm:text-right min-w-[100px]">
+                                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Volume Goal</div>
+                                                    <div class="text-xs font-bold text-slate-800">
+                                                        <span class="text-slate-900 font-black">₹{{ ro.actualVolume }}L</span> / ₹{{ ro.targetVolume }}L
+                                                        <span class="text-[10px] font-medium text-emerald-600 ml-0.5">({{ ro.percentVolume }}%)</span>
+                                                    </div>
+                                                    <div class="w-20 sm:w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                                        <div class="bg-emerald-500 h-full rounded-full" :style="{ width: ro.percentVolume + '%' }"></div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action Button -->
+                                                <button @click="openSetTargetModal(ro, 'ro')" type="button" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                                                    <i class="fas fa-bullseye text-[10px] text-[#4F46E5]"></i>
+                                                    <span>Set Target</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VIEW FOR ASM: MANAGE SM (BRANCH) TARGETS -->
+                            <div v-else-if="isASM" class="space-y-3">
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                                    <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Branch Sales Manager (SM) Targets</span>
+                                        <span class="text-[11px] text-slate-500 font-medium">Area Sales Manager Governance</span>
+                                    </div>
+
+                                    <div v-if="asmSmTargetsList.length === 0" class="p-8 text-center text-slate-400 text-xs font-medium">
+                                        No Branch Sales Managers connected to your area cluster yet. Connect SMs in Team tab.
+                                    </div>
+
+                                    <div v-else class="divide-y divide-slate-100">
+                                        <div v-for="sm in asmSmTargetsList" :key="sm.id" class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition">
+                                            <div class="min-w-0 flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                    <i class="fas fa-building-columns"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate capitalize">{{ sm.name }}</h4>
+                                                        <span :class="sm.statusClass" class="text-[9px] font-bold px-2 py-0.5 rounded-full border">
+                                                            {{ sm.statusBadge }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-400 font-medium truncate">{{ sm.region || 'Branch Hub' }} &bull; {{ sm.salesLinkId || 'SL-SM' }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-4 sm:gap-6 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+                                                <div class="text-left sm:text-right min-w-[110px]">
+                                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Hub Volume</div>
+                                                    <div class="text-xs font-bold text-slate-800">
+                                                        <span class="text-slate-900 font-black">₹{{ sm.actualVolume }}L</span> / ₹{{ sm.targetVolume }}L
+                                                        <span class="text-[10px] font-medium text-emerald-600 ml-0.5">({{ sm.percentVolume }}%)</span>
+                                                    </div>
+                                                    <div class="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                                        <div class="bg-emerald-500 h-full rounded-full" :style="{ width: sm.percentVolume + '%' }"></div>
+                                                    </div>
+                                                </div>
+
+                                                <button @click="openSetTargetModal(sm, 'sm')" type="button" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                                                    <i class="fas fa-bullseye text-[10px] text-purple-600"></i>
+                                                    <span>Set Hub Target</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VIEW FOR ZSM / SUPER ADMIN -->
+                            <div v-else class="space-y-3">
+                                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                                    <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Area Sales Manager (ASM) Targets</span>
+                                        <span class="text-[11px] text-slate-500 font-medium">Zonal Supervisory Governance</span>
+                                    </div>
+
+                                    <div v-if="zsmAsmTargetsList.length === 0" class="p-8 text-center text-slate-400 text-xs font-medium">
+                                        No Area Sales Managers connected to your zonal cluster yet.
+                                    </div>
+
+                                    <div v-else class="divide-y divide-slate-100">
+                                        <div v-for="asm in zsmAsmTargetsList" :key="asm.id" class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition">
+                                            <div class="min-w-0 flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                                                    <i class="fas fa-sitemap"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate capitalize">{{ asm.name }}</h4>
+                                                    <p class="text-[11px] text-slate-400 font-medium truncate">{{ asm.region || 'Area Territory' }} &bull; {{ asm.salesLinkId || 'SL-ASM' }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-4 sm:gap-6 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+                                                <div class="text-left sm:text-right min-w-[120px]">
+                                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Cluster Volume</div>
+                                                    <div class="text-xs font-bold text-slate-800">
+                                                        <span class="text-slate-900 font-black">₹{{ asm.actualVolume }}L</span> / ₹{{ asm.targetVolume }}L
+                                                        <span class="text-[10px] font-medium text-emerald-600 ml-0.5">({{ asm.percentVolume }}%)</span>
+                                                    </div>
+                                                </div>
+
+                                                <button @click="openSetTargetModal(asm, 'asm')" type="button" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                                                    <i class="fas fa-bullseye text-[10px] text-indigo-600"></i>
+                                                    <span>Set ASM Target</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================== -->
+                        <!-- SUBTAB 2: SALES DRIVES & CONTESTS             -->
+                        <!-- ============================================== -->
+                        <div v-if="targetsDrivesSubTab === 'drives'" class="space-y-4 animate-fade-in">
+                            <div class="flex items-center justify-between pb-1 flex-wrap gap-2">
+                                <div>
+                                    <h3 class="text-base font-black text-slate-900 tracking-tight">Active Sales Drives & Blitzes</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Time-bound sprints with recognition rewards & progress tracking</p>
+                                </div>
+                                <button v-if="!isRO" @click="openNewDriveModal" type="button" class="px-3.5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                    <span>Launch Sales Drive</span>
+                                </button>
+                            </div>
+
+                            <div v-if="drivesWithProgress.length === 0" class="p-12 text-center bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl mx-auto shadow-inner">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-900">No Active Sales Drives</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5">Managers can launch timed disbursal sprints to boost branch numbers.</p>
+                                </div>
+                            </div>
+
+                            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div v-for="drive in drivesWithProgress" :key="drive.id" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4 hover:border-indigo-200 transition">
+                                    <!-- Drive Header -->
+                                    <div class="space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200">
+                                                {{ drive.scope ? drive.scope + ' Drive' : 'Branch Drive' }}
+                                            </span>
+                                            <span v-if="drive.isActive" class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <i class="fas fa-fire text-rose-500 text-[9px]"></i>
+                                                <span>{{ drive.daysRemaining }} Days Remaining</span>
+                                            </span>
+                                            <span v-else class="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                                {{ drive.isEnded ? 'Completed' : 'Upcoming' }}
+                                            </span>
+                                        </div>
+
+                                        <h4 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">{{ drive.title }}</h4>
+                                        <p v-if="drive.description" class="text-xs text-slate-500 leading-relaxed">{{ drive.description }}</p>
+                                    </div>
+
+                                    <!-- Progress Meter -->
+                                    <div class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <div class="flex items-center justify-between text-xs font-bold">
+                                            <span class="text-slate-500 text-[10px] uppercase tracking-wider">Campaign Target</span>
+                                            <span class="text-[#4F46E5]">{{ drive.percent }}% Achieved</span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span class="text-xl font-black text-slate-900">
+                                                {{ drive.targetMetric === 'volume' ? '₹' + drive.currentVal + 'L' : drive.currentVal }}
+                                            </span>
+                                            <span class="text-xs font-bold text-slate-400">
+                                                / {{ drive.targetMetric === 'volume' ? '₹' + drive.targetVal + 'L' : drive.targetVal + ' ' + drive.targetMetric }}
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-gradient-to-r from-[#4F46E5] to-emerald-500 h-full rounded-full transition-all duration-500" :style="{ width: drive.percent + '%' }"></div>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 flex items-center justify-between pt-0.5">
+                                            <span>Starts: {{ formatDateOnly(drive.startDate) }}</span>
+                                            <span>Ends: {{ formatDateOnly(drive.endDate) }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Incentive Rewards Note -->
+                                    <div v-if="drive.incentiveNote" class="p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center gap-2 text-xs text-amber-900">
+                                        <i class="fas fa-trophy text-amber-500 text-xs shrink-0"></i>
+                                        <span class="font-semibold">{{ drive.incentiveNote }}</span>
+                                    </div>
+
+                                    <!-- Creator Footer & Delete for Creator -->
+                                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                                        <span>Initiated by: <strong class="text-slate-600">{{ drive.createdByName || 'Sales Leadership' }}</strong></span>
+                                        <button v-if="!isRO" @click="deleteSalesDrive(drive.id)" type="button" class="text-slate-300 hover:text-rose-500 transition cursor-pointer" title="Delete Drive">
+                                            <i class="fas fa-trash-can text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================== -->
+                        <!-- SUBTAB 3: UPCOMING INNOVATION HUB             -->
+                        <!-- ============================================== -->
+                        <div v-if="targetsDrivesSubTab === 'upcoming'" class="space-y-4 animate-fade-in">
+                            <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-2xl p-5 text-white shadow-xs space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-white/10 text-purple-200 border border-white/10">
+                                        Platform Roadmap
+                                    </span>
+                                    <span class="text-xs text-purple-200/80 font-medium">SalesLink Future Modules</span>
+                                </div>
+                                <h3 class="text-base sm:text-lg font-black tracking-tight">Upcoming Features & Vote Hub</h3>
+                                <p class="text-xs text-purple-200/90 leading-relaxed max-w-xl">
+                                    Vote on features you need the most. Our product team prioritizes modules based on field feedback from Relationship Officers and Managers.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Feature 1: AI Lead Sanction Predictor -->
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm shadow-2xs font-bold">
+                                                <i class="fas fa-robot"></i>
+                                            </div>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                                In Development
+                                            </span>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-slate-900">AI Sanction & Approval Predictor</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed">
+                                            Predict loan file approval likelihood instantly upon initial FI / login based on CIBIL score, income segment, and vehicle LTV before credit submission.
+                                        </p>
+                                    </div>
+                                    <button @click="toggleUpcomingVote('ai_predictor')" type="button" class="w-full py-2 px-3 bg-slate-50 hover:bg-purple-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-purple-700 transition flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5"><i class="fas fa-thumbs-up text-xs"></i> Vote to Prioritize</span>
+                                        <span class="text-[11px] font-extrabold bg-white px-2 py-0.5 rounded-md border border-slate-200">{{ 42 + (upcomingFeatureVotes['ai_predictor'] || 0) }} Votes</span>
+                                    </button>
+                                </div>
+
+                                <!-- Feature 2: Real-Time Incentive Calculator -->
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shadow-2xs font-bold">
+                                                <i class="fas fa-calculator"></i>
+                                            </div>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                Next Sprint
+                                            </span>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-slate-900">Live Commission & Incentive Simulator</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed">
+                                            Real-time incentive tracker showing exact monthly bonus earnings in rupees as each loan file disburses, with bracket booster milestones.
+                                        </p>
+                                    </div>
+                                    <button @click="toggleUpcomingVote('incentive_calc')" type="button" class="w-full py-2 px-3 bg-slate-50 hover:bg-emerald-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-emerald-700 transition flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5"><i class="fas fa-thumbs-up text-xs"></i> Vote to Prioritize</span>
+                                        <span class="text-[11px] font-extrabold bg-white px-2 py-0.5 rounded-md border border-slate-200">{{ 68 + (upcomingFeatureVotes['incentive_calc'] || 0) }} Votes</span>
+                                    </button>
+                                </div>
+
+                                <!-- Feature 3: Dealer Digital Hub -->
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm shadow-2xs font-bold">
+                                                <i class="fas fa-car"></i>
+                                            </div>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                Planned
+                                            </span>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-slate-900">Dealer QR Portal & WhatsApp Sync</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed">
+                                            Allow auto showroom dealers to scan a QR code or message via WhatsApp to upload customer proforma invoice and KYC directly into the officer's pipeline.
+                                        </p>
+                                    </div>
+                                    <button @click="toggleUpcomingVote('dealer_hub')" type="button" class="w-full py-2 px-3 bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-[#4F46E5] transition flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5"><i class="fas fa-thumbs-up text-xs"></i> Vote to Prioritize</span>
+                                        <span class="text-[11px] font-extrabold bg-white px-2 py-0.5 rounded-md border border-slate-200">{{ 35 + (upcomingFeatureVotes['dealer_hub'] || 0) }} Votes</span>
+                                    </button>
+                                </div>
+
+                                <!-- Feature 4: Core Banking LOS API Integration -->
+                                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3 flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm shadow-2xs font-bold">
+                                                <i class="fas fa-network-wired"></i>
+                                            </div>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                Research
+                                            </span>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-slate-900">Automated LOS Status Webhook Sync</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed">
+                                            Direct webhook linkage to Bank LOS to auto-flip file statuses from FI &rarr; Sanctioned &rarr; Disbursed with zero manual typing required.
+                                        </p>
+                                    </div>
+                                    <button @click="toggleUpcomingVote('los_sync')" type="button" class="w-full py-2 px-3 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-blue-700 transition flex items-center justify-between cursor-pointer">
+                                        <span class="flex items-center gap-1.5"><i class="fas fa-thumbs-up text-xs"></i> Vote to Prioritize</span>
+                                        <span class="text-[11px] font-extrabold bg-white px-2 py-0.5 rounded-md border border-slate-200">{{ 51 + (upcomingFeatureVotes['los_sync'] || 0) }} Votes</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
                     <!-- ============================================== -->
                     <!-- PROFILE & WORKPLACE IDENTITY (Minimalist & Focused) -->
                     <!-- ============================================== -->
@@ -4243,6 +4750,90 @@
 
                     </div>
 
+                </div>
+
+                <!-- Floating Quick Hub Action Button (Mobile Only) -->
+                <div class="md:hidden fixed bottom-18 right-4 z-40">
+                    <button @click="showQuickHubDrawer = !showQuickHubDrawer" 
+                            type="button" 
+                            class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-900 to-[#4F46E5] text-white shadow-lg flex items-center justify-center transition-transform active:scale-95 cursor-pointer relative"
+                            title="SalesLink Hub">
+                        <i :class="showQuickHubDrawer ? 'fa-times' : 'fa-compass'" class="fas text-lg transition-all duration-200"></i>
+                        <span v-if="activeSalesDrivesCount > 0" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse"></span>
+                    </button>
+                </div>
+
+                <!-- Slide-up Modern App Sheet (SalesLink Quick Hub) -->
+                <div v-if="showQuickHubDrawer" class="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+                    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" @click="showQuickHubDrawer = false"></div>
+                    <div class="relative bg-white rounded-t-3xl p-5 shadow-2xl border-t border-slate-200/70 z-10 animate-in slide-in-from-bottom duration-200 max-h-[85vh] overflow-y-auto">
+                        <!-- Handle bar -->
+                        <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-4"></div>
+
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-base font-black text-slate-900 leading-tight">SalesLink Hub</h3>
+                                <p class="text-xs text-slate-500 font-medium">Quick navigation & active drives</p>
+                            </div>
+                            <span v-if="activeSalesDrivesCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 uppercase tracking-wider">
+                                {{ activeSalesDrivesCount }} Active Drive{{ activeSalesDrivesCount > 1 ? 's' : '' }}
+                            </span>
+                        </div>
+
+                        <!-- 2x2 Sleek Shortcut Grid -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showQuickHubDrawer = false;" 
+                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50/50 border border-indigo-100 text-left hover:shadow-xs transition active:scale-98">
+                                <div class="w-9 h-9 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center text-sm shadow-xs mb-2">
+                                    <i class="fas fa-bullseye"></i>
+                                </div>
+                                <div class="text-xs font-black text-slate-800">Sales Targets</div>
+                                <div class="text-[10px] text-slate-500 font-medium">Monthly goals & pacing</div>
+                            </button>
+
+                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'drives'; showQuickHubDrawer = false;" 
+                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100 text-left hover:shadow-xs transition active:scale-98">
+                                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs mb-2">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div class="text-xs font-black text-slate-800">Sales Drives</div>
+                                <div class="text-[10px] text-slate-500 font-medium">Contests & incentives</div>
+                            </button>
+
+                            <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'upcoming'; showQuickHubDrawer = false;" 
+                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50/50 border border-purple-100 text-left hover:shadow-xs transition active:scale-98">
+                                <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shadow-xs mb-2">
+                                    <i class="fas fa-sparkles"></i>
+                                </div>
+                                <div class="text-xs font-black text-slate-800">Upcoming Hub</div>
+                                <div class="text-[10px] text-slate-500 font-medium">Vote future features</div>
+                            </button>
+
+                            <button @click="goToTab(isRO ? 'ro-eod' : (isSM ? 'sm-eod' : (isASM ? 'asm-eod' : 'zsm-eod'))); showQuickHubDrawer = false;" 
+                                    class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-100 text-left hover:shadow-xs transition active:scale-98">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm shadow-xs mb-2">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="text-xs font-black text-slate-800">Daily EOD</div>
+                                <div class="text-[10px] text-slate-500 font-medium">Submit / verify logs</div>
+                            </button>
+                        </div>
+
+                        <!-- Active Campaign Preview Card in Drawer if any -->
+                        <div v-if="drivesWithProgress.length > 0" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 mb-3">
+                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                <span class="font-bold text-slate-700 truncate max-w-[200px]">{{ drivesWithProgress[0].title }}</span>
+                                <span class="text-[10px] font-black text-[#4F46E5]">{{ drivesWithProgress[0].pct }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-gradient-to-r from-[#4F46E5] to-emerald-500 h-1.5 rounded-full transition-all" :style="{ width: drivesWithProgress[0].pct + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <button @click="showQuickHubDrawer = false" type="button" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                            Close
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Bottom Navigation (Mobile Only - Minimal & Clean) -->
@@ -4968,6 +5559,129 @@
                     </button>
                     <button @click="saveRoTarget" type="button" class="flex-1 py-2.5 bg-[#4F46E5] hover:bg-axisMaroonDark text-white font-bold rounded-xl text-xs transition shadow-xs">
                         Save Target
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cascading Sales Target Setting Modal (SM->RO, ASM->SM, ZSM->ASM) -->
+        <div v-if="showSetTargetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm font-bold">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-800 leading-tight">Assign Official Target</h3>
+                            <p class="text-[11px] text-slate-500 font-medium">{{ targetModalForm.assigneeRole }}: <span class="font-bold text-slate-700">{{ targetModalForm.assigneeName }}</span></p>
+                        </div>
+                    </div>
+                    <button @click="showSetTargetModal = false" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs text-slate-600 flex items-center justify-between">
+                    <span class="font-bold text-slate-500">Target Month:</span>
+                    <span class="font-black text-[#4F46E5] uppercase tracking-wider">{{ targetModalForm.monthKey }}</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Files</label>
+                            <input type="number" v-model.number="targetModalForm.targetFiles" min="1" placeholder="e.g. 15" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Target Vol (₹ Lakhs)</label>
+                            <input type="number" v-model.number="targetModalForm.targetVolumeLakhs" min="1" step="0.5" placeholder="e.g. 45" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Manager Coaching Notes / Focus Area</label>
+                        <textarea v-model="targetModalForm.notes" rows="2" placeholder="e.g., Focus on higher ticket LAP cases and early-month login velocity." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button @click="showSetTargetModal = false" type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        Cancel
+                    </button>
+                    <button @click="saveSalesTarget" type="button" class="flex-1 py-2.5 bg-[#4F46E5] hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-xs">
+                        Confirm & Assign
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Launch Sales Drive / Blitz Contest Modal -->
+        <div v-if="showNewDriveModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-800 leading-tight">Launch Sales Drive</h3>
+                            <p class="text-[11px] text-slate-500 font-medium">Create a competitive sprint contest</p>
+                        </div>
+                    </div>
+                    <button @click="showNewDriveModal = false" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Drive / Campaign Title *</label>
+                        <input type="text" v-model="driveModalForm.title" placeholder="e.g. Q4 Mega Login Blitz" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Description & Qualification Criteria</label>
+                        <textarea v-model="driveModalForm.description" rows="2" placeholder="e.g., Minimum 5 logins per RO between 1st & 15th to qualify for top branch rewards." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none resize-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Metric Type</label>
+                            <select v-model="driveModalForm.metricType" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                                <option value="files">Total Login Files</option>
+                                <option value="volume">Disbursal Volume (Lakhs)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Team Target Goal</label>
+                            <input type="number" v-model.number="driveModalForm.targetGoal" min="1" placeholder="e.g. 50" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Start Date</label>
+                            <input type="date" v-model="driveModalForm.startDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">End Date</label>
+                            <input type="date" v-model="driveModalForm.endDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Reward / Incentive Announcement</label>
+                        <input type="text" v-model="driveModalForm.incentive" placeholder="e.g. ₹5,000 Voucher + Zonal Trophy" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-[#4F46E5] outline-none">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button @click="showNewDriveModal = false" type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        Cancel
+                    </button>
+                    <button @click="saveSalesDrive" type="button" class="flex-1 py-2.5 bg-[#4F46E5] hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-xs">
+                        Publish Drive
                     </button>
                 </div>
             </div>
@@ -5745,7 +6459,7 @@
 
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-90"></script>
+    <script type="module" src="js/app.js?v=force-update-95"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

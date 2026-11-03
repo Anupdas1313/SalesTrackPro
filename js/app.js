@@ -1336,6 +1336,7 @@ const app = createApp({
                 case 'asm-eod': return 'SM Daily EODs';
                 case 'zsm-dashboard': return 'Zonal Operations Cockpit';
                 case 'zsm-team': return 'Supervised Area Managers';
+                case 'targets-drives': return 'Sales Targets & Drives';
                 case 'profile': return 'My Profile & Account';
                 default: return tab ? tab.replace('-', ' ') : '';
             }
@@ -1559,6 +1560,410 @@ const app = createApp({
                 paceColorClass
             };
         });
+
+        // =========================================================
+        // CASCADING SALES TARGETS & SALES DRIVES MODULE
+        // =========================================================
+        const showQuickHubDrawer = ref(false);
+        const targetsDrivesSubTab = ref('targets'); // 'targets' | 'drives' | 'upcoming'
+        const allSalesTargets = ref([]);
+        const allSalesDrives = ref([]);
+        const showSetTargetModal = ref(false);
+        const targetModalForm = ref({
+            id: '',
+            assignedToUserId: '',
+            assignedToUserName: '',
+            assignedToUserRole: '',
+            targetFiles: 25,
+            targetVolume: 150,
+            targetLogins: 35,
+            remarks: ''
+        });
+        const isSavingTarget = ref(false);
+        const targetSaveSuccess = ref(false);
+        const targetSaveError = ref('');
+
+        const showNewDriveModal = ref(false);
+        const driveModalForm = ref({
+            title: '',
+            description: '',
+            targetMetric: 'volume', // 'volume' | 'files' | 'logins'
+            targetValue: 300,
+            startDate: '',
+            endDate: '',
+            incentiveNote: ''
+        });
+        const isSavingDrive = ref(false);
+        const driveSaveSuccess = ref(false);
+        const driveSaveError = ref('');
+
+        const upcomingFeatureVotes = ref(JSON.parse(localStorage.getItem('upcoming_votes') || '{}'));
+
+        const currentMonthKey = computed(() => {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            return `${y}-${m}`;
+        });
+
+        // 1. SM View: Targets for each RO under their branch
+        const smRoTargetsList = computed(() => {
+            const month = currentMonthKey.value;
+            const ros = activeRoUsers.value && activeRoUsers.value.length > 0 ? activeRoUsers.value : (roUsers.value || []);
+            return ros.map(ro => {
+                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === ro.id && t.month === month);
+                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 25) : 25;
+                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 150) : 150;
+                const targetLogins = targetDoc ? (Number(targetDoc.targetLogins) || 35) : 35;
+                const remarks = targetDoc ? targetDoc.remarks : '';
+
+                // Calculate actuals from allFiles
+                const normName = (ro.name || '').trim().toUpperCase();
+                const roFiles = (allFiles.value || []).filter(f => {
+                    const matchId = f.roId === ro.id;
+                    const matchName = normName && f.roName && f.roName.trim().toUpperCase() === normName;
+                    return matchId || matchName;
+                });
+                const disbursedFiles = roFiles.filter(f => f.status === 'Disbursed');
+                const actualFiles = disbursedFiles.length;
+                const actualVolume = disbursedFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                const actualLogins = roFiles.filter(f => f.status === 'FI' || f.status === 'Sanctioned' || f.status === 'Disbursed').length;
+
+                const percentFiles = Math.min(100, Math.round((actualFiles / targetFiles) * 100));
+                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
+
+                let statusBadge = 'On Track';
+                let statusClass = 'text-blue-700 bg-blue-50 border-blue-200';
+                if (percentVolume >= 100) {
+                    statusBadge = 'Target Hit! 🎯';
+                    statusClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+                } else if (percentVolume >= 60) {
+                    statusBadge = 'On Track';
+                    statusClass = 'text-indigo-700 bg-indigo-50 border-indigo-200';
+                } else {
+                    statusBadge = 'Needs Focus';
+                    statusClass = 'text-amber-700 bg-amber-50 border-amber-200';
+                }
+
+                return {
+                    id: ro.id,
+                    targetDocId: targetDoc?.id || null,
+                    name: ro.name,
+                    salesLinkId: ro.salesLinkId,
+                    phone: ro.phone,
+                    targetFiles,
+                    targetVolume,
+                    targetLogins,
+                    remarks,
+                    actualFiles,
+                    actualVolume,
+                    actualLogins,
+                    percentFiles,
+                    percentVolume,
+                    statusBadge,
+                    statusClass
+                };
+            });
+        });
+
+        // 2. ASM View: Targets for each SM (Branch Manager) under this ASM
+        const asmSmTargetsList = computed(() => {
+            const month = currentMonthKey.value;
+            const sms = supervisedSMs.value || [];
+            return sms.map(sm => {
+                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === sm.id && t.month === month);
+                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 450) : 450;
+                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 75) : 75;
+                const remarks = targetDoc ? targetDoc.remarks : '';
+
+                // Actuals from areaFiles for this SM's branch
+                const branchFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
+                const disbursed = branchFiles.filter(f => f.status === 'Disbursed');
+                const actualFiles = disbursed.length;
+                const actualVolume = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
+
+                let statusBadge = 'On Track';
+                let statusClass = 'text-blue-700 bg-blue-50 border-blue-200';
+                if (percentVolume >= 100) {
+                    statusBadge = 'Exceeded 🏆';
+                    statusClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+                } else if (percentVolume < 50) {
+                    statusBadge = 'Lagging';
+                    statusClass = 'text-amber-700 bg-amber-50 border-amber-200';
+                }
+
+                return {
+                    id: sm.id,
+                    targetDocId: targetDoc?.id || null,
+                    name: sm.name,
+                    region: sm.region,
+                    salesLinkId: sm.salesLinkId,
+                    targetVolume,
+                    targetFiles,
+                    remarks,
+                    actualFiles,
+                    actualVolume,
+                    percentVolume,
+                    statusBadge,
+                    statusClass
+                };
+            });
+        });
+
+        // 3. ZSM View: Targets for each ASM under this ZSM
+        const zsmAsmTargetsList = computed(() => {
+            const month = currentMonthKey.value;
+            const asms = supervisedASMs.value || [];
+            return asms.map(asm => {
+                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === asm.id && t.month === month);
+                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 1200) : 1200;
+                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 200) : 200;
+                const remarks = targetDoc ? targetDoc.remarks : '';
+
+                let actualVolume = 0;
+                let actualFiles = 0;
+                (asm.supervisedSMs || []).forEach(sm => {
+                    const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId && f.status === 'Disbursed');
+                    actualFiles += smFiles.length;
+                    actualVolume += smFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                });
+                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
+
+                return {
+                    id: asm.id,
+                    targetDocId: targetDoc?.id || null,
+                    name: asm.name,
+                    region: asm.region,
+                    salesLinkId: asm.salesLinkId,
+                    targetVolume,
+                    targetFiles,
+                    remarks,
+                    actualFiles,
+                    actualVolume,
+                    percentVolume
+                };
+            });
+        });
+
+        // 4. RO Official Assigned Target (by SM)
+        const roOfficialTarget = computed(() => {
+            if (!currentUser.value?.id) return null;
+            const month = currentMonthKey.value;
+            const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === currentUser.value.id && t.month === month);
+            if (targetDoc) {
+                return {
+                    isCustom: true,
+                    assignedByName: targetDoc.assignedByUserName || 'Branch Sales Manager',
+                    targetFiles: Number(targetDoc.targetFiles) || 25,
+                    targetVolume: Number(targetDoc.targetVolume) || 150,
+                    targetLogins: Number(targetDoc.targetLogins) || 35,
+                    remarks: targetDoc.remarks || ''
+                };
+            }
+            return {
+                isCustom: false,
+                assignedByName: defaultSmName.value || 'Branch Sales Manager',
+                targetFiles: roTargetFiles.value || 25,
+                targetVolume: roTargetVolume.value || 150,
+                targetLogins: 35,
+                remarks: 'Branch Standard Target'
+            };
+        });
+
+        // 5. Drives with Real-Time Progress & Top Contributors
+        const drivesWithProgress = computed(() => {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            return allSalesDrives.value.map(drive => {
+                const start = drive.startDate || todayStr;
+                const end = drive.endDate || todayStr;
+
+                const isEnded = todayStr > end;
+                const isUpcoming = todayStr < start;
+                const isActive = !isEnded && !isUpcoming;
+
+                const endDateObj = new Date(end);
+                const diffTime = endDateObj.getTime() - now.getTime();
+                const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+                const pool = (allFiles.value && allFiles.value.length > 0) ? allFiles.value : (areaFiles.value || []);
+                const matchingFiles = pool.filter(f => {
+                    const date = f.disbursalDate || f.updatedAt || f.loginDate || f.createdAt || '';
+                    const dateStr = String(date).split('T')[0];
+                    return dateStr >= start && dateStr <= end;
+                });
+
+                const metric = drive.targetMetric || 'volume';
+                const targetVal = Number(drive.targetValue) || 100;
+                let currentVal = 0;
+
+                if (metric === 'volume') {
+                    const disbursed = matchingFiles.filter(f => f.status === 'Disbursed');
+                    currentVal = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
+                } else if (metric === 'files') {
+                    currentVal = matchingFiles.filter(f => f.status === 'Disbursed').length;
+                } else {
+                    currentVal = matchingFiles.length; // logins
+                }
+
+                const percent = Math.min(100, Math.round((currentVal / targetVal) * 100));
+
+                return {
+                    ...drive,
+                    isActive,
+                    isUpcoming,
+                    isEnded,
+                    daysRemaining,
+                    currentVal: Number(currentVal.toFixed(1)),
+                    targetVal,
+                    percent
+                };
+            });
+        });
+
+        const activeSalesDrivesCount = computed(() => {
+            return drivesWithProgress.value.filter(d => d.isActive).length;
+        });
+
+        // Methods for setting Targets
+        const openSetTargetModal = (user, defaultRole = 'ro') => {
+            const month = currentMonthKey.value;
+            const existing = allSalesTargets.value.find(t => t.assignedToUserId === user.id && t.month === month);
+            targetModalForm.value = {
+                id: existing?.id || '',
+                assignedToUserId: user.id,
+                assignedToUserName: user.name || 'Officer',
+                assignedToUserRole: defaultRole,
+                targetFiles: existing ? Number(existing.targetFiles) : (defaultRole === 'ro' ? 25 : (defaultRole === 'sm' ? 60 : 200)),
+                targetVolume: existing ? Number(existing.targetVolume) : (defaultRole === 'ro' ? 150 : (defaultRole === 'sm' ? 400 : 1200)),
+                targetLogins: existing ? Number(existing.targetLogins) : 35,
+                remarks: existing?.remarks || ''
+            };
+            targetSaveError.value = '';
+            targetSaveSuccess.value = false;
+            showSetTargetModal.value = true;
+        };
+
+        const saveSalesTarget = async () => {
+            if (!targetModalForm.value.assignedToUserId) return;
+            isSavingTarget.value = true;
+            targetSaveError.value = '';
+            try {
+                const payload = {
+                    assignedToUserId: targetModalForm.value.assignedToUserId,
+                    assignedToUserName: targetModalForm.value.assignedToUserName,
+                    assignedToUserRole: targetModalForm.value.assignedToUserRole,
+                    assignedByUserId: currentUser.value?.id || '',
+                    assignedByUserName: currentUser.value?.name || 'Sales Leadership',
+                    assignedByUserRole: currentUser.value?.role || 'sm',
+                    tenantId: currentUser.value?.tenantId || null,
+                    month: currentMonthKey.value,
+                    targetFiles: Math.max(1, Number(targetModalForm.value.targetFiles) || 25),
+                    targetVolume: Math.max(1, Number(targetModalForm.value.targetVolume) || 150),
+                    targetLogins: Math.max(1, Number(targetModalForm.value.targetLogins) || 35),
+                    remarks: (targetModalForm.value.remarks || '').trim()
+                };
+                if (targetModalForm.value.id) {
+                    payload.id = targetModalForm.value.id;
+                }
+                const savedId = await db.saveSalesTarget(payload);
+                payload.id = savedId;
+
+                const idx = allSalesTargets.value.findIndex(t => t.assignedToUserId === payload.assignedToUserId && t.month === payload.month);
+                if (idx !== -1) {
+                    allSalesTargets.value[idx] = payload;
+                } else {
+                    allSalesTargets.value.push(payload);
+                }
+
+                targetSaveSuccess.value = true;
+                setTimeout(() => {
+                    showSetTargetModal.value = false;
+                    targetSaveSuccess.value = false;
+                }, 1200);
+            } catch (err) {
+                console.error("Save target error:", err);
+                targetSaveError.value = err.message || 'Failed to save sales target.';
+            } finally {
+                isSavingTarget.value = false;
+            }
+        };
+
+        // Methods for Sales Drives
+        const openNewDriveModal = () => {
+            const today = new Date().toISOString().split('T')[0];
+            const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+            driveModalForm.value = {
+                title: '',
+                description: '',
+                targetMetric: 'volume',
+                targetValue: 400,
+                startDate: today,
+                endDate: endOfMonth,
+                incentiveNote: ''
+            };
+            driveSaveError.value = '';
+            driveSaveSuccess.value = false;
+            showNewDriveModal.value = true;
+        };
+
+        const saveSalesDrive = async () => {
+            if (!driveModalForm.value.title.trim()) {
+                driveSaveError.value = 'Sales Drive title is mandatory.';
+                return;
+            }
+            isSavingDrive.value = true;
+            driveSaveError.value = '';
+            try {
+                const payload = {
+                    title: driveModalForm.value.title.trim(),
+                    description: (driveModalForm.value.description || '').trim(),
+                    targetMetric: driveModalForm.value.targetMetric,
+                    targetValue: Number(driveModalForm.value.targetValue) || 100,
+                    startDate: driveModalForm.value.startDate,
+                    endDate: driveModalForm.value.endDate,
+                    incentiveNote: (driveModalForm.value.incentiveNote || '').trim(),
+                    scope: isSM.value ? 'branch' : (isASM.value ? 'area' : 'zonal'),
+                    createdByRole: currentUser.value?.role || 'sm',
+                    createdByName: currentUser.value?.name || 'Manager',
+                    tenantId: currentUser.value?.tenantId || null
+                };
+                const driveId = await db.saveSalesDrive(payload);
+                payload.id = driveId;
+                allSalesDrives.value.unshift(payload);
+
+                driveSaveSuccess.value = true;
+                setTimeout(() => {
+                    showNewDriveModal.value = false;
+                    driveSaveSuccess.value = false;
+                }, 1200);
+            } catch (err) {
+                console.error("Save drive error:", err);
+                driveSaveError.value = err.message || 'Failed to launch sales drive.';
+            } finally {
+                isSavingDrive.value = false;
+            }
+        };
+
+        const deleteSalesDrive = async (id) => {
+            if (!confirm("Are you sure you want to remove this sales drive?")) return;
+            try {
+                await db.deleteSalesDrive(id);
+                allSalesDrives.value = allSalesDrives.value.filter(d => d.id !== id);
+            } catch (err) {
+                console.error("Delete drive error:", err);
+            }
+        };
+
+        const toggleUpcomingVote = (featureKey) => {
+            const votes = { ...upcomingFeatureVotes.value };
+            votes[featureKey] = (votes[featureKey] || 0) + 1;
+            upcomingFeatureVotes.value = votes;
+            localStorage.setItem('upcoming_votes', JSON.stringify(votes));
+        };
+
         
         const eodSubmitError = ref('');
         const eodSubmitSuccess = ref(false);
@@ -3154,6 +3559,34 @@ const app = createApp({
             } else {
                 await loadRoData();
             }
+            // Load Sales Targets & Drives
+            try {
+                const month = new Date().toISOString().substring(0, 7);
+                allSalesTargets.value = await db.getSalesTargets(month);
+                allSalesDrives.value = await db.getAllSalesDrives();
+                
+                // Seed initial drive if none exist
+                if (allSalesDrives.value.length === 0) {
+                    const sampleDrive = {
+                        title: 'Super Sprint: Auto Loan Disbursal Marathon',
+                        description: 'Accelerate dealer conversion and fast-track sanctions to maximize month-end disbursals.',
+                        targetMetric: 'volume',
+                        targetValue: 500,
+                        startDate: `${month}-01`,
+                        endDate: `${month}-30`,
+                        incentiveNote: 'Top 3 Performers earn Branch Recognition & Performance Bonus',
+                        scope: 'branch',
+                        createdByRole: isSM.value ? 'sm' : (isASM.value ? 'asm' : 'zsm'),
+                        createdByName: currentUser.value?.name || 'Sales Leadership',
+                        tenantId: currentUser.value?.tenantId || null
+                    };
+                    const driveId = await db.saveSalesDrive(sampleDrive);
+                    sampleDrive.id = driveId;
+                    allSalesDrives.value = [sampleDrive];
+                }
+            } catch (err) {
+                console.warn("Could not load targets/drives:", err);
+            }
         };
 
         const originalUser = ref(null);
@@ -4445,7 +4878,13 @@ const app = createApp({
             profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
-            onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify
+            onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify,
+            showQuickHubDrawer, targetsDrivesSubTab, allSalesTargets, allSalesDrives, currentMonthKey,
+            smRoTargetsList, asmSmTargetsList, zsmAsmTargetsList, roOfficialTarget,
+            drivesWithProgress, activeSalesDrivesCount, showSetTargetModal, targetModalForm,
+            isSavingTarget, targetSaveSuccess, targetSaveError, openSetTargetModal, saveSalesTarget,
+            showNewDriveModal, driveModalForm, isSavingDrive, driveSaveSuccess, driveSaveError,
+            openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote
         };
     }
 });
