@@ -5021,7 +5021,7 @@ const app = createApp({
             showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
+            showViewFileModal, filters, roFilters, smStatusCounts, roStatusCounts, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, loginRedirect, logout, saveNewRo, toggleUserStatus, deleteRoUser,
