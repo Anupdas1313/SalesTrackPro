@@ -3479,6 +3479,52 @@ const app = createApp({
             }
         };
 
+        const zsmStats = computed(() => {
+            const asms = supervisedASMs.value || [];
+            let totalDisbVol = 0;
+            let totalDisbCount = 0;
+            let totalTargetVol = 0;
+            let totalHubs = 0;
+
+            (zsmAsmTargetsList.value || []).forEach(item => {
+                totalDisbVol += (item.actualVolume || 0);
+                totalDisbCount += (item.actualFiles || 0);
+                totalTargetVol += (item.targetVolume || 0);
+            });
+
+            asms.forEach(asm => {
+                totalHubs += (asm.supervisedSMs || []).length;
+            });
+
+            const overallPercent = totalTargetVol > 0 ? Math.min(100, Math.round((totalDisbVol / totalTargetVol) * 100)) : 0;
+
+            return {
+                totalAreas: asms.length,
+                totalHubs,
+                totalDisbVol,
+                totalDisbCount,
+                totalTargetVol,
+                overallPercent
+            };
+        });
+
+        const openInviteAsmModal = () => {
+            inviteAsmError.value = '';
+            inviteAsmSuccess.value = '';
+            inviteAsmForm.value = { email: '', salesLinkId: '', territoryName: '' };
+            showInviteAsmModal.value = true;
+        };
+
+        const releaseAsm = async (asm) => {
+            if (!confirm(`Are you sure you want to disconnect Area Sales Manager "${asm.name}" from your Zonal supervision?`)) return;
+            try {
+                await db.unlinkUserFromSupervisor(asm.id);
+                supervisedASMs.value = supervisedASMs.value.filter(a => a.id !== asm.id);
+            } catch (e) {
+                alert('Failed to disconnect ASM: ' + e.message);
+            }
+        };
+
 
         // Data Loading
         const loadSuperAdminData = async () => {
@@ -4925,7 +4971,7 @@ const app = createApp({
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
             selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, closeIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
-            allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
+            allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation, zsmStats, openInviteAsmModal, releaseAsm,
             profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
             showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
