@@ -1206,17 +1206,9 @@ const app = createApp({
                     (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
                     (file.status && file.status.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
-                const matchStatus = (() => {
-                    if (!roFilters.value.status || roFilters.value.status === '' || roFilters.value.status === 'All') return true;
-                    const st = roFilters.value.status.toLowerCase();
-                    const fSt = (file.status || '').toLowerCase();
-                    if (['approved', 'sanction', 'sanctioned'].includes(st)) return isSanctionStatus(file.status);
-                    if (st === 'disbursed') return isDisbursedStatus(file.status);
-                    if (['lead', 'logged'].includes(st)) return ['lead', 'logged'].includes(fSt);
-                    if (['rejected', 'cancelled'].includes(st)) return ['rejected', 'cancelled'].includes(fSt);
-                    if (roFilters.value.status === 'Custom') return !STANDARD_STATUSES.includes(file.status);
-                    return fSt === st;
-                })();
+                const matchStatus = roFilters.value.status 
+                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
+                    : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
                 const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
                 const matchRo = filters.value.roId ? file.roId === filters.value.roId : true;
@@ -1256,17 +1248,9 @@ const app = createApp({
                     (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
                     (file.status && file.status.toLowerCase().includes(q)) ||
                     (file.ppc && file.ppc.toLowerCase().includes(q));
-                const matchStatus = (() => {
-                    if (!roFilters.value.status || roFilters.value.status === '' || roFilters.value.status === 'All') return true;
-                    const st = roFilters.value.status.toLowerCase();
-                    const fSt = (file.status || '').toLowerCase();
-                    if (['approved', 'sanction', 'sanctioned'].includes(st)) return isSanctionStatus(file.status);
-                    if (st === 'disbursed') return isDisbursedStatus(file.status);
-                    if (['lead', 'logged'].includes(st)) return ['lead', 'logged'].includes(fSt);
-                    if (['rejected', 'cancelled'].includes(st)) return ['rejected', 'cancelled'].includes(fSt);
-                    if (roFilters.value.status === 'Custom') return !STANDARD_STATUSES.includes(file.status);
-                    return fSt === st;
-                })();
+                const matchStatus = roFilters.value.status 
+                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
+                    : true;
                 const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
                 const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
                 const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
@@ -1294,57 +1278,6 @@ const app = createApp({
             });
         });
 
-
-        
-        // Dynamic Status Counts for Tracking Filter Chips (SM & RO)
-        const smStatusCounts = computed(() => {
-            let files = allFiles.value || [];
-            if (filters.value.roId) {
-                files = files.filter(f => f.roId === filters.value.roId);
-            }
-            if (roFilters.value.timeline) {
-                files = files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, roFilters.value.timeline, roFilters.value.customDate));
-            }
-            if (roFilters.value.nclUcl) {
-                files = files.filter(f => f.nclUcl === roFilters.value.nclUcl);
-            }
-            if (roFilters.value.sourcingChannel) {
-                files = files.filter(f => f.sourcingChannel === roFilters.value.sourcingChannel);
-            }
-            return {
-                all: files.length,
-                lead: files.filter(f => ['lead', 'logged'].includes((f.status || '').toLowerCase())).length,
-                fi: files.filter(f => (f.status || '').toLowerCase() === 'fi').length,
-                fcu: files.filter(f => (f.status || '').toLowerCase() === 'fcu').length,
-                uw: files.filter(f => (f.status || '').toLowerCase() === 'uw').length,
-                sanction: files.filter(f => isSanctionStatus(f.status)).length,
-                disbursed: files.filter(f => isDisbursedStatus(f.status)).length,
-                rejected: files.filter(f => ['rejected', 'cancelled'].includes((f.status || '').toLowerCase())).length,
-            };
-        });
-
-        const roStatusCounts = computed(() => {
-            let files = myFiles.value || [];
-            if (roFilters.value.timeline) {
-                files = files.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, roFilters.value.timeline, roFilters.value.customDate));
-            }
-            if (roFilters.value.nclUcl) {
-                files = files.filter(f => f.nclUcl === roFilters.value.nclUcl);
-            }
-            if (roFilters.value.sourcingChannel) {
-                files = files.filter(f => f.sourcingChannel === roFilters.value.sourcingChannel);
-            }
-            return {
-                all: files.length,
-                lead: files.filter(f => ['lead', 'logged'].includes((f.status || '').toLowerCase())).length,
-                fi: files.filter(f => (f.status || '').toLowerCase() === 'fi').length,
-                fcu: files.filter(f => (f.status || '').toLowerCase() === 'fcu').length,
-                uw: files.filter(f => (f.status || '').toLowerCase() === 'uw').length,
-                sanction: files.filter(f => isSanctionStatus(f.status)).length,
-                disbursed: files.filter(f => isDisbursedStatus(f.status)).length,
-                rejected: files.filter(f => ['rejected', 'cancelled'].includes((f.status || '').toLowerCase())).length,
-            };
-        });
 
         // --- Methods ---
 
@@ -5021,7 +4954,7 @@ const app = createApp({
             showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, smStatusCounts, roStatusCounts, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
+            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
             formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
             getTodayDateStr, getYesterdayDateStr,
             login, loginRedirect, logout, saveNewRo, toggleUserStatus, deleteRoUser,
