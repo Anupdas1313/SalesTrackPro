@@ -4685,14 +4685,9 @@ const app = createApp({
             if (deferredInstallPrompt.value) {
                 deferredInstallPrompt.value.prompt();
                 const choice = await deferredInstallPrompt.value.userChoice;
-                if (choice && choice.outcome === 'accepted') {
-                    showInstallBanner.value = false;
-                }
                 deferredInstallPrompt.value = null;
-            } else if (isIos.value) {
-                showIosInstallModal.value = true;
             } else {
-                alert('To install SalesLink on your device, open your browser menu (â‹® or Share) and tap "Install app" or "Add to Home screen".');
+                alert('To install SalesLink on your device:\n\n• On iPhone/iPad: Tap the Share button (⬆) in Safari, then tap "Add to Home Screen".\n• On Android/PC: Tap the browser menu (⋮) and tap "Install app" or "Add to Home screen".');
             }
         };
 

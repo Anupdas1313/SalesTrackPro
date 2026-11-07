@@ -6068,81 +6068,8 @@
             </button>
         </div>
 
-        <!-- PWA Install Banner (Floating & Responsive for Android, Chrome, and iOS) -->
-        <div v-if="showInstallBanner && !isStandalone" class="fixed bottom-20 md:bottom-6 left-3 right-3 md:left-auto md:right-6 md:w-[380px] z-50 bg-slate-900/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white shrink-0 shadow-md shadow-[#4F46E5]/40 ring-2 ring-white/10">
-                    <i class="fas fa-layer-group text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h4 class="text-xs sm:text-sm font-extrabold text-white truncate flex items-center gap-1.5">
-                        <span>Install SalesLink</span>
-                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#4F46E5] text-white">App</span>
-                    </h4>
-                    <p class="text-[11px] text-slate-300 font-medium leading-tight truncate">
-                        Fast offline access & fullscreen app
-                    </p>
-                </div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-                <button @click="installPwaApp" type="button" class="px-3.5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#4F46E5]/30 transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fas fa-download text-[11px]"></i>
-                    <span>Install</span>
-                </button>
-                <button @click="dismissInstallBanner" type="button" class="w-7 h-7 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg flex items-center justify-center transition cursor-pointer" title="Dismiss">
-                    <i class="fas fa-xmark text-sm"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- iOS Safari Add to Home Screen Instructions Modal -->
-        <div v-if="showIosInstallModal" class="fixed inset-0 z-[120] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 sm:p-4" @click.self="closeIosInstallModal">
-            <div class="w-full max-w-sm bg-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 animate-in slide-in-from-bottom duration-300">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm">
-                            <i class="fas fa-layer-group"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-extrabold text-slate-900">Install on iPhone / iPad</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Add to Home Screen in 2 simple taps</p>
-                        </div>
-                    </div>
-                    <button @click="closeIosInstallModal" type="button" class="text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="space-y-2.5 py-1 text-xs text-slate-600">
-                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm shrink-0 font-bold">1</div>
-                        <p class="pt-0.5 leading-snug">
-                            Tap the <strong>Share</strong> button <i class="fas fa-arrow-up-from-bracket text-blue-600 px-1"></i> in Safari's bottom toolbar.
-                        </p>
-                    </div>
-
-                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div class="w-7 h-7 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm shrink-0 font-bold">2</div>
-                        <p class="pt-0.5 leading-snug">
-                            Scroll down the options and tap <strong>"Add to Home Screen"</strong> <i class="fas fa-plus-square text-[#4F46E5] px-1"></i>.
-                        </p>
-                    </div>
-
-                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shrink-0 font-bold">3</div>
-                        <p class="pt-0.5 leading-snug">
-                            Tap <strong>"Add"</strong> in the top right. <strong>SalesLink</strong> will launch fullscreen from your home screen!
-                        </p>
-                    </div>
-                </div>
-
-                <button @click="closeIosInstallModal" type="button" class="w-full py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#4F46E5]/20 transition cursor-pointer">
-                    Got It!
-                </button>
-            </div>
-        </div>
-
         <!-- Copied SalesLink ID Toast (Inside Vue #app) -->
+
         <div v-if="copiedSalesLinkIdToast" class="fixed top-4 right-4 z-[999] bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in font-bold">
             <i class="fas fa-check-circle text-emerald-400"></i>
             <span>SalesLink ID copied to clipboard!</span>
@@ -6545,14 +6472,15 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-102"></script>
+    <script type="module" src="js/app.js?v=force-update-104"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js?v=force-update-104')
                     .then((reg) => {
+                        reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
                     })
                     .catch((err) => {
