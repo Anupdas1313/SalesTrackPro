@@ -4644,7 +4644,6 @@
 
                     </div>
 
-                </div>
 
                     <!-- ============================================== -->
                     <!-- APP SETTINGS & PREFERENCES SECTION             -->
@@ -6471,14 +6470,16 @@
             </div>
         </div>
 
+        </div>
+
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-104"></script>
+    <script type="module" src="js/app.js?v=force-update-105"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-104')
+                navigator.serviceWorker.register('./sw.js?v=force-update-105')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
