@@ -507,7 +507,7 @@
 
                         <!-- Targets & Drives Navigation Item (For All Roles) -->
                         <div class="pt-2 mt-1 border-t border-slate-100">
-                            <a href="#" @click.prevent="goToTab('targets-drives')" :class="[currentTab === 'targets-drives' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer mb-1']">
+                            <a href="#" @click.prevent="goToTab('targets-drives')" :class="[currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer mb-1']">
                                 <div class="flex items-center">
                                     <i class="fas fa-bullseye w-5 text-sm"></i> Targets & Drives
                                 </div>
@@ -553,7 +553,7 @@
                         </div>
 
                         <!-- Top Header Quick Launcher: Targets & Drives -->
-                        <button @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-indigo-50/80 hover:bg-indigo-100 text-[#4F46E5] border border-indigo-100'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
+                        <button @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
                             <i class="fas fa-bullseye text-[11px]"></i>
                             <span class="hidden sm:inline">Targets & Drives</span>
                             <span class="sm:hidden">Targets</span>
@@ -4164,24 +4164,29 @@
                         <div v-if="targetsDrivesSubTab === 'targets'" class="space-y-4 animate-fade-in">
 
                             <!-- Header Summary Card -->
-                            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-4 sm:p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-white/10 text-indigo-200 border border-white/10">
-                                            Month: {{ currentMonthKey }}
-                                        </span>
-                                        <span class="text-xs text-indigo-200/80 font-medium">Cascading Sales Hierarchy</span>
+                            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="flex items-start sm:items-center gap-3.5">
+                                    <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shrink-0">
+                                        <i class="fas fa-bullseye text-[#4F46E5]"></i>
                                     </div>
-                                    <h2 class="text-base sm:text-lg font-black tracking-tight">
-                                        {{ isRO ? 'My Official Monthly Target' : (isSM ? 'Branch Officer Targets (SM → RO)' : (isASM ? 'Area Hub Targets (ASM → SM)' : 'Zonal Targets (ZSM → ASM)')) }}
-                                    </h2>
-                                    <p class="text-xs text-indigo-200/90 font-medium mt-0.5">
-                                        {{ isRO ? 'Official targets set by your branch Sales Manager' : 'Set and monitor monthly disbursal volume and file quotas' }}
-                                    </p>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200">
+                                                Month: {{ currentMonthKey }}
+                                            </span>
+                                            <span class="text-[11px] text-slate-400 font-semibold">Sales Hierarchy Targets</span>
+                                        </div>
+                                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug">
+                                            {{ isRO ? 'My Official Monthly Target' : (isSM ? 'Branch Officer Targets (SM → RO)' : (isASM ? 'Area Hub Targets (ASM → SM)' : 'Zonal Targets (ZSM → ASM)')) }}
+                                        </h2>
+                                        <p class="text-xs text-slate-500 font-medium mt-0.5">
+                                            {{ isRO ? 'Official targets set by your branch Sales Manager' : 'Set and monitor monthly disbursal volume and file quotas' }}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div v-if="!isRO" class="shrink-0 flex items-center gap-2">
-                                    <span class="text-xs font-semibold text-indigo-200 hidden sm:inline">
+                                    <span class="px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-2xs">
                                         {{ isSM ? `${smRoTargetsList.length} Branch ROs` : (isASM ? `${asmSmTargetsList.length} Hub SMs` : `${zsmAsmTargetsList.length} Area ASMs`) }}
                                     </span>
                                 </div>
@@ -4247,7 +4252,7 @@
                                     </div>
 
                                     <!-- Manager Remarks / Coaching Note -->
-                                    <div v-if="roOfficialTarget.remarks" class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-start gap-2.5 text-xs text-indigo-900">
+                                    <div v-if="roOfficialTarget.remarks" class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-start gap-2.5 text-xs text-slate-800">
                                         <i class="fas fa-quote-left text-indigo-400 text-xs shrink-0 mt-0.5"></i>
                                         <div>
                                             <span class="font-bold">Manager Directive: </span>
@@ -6743,13 +6748,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-110"></script>
+    <script type="module" src="js/app.js?v=force-update-111"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-110')
+                navigator.serviceWorker.register('./sw.js?v=force-update-111')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
