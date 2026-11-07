@@ -1262,7 +1262,7 @@
                                     :class="!roFilters.status ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>All Files</span>
-                                    <span :class="!roFilters.status ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.all || 0 }}</span>
+                                    <span :class="!roFilters.status ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.all }}</span>
                                 </button>
 
                                 <!-- Lead -->
@@ -1271,7 +1271,7 @@
                                     :class="roFilters.status === 'Lead' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Lead</span>
-                                    <span :class="roFilters.status === 'Lead' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.lead || 0 }}</span>
+                                    <span :class="roFilters.status === 'Lead' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.lead }}</span>
                                 </button>
 
                                 <!-- FI -->
@@ -1280,7 +1280,7 @@
                                     :class="roFilters.status === 'FI' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>FI</span>
-                                    <span :class="roFilters.status === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.fi || 0 }}</span>
+                                    <span :class="roFilters.status === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.fi }}</span>
                                 </button>
 
                                 <!-- FCU -->
@@ -1289,7 +1289,7 @@
                                     :class="roFilters.status === 'FCU' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>FCU</span>
-                                    <span :class="roFilters.status === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.fcu || 0 }}</span>
+                                    <span :class="roFilters.status === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.fcu }}</span>
                                 </button>
 
                                 <!-- UW -->
@@ -1298,7 +1298,7 @@
                                     :class="roFilters.status === 'UW' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>UW</span>
-                                    <span :class="roFilters.status === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.uw || 0 }}</span>
+                                    <span :class="roFilters.status === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.uw }}</span>
                                 </button>
 
                                 <!-- Sanction -->
@@ -1307,7 +1307,7 @@
                                     :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Sanction</span>
-                                    <span :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.sanction || 0 }}</span>
+                                    <span :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.sanction }}</span>
                                 </button>
 
                                 <!-- Disbursed -->
@@ -1316,7 +1316,7 @@
                                     :class="roFilters.status === 'Disbursed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Disbursed</span>
-                                    <span :class="roFilters.status === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.disbursed || 0 }}</span>
+                                    <span :class="roFilters.status === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.disbursed }}</span>
                                 </button>
 
                                 <!-- Rejected -->
@@ -1325,7 +1325,7 @@
                                     :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Rejected</span>
-                                    <span :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts?.rejected || 0 }}</span>
+                                    <span :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ smStatusCounts.rejected }}</span>
                                 </button>
                             </div>
 
@@ -1830,7 +1830,7 @@
                             <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
                                 <button @click="asmStatusFilter = 'All'" :class="[asmStatusFilter === 'All' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>All Files</span>
-                                    <span :class="asmStatusFilter === 'All' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.all || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'All' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.all }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'Logged' ? 'All' : 'Logged')" :class="[asmStatusFilter === 'Logged' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>Logged</span>
@@ -1838,27 +1838,27 @@
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'FI' ? 'All' : 'FI')" :class="[asmStatusFilter === 'FI' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>FI</span>
-                                    <span :class="asmStatusFilter === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.fi || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.fi }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'FCU' ? 'All' : 'FCU')" :class="[asmStatusFilter === 'FCU' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>FCU</span>
-                                    <span :class="asmStatusFilter === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.fcu || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.fcu }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'UW' ? 'All' : 'UW')" :class="[asmStatusFilter === 'UW' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>UW</span>
-                                    <span :class="asmStatusFilter === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.uw || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.uw }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'Sanction' ? 'All' : 'Sanction')" :class="[asmStatusFilter === 'Sanction' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>Sanction</span>
-                                    <span :class="asmStatusFilter === 'Sanction' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.sanction || 0ed }}</span>
+                                    <span :class="asmStatusFilter === 'Sanction' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.sanctioned }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'Disbursed' ? 'All' : 'Disbursed')" :class="[asmStatusFilter === 'Disbursed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>Disbursed</span>
-                                    <span :class="asmStatusFilter === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.disbursed || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.disbursed }}</span>
                                 </button>
                                 <button @click="asmStatusFilter = (asmStatusFilter === 'Rejected' ? 'All' : 'Rejected')" :class="[asmStatusFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
                                     <span>Rejected</span>
-                                    <span :class="asmStatusFilter === 'Rejected' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts?.rejected || 0 }}</span>
+                                    <span :class="asmStatusFilter === 'Rejected' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ asmStatusCounts.rejected }}</span>
                                 </button>
                             </div>
 
@@ -3364,7 +3364,7 @@
                                     :class="!roFilters.status ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>All Files</span>
-                                    <span :class="!roFilters.status ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.all || 0 }}</span>
+                                    <span :class="!roFilters.status ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.all }}</span>
                                 </button>
 
                                 <!-- Lead -->
@@ -3373,7 +3373,7 @@
                                     :class="roFilters.status === 'Lead' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Lead</span>
-                                    <span :class="roFilters.status === 'Lead' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.lead || 0 }}</span>
+                                    <span :class="roFilters.status === 'Lead' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.lead }}</span>
                                 </button>
 
                                 <!-- FI -->
@@ -3382,7 +3382,7 @@
                                     :class="roFilters.status === 'FI' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>FI</span>
-                                    <span :class="roFilters.status === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.fi || 0 }}</span>
+                                    <span :class="roFilters.status === 'FI' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.fi }}</span>
                                 </button>
 
                                 <!-- FCU -->
@@ -3391,7 +3391,7 @@
                                     :class="roFilters.status === 'FCU' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>FCU</span>
-                                    <span :class="roFilters.status === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.fcu || 0 }}</span>
+                                    <span :class="roFilters.status === 'FCU' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.fcu }}</span>
                                 </button>
 
                                 <!-- UW -->
@@ -3400,7 +3400,7 @@
                                     :class="roFilters.status === 'UW' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>UW</span>
-                                    <span :class="roFilters.status === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.uw || 0 }}</span>
+                                    <span :class="roFilters.status === 'UW' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.uw }}</span>
                                 </button>
 
                                 <!-- Sanction -->
@@ -3409,7 +3409,7 @@
                                     :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Sanction</span>
-                                    <span :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.sanction || 0 }}</span>
+                                    <span :class="['Sanction', 'Approved'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.sanction }}</span>
                                 </button>
 
                                 <!-- Disbursed -->
@@ -3418,7 +3418,7 @@
                                     :class="roFilters.status === 'Disbursed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Disbursed</span>
-                                    <span :class="roFilters.status === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.disbursed || 0 }}</span>
+                                    <span :class="roFilters.status === 'Disbursed' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.disbursed }}</span>
                                 </button>
 
                                 <!-- Rejected -->
@@ -3427,7 +3427,7 @@
                                     :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/80'" 
                                     class="px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
                                     <span>Rejected</span>
-                                    <span :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts?.rejected || 0 }}</span>
+                                    <span :class="['Rejected', 'Cancelled'].includes(roFilters.status) ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700'" class="px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none">{{ roStatusCounts.rejected }}</span>
                                 </button>
                             </div>
 
@@ -6960,13 +6960,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-108"></script>
+    <script type="module" src="js/app.js?v=force-update-109"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-108')
+                navigator.serviceWorker.register('./sw.js?v=force-update-109')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
