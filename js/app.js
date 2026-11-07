@@ -2544,13 +2544,16 @@ const app = createApp({
 
         // --- SalesLink Identity & Invitation Handshake State ---
         const copiedSalesLinkIdToast = ref(false);
-        const copySalesLinkId = async (id) => {
+        let copyToastTimer = null;
+        const copySalesLinkId = async (id, event) => {
+            if (event && event.stopPropagation) event.stopPropagation();
             const targetId = id || currentUser.value?.salesLinkId;
             if (!targetId || targetId === 'Syncing...' || targetId.includes('...')) return;
             try {
                 await navigator.clipboard.writeText(targetId);
                 copiedSalesLinkIdToast.value = true;
-                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
+                if (copyToastTimer) clearTimeout(copyToastTimer);
+                copyToastTimer = setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
             } catch (e) {
                 console.warn('Could not copy SalesLink ID to clipboard:', e);
             }
@@ -4693,8 +4696,17 @@ const app = createApp({
             }
         };
 
+        const closeIosInstallModal = () => {
+            showIosInstallModal.value = false;
+            showInstallBanner.value = false;
+            try {
+                localStorage.setItem('saleslink_pwa_dismissed', String(Date.now()));
+            } catch(e) {}
+        };
+
         const dismissInstallBanner = () => {
             showInstallBanner.value = false;
+            showIosInstallModal.value = false;
             try {
                 localStorage.setItem('saleslink_pwa_dismissed', String(Date.now()));
             } catch(e) {}
@@ -4762,33 +4774,22 @@ const app = createApp({
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredInstallPrompt.value = e;
-                if (!isStandalone.value) {
-                    const dismissedAt = localStorage.getItem('saleslink_pwa_dismissed');
-                    const cooldown = 2 * 24 * 60 * 60 * 1000; // 2 days cooldown
-                    if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
-                        showInstallBanner.value = true;
-                    }
-                }
             });
 
             window.addEventListener('appinstalled', () => {
                 showInstallBanner.value = false;
+                showIosInstallModal.value = false;
                 deferredInstallPrompt.value = null;
                 isStandalone.value = true;
             });
 
-            // On iOS Safari, if not standalone, prompt after brief delay
-            if (isIos.value && !isStandalone.value) {
-                const dismissedAt = localStorage.getItem('saleslink_pwa_dismissed');
-                const cooldown = 2 * 24 * 60 * 60 * 1000;
-                if (!dismissedAt || (Date.now() - Number(dismissedAt)) > cooldown) {
-                    setTimeout(() => {
-                        if (!isStandalone.value) {
-                            showInstallBanner.value = true;
-                        }
-                    }, 2500);
+            // Global Escape key listener to close modals
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (showIosInstallModal.value) closeIosInstallModal();
+                    if (showRoInspectorDrawer.value) closeRoInspector();
                 }
-            }
+            });
 
             try {
                 systemAnnouncement.value = await db.getAnnouncement();
@@ -4928,7 +4929,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, closeIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
             allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation,
             profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,

@@ -429,7 +429,7 @@
                         <div class="text-[10px] text-slate-500 truncate">
                             Welcome, <strong class="text-slate-900 font-bold">{{ currentUser.name }}</strong>
                         </div>
-                        <div @click="copySalesLinkId(currentUser?.salesLinkId)" :title="'Click to copy ' + (currentUser?.salesLinkId || 'ID')" class="mt-1 cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] text-[10px] font-mono font-bold transition">
+                        <div @click.stop="copySalesLinkId(currentUser?.salesLinkId, $event)" :title="'Click to copy ' + (currentUser?.salesLinkId || 'ID')" class="mt-1 cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] text-[10px] font-mono font-bold transition">
                             <i class="fas fa-id-badge text-[9px]"></i>
                             <span>{{ currentUser?.salesLinkId || 'Syncing ID...' }}</span>
                             <i class="fas fa-copy text-[8px] text-indigo-400"></i>
@@ -5798,7 +5798,7 @@
                             </p>
                         </div>
                     </div>
-                    <button @click="closeRoInspector" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition" title="Close Drawer">
+                    <button @click="closeRoInspector" type="button" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer" title="Close Drawer">
                         <i class="fas fa-times text-base"></i>
                     </button>
                 </div>
@@ -5868,12 +5868,12 @@
                             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Logins</span>
                                 <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.todayLoginsCount }}</span>
-                                <span class="text-[10px] font-semibold text-[#4F46E5] block">₹{{ selectedRoAnalytics.todayLoginsVolume.toFixed(2) }} L</span>
+                                <span class="text-[10px] font-semibold text-[#4F46E5] block">₹{{ (selectedRoAnalytics.todayLoginsVolume || 0).toFixed(2) }} L</span>
                             </div>
                             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today Disb</span>
                                 <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.todayDisbCount }}</span>
-                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ selectedRoAnalytics.todayDisbVolume.toFixed(2) }} L</span>
+                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ (selectedRoAnalytics.todayDisbVolume || 0).toFixed(2) }} L</span>
                             </div>
                             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-center">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Dealer Visits</span>
@@ -5913,12 +5913,12 @@
                             <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase block">Total Logins</span>
                                 <span class="text-base font-black text-slate-900 block mt-0.5">{{ selectedRoAnalytics.mtdCount }}</span>
-                                <span class="text-[10px] font-semibold text-slate-600 block">₹{{ selectedRoAnalytics.mtdVolume.toFixed(2) }} L</span>
+                                <span class="text-[10px] font-semibold text-slate-600 block">₹{{ (selectedRoAnalytics.mtdVolume || 0).toFixed(2) }} L</span>
                             </div>
                             <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase block">Disbursed</span>
                                 <span class="text-base font-black text-emerald-700 block mt-0.5">{{ selectedRoAnalytics.mtdDisbCount }}</span>
-                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ selectedRoAnalytics.mtdDisbVolume.toFixed(2) }} L</span>
+                                <span class="text-[10px] font-semibold text-emerald-600 block">₹{{ (selectedRoAnalytics.mtdDisbVolume || 0).toFixed(2) }} L</span>
                             </div>
                             <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase block">Conversion %</span>
@@ -5937,8 +5937,8 @@
                         <!-- NCL vs UCL Proportional Bar -->
                         <div class="pt-1">
                             <div class="flex justify-between text-[11px] font-bold text-slate-700 mb-1.5">
-                                <span>NCL: {{ selectedRoAnalytics.nclCount }} (₹{{ selectedRoAnalytics.nclVolume.toFixed(1) }}L)</span>
-                                <span>UCL: {{ selectedRoAnalytics.uclCount }} (₹{{ selectedRoAnalytics.uclVolume.toFixed(1) }}L)</span>
+                                <span>NCL: {{ selectedRoAnalytics.nclCount }} (₹{{ (selectedRoAnalytics.nclVolume || 0).toFixed(1) }}L)</span>
+                                <span>UCL: {{ selectedRoAnalytics.uclCount }} (₹{{ (selectedRoAnalytics.uclVolume || 0).toFixed(1) }}L)</span>
                             </div>
                             <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
                                 <div :style="{ width: ((selectedRoAnalytics.nclCount / Math.max(1, selectedRoAnalytics.mtdCount)) * 100) + '%' }" 
@@ -6096,7 +6096,7 @@
         </div>
 
         <!-- iOS Safari Add to Home Screen Instructions Modal -->
-        <div v-if="showIosInstallModal" class="fixed inset-0 z-[120] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 sm:p-4">
+        <div v-if="showIosInstallModal" class="fixed inset-0 z-[120] bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 sm:p-4" @click.self="closeIosInstallModal">
             <div class="w-full max-w-sm bg-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 animate-in slide-in-from-bottom duration-300">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2.5">
@@ -6108,7 +6108,7 @@
                             <p class="text-[10px] text-slate-400 font-medium">Add to Home Screen in 2 simple taps</p>
                         </div>
                     </div>
-                    <button @click="showIosInstallModal = false" class="text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer">
+                    <button @click="closeIosInstallModal" type="button" class="text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -6136,7 +6136,7 @@
                     </div>
                 </div>
 
-                <button @click="showIosInstallModal = false" type="button" class="w-full py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#4F46E5]/20 transition cursor-pointer">
+                <button @click="closeIosInstallModal" type="button" class="w-full py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#4F46E5]/20 transition cursor-pointer">
                     Got It!
                 </button>
             </div>
@@ -6146,6 +6146,7 @@
         <div v-if="copiedSalesLinkIdToast" class="fixed top-4 right-4 z-[999] bg-slate-900 text-white text-xs px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in font-bold">
             <i class="fas fa-check-circle text-emerald-400"></i>
             <span>SalesLink ID copied to clipboard!</span>
+            <button @click="copiedSalesLinkIdToast = false" type="button" class="ml-2 text-slate-400 hover:text-white cursor-pointer"><i class="fas fa-times text-[10px]"></i></button>
         </div>
 
         <!-- Connect / Invite Branch Sales Manager Modal (ASM - Simple Dynamic Selector with Conflict Warning) -->
@@ -6543,11 +6544,8 @@
             </div>
         </div>
 
-    </div>
-
-
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-101"></script>
+    <script type="module" src="js/app.js?v=force-update-102"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
