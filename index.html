@@ -472,6 +472,19 @@
                                     </div>
                                 </div>
 
+                                <!-- Field 4: Official Employee ID / Staff Code -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-id-badge"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            Official Employee ID / Staff Code <span class="text-rose-500">*</span>
+                                        </div>
+                                        <input v-model="registerForm.employeeCode" type="text" required placeholder="e.g. EMP104829 / AXIS9823" class="w-full bg-transparent text-xs font-bold text-slate-800 outline-none uppercase placeholder-slate-300">
+                                    </div>
+                                </div>
+
                                 <!-- Field 4: Hub Location / City -->
                                 <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
                                     <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
@@ -6823,13 +6836,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-120"></script>
+    <script type="module" src="js/app.js?v=force-update-121"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-120')
+                navigator.serviceWorker.register('./sw.js?v=force-update-121')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

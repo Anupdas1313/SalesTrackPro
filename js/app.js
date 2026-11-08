@@ -116,7 +116,7 @@ const app = createApp({
         const showRegisterMode = ref(false);
         const showMobileFeatures = ref(false);
         const showBankSelector = ref(false);
-        const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+        const registerForm = ref({ role: 'sm', name: '', employeeCode: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
         const registerStep = ref(1);
         const registerConfirmed = ref(false);
 
