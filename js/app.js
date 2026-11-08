@@ -1344,15 +1344,15 @@ const app = createApp({
             }
         };
 
-        const getTimelineLabel = (timeline) => {
+        const getTimelineLabel = (timeline, customDate) => {
             switch (timeline) {
                 case 'today': return 'Today';
                 case 'yesterday': return 'Yesterday';
                 case 'this-week': return 'This Week';
                 case 'this-month': return 'This Month';
-                case 'custom': return roFilters.value.customDate ? `Date: ${roFilters.value.customDate}` : 'Custom Date';
+                case 'custom': return (customDate || roFilters.value.customDate) ? `Date: ${customDate || roFilters.value.customDate}` : 'Custom Date';
                 case 'all': return 'All Time';
-                default: return 'This Month';
+                default: return 'All Time';
             }
         };
 
@@ -2924,22 +2924,59 @@ const app = createApp({
         const inviteSmSuccess = ref('');
         const isInvitingSm = ref(false);
         const selectedSmDrilldown = ref(null);
-        const asmSearchQuery = ref('');
-        const asmStatusFilter = ref('All');
-        const asmHubFilter = ref('All');
-        const asmTimelineFilter = ref('all'); // 'all' | 'today' | 'yesterday' | 'this-week' | 'this-month'
-        const asmCategoryFilter = ref('All'); // 'All' | 'NCL' | 'UCL'
-        const asmChannelFilter = ref('All');  // 'All' | 'DSA' | 'Branch'
-        const asmSortBy = ref('newest');      // 'newest' | 'oldest' | 'amount-desc' | 'amount-asc' | 'name-asc'
+        const asmFilters = ref({
+            search: '',
+            status: '',
+            hubId: 'All',
+            timeline: 'all',
+            customDate: '',
+            nclUcl: '',
+            sourcingChannel: '',
+            sortBy: 'newest',
+            showMenu: false
+        });
+
+        const asmHubFilter = computed({
+            get: () => asmFilters.value.hubId,
+            set: (val) => { asmFilters.value.hubId = val; }
+        });
+        const asmSearchQuery = computed({
+            get: () => asmFilters.value.search,
+            set: (val) => { asmFilters.value.search = val; }
+        });
+        const asmStatusFilter = computed({
+            get: () => asmFilters.value.status,
+            set: (val) => { asmFilters.value.status = val; }
+        });
+        const asmTimelineFilter = computed({
+            get: () => asmFilters.value.timeline,
+            set: (val) => { asmFilters.value.timeline = val; }
+        });
+        const asmCategoryFilter = computed({
+            get: () => asmFilters.value.nclUcl,
+            set: (val) => { asmFilters.value.nclUcl = val; }
+        });
+        const asmChannelFilter = computed({
+            get: () => asmFilters.value.sourcingChannel,
+            set: (val) => { asmFilters.value.sourcingChannel = val; }
+        });
+        const asmSortBy = computed({
+            get: () => asmFilters.value.sortBy,
+            set: (val) => { asmFilters.value.sortBy = val; }
+        });
 
         const resetAsmFilters = () => {
-            asmSearchQuery.value = '';
-            asmStatusFilter.value = 'All';
-            asmHubFilter.value = 'All';
-            asmTimelineFilter.value = 'all';
-            asmCategoryFilter.value = 'All';
-            asmChannelFilter.value = 'All';
-            asmSortBy.value = 'newest';
+            asmFilters.value = {
+                search: '',
+                status: '',
+                hubId: 'All',
+                timeline: 'all',
+                customDate: '',
+                nclUcl: '',
+                sourcingChannel: '',
+                sortBy: 'newest',
+                showMenu: false
+            };
         };
 
         // Simple Dynamic Connector State (Dropdown method + dynamic input box + conflict warning)
@@ -3328,84 +3365,75 @@ const app = createApp({
             });
 
             // 1. Hub / SM Filter
-            if (asmHubFilter.value && asmHubFilter.value !== 'All') {
-                list = list.filter(f => f.tenantId === asmHubFilter.value);
+            if (asmFilters.value.hubId && asmFilters.value.hubId !== 'All') {
+                list = list.filter(f => f.tenantId === asmFilters.value.hubId);
             }
 
             // 2. Status Stage Filter
-            if (asmStatusFilter.value && asmStatusFilter.value !== 'All') {
-                const s = asmStatusFilter.value.toLowerCase();
-                if (s === 'logged') {
+            if (asmFilters.value.status && asmFilters.value.status !== 'All') {
+                const s = asmFilters.value.status.toLowerCase();
+                if (['approved', 'sanction', 'sanctioned'].includes(s)) {
+                    list = list.filter(f => isSanctionStatus(f.status));
+                } else if (s === 'logged' || s === 'lead') {
                     list = list.filter(f => (f.status || '').toLowerCase() === 'logged' || (f.status || '').toLowerCase() === 'lead');
-                } else if (s === 'sanction' || s === 'approved') {
-                    list = list.filter(f => (f.status || '').toLowerCase() === 'approved' || (f.status || '').toLowerCase() === 'sanction');
                 } else if (s === 'rejected' || s === 'cancelled') {
                     list = list.filter(f => (f.status || '').toLowerCase() === 'rejected' || (f.status || '').toLowerCase() === 'cancelled');
+                } else if (asmFilters.value.status === 'Custom') {
+                    list = list.filter(f => !STANDARD_STATUSES.includes(f.status));
                 } else {
                     list = list.filter(f => (f.status || '').toLowerCase() === s);
                 }
             }
 
             // 3. Search Query
-            if (asmSearchQuery.value) {
-                const q = asmSearchQuery.value.trim().toLowerCase();
+            if (asmFilters.value.search) {
+                const q = asmFilters.value.search.trim().toLowerCase();
                 list = list.filter(f => 
                     (f.customerName || '').toLowerCase().includes(q) ||
                     (f.appId || '').toLowerCase().includes(q) ||
                     (f.roName || '').toLowerCase().includes(q) ||
                     (f.smDisplayName || '').toLowerCase().includes(q) ||
                     (f.hubName || '').toLowerCase().includes(q) ||
+                    (f.sourcingChannel || '').toLowerCase().includes(q) ||
+                    (f.nclUcl || '').toLowerCase().includes(q) ||
                     (f.vehicleModel || '').toLowerCase().includes(q)
                 );
             }
 
             // 4. Timeline Filter
-            if (asmTimelineFilter.value && asmTimelineFilter.value !== 'all') {
-                const now = new Date();
-                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                const startOfYesterday = startOfToday - 86400000;
-                const startOfWeek = startOfToday - (now.getDay() === 0 ? 6 : now.getDay() - 1) * 86400000;
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-                list = list.filter(f => {
-                    const dateStr = f.loginDate || f.createdAt;
-                    if (!dateStr) return false;
-                    const t = new Date(dateStr).getTime();
-                    if (asmTimelineFilter.value === 'today') return t >= startOfToday;
-                    if (asmTimelineFilter.value === 'yesterday') return t >= startOfYesterday && t < startOfToday;
-                    if (asmTimelineFilter.value === 'this-week') return t >= startOfWeek;
-                    if (asmTimelineFilter.value === 'this-month') return t >= startOfMonth;
-                    return true;
-                });
+            if (asmFilters.value.timeline && asmFilters.value.timeline !== 'all') {
+                list = list.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, asmFilters.value.timeline, asmFilters.value.customDate));
             }
 
             // 5. Category Filter
-            if (asmCategoryFilter.value && asmCategoryFilter.value !== 'All') {
-                list = list.filter(f => (f.nclUcl || '').toUpperCase() === asmCategoryFilter.value.toUpperCase());
+            if (asmFilters.value.nclUcl && asmFilters.value.nclUcl !== 'All') {
+                list = list.filter(f => (f.nclUcl || '').toUpperCase() === asmFilters.value.nclUcl.toUpperCase());
             }
 
             // 6. Channel Filter
-            if (asmChannelFilter.value && asmChannelFilter.value !== 'All') {
-                list = list.filter(f => (f.sourcingChannel || '').toLowerCase() === asmChannelFilter.value.toLowerCase());
+            if (asmFilters.value.sourcingChannel && asmFilters.value.sourcingChannel !== 'All') {
+                list = list.filter(f => (f.sourcingChannel || '').toLowerCase() === asmFilters.value.sourcingChannel.toLowerCase());
             }
 
             // 7. Sort
-            list = [...list].sort((a, b) => {
-                if (asmSortBy.value === 'newest') {
-                    return new Date(b.loginDate || b.createdAt || 0) - new Date(a.loginDate || a.createdAt || 0);
-                } else if (asmSortBy.value === 'oldest') {
-                    return new Date(a.loginDate || a.createdAt || 0) - new Date(b.loginDate || b.createdAt || 0);
-                } else if (asmSortBy.value === 'amount-desc') {
-                    return (Number(b.loanAmount) || 0) - (Number(a.loanAmount) || 0);
-                } else if (asmSortBy.value === 'amount-asc') {
-                    return (Number(a.loanAmount) || 0) - (Number(b.loanAmount) || 0);
-                } else if (asmSortBy.value === 'name-asc') {
-                    return (a.customerName || '').localeCompare(b.customerName || '');
+            return list.sort((a, b) => {
+                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt || 0);
+                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt || 0);
+                switch (asmFilters.value.sortBy) {
+                    case 'newest':
+                        return dateB - dateA;
+                    case 'oldest':
+                        return dateA - dateB;
+                    case 'amount-desc':
+                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
+                    case 'amount-asc':
+                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
+                    case 'name-asc':
+                        return (a.customerName || '').localeCompare(b.customerName || '');
+                    default:
+                        return dateB - dateA;
                 }
-                return 0;
             });
-
-            return list;
         });
 
         const sendFileAlertToSm = (file) => {
@@ -4386,6 +4414,8 @@ const app = createApp({
             showEditFileModal.value = false;
             if (isSM.value) {
                 await loadData();
+            } else if (isASM.value) {
+                await loadAsmData();
             } else {
                 await loadRoData();
             }
@@ -4443,6 +4473,8 @@ const app = createApp({
                 await db.deleteLoanFile(file.id);
                 if (isSM.value) {
                     await loadData();
+                } else if (isASM.value) {
+                    await loadAsmData();
                 } else {
                     await loadRoData();
                 }
@@ -4970,7 +5002,7 @@ const app = createApp({
             eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
             roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
             roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, closeIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
+            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, closeIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmFilters, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
             allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation, zsmStats, openInviteAsmModal, releaseAsm,
             profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
             assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,

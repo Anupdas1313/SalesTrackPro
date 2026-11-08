@@ -1270,7 +1270,7 @@
 
                                 <!-- Actions -->
                                 <div class="flex items-center gap-1.5 ml-auto">
-                                    <button @click="resetRoFilters(); filters.roId = ''" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                    <button @click="isASM ? resetAsmFilters() : (resetRoFilters(), filters.roId = '')" v-if="roFilters.search || roFilters.status || roFilters.nclUcl || roFilters.sourcingChannel || roFilters.timeline !== 'this-month' || roFilters.sortBy !== 'newest' || filters.roId" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <button @click="exportToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4338CA] transition shadow-xs text-xs font-bold">
@@ -1590,293 +1590,223 @@
                     <!-- ========================================== -->
                     <!-- ASM: AREA PIPELINE FILE TRACKING            -->
                     <!-- ========================================== -->
-                    <div v-if="currentTab === 'asm-tracking' && isASM" class="flex flex-col h-full space-y-3 max-w-7xl mx-auto animate-fade-in pb-16">
-
-                        <!-- 1. Frictionless SM Distribution Bar (Quick Switcher Pills) -->
-                        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs">
-                                        <i class="fas fa-sitemap"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Branch SM Hubs ({{ supervisedSMs.length }})</h3>
-                                        <p class="text-[10px] text-slate-400">1-tap to isolate files under any Branch Sales Manager</p>
-                                    </div>
-                                </div>
-                                <div class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200/60 self-start sm:self-auto">
-                                    Total Area Pipeline: <strong class="text-slate-900 font-bold font-mono">{{ areaFiles.length }} Files</strong> (₹{{ formatCurrency(areaFiles.reduce((s,f) => s + (Number(f.loanAmount)||0), 0)) }})
-                                </div>
-                            </div>
-
-                            <!-- Scrollable Horizontal Chip Bar -->
-                            <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
-                                <!-- All SM Hubs Pill -->
-                                <button 
-                                    type="button"
-                                    @click="asmHubFilter = 'All'" 
-                                    :class="[asmHubFilter === 'All' ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                    <i class="fas fa-layer-group text-[10px]"></i>
-                                    <span>All Branch Hubs</span>
-                                    <span :class="asmHubFilter === 'All' ? 'bg-white/20 text-white' : 'bg-white text-slate-800'" class="px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono">
-                                        {{ areaFiles.length }}
-                                    </span>
-                                </button>
-
-                                <!-- Each SM Pill -->
-                                <button 
-                                    v-for="dist in asmSmDistribution" 
-                                    :key="dist.id"
-                                    type="button"
-                                    @click="asmHubFilter = dist.tenantId"
-                                    :class="[asmHubFilter === dist.tenantId ? 'bg-[#4F46E5] text-white shadow-xs font-bold' : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 font-semibold', 'px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                    <i class="fas fa-building-columns text-[10px]" :class="asmHubFilter === dist.tenantId ? 'text-white' : 'text-[#4F46E5]'"></i>
-                                    <span>{{ dist.region }}</span>
-                                    <span class="text-[10px] opacity-80 font-normal">({{ dist.name }})</span>
-                                    <span :class="asmHubFilter === dist.tenantId ? 'bg-white/20 text-white' : 'bg-white text-slate-800 border border-slate-200'" class="px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono">
-                                        {{ dist.totalFiles }}
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 2. Admin Filter, Search & Sort Toolbar (Architecture same as SM) -->
-                        <div class="bg-white p-2.5 sm:p-3 rounded-2xl shadow-xs border border-slate-200/80 space-y-2.5">
-                            <!-- Top Row: Search & Timeline & Actions -->
-                            <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-stretch md:items-center">
+                    <div v-if="currentTab === 'asm-tracking' && isASM" class="flex flex-col h-full">
+                        <!-- Admin Filter, Search & Sort Toolbar (Compact) -->
+                        <div class="bg-white p-2.5 sm:p-3 rounded-xl shadow-xs border border-slate-200/80 mb-3">
+                            
+                            <!-- Top Row: Search (Full width on mobile) & Filter Trigger -->
+                            <div class="flex flex-col md:flex-row gap-2 md:gap-3">
                                 <!-- Search Input -->
-                                <div class="w-full md:flex-1 relative">
-                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input 
-                                        v-model="asmSearchQuery" 
-                                        type="text" 
-                                        placeholder="Search Customer Name, App ID, RO, SM, Hub, Vehicle..." 
-                                        class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] transition">
+                                <div class="w-full md:flex-1">
+                                    <div class="relative">
+                                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input v-model="asmFilters.search" @input="asmFilters.search = $event.target.value.toUpperCase()" type="text" placeholder="Search Customer Name, App ID, RO, SM, Hub..." class="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold uppercase outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
+                                    </div>
+                                </div>
+                                
+                                <!-- Mobile Action Buttons -->
+                                <div class="flex gap-2 w-full md:hidden">
+                                    <!-- Mobile Timeline Selector (Custom Dropdown) -->
+                                    <div class="flex-1 relative">
+                                        <button @click="asmFilters.showMenu = !asmFilters.showMenu" class="w-full pl-3 pr-7 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-sm text-left h-[34px] relative">
+                                            <span class="truncate">{{ getTimelineLabel(asmFilters.timeline, asmFilters.customDate) || 'All Time' }}</span>
+                                            <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 transition-transform pointer-events-none" :class="asmFilters.showMenu ? 'rotate-180' : ''"></i>
+                                        </button>
+                                        
+                                        <!-- Backdrop -->
+                                        <div v-if="asmFilters.showMenu" @click="asmFilters.showMenu = false" class="fixed inset-0 z-[40]"></div>
+                                        
+                                        <!-- Dropdown Menu -->
+                                        <div v-if="asmFilters.showMenu" class="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl z-[50] overflow-hidden py-1 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <button v-for="t in [{val:'all', label:'All Time'}, {val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}]" 
+                                                    :key="t.val" 
+                                                    @click="asmFilters.timeline = t.val; asmFilters.customDate = ''; asmFilters.showMenu = false;"
+                                                    class="w-full text-left px-3 py-2.5 text-xs font-bold transition-colors"
+                                                    :class="asmFilters.timeline === t.val ? 'text-[#4F46E5] bg-[#4F46E5]/5' : 'text-slate-600 hover:bg-slate-50'">
+                                                {{ t.label }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Mobile Filter Trigger -->
+                                    <button @click="showMobileFilterDrawer = true" class="shrink-0 px-3.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]">
+                                        <i class="fas fa-sliders text-[#4F46E5]"></i>
+                                        <span>Filters</span>
+                                    </button>
+                                    
+                                    <!-- Mobile Export Button -->
+                                    <button @click="exportToExcel" class="shrink-0 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]" title="Export to Excel">
+                                        <i class="fas fa-file-excel"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Desktop Filters (Hidden on Mobile) -->
+                            <div class="hidden md:flex flex-wrap gap-2.5 items-end mt-2.5">
+                                <!-- Branch Hub / SM Filter (ASM Level) -->
+                                <div class="w-[135px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Branch / SM</label>
+                                    <select v-model="asmFilters.hubId" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
+                                        <option value="All">All Hubs ({{ supervisedSMs.length }})</option>
+                                        <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">{{ hub.region || hub.name }} ({{ hub.name }})</option>
+                                    </select>
                                 </div>
 
-                                <!-- Action Buttons Row -->
-                                <div class="flex items-center gap-2">
-                                    <!-- Timeline Selector -->
-                                    <select v-model="asmTimelineFilter" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-[#4F46E5] cursor-pointer">
+                                <!-- Status Filter -->
+                                <div class="w-[115px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Status</label>
+                                    <select v-model="asmFilters.status" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
+                                        <option value="">All Statuses</option>
+                                        <option value="Lead">Lead</option>
+                                        <option value="FI">FI</option>
+                                        <option value="FCU">FCU</option>
+                                        <option value="UW">UW</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Disbursed">Disbursed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Custom">Custom</option>
+                                    </select>
+                                </div>
+
+                                <!-- Timeline Filter -->
+                                <div class="w-[110px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Timeline</label>
+                                    <select v-model="asmFilters.timeline" @change="asmFilters.timeline !== 'custom' ? asmFilters.customDate = '' : null" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
                                         <option value="all">All Time</option>
                                         <option value="today">Today</option>
                                         <option value="yesterday">Yesterday</option>
                                         <option value="this-week">This Week</option>
                                         <option value="this-month">This Month</option>
-                                    </select>
-
-                                    <!-- Reset Button -->
-                                    <button 
-                                        @click="resetAsmFilters" 
-                                        v-if="asmSearchQuery || asmHubFilter !== 'All' || asmStatusFilter !== 'All' || asmTimelineFilter !== 'all' || asmCategoryFilter !== 'All' || asmChannelFilter !== 'All' || asmSortBy !== 'newest'" 
-                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition text-xs font-bold cursor-pointer" 
-                                        title="Clear Filters">
-                                        <i class="fas fa-undo mr-1"></i>
-                                        <span>Reset</span>
-                                    </button>
-
-                                    <!-- Export to Excel Button -->
-                                    <button 
-                                        @click="exportToExcel" 
-                                        class="px-3.5 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl transition shadow-xs text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-                                        <i class="fas fa-file-excel text-xs"></i>
-                                        <span>Export</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Secondary Filter Dropdowns Row -->
-                            <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
-                                <!-- Branch SM Hub Dropdown -->
-                                <div class="flex-1 min-w-[140px] sm:max-w-[220px]">
-                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Branch Hub / SM</label>
-                                    <select v-model="asmHubFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All Branch Hubs ({{ supervisedSMs.length }})</option>
-                                        <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">
-                                            {{ hub.region || hub.name }} ({{ hub.name }})
-                                        </option>
+                                        <option value="custom">Custom Date</option>
                                     </select>
                                 </div>
 
-                                <!-- Status Stage Dropdown -->
-                                <div class="flex-1 min-w-[120px] sm:max-w-[160px]">
-                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Stage / Status</label>
-                                    <select v-model="asmStatusFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All Stages</option>
-                                        <option value="Logged">Logged / Lead</option>
-                                        <option value="FI">FI (Field Investigation)</option>
-                                        <option value="FCU">FCU</option>
-                                        <option value="UW">UW (Credit Underwriting)</option>
-                                        <option value="Sanction">Approved / Sanction</option>
-                                        <option value="Disbursed">Disbursed</option>
-                                        <option value="Rejected">Rejected / Cancelled</option>
-                                    </select>
+                                <!-- Custom Date Input -->
+                                <div v-if="asmFilters.timeline === 'custom'" class="w-[115px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Select Date</label>
+                                    <input v-model="asmFilters.customDate" type="date" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition">
                                 </div>
 
-                                <!-- Category Dropdown (NCL / UCL) -->
-                                <div class="w-[90px]">
-                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Category</label>
-                                    <select v-model="asmCategoryFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All</option>
+                                <!-- Category Filter -->
+                                <div class="w-[80px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Category</label>
+                                    <select v-model="asmFilters.nclUcl" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
+                                        <option value="">All</option>
                                         <option value="NCL">NCL</option>
                                         <option value="UCL">UCL</option>
                                     </select>
                                 </div>
 
-                                <!-- Channel Dropdown -->
-                                <div class="w-[90px]">
-                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Channel</label>
-                                    <select v-model="asmChannelFilter" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="All">All</option>
+                                <!-- Channel Filter -->
+                                <div class="w-[80px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Channel</label>
+                                    <select v-model="asmFilters.sourcingChannel" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
+                                        <option value="">All</option>
                                         <option value="DSA">DSA</option>
                                         <option value="Branch">Branch</option>
                                     </select>
                                 </div>
 
-                                <!-- Sort Dropdown -->
-                                <div class="w-[110px]">
-                                    <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sort By</label>
-                                    <select v-model="asmSortBy" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#4F46E5] cursor-pointer">
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
+                                <!-- Sort By -->
+                                <div class="w-[100px]">
+                                    <label class="block text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider">Sort</label>
+                                    <select v-model="asmFilters.sortBy" class="w-full px-1.5 py-1 bg-slate-50/70 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition appearance-none cursor-pointer">
+                                        <option value="newest">Newest</option>
+                                        <option value="oldest">Oldest</option>
                                         <option value="amount-desc">Amount &darr;</option>
                                         <option value="amount-asc">Amount &uarr;</option>
-                                        <option value="name-asc">Customer A-Z</option>
+                                        <option value="name-asc">Name A-Z</option>
                                     </select>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-1.5 ml-auto">
+                                    <button @click="resetAsmFilters()" v-if="asmFilters.search || asmFilters.status || asmFilters.nclUcl || asmFilters.sourcingChannel || asmFilters.timeline !== 'all' || asmFilters.sortBy !== 'newest' || asmFilters.hubId !== 'All' || asmFilters.customDate" class="px-1.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition text-xs font-bold" title="Clear Filters">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    <button @click="exportToExcel" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4338CA] transition shadow-xs text-xs font-bold">
+                                        <i class="fas fa-file-excel"></i>
+                                        <span>Export</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. Status Stage Quick-Filter Pills Strip -->
-                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
-                            <button @click="asmStatusFilter = 'All'" :class="[asmStatusFilter === 'All' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>All Files</span>
-                                <span :class="asmStatusFilter === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'" class="px-1.5 py-0.2 rounded-md text-[10px] font-mono">{{ asmStatusCounts.all }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'Logged'" :class="[asmStatusFilter === 'Logged' ? 'bg-slate-800 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>Logged</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.logged }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'FI'" :class="[asmStatusFilter === 'FI' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>FI</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.fi }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'UW'" :class="[asmStatusFilter === 'UW' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>UW</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.uw }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'Sanction'" :class="[asmStatusFilter === 'Sanction' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>Sanctioned</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.sanctioned }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'Disbursed'" :class="[asmStatusFilter === 'Disbursed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>Disbursed</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.disbursed }}</span>
-                            </button>
-                            <button @click="asmStatusFilter = 'Rejected'" :class="[asmStatusFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200', 'px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0']">
-                                <span>Rejected</span>
-                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700">{{ asmStatusCounts.rejected }}</span>
-                            </button>
-                        </div>
-
-                        <!-- 4. Desktop Table View (Full width, dense, fits screen) -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden hidden md:block">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse border border-slate-200 bg-white">
+                        <div class="bg-white rounded-xl border border-slate-300 shadow-xs flex-1 overflow-hidden flex flex-col">
+                            <!-- Desktop Table View (Full width, dense, fits screen) -->
+                            <div class="hidden md:block overflow-x-auto flex-1">
+                                <table class="w-full text-left border-collapse border border-slate-300 bg-white">
                                     <thead class="bg-slate-100 sticky top-0 z-10">
                                         <tr class="text-slate-600 text-[10px] uppercase font-bold tracking-tight">
-                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">App ID</th>
-                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Customer Name</th>
-                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Branch Hub & SM</th>
-                                            <th class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">Relationship Officer</th>
-                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Category</th>
-                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Channel</th>
-                                            <th class="border border-slate-200 px-2.5 py-1.5 text-right whitespace-nowrap">Loan Amount</th>
-                                            <th class="border border-slate-200 px-2.5 py-1.5 text-center whitespace-nowrap">Status</th>
-                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Login Date</th>
-                                            <th class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">Actions</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">App ID</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">Customer Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Category</th>
+                                            <th class="border border-slate-300 px-1.5 py-1.5 text-center whitespace-nowrap">Channel</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-right whitespace-nowrap">Loan Amount</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Status</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">RO Name</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 whitespace-nowrap">Branch Hub & SM</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Login Date</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Last Updated</th>
+                                            <th class="border border-slate-300 px-1.5 py-1 text-center whitespace-nowrap">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-[11px] divide-y divide-slate-100">
-                                        <tr v-if="filteredAreaFiles.length === 0">
-                                            <td colspan="10" class="p-8 text-center text-slate-400 font-semibold">
-                                                No loan files match the selected area filters.
+                                    <tbody class="text-[11px]">
+                                        <tr v-for="file in filteredAreaFiles" :key="file.id" class="hover:bg-slate-50 transition-colors">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">#{{ file.appId || 'No ID' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-900 uppercase whitespace-nowrap">{{ file.customerName }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">{{ file.nclUcl || '-' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-1 font-semibold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">{{ file.sourcingChannel || 'DSA' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px]">₹{{ formatCurrency(file.loanAmount) }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
+                                                <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
                                             </td>
-                                        </tr>
-                                        <tr v-for="file in filteredAreaFiles" :key="file.id" class="hover:bg-slate-50/80 transition-colors">
-                                            <!-- App ID -->
-                                            <td class="border border-slate-200 px-2 py-1.5 font-bold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">
-                                                #{{ file.appId || 'No ID' }}
-                                            </td>
-
-                                            <!-- Customer Name -->
-                                            <td class="border border-slate-200 px-2.5 py-1.5 font-bold text-slate-900 uppercase whitespace-nowrap">
-                                                <div>{{ file.customerName }}</div>
-                                                <div v-if="file.vehicleModel" class="text-[9px] text-slate-400 font-normal lowercase">{{ file.vehicleModel }}</div>
-                                            </td>
-
-                                            <!-- Branch Hub & SM -->
-                                            <td class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap">
-                                                <div class="font-bold text-slate-800 flex items-center gap-1">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-bold text-slate-800 uppercase whitespace-nowrap text-[10px]">{{ file.roName || 'Unassigned' }}</td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 font-semibold text-slate-600 whitespace-nowrap text-[10px]">
+                                                <div class="flex items-center gap-1 font-bold text-slate-800">
                                                     <i class="fas fa-building-columns text-[9px] text-[#4F46E5]"></i>
                                                     <span>{{ file.hubName }}</span>
                                                 </div>
-                                                <div class="text-[10px] text-slate-400 font-medium">SM: {{ file.smDisplayName }}</div>
+                                                <div class="text-[9px] text-slate-400 font-medium">SM: {{ file.smDisplayName }}</div>
                                             </td>
-
-                                            <!-- RO Officer -->
-                                            <td class="border border-slate-200 px-2.5 py-1.5 whitespace-nowrap font-semibold text-slate-800">
-                                                <div class="flex items-center gap-1">
-                                                    <i class="fas fa-user text-[9px] text-slate-400"></i>
-                                                    <span>{{ file.roName || 'Unassigned RO' }}</span>
-                                                </div>
-                                            </td>
-
-                                            <!-- Category -->
-                                            <td class="border border-slate-200 px-2 py-1.5 font-semibold text-slate-700 uppercase text-center text-[10px] whitespace-nowrap">
-                                                {{ file.nclUcl || '-' }}
-                                            </td>
-
-                                            <!-- Channel -->
-                                            <td class="border border-slate-200 px-2 py-1.5 font-semibold text-[#4F46E5] uppercase text-center text-[10px] whitespace-nowrap">
-                                                {{ file.sourcingChannel || 'DSA' }}
-                                            </td>
-
-                                            <!-- Loan Amount -->
-                                            <td class="border border-slate-200 px-2.5 py-1.5 text-right font-black text-slate-900 whitespace-nowrap text-[11px] font-mono">
-                                                ₹{{ formatCurrency(file.loanAmount) }}
-                                            </td>
-
-                                            <!-- Status Badge -->
-                                            <td class="border border-slate-200 px-2.5 py-1.5 text-center whitespace-nowrap">
-                                                <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] font-bold rounded-md inline-block">
-                                                    {{ file.status }}
-                                                </span>
-                                            </td>
-
-                                            <!-- Login Date -->
-                                            <td class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap font-medium text-slate-600 text-[10px]">
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap font-bold text-slate-800 text-[10px]">
                                                 {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}
                                             </td>
-
-                                            <!-- Actions -->
-                                            <td class="border border-slate-200 px-2 py-1.5 text-center whitespace-nowrap">
-                                                <div class="flex items-center justify-center gap-1.5">
-                                                    <!-- Inspect / View Details -->
-                                                    <button 
-                                                        type="button" 
-                                                        @click="openViewFileModal(file)" 
-                                                        class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer" 
-                                                        title="View Complete File Lifecycle">
-                                                        <i class="fas fa-eye text-xs"></i>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap font-medium text-slate-600 text-[10px]">
+                                                {{ formatDate(file.updatedAt || file.createdAt) }}
+                                            </td>
+                                            <td class="border border-slate-300 px-1.5 py-0.5 text-center whitespace-nowrap">
+                                                <div class="inline-flex items-center gap-1.5">
+                                                    <button @click="openViewFileModal(file)" title="View Details" class="text-slate-400 hover:text-slate-900 transition text-[11px]">
+                                                        <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <!-- WhatsApp Alert to SM / RO -->
-                                                    <button 
-                                                        type="button" 
-                                                        @click="sendFileAlertToSm(file)" 
-                                                        class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition cursor-pointer" 
-                                                        title="WhatsApp Follow-up Alert">
-                                                        <i class="fab fa-whatsapp text-xs"></i>
+                                                    <button @click="openEditFileModal(file)" title="Edit Details" class="text-blue-600 hover:text-blue-900 transition text-[11px]">
+                                                        <i class="fas fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button @click="sendFileAlertToSm(file)" title="WhatsApp Alert" class="text-emerald-600 hover:text-emerald-800 transition text-[11px]">
+                                                        <i class="fab fa-whatsapp"></i>
+                                                    </button>
+                                                    <button @click="deleteFile(file)" title="Delete File" class="text-slate-400 hover:text-rose-600 transition text-[11px]">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="filteredAreaFiles.length === 0">
+                                            <td colspan="11" class="border border-slate-300 p-6 text-center text-slate-400 bg-slate-50">
+                                                <i class="fas fa-calendar-day text-2xl mb-1.5 text-slate-300 block"></i>
+                                                <p class="font-bold text-xs text-slate-700">No files found for {{ getTimelineLabel(asmFilters.timeline, asmFilters.customDate) }}</p>
+                                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                                    {{ asmFilters.timeline === 'today' && areaFiles.length > 0 ? 'There are files logged on other dates.' : 'Try adjusting your search, status, or filters.' }}
+                                                </p>
+                                                <div class="mt-3 flex items-center justify-center gap-2">
+                                                    <button v-if="asmFilters.timeline !== 'all' && areaFiles.length > 0" @click="asmFilters.timeline = 'all'" class="px-3 py-1 bg-slate-900 text-white font-bold rounded-lg text-xs hover:bg-slate-800 transition flex items-center gap-1.5">
+                                                        <i class="fas fa-globe text-[10px]"></i>
+                                                        <span>View All Time ({{ areaFiles.length }} files)</span>
+                                                    </button>
+                                                    <button v-if="asmFilters.search || asmFilters.status || asmFilters.nclUcl || asmFilters.sourcingChannel || asmFilters.timeline !== 'all' || asmFilters.sortBy !== 'newest' || asmFilters.hubId !== 'All' || asmFilters.customDate" @click="resetAsmFilters()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">
+                                                        Reset Filters
                                                     </button>
                                                 </div>
                                             </td>
@@ -1885,78 +1815,84 @@
                                 </table>
                             </div>
 
-                            <!-- Table Footer -->
-                            <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 text-slate-500 flex justify-between items-center text-[11px] font-semibold">
-                                <span>Showing {{ filteredAreaFiles.length }} loan files across {{ asmHubFilter === 'All' ? supervisedSMs.length + ' Branch Hubs' : 'selected Hub' }}</span>
+                            <!-- Mobile Card View (100% Screen Fit, Minimal, Clean & Modern) -->
+                            <div class="md:hidden flex flex-col gap-2.5 p-3 bg-slate-50/50 flex-1 overflow-y-auto">
+                                <div v-for="file in filteredAreaFiles" :key="'mob-asm-'+file.id" class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-xs space-y-2.5">
+                                    <!-- Top: App ID & Date & Status Badge -->
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <span class="text-[#4F46E5]">#{{ file.appId || 'NO ID' }}</span>
+                                            <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                            <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
+                                        </div>
+                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] font-bold shadow-xs">{{ file.status }}</span>
+                                    </div>
+
+                                    <!-- Middle: Customer Name & Loan Amount -->
+                                    <div class="flex justify-between items-baseline gap-2">
+                                        <h4 class="font-extrabold text-slate-900 text-sm leading-snug uppercase truncate">{{ file.customerName }}</h4>
+                                        <div class="text-sm font-black text-slate-900 shrink-0">₹{{ formatCurrency(file.loanAmount) }}</div>
+                                    </div>
+
+                                    <!-- Tags Row: Category, Channel, RO & SM -->
+                                    <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200/60 uppercase">{{ file.nclUcl || '-' }}</span>
+                                        <span class="px-2 py-0.5 bg-slate-100 text-[#4F46E5] rounded-md border border-slate-200/60 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
+                                            <i class="fas fa-user text-[9px] text-slate-400"></i> RO: {{ file.roName || 'Unassigned' }}
+                                        </span>
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
+                                            <i class="fas fa-building-columns text-[9px] text-[#4F46E5]"></i> {{ file.hubName }}
+                                        </span>
+                                        <span v-if="file.smDisplayName" class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
+                                            <i class="fas fa-user-tie text-[9px] text-slate-400"></i> SM: {{ file.smDisplayName }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Bottom: Updated Date & Actions -->
+                                    <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
+                                        <span class="text-[10px] font-medium text-slate-400">Updated: {{ formatDate(file.updatedAt || file.createdAt) }}</span>
+                                        <div class="flex items-center gap-1">
+                                            <button @click="openViewFileModal(file)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition" title="View">
+                                                <i class="fas fa-eye text-xs"></i>
+                                            </button>
+                                            <button @click="openEditFileModal(file)" class="w-7 h-7 flex items-center justify-center text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-full transition" title="Edit">
+                                                <i class="fas fa-pen-to-square text-xs"></i>
+                                            </button>
+                                            <button @click="sendFileAlertToSm(file)" class="w-7 h-7 flex items-center justify-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full transition" title="WhatsApp Alert">
+                                                <i class="fab fa-whatsapp text-xs"></i>
+                                            </button>
+                                            <button @click="deleteFile(file)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition" title="Delete">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mobile Empty State -->
+                                <div v-if="filteredAreaFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-xs">
+                                    <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
+                                    <p class="text-sm font-bold text-slate-700">No files for {{ getTimelineLabel(asmFilters.timeline, asmFilters.customDate) }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">
+                                        {{ asmFilters.timeline === 'today' && areaFiles.length > 0 ? 'There are files logged on other dates.' : 'Try adjusting your search or filters.' }}
+                                    </p>
+                                    <div class="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2">
+                                        <button v-if="asmFilters.timeline !== 'all' && areaFiles.length > 0" @click="asmFilters.timeline = 'all'" class="w-full sm:w-auto px-4 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition flex items-center justify-center gap-1.5">
+                                            <i class="fas fa-globe text-xs"></i>
+                                            <span>View All Time ({{ areaFiles.length }} files)</span>
+                                        </button>
+                                        <button v-if="asmFilters.search || asmFilters.status || asmFilters.nclUcl || asmFilters.sourcingChannel || asmFilters.timeline !== 'all' || asmFilters.sortBy !== 'newest' || asmFilters.hubId !== 'All' || asmFilters.customDate" @click="resetAsmFilters()" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                                            Reset Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 px-1.5 py-1 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center rounded-b-xl">
+                                <span class="font-semibold text-[11px]">Showing {{ filteredAreaFiles.length }} records</span>
                                 <span class="font-mono font-bold text-slate-700">₹{{ formatCurrency(filteredAreaFiles.reduce((s,f) => s + (Number(f.loanAmount)||0), 0)) }}</span>
                             </div>
                         </div>
-
-                        <!-- 5. Mobile Cards View (Responsive & Touch-Friendly) -->
-                        <div class="md:hidden space-y-2.5">
-                            <div v-if="filteredAreaFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 text-xs font-semibold">
-                                No loan files match the selected area filters.
-                            </div>
-
-                            <div v-for="file in filteredAreaFiles" :key="file.id" class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs space-y-2.5">
-                                <!-- Top Row -->
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-mono font-black text-[#4F46E5]">#{{ file.appId || 'NoID' }}</span>
-                                        <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.2 !text-[9px] font-bold rounded-md">
-                                            {{ file.status }}
-                                        </span>
-                                    </div>
-                                    <span class="font-black text-xs text-slate-900 font-mono">
-                                        ₹{{ formatCurrency(file.loanAmount) }}
-                                    </span>
-                                </div>
-
-                                <!-- Customer Details -->
-                                <div>
-                                    <h4 class="text-xs font-black uppercase text-slate-900">{{ file.customerName }}</h4>
-                                    <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                        <span>Category: {{ file.nclUcl || '-' }}</span>
-                                        <span>•</span>
-                                        <span>Channel: {{ file.sourcingChannel || 'DSA' }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Hub & Officer Tags -->
-                                <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-[11px]">
-                                    <div class="space-y-0.5">
-                                        <div class="font-bold text-slate-800 flex items-center gap-1">
-                                            <i class="fas fa-building-columns text-[10px] text-[#4F46E5]"></i>
-                                            <span>{{ file.hubName }}</span>
-                                        </div>
-                                        <div class="text-[10px] text-slate-500">SM: {{ file.smDisplayName }}</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="font-semibold text-slate-700">RO: {{ file.roName || 'Unassigned' }}</div>
-                                        <div class="text-[10px] text-slate-400">{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</div>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
-                                    <button 
-                                        type="button" 
-                                        @click="openViewFileModal(file)" 
-                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                                        <i class="fas fa-eye text-xs"></i>
-                                        <span>Details</span>
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="sendFileAlertToSm(file)" 
-                                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                                        <i class="fab fa-whatsapp text-xs text-emerald-600"></i>
-                                        <span>Nudge</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
                     <!-- ========================================== -->
@@ -5232,14 +5168,23 @@
                                         </select>
                                     </div>
 
+                                    <!-- Branch Hub / SM Filter (ASM only) -->
+                                    <div v-if="isASM">
+                                        <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Branch Hub / SM</label>
+                                        <select v-model="asmFilters.hubId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] transition">
+                                            <option value="All">All Branch Hubs ({{ supervisedSMs.length }})</option>
+                                            <option v-for="hub in supervisedSMs" :key="hub.id" :value="hub.tenantId">{{ hub.region || hub.name }} ({{ hub.name }})</option>
+                                        </select>
+                                    </div>
+
                                     <!-- Status Filter -->
                                     <div>
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Status</label>
                                         <div class="flex flex-wrap gap-2">
                                             <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'FCU', label:'FCU'}, {val:'UW', label:'UW'}, {val:'Sanction', label:'Sanction'}, {val:'Approved', label:'Approved'}, {val:'Rejected', label:'Rejected'}, {val:'Disbursed', label:'Disbursed'}, {val:'Cancelled', label:'Cancelled'}, {val:'Custom', label:'Custom'}]" 
                                                     :key="st.val"
-                                                    @click="roFilters.status = st.val"
-                                                    :class="roFilters.status === st.val ? 'bg-slate-800 text-white shadow-md font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
+                                                    @click="isASM ? asmFilters.status = st.val : roFilters.status = st.val"
+                                                    :class="(isASM ? asmFilters.status : roFilters.status) === st.val ? 'bg-slate-800 text-white shadow-md font-bold border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
                                                     class="px-3.5 py-2 rounded-xl text-xs border transition-all duration-200">
                                                 {{ st.label }}
                                             </button>
@@ -5252,15 +5197,15 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <button v-for="t in [{val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-week', label:'This Week'}, {val:'this-month', label:'This Month'}, {val:'all', label:'All Time'}, {val:'custom', label:'Custom'}]" 
                                                     :key="t.val"
-                                                    @click="roFilters.timeline = t.val; if(t.val !== 'custom') roFilters.customDate = '';"
-                                                    :class="roFilters.timeline === t.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
+                                                    @click="if(isASM) { asmFilters.timeline = t.val; if(t.val !== 'custom') asmFilters.customDate = ''; } else { roFilters.timeline = t.val; if(t.val !== 'custom') roFilters.customDate = ''; }"
+                                                    :class="(isASM ? asmFilters.timeline : roFilters.timeline) === t.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
                                                     class="px-1.5 py-1 rounded-xl text-xs border transition-all duration-200">
                                                 {{ t.label }}
                                             </button>
                                         </div>
                                         <!-- Custom Date Input -->
-                                        <div v-if="roFilters.timeline === 'custom'" class="mt-3 relative animate-in fade-in zoom-in-95 duration-200">
-                                            <input v-model="roFilters.customDate" type="date" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-inner">
+                                        <div v-if="(isASM ? asmFilters.timeline : roFilters.timeline) === 'custom'" class="mt-3 relative animate-in fade-in zoom-in-95 duration-200">
+                                            <input v-model="isASM ? asmFilters.customDate : roFilters.customDate" type="date" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/10 transition shadow-inner">
                                         </div>
                                     </div>
 
@@ -5270,8 +5215,8 @@
                                         <div class="grid grid-cols-3 gap-2">
                                             <button v-for="cat in [{val:'', label:'All'}, {val:'NCL', label:'NCL'}, {val:'UCL', label:'UCL'}]"
                                                     :key="cat.val"
-                                                    @click="roFilters.nclUcl = cat.val"
-                                                    :class="roFilters.nclUcl === cat.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
+                                                    @click="isASM ? asmFilters.nclUcl = cat.val : roFilters.nclUcl = cat.val"
+                                                    :class="(isASM ? asmFilters.nclUcl : roFilters.nclUcl) === cat.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
                                                     class="px-1.5 py-1 rounded-xl text-xs border text-center transition-all duration-200">
                                                 {{ cat.label }}
                                             </button>
@@ -5284,8 +5229,8 @@
                                         <div class="grid grid-cols-3 gap-2">
                                             <button v-for="ch in [{val:'', label:'All'}, {val:'DSA', label:'DSA'}, {val:'Branch', label:'Branch'}]"
                                                     :key="ch.val"
-                                                    @click="roFilters.sourcingChannel = ch.val"
-                                                    :class="roFilters.sourcingChannel === ch.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
+                                                    @click="isASM ? asmFilters.sourcingChannel = ch.val : roFilters.sourcingChannel = ch.val"
+                                                    :class="(isASM ? asmFilters.sourcingChannel : roFilters.sourcingChannel) === ch.val ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'"
                                                     class="px-1.5 py-1 rounded-xl text-xs border text-center transition-all duration-200">
                                                 {{ ch.label }}
                                             </button>
@@ -5296,10 +5241,10 @@
                                     <div>
                                         <label class="block text-[11px] text-slate-500 font-bold mb-3 uppercase tracking-wider">Sort Order</label>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button @click="roFilters.sortBy = 'newest'" :class="roFilters.sortBy === 'newest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                            <button @click="isASM ? asmFilters.sortBy = 'newest' : roFilters.sortBy = 'newest'" :class="(isASM ? asmFilters.sortBy : roFilters.sortBy) === 'newest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
                                                 <i class="fas fa-arrow-down text-[10px]"></i> Newest
                                             </button>
-                                            <button @click="roFilters.sortBy = 'oldest'" :class="roFilters.sortBy === 'oldest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
+                                            <button @click="isASM ? asmFilters.sortBy = 'oldest' : roFilters.sortBy = 'oldest'" :class="(isASM ? asmFilters.sortBy : roFilters.sortBy) === 'oldest' ? 'bg-slate-800 text-white font-bold shadow-md border-transparent' : 'bg-white text-slate-600 border-slate-200 font-medium hover:bg-slate-50'" class="px-1.5 py-1.5 rounded-xl text-xs border transition-all duration-200 flex items-center justify-center gap-1.5">
                                                 <i class="fas fa-arrow-up text-[10px]"></i> Oldest
                                             </button>
                                         </div>
@@ -6748,13 +6693,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-111"></script>
+    <script type="module" src="js/app.js?v=force-update-112"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-111')
+                navigator.serviceWorker.register('./sw.js?v=force-update-112')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
