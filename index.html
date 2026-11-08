@@ -174,7 +174,9 @@
             </div>
 
             <!-- RIGHT AUTH PANEL: Minimalist, Friction-Free Authentication -->
-            <div class="w-full lg:w-[50%] xl:w-[46%] min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white relative">
+            <div class="w-full lg:w-[50%] xl:w-[46%] min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/40 via-white to-white relative overflow-hidden">
+                <!-- Ambient subtle glow for mobile -->
+                <div class="lg:hidden absolute -top-20 -right-20 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <!-- Top Status Bar (Desktop) -->
                 <div class="hidden lg:flex items-center justify-between text-xs text-slate-500 pb-2">
                     <div class="flex items-center gap-2">
@@ -187,18 +189,21 @@
                 </div>
 
                 <!-- Top Brand Header (Mobile Only) -->
-                <div class="lg:hidden flex items-center justify-between pb-4">
+                <div class="lg:hidden flex items-center justify-between pb-3">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm shadow-[#4F46E5]/20">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm shadow-[#4F46E5]/25 ring-1 ring-[#4F46E5]/20">
                             <i class="fas fa-layer-group"></i>
                         </div>
                         <div>
-                            <span class="text-[9px] font-mono font-bold tracking-wider uppercase text-indigo-600 block leading-tight">Enterprise Sales OS</span>
-                            <span class="text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide bg-indigo-100 text-[#4F46E5]">Lending OS</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block leading-tight font-medium">Retail Pipeline & Branch Radar</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[10px] font-bold text-emerald-700">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[10px] font-bold text-emerald-700 shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Online</span>
                     </div>
                 </div>
@@ -213,7 +218,7 @@
                                 Sign In
                             </h2>
                             <p class="text-xs sm:text-sm text-slate-500">
-                                Access your loan pipeline and daily branch tracking.
+                                Unified retail loan pipeline & daily branch tracking.
                             </p>
                         </div>
 
@@ -259,6 +264,17 @@
                                     <span v-if="loginStage === 'redirecting'">Redirecting to Google SSO...</span>
                                     <span v-else>Browser blocking popups? Click for Direct Sign-In →</span>
                                 </button>
+                            </div>
+
+                            <!-- Institutional Trust Bar (Bank Security & Authority) -->
+                            <div class="pt-2 flex flex-col items-center gap-1 text-[10px] text-slate-400">
+                                <div class="flex items-center gap-1.5 font-semibold text-slate-500">
+                                    <i class="fas fa-shield-halved text-emerald-600"></i>
+                                    <span>Bank-Grade 256-Bit SSL • OAuth 2.0 Auth</span>
+                                </div>
+                                <div class="text-[9px] text-slate-400 font-medium tracking-wider uppercase">
+                                    Axis Bank • HDFC • ICICI • PSBs & NBFCs
+                                </div>
                             </div>
                         </div>
 
@@ -474,6 +490,49 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Mobile On-Demand Platform Overview -->
+                <div class="lg:hidden pb-3">
+                    <div class="text-center">
+                        <button type="button" @click="showMobileFeatures = !showMobileFeatures" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-[#4F46E5] transition cursor-pointer py-1">
+                            <i class="fas fa-sparkles text-[#4F46E5] text-[10px]"></i>
+                            <span>{{ showMobileFeatures ? 'Close Platform Overview ↑' : 'Why SalesLink? Platform Overview ↓' }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Expandable Pillar Cards -->
+                    <div v-if="showMobileFeatures" class="mt-2.5 space-y-2 animate-fade-in text-left">
+                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center text-xs shrink-0 mt-0.5">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">Multi-Tier Hierarchy</div>
+                                <div class="text-[10px] text-slate-500 leading-snug">Isolated portals & dashboards for ROs, SMs, ASMs, and ZSMs.</div>
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">Live Pipeline Radar</div>
+                                <div class="text-[10px] text-slate-500 leading-snug">Real-time loan stages: Logins, Field Investigation, Sanctions & Disbursals.</div>
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                                <i class="fas fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-900">Bank-Grade Governance</div>
+                                <div class="text-[10px] text-slate-500 leading-snug">Granular authority boundaries, Sol ID validation & automated audit trails.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -6772,13 +6831,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-115"></script>
+    <script type="module" src="js/app.js?v=force-update-116"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-115')
+                navigator.serviceWorker.register('./sw.js?v=force-update-116')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
