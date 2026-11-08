@@ -92,10 +92,10 @@
         <!-- ======================================================== -->
         <!-- ENTERPRISE SPLIT-SCREEN AUTHENTICATION PORTAL              -->
         <!-- ======================================================== -->
-        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-900 font-sans antialiased overflow-x-hidden selection:bg-[#4F46E5] selection:text-white">
+        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-white lg:bg-slate-900 font-sans antialiased overflow-x-hidden selection:bg-[#4F46E5] selection:text-white">
 
             <!-- LEFT BRAND PANEL: Corporate Authority, Vision & Trust Badges -->
-            <div class="lg:w-[50%] xl:w-[54%] relative flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-gradient-to-br from-slate-950 via-[#0a0f1d] to-[#1e1b4b] text-white overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10 shrink-0">
+            <div class="hidden lg:flex lg:w-[50%] xl:w-[54%] relative flex-col justify-between p-6 sm:p-10 lg:p-14 bg-gradient-to-br from-slate-950 via-[#0a0f1d] to-[#1e1b4b] text-white overflow-hidden border-r border-white/10 shrink-0">
                 <!-- Background Geometric Grid & Ambient Glows -->
                 <div class="absolute inset-0 bg-[radial-gradient(#4F46E5_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none"></div>
                 <div class="absolute -top-32 -left-32 w-80 h-80 bg-[#4F46E5]/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -174,9 +174,9 @@
             </div>
 
             <!-- RIGHT AUTH PANEL: Minimalist, Friction-Free Authentication -->
-            <div class="lg:w-[50%] xl:w-[46%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white relative">
-                <!-- Top Status Bar -->
-                <div class="flex items-center justify-between text-xs text-slate-500 pb-2">
+            <div class="w-full lg:w-[50%] xl:w-[46%] min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white relative">
+                <!-- Top Status Bar (Desktop) -->
+                <div class="hidden lg:flex items-center justify-between text-xs text-slate-500 pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <span class="text-[11px] font-semibold text-slate-700">Production Cloud • Online</span>
@@ -184,6 +184,23 @@
                     <a href="mailto:support@saleslink.in" class="text-[11px] text-slate-400 hover:text-slate-700 font-medium transition">
                         Help & Support
                     </a>
+                </div>
+
+                <!-- Top Brand Header (Mobile Only) -->
+                <div class="lg:hidden flex items-center justify-between pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm shadow-[#4F46E5]/20">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <span class="text-[9px] font-mono font-bold tracking-wider uppercase text-indigo-600 block leading-tight">Enterprise Sales OS</span>
+                            <span class="text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-[10px] font-bold text-emerald-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Online</span>
+                    </div>
                 </div>
 
                 <!-- Center Authentication Container -->
@@ -6755,13 +6772,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-114"></script>
+    <script type="module" src="js/app.js?v=force-update-115"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-114')
+                navigator.serviceWorker.register('./sw.js?v=force-update-115')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
