@@ -289,21 +289,19 @@
 
                     <!-- VIEW 2: Workspace Registration & Role Selection -->
                     <div v-else class="space-y-4 animate-fade-in">
-                        <!-- Top Navigation & Step Indicator -->
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                            <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition">
-                                <i class="fas fa-arrow-left text-[10px]"></i>
-                                <span>Back to Sign In</span>
-                            </button>
-                            <span class="text-[11px] font-semibold text-slate-400">
-                                {{ registerStep === 1 ? 'Step 1 of 2' : 'Step 2 of 2' }}
-                            </span>
-                        </div>
-
                         <!-- ============================================== -->
                         <!-- STEP 1: WHO IS REGISTERING? (ROLE MANDATE)     -->
                         <!-- ============================================== -->
                         <div v-if="registerStep === 1" class="space-y-4">
+                            <!-- Clean Step 1 Header -->
+                            <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                                <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition">
+                                    <i class="fas fa-arrow-left text-[10px]"></i>
+                                    <span>Back to Sign In</span>
+                                </button>
+                                <span class="text-[11px] font-semibold text-slate-400">Step 1 of 2</span>
+                            </div>
+
                             <div class="space-y-1">
                                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                                     Who is registering?
@@ -361,7 +359,6 @@
                                 </button>
                             </div>
 
-                            <!-- Quiet Officer Helper -->
                             <div class="pt-2 text-center">
                                 <p class="text-[11px] text-slate-400">
                                     Relationship Officer (RO)?
@@ -373,16 +370,16 @@
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- STEP 2: WORKSPACE SETUP DETAILS                -->
+                        <!-- STEP 2: WORKSPACE SETUP DETAILS (INSET CARD)   -->
                         <!-- ============================================== -->
                         <form v-else-if="registerStep === 2" @submit.prevent="registerSM" class="space-y-3.5 animate-fade-in">
-                            <!-- Top Navigation Bar with Role Pill -->
+                            <!-- Single Clean Header Bar with Role Pill -->
                             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                                <button type="button" @click="registerStep = 1; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer">
+                                <button type="button" @click="registerStep = 1; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition">
                                     <i class="fas fa-arrow-left text-[10px]"></i>
-                                    <span>Back</span>
+                                    <span>Change Role</span>
                                 </button>
-                                <div class="flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full text-[11px] font-bold text-[#4F46E5]">
+                                <div class="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-bold text-[#4F46E5]">
                                     <i :class="registerForm.role === 'sm' ? 'fas fa-building' : (registerForm.role === 'asm' ? 'fas fa-network-wired' : 'fas fa-globe')" class="text-[10px]"></i>
                                     <span>{{ registerForm.role === 'sm' ? 'Sales Manager (SM)' : (registerForm.role === 'asm' ? 'Area Manager (ASM)' : 'Zonal Manager (ZSM)') }}</span>
                                 </div>
@@ -391,13 +388,13 @@
                                 </button>
                             </div>
 
-                            <!-- Title & Mandatory Notice -->
+                            <!-- Screen Title -->
                             <div class="space-y-0.5">
                                 <h3 class="text-base font-black text-slate-900 tracking-tight">
-                                    {{ registerForm.role === 'sm' ? 'Set Up Branch Hub' : (registerForm.role === 'asm' ? 'Set Up Area Desk' : 'Set Up Zonal Desk') }}
+                                    {{ registerForm.role === 'sm' ? 'Branch Hub Details' : (registerForm.role === 'asm' ? 'Area Desk Details' : 'Zonal Desk Details') }}
                                 </h3>
                                 <p class="text-xs text-slate-500">
-                                    Official banking details • <span class="text-rose-600 font-semibold">All fields mandatory</span>
+                                    All official fields are mandatory to provision your workspace.
                                 </p>
                             </div>
 
@@ -407,84 +404,103 @@
                                 <span>{{ registerError }}</span>
                             </div>
 
-                            <!-- Form Inputs Container (Clean, Balanced & Compact) -->
-                            <div class="space-y-2.5">
-                                <!-- Row 1: Bank & Asset Vertical (Side-by-Side) -->
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                            <!-- Inset Grouped Form Card (Apple / Stripe Aesthetic) -->
+                            <div class="bg-white border border-slate-200 rounded-2xl shadow-xs divide-y divide-slate-100 overflow-hidden">
+                                <!-- Field 1: Bank / Institution -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-building-columns"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                             Bank / Institution <span class="text-rose-500">*</span>
-                                        </label>
+                                        </div>
                                         <div class="relative">
-                                            <select v-model="registerForm.bankName" required class="w-full pl-2.5 pr-6 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5] appearance-none cursor-pointer transition">
+                                            <select v-model="registerForm.bankName" required class="w-full bg-transparent text-xs font-bold text-slate-800 pr-5 outline-none appearance-none cursor-pointer">
                                                 <option value="Axis Bank">Axis Bank</option>
                                                 <option v-for="b in bankOptions.private" :key="b" :value="b">{{ b }}</option>
                                                 <option v-for="b in bankOptions.public" :key="b" :value="b">{{ b }}</option>
                                                 <option v-for="b in bankOptions.nbfc" :key="b" :value="b">{{ b }}</option>
                                                 <option value="Other">Other Bank / NBFC</option>
                                             </select>
-                                            <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                            <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                <!-- Field 1b: Custom Bank (if Other) -->
+                                <div v-if="registerForm.bankName === 'Other'" class="p-3 flex items-center gap-3 bg-amber-50/40 animate-fade-in">
+                                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-pen"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                                            Custom Bank Name <span class="text-rose-500">*</span>
+                                        </div>
+                                        <input v-model="registerForm.customBankName" type="text" required placeholder="e.g. Northern Arc Capital" class="w-full bg-transparent text-xs font-bold text-slate-800 outline-none placeholder-slate-400">
+                                    </div>
+                                </div>
+
+                                <!-- Field 2: Asset Vertical (Full width, NO truncation!) -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                             Asset Vertical <span class="text-rose-500">*</span>
-                                        </label>
+                                        </div>
                                         <div class="relative">
-                                            <select v-model="registerForm.division" required class="w-full pl-2.5 pr-6 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5] appearance-none cursor-pointer transition">
+                                            <select v-model="registerForm.division" required class="w-full bg-transparent text-xs font-bold text-slate-800 pr-5 outline-none appearance-none cursor-pointer">
                                                 <option v-for="d in divisionOptions" :key="d" :value="d">{{ d }}</option>
                                             </select>
-                                            <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                            <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Custom Bank if "Other" -->
-                                <div v-if="registerForm.bankName === 'Other'" class="animate-fade-in">
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                        Custom Bank / NBFC Name <span class="text-rose-500">*</span>
-                                    </label>
-                                    <input v-model="registerForm.customBankName" type="text" required placeholder="e.g. Northern Arc Capital" class="w-full px-3 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5]">
-                                </div>
-
-                                <!-- Row 2: Full Name -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                        {{ registerForm.role === 'sm' ? 'Sales Manager Full Name' : (registerForm.role === 'asm' ? 'Area Manager Full Name' : 'Zonal Manager Full Name') }} <span class="text-rose-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <i class="fas fa-user text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                        <input v-model="registerForm.name" type="text" required placeholder="e.g. Vikram Singh" class="w-full pl-8 pr-3 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5] transition">
+                                <!-- Field 3: Manager Full Name -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            {{ registerForm.role === 'sm' ? 'Sales Manager Name' : (registerForm.role === 'asm' ? 'Area Manager Name' : 'Zonal Manager Name') }} <span class="text-rose-500">*</span>
+                                        </div>
+                                        <input v-model="registerForm.name" type="text" required placeholder="e.g. Vikram Singh" class="w-full bg-transparent text-xs font-bold text-slate-800 outline-none placeholder-slate-300">
                                     </div>
                                 </div>
 
-                                <!-- Row 3: Hub City / Location & Mobile (Side-by-Side) -->
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                <!-- Field 4: Hub Location / City -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-location-dot"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                             {{ registerForm.role === 'sm' ? 'Branch Hub / City' : (registerForm.role === 'asm' ? 'Area Jurisdiction' : 'Zonal Jurisdiction') }} <span class="text-rose-500">*</span>
-                                        </label>
-                                        <div class="relative">
-                                            <i class="fas fa-location-dot text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                            <input v-model="registerForm.region" type="text" required :placeholder="registerForm.role === 'sm' ? 'e.g. Jaipur Main' : (registerForm.role === 'asm' ? 'e.g. Rajasthan' : 'e.g. West Zone')" class="w-full pl-8 pr-2.5 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5] transition">
                                         </div>
+                                        <input v-model="registerForm.region" type="text" required :placeholder="registerForm.role === 'sm' ? 'e.g. Guwahati Hub' : (registerForm.role === 'asm' ? 'e.g. Assam Cluster' : 'e.g. North East Zone')" class="w-full bg-transparent text-xs font-bold text-slate-800 outline-none placeholder-slate-300">
                                     </div>
+                                </div>
 
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                            Mobile / WhatsApp <span class="text-rose-500">*</span>
-                                        </label>
-                                        <div class="relative">
-                                            <i class="fas fa-phone text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                            <input v-model="registerForm.phone" type="tel" required placeholder="10-digit number" class="w-full pl-8 pr-2.5 py-2 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-[#4F46E5] transition">
+                                <!-- Field 5: Mobile / WhatsApp -->
+                                <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
+                                        <i class="fas fa-phone"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            Mobile / WhatsApp (10 Digits) <span class="text-rose-500">*</span>
                                         </div>
+                                        <input v-model="registerForm.phone" type="tel" required placeholder="e.g. 9652846491" class="w-full bg-transparent text-xs font-bold text-slate-800 outline-none placeholder-slate-300">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Submit Button -->
-                            <button type="submit" :disabled="isRegistering" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-xs hover:shadow-md mt-2">
+                            <!-- Primary Submit Button -->
+                            <button type="submit" :disabled="isRegistering" class="w-full h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-2xl text-xs sm:text-sm shadow-md shadow-indigo-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 mt-1">
                                 <template v-if="registerStage === 'setting_up'">
                                     <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -497,59 +513,18 @@
                                     <span>Select Google Account to Link...</span>
                                 </template>
                                 <template v-else>
-                                    <i class="fas fa-check-circle text-xs"></i>
+                                    <i class="fas fa-shield-check text-indigo-200"></i>
                                     <span>Register & Link with Google Workspace</span>
+                                    <i class="fas fa-arrow-right text-[11px] text-indigo-200"></i>
                                 </template>
                             </button>
 
                             <!-- Quiet Mandate Confirmation Footnote -->
-                            <div class="text-[10px] text-slate-400 text-center leading-tight">
-                                By continuing, you confirm your authority as verified <strong class="text-slate-600">{{ registerForm.role === 'sm' ? 'Sales Manager (SM)' : (registerForm.role === 'asm' ? 'Area Manager (ASM)' : 'Zonal Manager (ZSM)') }}</strong>.
+                            <div class="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 text-center">
+                                <i class="fas fa-shield-check text-emerald-500 text-[10px]"></i>
+                                <span>Verified workspace for <strong class="text-slate-600 font-bold">{{ registerForm.role === 'sm' ? 'Sales Manager (SM)' : (registerForm.role === 'asm' ? 'Area Manager (ASM)' : 'Zonal Manager (ZSM)') }}</strong></span>
                             </div>
                         </form>
-                    </div>
-                </div>
-
-                <!-- Mobile On-Demand Platform Overview -->
-                <div v-if="!showRegisterMode" class="lg:hidden pb-3">
-                    <div class="text-center">
-                        <button type="button" @click="showMobileFeatures = !showMobileFeatures" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-[#4F46E5] transition cursor-pointer py-1">
-                            <i class="fas fa-sparkles text-[#4F46E5] text-[10px]"></i>
-                            <span>{{ showMobileFeatures ? 'Close Platform Overview ↑' : 'Why SalesLink? Platform Overview ↓' }}</span>
-                        </button>
-                    </div>
-
-                    <!-- Expandable Pillar Cards -->
-                    <div v-if="showMobileFeatures" class="mt-2.5 space-y-2 animate-fade-in text-left">
-                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center text-xs shrink-0 mt-0.5">
-                                <i class="fas fa-sitemap"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-slate-900">Multi-Tier Hierarchy</div>
-                                <div class="text-[10px] text-slate-500 leading-snug">Isolated portals & dashboards for ROs, SMs, ASMs, and ZSMs.</div>
-                            </div>
-                        </div>
-
-                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs shrink-0 mt-0.5">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-slate-900">Live Pipeline Radar</div>
-                                <div class="text-[10px] text-slate-500 leading-snug">Real-time loan stages: Logins, Field Investigation, Sanctions & Disbursals.</div>
-                            </div>
-                        </div>
-
-                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs shrink-0 mt-0.5">
-                                <i class="fas fa-shield-halved"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-slate-900">Bank-Grade Governance</div>
-                                <div class="text-[10px] text-slate-500 leading-snug">Granular authority boundaries, Sol ID validation & automated audit trails.</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -6848,13 +6823,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-119"></script>
+    <script type="module" src="js/app.js?v=force-update-120"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-119')
+                navigator.serviceWorker.register('./sw.js?v=force-update-120')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
