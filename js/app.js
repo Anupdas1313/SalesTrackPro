@@ -115,6 +115,15 @@ const app = createApp({
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
         const registerForm = ref({ role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
+        const registerStep = ref(1);
+        const registerConfirmed = ref(false);
+
+        const selectRegisterRole = (role) => {
+            registerForm.value.role = role;
+            registerStep.value = 2;
+            registerError.value = '';
+            registerConfirmed.value = false;
+        };
         const divisionOptions = [
             'Auto Loans (Car Loans)',
             'Personal Loans (PL)',
@@ -3809,6 +3818,11 @@ const app = createApp({
             if (isRegistering.value) return;
             registerError.value = '';
 
+            if (!registerConfirmed.value) {
+                registerError.value = 'Please confirm the leadership mandate checkbox before proceeding.';
+                return;
+            }
+
             const smName = registerForm.value.name?.trim();
             const smRegion = registerForm.value.region?.trim();
             const smPhone = registerForm.value.phone?.trim() || '';
@@ -3915,6 +3929,8 @@ const app = createApp({
                 await loadData();
 
                 showRegisterMode.value = false;
+                registerStep.value = 1;
+                registerConfirmed.value = false;
                 registerForm.value = { role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
             } catch (error) {
                 console.error("Registration Error:", error);
@@ -4983,7 +4999,7 @@ const app = createApp({
             showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            showRegisterMode, registerForm, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
+            showRegisterMode, registerForm, registerStep, registerConfirmed, selectRegisterRole, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
