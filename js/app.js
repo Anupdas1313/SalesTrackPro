@@ -123,7 +123,7 @@ const app = createApp({
             registerForm.value.role = role;
             registerStep.value = 2;
             registerError.value = '';
-            registerConfirmed.value = false;
+            registerConfirmed.value = true;
         };
         const divisionOptions = [
             'Auto Loans (Car Loans)',
