@@ -245,177 +245,116 @@
                             </div>
                         </div>
 
-                        <!-- Automatic Role Routing Note -->
-                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between text-[11px] text-slate-500">
-                            <span class="flex items-center gap-1.5 font-medium">
-                                <i class="fas fa-shield-check text-[#4F46E5]"></i>
-                                <span>Auto-routes by authority:</span>
-                            </span>
-                            <span class="font-bold text-slate-700">RO • SM • ASM • ZSM</span>
-                        </div>
-
-                        <!-- Manager Setup Callout Card -->
-                        <div class="pt-3 border-t border-slate-100">
-                            <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-2xl flex items-center justify-between gap-3">
-                                <div>
-                                    <div class="text-xs font-bold text-slate-900">Branch or Area Leadership Setup?</div>
-                                    <div class="text-[11px] text-slate-500">Register a new Branch Hub, Area or Zonal Desk</div>
-                                </div>
-                                <button type="button" @click="showRegisterMode = true; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="px-3 py-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition shrink-0 cursor-pointer">
-                                    Register Hub →
-                                </button>
-                            </div>
+                        <!-- Callout for New Workspace Setup -->
+                        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="text-slate-500">Setting up a branch or area?</span>
+                            <button type="button" @click="showRegisterMode = true; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:text-[#4338CA] transition cursor-pointer">
+                                Register Workspace →
+                            </button>
                         </div>
                     </div>
 
-                    <!-- VIEW 2: Leadership Mandate & Workspace Registration -->
+                    <!-- VIEW 2: Workspace Registration & Role Selection -->
                     <div v-else class="space-y-4 animate-fade-in">
-                        <!-- Top Navigation & Return Link -->
+                        <!-- Top Navigation & Step Indicator -->
                         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                            <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-bold cursor-pointer">
-                                <i class="fas fa-arrow-left text-[11px]"></i> Back to Sign In
+                            <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition">
+                                <i class="fas fa-arrow-left text-[10px]"></i>
+                                <span>Back to Sign In</span>
                             </button>
-                            <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-full">
-                                {{ registerStep === 1 ? 'Step 1 of 2: Role Mandate' : 'Step 2 of 2: Setup Details' }}
+                            <span class="text-[11px] font-semibold text-slate-400">
+                                {{ registerStep === 1 ? 'Step 1 of 2' : 'Step 2 of 2' }}
                             </span>
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- STEP 1: MANDATE QUESTION & ROLE GATEKEEPER    -->
+                        <!-- STEP 1: WHO IS REGISTERING? (ROLE MANDATE)     -->
                         <!-- ============================================== -->
                         <div v-if="registerStep === 1" class="space-y-4">
                             <div class="space-y-1">
-                                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                                    Confirm Your Leadership Role
+                                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                                    Who is registering?
                                 </h2>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    SalesLink enforces strict role mandates to ensure loan files, branch teams, and daily EODs roll up to the correct supervisory tier.
+                                <p class="text-xs text-slate-500">
+                                    Select your leadership role to configure the correct workspace:
                                 </p>
                             </div>
 
-                            <!-- Role Cards Grid -->
-                            <div class="space-y-2.5">
-                                <!-- Card 1: SM (Sales Manager) -->
-                                <button type="button" @click="selectRegisterRole('sm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50/80 border-2 rounded-2xl transition-all cursor-pointer group flex items-start gap-3.5 shadow-2xs hover:shadow-xs border-slate-200/80 hover:border-slate-300">
-                                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-[#4F46E5] flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
+                            <!-- 3 Clean Role Options -->
+                            <div class="space-y-2">
+                                <!-- Option 1: SM -->
+                                <button type="button" @click="selectRegisterRole('sm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-[#4F46E5] flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-building"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-[#4F46E5] transition-colors">
-                                                SM (Sales Manager)
-                                            </h3>
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-[#4F46E5] border border-indigo-100">
-                                                Branch Hub
-                                            </span>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#4F46E5] transition-colors">Sales Manager (SM)</span>
+                                            <span class="text-[10px] font-semibold text-slate-400">Branch Hub</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 font-medium mt-1 leading-snug">
-                                            I manage a physical branch hub and lead a team of field Relationship Officers (ROs).
-                                        </p>
-                                        <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
-                                            <i class="fas fa-circle-check text-emerald-600 text-[11px]"></i>
-                                            <span>Creates Branch Workspace • Generates <strong class="text-slate-700 font-mono">SL-SM-XXXX</strong></span>
-                                        </div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5">Manage branch team & loan files</div>
                                     </div>
-                                    <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition self-center"></i>
+                                    <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
 
-                                <!-- Card 2: ASM (Area Sales Manager) -->
-                                <button type="button" @click="selectRegisterRole('asm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50/80 border-2 rounded-2xl transition-all cursor-pointer group flex items-start gap-3.5 shadow-2xs hover:shadow-xs border-slate-200/80 hover:border-slate-300">
-                                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
+                                <!-- Option 2: ASM -->
+                                <button type="button" @click="selectRegisterRole('asm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-purple-50 text-slate-700 group-hover:text-purple-600 flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-network-wired"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-purple-600 transition-colors">
-                                                ASM (Area Sales Manager)
-                                            </h3>
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-100">
-                                                Multi-Hub Area
-                                            </span>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-purple-600 transition-colors">Area Sales Manager (ASM)</span>
+                                            <span class="text-[10px] font-semibold text-slate-400">Area Cluster</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 font-medium mt-1 leading-snug">
-                                            I supervise multiple branch hubs and Sales Managers across a city or district cluster.
-                                        </p>
-                                        <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
-                                            <i class="fas fa-circle-check text-emerald-600 text-[11px]"></i>
-                                            <span>Area Cockpit & EOD Audit • Generates <strong class="text-slate-700 font-mono">SL-ASM-XXXX</strong></span>
-                                        </div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5">Supervise multiple branch hubs</div>
                                     </div>
-                                    <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition self-center"></i>
+                                    <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
 
-                                <!-- Card 3: ZSM (Zonal Sales Manager) -->
-                                <button type="button" @click="selectRegisterRole('zsm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50/80 border-2 rounded-2xl transition-all cursor-pointer group flex items-start gap-3.5 shadow-2xs hover:shadow-xs border-slate-200/80 hover:border-slate-300">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
+                                <!-- Option 3: ZSM -->
+                                <button type="button" @click="selectRegisterRole('zsm')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-blue-50 text-slate-700 group-hover:text-blue-600 flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-globe"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                                ZSM (Zonal Sales Manager)
-                                            </h3>
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
-                                                Regional Command
-                                            </span>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Zonal Sales Manager (ZSM)</span>
+                                            <span class="text-[10px] font-semibold text-slate-400">Regional Zone</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 font-medium mt-1 leading-snug">
-                                            I govern regional operations and macro targets across Area Managers in a zone or state.
-                                        </p>
-                                        <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
-                                            <i class="fas fa-circle-check text-emerald-600 text-[11px]"></i>
-                                            <span>Zonal Cockpit & Quota Pacing • Generates <strong class="text-slate-700 font-mono">SL-ZSM-XXXX</strong></span>
-                                        </div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5">Command all areas across the zone</div>
                                     </div>
-                                    <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition self-center"></i>
+                                    <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
                             </div>
 
-                            <!-- RO Diverter Safety Banner -->
-                            <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex items-start gap-3">
-                                <i class="fas fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                                <div class="text-[11px] leading-relaxed">
-                                    <strong class="text-amber-900 font-bold block mb-0.5">Are you a Relationship Officer (RO)?</strong>
-                                    <span class="text-amber-800">Field officers do not register hubs. Your Branch Sales Manager adds you directly to their branch team.</span>
-                                    <div class="mt-1.5">
-                                        <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="inline-flex items-center gap-1 font-bold text-[#4F46E5] hover:underline cursor-pointer">
-                                            <span>Switch to Officer Sign In</span>
-                                            <i class="fas fa-arrow-right text-[10px]"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                            <!-- Quiet Officer Helper -->
+                            <div class="pt-2 text-center">
+                                <p class="text-[11px] text-slate-400">
+                                    Relationship Officer (RO)?
+                                    <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:underline cursor-pointer ml-1">
+                                        Sign in directly
+                                    </button>
+                                </p>
                             </div>
                         </div>
 
                         <!-- ============================================== -->
-                        <!-- STEP 2: ROLE-CONTEXTUAL DATA ENTRY & MANDATE   -->
+                        <!-- STEP 2: WORKSPACE SETUP DETAILS                -->
                         <!-- ============================================== -->
                         <form v-else-if="registerStep === 2" @submit.prevent="registerSM" class="space-y-3.5 animate-fade-in">
-                            <!-- Role Switcher & Summary Card -->
-                            <div class="p-3 rounded-2xl border flex items-center justify-between gap-3 shadow-2xs" :class="registerForm.role === 'sm' ? 'bg-indigo-50/40 border-indigo-200/80' : (registerForm.role === 'asm' ? 'bg-purple-50/40 border-purple-200/80' : 'bg-blue-50/40 border-blue-200/80')">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-2xs" :class="registerForm.role === 'sm' ? 'bg-[#4F46E5] text-white' : (registerForm.role === 'asm' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white')">
-                                        <i :class="registerForm.role === 'sm' ? 'fas fa-building' : (registerForm.role === 'asm' ? 'fas fa-network-wired' : 'fas fa-globe')"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Selected Leadership Role</div>
-                                        <div class="text-xs font-black text-slate-900">
-                                            {{ registerForm.role === 'sm' ? 'SM (Sales Manager) • Branch Hub' : (registerForm.role === 'asm' ? 'ASM (Area Sales Manager) • Multi-Hub' : 'ZSM (Zonal Sales Manager) • Regional') }}
-                                        </div>
-                                    </div>
+                            <div class="flex items-center justify-between pb-1">
+                                <div>
+                                    <h3 class="text-base font-black text-slate-900 tracking-tight">
+                                        {{ registerForm.role === 'sm' ? 'Branch Hub Details' : (registerForm.role === 'asm' ? 'Area Desk Details' : 'Zonal Desk Details') }}
+                                    </h3>
+                                    <p class="text-xs text-slate-500">
+                                        Registering as <span class="font-bold text-slate-800">{{ registerForm.role === 'sm' ? 'Sales Manager (SM)' : (registerForm.role === 'asm' ? 'Area Manager (ASM)' : 'Zonal Manager (ZSM)') }}</span>
+                                    </p>
                                 </div>
-                                <button type="button" @click="registerStep = 1; registerError = ''" class="text-[11px] font-bold text-[#4F46E5] hover:underline cursor-pointer shrink-0">
-                                    Change
+                                <button type="button" @click="registerStep = 1; registerError = ''" class="text-xs font-bold text-[#4F46E5] hover:underline cursor-pointer">
+                                    Change Role
                                 </button>
-                            </div>
-
-                            <div class="space-y-0.5">
-                                <h3 class="text-base font-black text-slate-900 tracking-tight">
-                                    {{ registerForm.role === 'sm' ? 'Set Up Your Branch Hub' : (registerForm.role === 'asm' ? 'Set Up Your Area Territory' : 'Set Up Your Zonal Command') }}
-                                </h3>
-                                <p class="text-xs text-slate-500">
-                                    {{ registerForm.role === 'sm' ? 'Configure the physical branch workspace where your field officers log files.' : (registerForm.role === 'asm' ? 'Configure your Area desk to link and supervise multiple branch hubs.' : 'Configure your Zonal desk to govern multiple Area Managers across the state/zone.') }}
-                                </p>
                             </div>
 
                             <!-- Registration Error Alert -->
@@ -469,7 +408,7 @@
                                         <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                                             {{ registerForm.role === 'sm' ? 'Branch Hub Location / City' : (registerForm.role === 'asm' ? 'Supervised Area / Cluster' : 'Zonal Jurisdiction') }} <span class="text-rose-500">*</span>
                                         </label>
-                                        <input v-model="registerForm.region" type="text" required :placeholder="registerForm.role === 'sm' ? 'e.g. Jaipur Main Branch Hub' : (registerForm.role === 'asm' ? 'e.g. Rajasthan Area (Jaipur + Ajmer)' : 'e.g. West Zone (RJ, GUJ, MH)')" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
+                                        <input v-model="registerForm.region" type="text" required :placeholder="registerForm.role === 'sm' ? 'e.g. Jaipur Main Branch Hub' : (registerForm.role === 'asm' ? 'e.g. Rajasthan Cluster' : 'e.g. West Zone')" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4F46E5] outline-none text-xs font-semibold text-slate-800">
                                     </div>
                                 </div>
 
@@ -481,18 +420,13 @@
                                 </div>
                             </div>
 
-                            <!-- Strict Mandate Confirmation Checkbox -->
-                            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1.5">
-                                <label class="flex items-start gap-2.5 cursor-pointer select-none">
-                                    <input v-model="registerConfirmed" type="checkbox" required class="mt-0.5 rounded text-[#4F46E5] focus:ring-[#4F46E5] cursor-pointer">
-                                    <span class="text-xs font-semibold text-slate-700 leading-snug">
-                                        I confirm that I am registering as a verified <strong class="text-slate-900 font-bold">{{ registerForm.role === 'sm' ? 'SM (Sales Manager)' : (registerForm.role === 'asm' ? 'ASM (Area Sales Manager)' : 'ZSM (Zonal Sales Manager)') }}</strong> for this financial institution.
-                                    </span>
-                                </label>
-                                <p class="text-[10px] text-slate-400 pl-6 leading-tight">
-                                    {{ registerForm.role === 'sm' ? 'Your branch workspace will be provisioned. Only field officers under this branch will be authorized to log files here.' : (registerForm.role === 'asm' ? 'Your Area Desk will be provisioned. Branch managers under your jurisdiction will link their hubs here.' : 'Your Zonal Command Desk will be provisioned to govern Area Managers across your zone.') }}
-                                </p>
-                            </div>
+                            <!-- Strict Mandate Confirmation Checkbox (Clean single line) -->
+                            <label class="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                                <input v-model="registerConfirmed" type="checkbox" required class="mt-0.5 rounded text-[#4F46E5] focus:ring-[#4F46E5] cursor-pointer">
+                                <span class="text-xs text-slate-600 font-medium leading-snug">
+                                    I confirm that I am registering as a verified {{ registerForm.role === 'sm' ? 'Sales Manager (SM)' : (registerForm.role === 'asm' ? 'Area Sales Manager (ASM)' : 'Zonal Sales Manager (ZSM)') }} for this financial institution.
+                                </span>
+                            </label>
 
                             <!-- Submit Button -->
                             <button type="submit" :disabled="isRegistering || !registerConfirmed" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs mt-1">
@@ -6821,13 +6755,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-113"></script>
+    <script type="module" src="js/app.js?v=force-update-114"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-113')
+                navigator.serviceWorker.register('./sw.js?v=force-update-114')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
