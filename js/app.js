@@ -4547,7 +4547,7 @@ const app = createApp({
 
                 await loadData();
             } else {
-                loginError.value = `⛔ Account Not Registered: The Google account (${email}) is not registered in SalesLink. If you are a Dealership Sales Executive (DSE) or Sales Manager, please register your account below.`;
+                loginError.value = `⛔ Account Not Registered: The Google account (${email}) is not registered in SalesLink. If you are a Sales Manager, please register your workspace below, or ask your supervisor to invite your account.`;
             }
         };
 

@@ -211,22 +211,10 @@
                 <!-- Center Authentication Container -->
                 <div class="my-auto max-w-sm w-full mx-auto py-4">
 
-                    <!-- VIEW 1: Dual-Portal Sign In (Bank Officers & Car Dealership DSE) -->
+                    <!-- VIEW 1: Sign In -->
                     <div v-if="!showRegisterMode" class="space-y-4 animate-fade-in">
-                        <!-- Portal Segmented Switcher -->
-                        <div class="p-1 bg-slate-100 border border-slate-200/70 rounded-2xl flex items-center gap-1">
-                            <button type="button" @click="loginPortalMode = 'bank'; loginError = ''" :class="[loginPortalMode === 'bank' ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-500 font-semibold hover:text-slate-800', 'flex-1 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer']">
-                                <i class="fas fa-building-columns text-[11px]" :class="loginPortalMode === 'bank' ? 'text-[#4F46E5]' : 'text-slate-400'"></i>
-                                <span>Bank Officers</span>
-                            </button>
-                            <button type="button" @click="loginPortalMode = 'dealer'; loginError = ''" :class="[loginPortalMode === 'dealer' ? 'bg-white text-emerald-950 font-bold shadow-xs' : 'text-slate-500 font-semibold hover:text-slate-800', 'flex-1 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer']">
-                                <i class="fas fa-car-side text-[11px]" :class="loginPortalMode === 'dealer' ? 'text-emerald-600' : 'text-slate-400'"></i>
-                                <span>Dealership (DSE)</span>
-                            </button>
-                        </div>
-
-                        <!-- BANK OFFICERS SIGN IN HEADER -->
-                        <div v-if="loginPortalMode === 'bank'" class="space-y-1.5 animate-fade-in">
+                        <!-- Sign In Header -->
+                        <div class="space-y-1.5 animate-fade-in">
                             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                                 Bank Officer Sign In
                             </h2>
@@ -235,32 +223,12 @@
                             </p>
                         </div>
 
-                        <!-- DEALERSHIP DSE SIGN IN HEADER -->
-                        <div v-else class="space-y-1.5 animate-fade-in">
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-[#4F46E5] border border-indigo-100">
-                                <i class="fas fa-car-side text-[9px]"></i>
-                                <span>Car Showroom Finance Portal</span>
-                            </div>
-                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                                Dealership DSE Sign In
-                            </h2>
-                            <p class="text-xs sm:text-sm text-slate-500">
-                                Punch customer files & track multi-bank sanctions in real time.
-                            </p>
-                        </div>
-
                         <!-- Login Error Alert -->
                         <div v-if="loginError" class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium rounded-2xl flex items-start gap-2.5">
                             <i class="fas fa-circle-exclamation text-rose-600 text-sm shrink-0 mt-0.5"></i>
                             <div class="space-y-1 leading-snug flex-1">
                                 <div class="font-bold">{{ loginError }}</div>
-                                <div v-if="loginPortalMode === 'dealer'" class="pt-1">
-                                    <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#4F46E5] text-white rounded-lg text-xs font-bold hover:bg-[#4338CA] transition cursor-pointer">
-                                        <i class="fas fa-user-plus text-[10px]"></i>
-                                        <span>Register DSE Account Now →</span>
-                                    </button>
-                                </div>
-                                <div v-else-if="loginError.includes('not found') || loginError.includes('invite')" class="text-[11px] text-rose-600 font-normal mt-0.5">
+                                <div v-if="loginError.includes('not found') || loginError.includes('invite') || loginError.includes('Not Registered')" class="text-[11px] text-rose-600 font-normal mt-0.5">
                                     If you are a new officer, ask your branch Sales Manager to invite your Google account.
                                 </div>
                             </div>
@@ -268,8 +236,7 @@
 
                         <!-- Primary Sign In Action -->
                         <div class="space-y-2.5 pt-1">
-                            <!-- BANK SUBMIT BUTTON -->
-                            <button v-if="loginPortalMode === 'bank'" type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-[#4F46E5] text-slate-800 hover:text-slate-900 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
+                            <button type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-[#4F46E5] text-slate-800 hover:text-slate-900 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
                                 <template v-if="loginStage === 'verifying'">
                                     <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -289,30 +256,6 @@
                                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                                     </svg>
                                     <span>Continue with Google Workspace</span>
-                                </template>
-                            </button>
-
-                            <!-- DEALERSHIP DSE SUBMIT BUTTON (Standard SalesLink Signature) -->
-                            <button v-else type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-[#4F46E5] text-slate-800 hover:text-slate-900 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
-                                <template v-if="loginStage === 'verifying'">
-                                    <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Verifying DSE Account...</span>
-                                </template>
-                                <template v-else-if="loginStage === 'selecting'">
-                                    <div class="w-2 h-2 rounded-full bg-[#4F46E5] animate-ping shrink-0"></div>
-                                    <span class="text-[#4F46E5] font-bold">Select account in Google window...</span>
-                                </template>
-                                <template v-else>
-                                    <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                                    </svg>
-                                    <span>Continue with Google (DSE Showroom)</span>
                                 </template>
                             </button>
 
@@ -336,17 +279,11 @@
                             </div>
                         </div>
 
-                        <!-- Callout for New Workspace / DSE Setup -->
-                        <div v-if="loginPortalMode === 'bank'" class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs animate-fade-in">
+                        <!-- Callout for New Workspace Setup -->
+                        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs animate-fade-in">
                             <span class="text-slate-500">Setting up a branch or area?</span>
                             <button type="button" @click="showRegisterMode = true; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:text-[#4338CA] transition cursor-pointer">
                                 Register Workspace →
-                            </button>
-                        </div>
-                        <div v-else class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs animate-fade-in">
-                            <span class="text-slate-500">New car showroom consultant?</span>
-                            <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:text-[#4338CA] transition cursor-pointer">
-                                Register DSE Account →
                             </button>
                         </div>
                     </div>
@@ -422,8 +359,8 @@
                                     <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
 
-                                <!-- Option 4: DSE (Car Showroom Sales Partner) -->
-                                <button type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                <!-- Option 4: DSE (Car Showroom Sales Partner - Currently Hidden) -->
+                                <button v-if="false" type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-[#4F46E5] flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-car-side"></i>
                                     </div>
@@ -440,7 +377,7 @@
 
                             <div class="pt-2 text-center">
                                 <p class="text-[11px] text-slate-400">
-                                    Already registered? (SM / RO / DSE)
+                                    Already registered? (SM / RO)
                                     <button type="button" @click="showRegisterMode = false; registerStep = 1; registerConfirmed = false; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:underline cursor-pointer ml-1">
                                         Proceed to Sign In Directly →
                                     </button>
@@ -7649,13 +7586,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-126"></script>
+    <script type="module" src="js/app.js?v=force-update-127"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-126')
+                navigator.serviceWorker.register('./sw.js?v=force-update-127')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
