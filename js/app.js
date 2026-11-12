@@ -351,6 +351,10 @@ const app = createApp({
         const currentTab = ref(getInitialTab());
         const goToTab = (tab) => {
             if (tab) {
+                if (isDSE.value && tab === 'targets-drives') {
+                    currentTab.value = 'dse-dashboard';
+                    return;
+                }
                 currentTab.value = tab;
                 if (tab === 'profile') {
                     initProfileForm();

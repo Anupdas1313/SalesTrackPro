@@ -1,5 +1,5 @@
 // SalesLink - Modern High-Performance PWA Service Worker
-const CACHE_NAME = 'saleslink-v37';
+const CACHE_NAME = 'saleslink-v38';
 
 // Core shell assets to pre-cache on install
 const PRECACHE_ASSETS = [

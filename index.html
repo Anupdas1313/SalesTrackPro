@@ -848,8 +848,8 @@
                             </a>
                         </template>
 
-                        <!-- Targets & Drives Navigation Item (For All Roles) -->
-                        <div class="pt-2 mt-1 border-t border-slate-100">
+                        <!-- Targets & Drives Navigation Item (Bank Roles Only) -->
+                        <div v-if="!isDSE" class="pt-2 mt-1 border-t border-slate-100">
                             <a href="#" @click.prevent="goToTab('targets-drives')" :class="[currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs font-bold' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs cursor-pointer mb-1']">
                                 <div class="flex items-center">
                                     <i class="fas fa-bullseye w-5 text-sm"></i> Targets & Drives
@@ -895,8 +895,8 @@
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
 
-                        <!-- Top Header Quick Launcher: Targets & Drives -->
-                        <button @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
+                        <!-- Top Header Quick Launcher: Targets & Drives (Bank Roles Only) -->
+                        <button v-if="!isDSE" @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
                             <i class="fas fa-bullseye text-[11px]"></i>
                             <span class="hidden sm:inline">Targets & Drives</span>
                             <span class="sm:hidden">Targets</span>
@@ -4845,7 +4845,7 @@
                                         <!-- ============================================== -->
                     <!-- SALES TARGETS & SALES DRIVES MODULE (All Roles)   -->
                     <!-- ============================================== -->
-                    <div v-if="currentTab === 'targets-drives' && currentUser" class="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
+                    <div v-if="currentTab === 'targets-drives' && currentUser && !isDSE" class="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-fade-in pb-24 w-full">
                         <!-- Top Navigation & Sub-Tab Switcher -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
                             <button @click="goToTab(isSuperAdmin ? 'super-admin-dashboard' : (isZSM ? 'zsm-dashboard' : (isASM ? 'asm-dashboard' : (isSM ? 'dashboard' : 'ro-dashboard'))))" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-bold transition cursor-pointer">
@@ -5884,8 +5884,8 @@
 
                 <!-- Vertical Menu List (Matching Screenshot Style) -->
                 <div class="divide-y divide-slate-100 text-xs">
-                    <!-- Sales Targets & Drives -->
-                    <button @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
+                    <!-- Sales Targets & Drives (Bank Roles Only) -->
+                    <button v-if="!isDSE" @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
                         <div class="flex items-center gap-3.5">
                             <div class="w-6 text-center text-slate-400 group-hover:text-[#4F46E5] transition-colors">
                                 <i class="fas fa-bullseye text-base"></i>
@@ -7623,13 +7623,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-124"></script>
+    <script type="module" src="js/app.js?v=force-update-125"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-124')
+                navigator.serviceWorker.register('./sw.js?v=force-update-125')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
