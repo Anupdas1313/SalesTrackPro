@@ -237,7 +237,7 @@
 
                         <!-- DEALERSHIP DSE SIGN IN HEADER -->
                         <div v-else class="space-y-1.5 animate-fade-in">
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-[#4F46E5] border border-indigo-100">
                                 <i class="fas fa-car-side text-[9px]"></i>
                                 <span>Car Showroom Finance Portal</span>
                             </div>
@@ -255,7 +255,7 @@
                             <div class="space-y-1 leading-snug flex-1">
                                 <div class="font-bold">{{ loginError }}</div>
                                 <div v-if="loginPortalMode === 'dealer'" class="pt-1">
-                                    <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition cursor-pointer">
+                                    <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#4F46E5] text-white rounded-lg text-xs font-bold hover:bg-[#4338CA] transition cursor-pointer">
                                         <i class="fas fa-user-plus text-[10px]"></i>
                                         <span>Register DSE Account Now →</span>
                                     </button>
@@ -292,30 +292,27 @@
                                 </template>
                             </button>
 
-                            <!-- DEALERSHIP DSE SUBMIT BUTTON -->
-                            <button v-else type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black rounded-2xl shadow-md shadow-emerald-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
+                            <!-- DEALERSHIP DSE SUBMIT BUTTON (Standard SalesLink Signature) -->
+                            <button v-else type="button" @click="login" :disabled="isLoggingIn" class="w-full h-12 px-5 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-[#4F46E5] text-slate-800 hover:text-slate-900 font-bold rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-xs sm:text-sm cursor-pointer disabled:opacity-75 group">
                                 <template v-if="loginStage === 'verifying'">
-                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg class="animate-spin h-4 w-4 text-[#4F46E5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     <span>Verifying DSE Account...</span>
                                 </template>
                                 <template v-else-if="loginStage === 'selecting'">
-                                    <div class="w-2 h-2 rounded-full bg-white animate-ping shrink-0"></div>
-                                    <span class="text-white font-bold">Select Google Account in Window...</span>
+                                    <div class="w-2 h-2 rounded-full bg-[#4F46E5] animate-ping shrink-0"></div>
+                                    <span class="text-[#4F46E5] font-bold">Select account in Google window...</span>
                                 </template>
                                 <template v-else>
-                                    <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
-                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
-                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                                        </svg>
-                                    </div>
-                                    <span>Sign In as Dealership Consultant (DSE)</span>
-                                    <i class="fas fa-arrow-right text-xs text-emerald-200"></i>
+                                    <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                    </svg>
+                                    <span>Continue with Google (DSE Showroom)</span>
                                 </template>
                             </button>
 
@@ -348,7 +345,7 @@
                         </div>
                         <div v-else class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs animate-fade-in">
                             <span class="text-slate-500">New car showroom consultant?</span>
-                            <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="font-bold text-emerald-600 hover:text-emerald-700 transition cursor-pointer">
+                            <button type="button" @click="selectRegisterRole('dse'); showRegisterMode = true; registerConfirmed = true; loginError = ''; registerError = ''" class="font-bold text-[#4F46E5] hover:text-[#4338CA] transition cursor-pointer">
                                 Register DSE Account →
                             </button>
                         </div>
@@ -426,18 +423,18 @@
                                 </button>
 
                                 <!-- Option 4: DSE (Car Showroom Sales Partner) -->
-                                <button type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-emerald-50 text-slate-700 group-hover:text-emerald-600 flex items-center justify-center text-base shrink-0 transition-colors">
+                                <button type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-[#4F46E5] flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-car-side"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Dealership Sales Exec (DSE)</span>
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md">Showroom Desk</span>
+                                            <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#4F46E5] transition-colors">Dealership Sales Exec (DSE)</span>
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-50 text-[#4F46E5] border border-indigo-100 rounded-md">Showroom Desk</span>
                                         </div>
                                         <div class="text-[11px] text-slate-500 mt-0.5">Punch customer files & route to multi-lender branch hubs</div>
                                     </div>
-                                    <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition shrink-0"></i>
+                                    <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
                             </div>
 
@@ -497,7 +494,7 @@
                                 <template v-if="registerForm.role === 'dse'">
                                     <!-- Field D1: OEM Car Brand -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-car"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -515,7 +512,7 @@
 
                                     <!-- Field D2: Dealership / Showroom Name -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-store"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -528,7 +525,7 @@
 
                                     <!-- Field D3: Sales Consultant Full Name -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-user-tie"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -541,7 +538,7 @@
 
                                     <!-- Field D4: Official Staff / Employee ID -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-id-badge"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -554,7 +551,7 @@
 
                                     <!-- Field D5: Showroom Location / City -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-location-dot"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -567,7 +564,7 @@
 
                                     <!-- Field D6: Mobile / WhatsApp (10 Digits) -->
                                     <div class="p-3 flex items-center gap-3 hover:bg-slate-50/50 transition">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xs shrink-0">
                                             <i class="fas fa-phone"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -830,7 +827,7 @@
                             <a href="#" @click.prevent="goToTab('dse-dashboard')" :class="[currentTab === 'dse-dashboard' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-car-side w-5 text-sm"></i> Showroom Radar
                             </a>
-                            <a href="#" @click.prevent="openDseFileModal" class="flex items-center px-1.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer shadow-2xs">
+                            <a href="#" @click.prevent="openDseFileModal" class="flex items-center px-1.5 py-1 rounded-lg bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer shadow-2xs">
                                 <i class="fas fa-plus-circle w-5 text-sm"></i> Punch New Lead
                             </a>
                         </template>
@@ -3380,88 +3377,111 @@
                     <!-- DSE: SHOWROOM MULTI-LENDER RADAR (COCKPIT)      -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'dse-dashboard' && isDSE" class="space-y-4 max-w-5xl mx-auto pb-14 animate-fade-in">
-                        <!-- Showroom Identity Header -->
-                        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-                            <div class="relative z-10 space-y-4">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                                {{ currentUser.showroomBrand || 'Authorized Car Dealership' }}
-                                            </span>
-                                            <span class="text-xs text-slate-300 font-medium">
-                                                📍 {{ currentUser.region || 'Showroom Floor' }}
-                                            </span>
-                                        </div>
-                                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                                            <span>{{ currentUser.dealershipName || 'Dealership Finance Desk' }}</span>
-                                        </h1>
-                                        <p class="text-xs text-slate-300">
-                                            Consultant: <strong class="text-white">{{ currentUser.name }}</strong> (Staff ID: {{ currentUser.employeeCode || currentUser.salesLinkId }})
-                                        </p>
+                        <!-- Showroom Identity Header (SalesLink Clean Card Style) -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3.5 min-w-0">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl shrink-0">
+                                    <i class="fas fa-car-side"></i>
+                                </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate">
+                                            {{ currentUser.dealershipName || 'Dealership Finance Desk' }}
+                                        </h2>
+                                        <span class="px-2 py-0.5 bg-indigo-50 text-[#4F46E5] border border-indigo-100 rounded-md text-[10px] font-bold">
+                                            {{ currentUser.showroomBrand || 'Showroom Partner' }}
+                                        </span>
                                     </div>
-
-                                    <!-- Primary Fast-Punch Button -->
-                                    <button type="button" @click="openDseFileModal" class="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/25 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer shrink-0">
-                                        <i class="fas fa-plus-circle text-base"></i>
-                                        <span>Punch New Loan File</span>
-                                    </button>
+                                    <div class="text-xs text-slate-500 font-medium flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-700">{{ currentUser.name }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="font-mono text-slate-400">ID: {{ currentUser.employeeCode || currentUser.salesLinkId }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span>📍 {{ currentUser.region || 'Showroom Floor' }}</span>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Primary Action Button (Matching RO & SM style) -->
+                            <button type="button" @click="openDseFileModal" class="px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer shrink-0">
+                                <i class="fas fa-plus text-xs"></i>
+                                <span>Punch New Loan File</span>
+                            </button>
                         </div>
 
-                        <!-- KPI Summary Cards (4 Cards Grid) -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <!-- Card 1: Total Punched -->
-                            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Inflow</div>
-                                <div class="text-xl sm:text-2xl font-black text-slate-900">{{ dseStats.total }}</div>
-                                <div class="text-[11px] font-semibold text-slate-500">₹{{ formatCurrency(dseStats.totalVol) }}</div>
+                        <!-- Core KPI Metrics Cards (Matching RO & SM Dashboard Style) -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Card 1: Total Inflow -->
+                            <div @click="dseFilterStatus = 'all'" :class="dseFilterStatus === 'all' ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 sm:p-5 flex items-center cursor-pointer hover:border-[#4F46E5]/40 transition group">
+                                <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg mr-3.5 shrink-0 group-hover:bg-[#4F46E5]/10 group-hover:text-[#4F46E5] transition">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Inflow</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight group-hover:text-[#4F46E5] transition">{{ dseStats.total }}</p>
+                                    <p class="text-[10px] font-bold text-slate-500">₹{{ formatCurrency(dseStats.totalVol) }}</p>
+                                </div>
                             </div>
 
                             <!-- Card 2: Awaiting SM Allocation -->
-                            <div class="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs space-y-1 bg-amber-50/20">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Awaiting SM</div>
-                                <div class="text-xl sm:text-2xl font-black text-amber-600">{{ dseStats.pendingSm }}</div>
-                                <div class="text-[11px] font-semibold text-amber-600/80">Pending Hub Dispatch</div>
-                            </div>
-
-                            <!-- Card 3: Sanctioned (Car Ready!) -->
-                            <div class="bg-white p-4 rounded-2xl border border-emerald-300 shadow-xs space-y-1 bg-emerald-50/30">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center justify-between">
-                                    <span>Sanctioned</span>
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                            <div @click="dseFilterStatus = 'pending'" :class="dseFilterStatus === 'pending' ? 'border-amber-400 ring-2 ring-amber-400/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 sm:p-5 flex items-center cursor-pointer hover:border-amber-400/40 transition group">
+                                <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg mr-3.5 shrink-0 group-hover:bg-amber-100 transition">
+                                    <i class="fas fa-clock"></i>
                                 </div>
-                                <div class="text-xl sm:text-2xl font-black text-emerald-600">{{ dseStats.sanctioned }}</div>
-                                <div class="text-[11px] font-black text-emerald-700">₹{{ formatCurrency(dseStats.sanctionedVol) }} (Delivery Ready)</div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Awaiting SM</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight group-hover:text-amber-600 transition">{{ dseStats.pendingSm }}</p>
+                                    <p class="text-[10px] font-bold text-amber-600">Pending Dispatch</p>
+                                </div>
                             </div>
 
-                            <!-- Card 4: Disbursed -->
-                            <div class="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs space-y-1 bg-purple-50/20">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-purple-700">Disbursed</div>
-                                <div class="text-xl sm:text-2xl font-black text-purple-600">{{ dseStats.disbursed }}</div>
-                                <div class="text-[11px] font-semibold text-purple-600/80">₹{{ formatCurrency(dseStats.disbursedVol) }}</div>
+                            <!-- Card 3: Sanctions (Ready for Car Delivery!) -->
+                            <div @click="dseFilterStatus = 'sanction'" :class="dseFilterStatus === 'sanction' ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 sm:p-5 flex items-center cursor-pointer hover:border-emerald-500/40 transition group">
+                                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mr-3.5 shrink-0 group-hover:bg-emerald-100 transition">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider flex items-center gap-1">
+                                        <span>Sanctioned</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    </p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition">{{ dseStats.sanctioned }}</p>
+                                    <p class="text-[10px] font-bold text-emerald-600">₹{{ formatCurrency(dseStats.sanctionedVol) }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Disbursed & Delivered -->
+                            <div @click="dseFilterStatus = 'disbursed'" :class="dseFilterStatus === 'disbursed' ? 'border-purple-400 ring-2 ring-purple-400/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 sm:p-5 flex items-center cursor-pointer hover:border-purple-400/40 transition group">
+                                <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg mr-3.5 shrink-0 group-hover:bg-purple-100 transition">
+                                    <i class="fas fa-car-side"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Disbursed</p>
+                                    <p class="text-2xl font-black text-slate-900 leading-tight group-hover:text-purple-600 transition">{{ dseStats.disbursed }}</p>
+                                    <p class="text-[10px] font-bold text-purple-600">₹{{ formatCurrency(dseStats.disbursedVol) }}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Filter Chips -->
+                        <!-- Filter Chips (SalesLink Standard Pill Bar) -->
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                            <button type="button" @click="dseFilterStatus = 'all'" :class="[dseFilterStatus === 'all' ? 'bg-slate-900 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
+                            <button type="button" @click="dseFilterStatus = 'all'" :class="[dseFilterStatus === 'all' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
                                 All ({{ dseFiles.length }})
                             </button>
-                            <button type="button" @click="dseFilterStatus = 'pending'" :class="[dseFilterStatus === 'pending' ? 'bg-amber-600 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
+                            <button type="button" @click="dseFilterStatus = 'pending'" :class="[dseFilterStatus === 'pending' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
                                 Awaiting SM ({{ dseStats.pendingSm }})
                             </button>
-                            <button type="button" @click="dseFilterStatus = 'login'" :class="[dseFilterStatus === 'login' ? 'bg-indigo-600 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
+                            <button type="button" @click="dseFilterStatus = 'login'" :class="[dseFilterStatus === 'login' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
                                 Docs Login
                             </button>
-                            <button type="button" @click="dseFilterStatus = 'fi'" :class="[dseFilterStatus === 'fi' ? 'bg-yellow-600 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
+                            <button type="button" @click="dseFilterStatus = 'fi'" :class="[dseFilterStatus === 'fi' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
                                 FI Active
                             </button>
-                            <button type="button" @click="dseFilterStatus = 'sanction'" :class="[dseFilterStatus === 'sanction' ? 'bg-emerald-600 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
-                                Sanctioned ({{ dseStats.sanctioned }}) 🟢
+                            <button type="button" @click="dseFilterStatus = 'sanction'" :class="[dseFilterStatus === 'sanction' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5']">
+                                <span>Sanctioned ({{ dseStats.sanctioned }})</span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                             </button>
-                            <button type="button" @click="dseFilterStatus = 'disbursed'" :class="[dseFilterStatus === 'disbursed' ? 'bg-purple-600 text-white font-bold' : 'bg-white text-slate-600 font-medium hover:bg-slate-50 border border-slate-200', 'px-3 py-1.5 rounded-full text-xs transition cursor-pointer whitespace-nowrap']">
+                            <button type="button" @click="dseFilterStatus = 'disbursed'" :class="[dseFilterStatus === 'disbursed' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
                                 Disbursed ({{ dseStats.disbursed }})
                             </button>
                         </div>
@@ -3469,29 +3489,29 @@
                         <!-- LIVE DELIVERY BOARD CARDS -->
                         <div class="space-y-3">
                             <!-- Empty State -->
-                            <div v-if="filteredDseFiles.length === 0" class="bg-white rounded-3xl border border-slate-200/80 p-8 text-center space-y-3">
-                                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-2xl mx-auto">
-                                    <i class="fas fa-car"></i>
+                            <div v-if="filteredDseFiles.length === 0" class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl mx-auto">
+                                    <i class="fas fa-car-side"></i>
                                 </div>
                                 <div class="space-y-1">
                                     <h3 class="text-sm font-bold text-slate-800">No loan files found</h3>
                                     <p class="text-xs text-slate-400 max-w-sm mx-auto">
-                                        Punched customer files will appear here with live lender status updates and 1-click RO WhatsApp communication.
+                                        Punched customer files will appear here with live multi-bank status updates and direct RO WhatsApp communication.
                                     </p>
                                 </div>
                                 <button type="button" @click="openDseFileModal" class="inline-flex items-center gap-2 px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus text-xs"></i>
                                     <span>Punch Customer File</span>
                                 </button>
                             </div>
 
-                            <!-- File Card -->
-                            <div v-for="file in filteredDseFiles" :key="file.id" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition p-4 sm:p-5 space-y-3 relative overflow-hidden">
+                            <!-- File Card (SalesLink Elevated Standard Card) -->
+                            <div v-for="file in filteredDseFiles" :key="file.id" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 transition p-4 sm:p-5 space-y-3 relative overflow-hidden">
                                 <!-- Top Strip -->
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-0.5 rounded-lg text-xs font-black bg-slate-100 text-slate-800 flex items-center gap-1.5">
-                                            <i class="fas fa-building-columns text-indigo-600"></i>
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1.5">
+                                            <i class="fas fa-building-columns text-[#4F46E5] text-[10px]"></i>
                                             <span>{{ file.targetBankName || 'Axis Bank' }}</span>
                                         </span>
                                         <span class="text-xs text-slate-500 font-medium">
@@ -3499,22 +3519,18 @@
                                         </span>
                                     </div>
 
-                                    <!-- Status Pill -->
+                                    <!-- Status Badge (Unified with getStatusBadgeClass) -->
                                     <div>
-                                        <span v-if="file.allocationStatus === 'pending_sm_dispatch'" class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold flex items-center gap-1">
-                                            <i class="fas fa-clock text-amber-500"></i>
-                                            <span>Waiting for Bank SM Allocation</span>
+                                        <span v-if="file.allocationStatus === 'pending_sm_dispatch'" class="px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5">
+                                            <i class="fas fa-clock text-amber-500 text-[10px]"></i>
+                                            <span>Awaiting SM Allocation</span>
                                         </span>
-                                        <span v-else-if="(file.status || '').toUpperCase() === 'SANCTION'" class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-xs font-black flex items-center gap-1.5 animate-pulse">
-                                            <i class="fas fa-check-circle text-emerald-600"></i>
-                                            <span>SANCTIONED: ₹{{ file.sanctionAmount || file.loanAmount }} L</span>
-                                        </span>
-                                        <span v-else-if="(file.status || '').toUpperCase() === 'DISBURSED'" class="px-2.5 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-full text-xs font-bold flex items-center gap-1">
-                                            <i class="fas fa-car-side text-purple-600"></i>
-                                            <span>Disbursed & Delivered</span>
-                                        </span>
-                                        <span v-else :class="getStatusBadgeClass(file.status)" class="px-2.5 py-1 rounded-full text-xs font-bold">
-                                            {{ file.status || 'Login' }}
+                                        <span v-else :class="getStatusBadgeClass(file.status)" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-current/20 inline-flex items-center gap-1">
+                                            <i :class="file.status === 'Sanction' ? 'fas fa-check-circle text-emerald-600' : (file.status === 'Disbursed' ? 'fas fa-car-side text-purple-600' : 'fas fa-circle-notch text-[#4F46E5]')" class="text-[9px]"></i>
+                                            <span>{{ file.status || 'Login' }}</span>
+                                            <span v-if="file.status === 'Sanction' && (file.sanctionAmount || file.loanAmount)" class="font-black ml-1">
+                                                (₹{{ file.sanctionAmount || file.loanAmount }} L)
+                                            </span>
                                         </span>
                                     </div>
                                 </div>
@@ -3525,7 +3541,7 @@
                                         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer</div>
                                         <div class="text-sm font-black text-slate-900">{{ file.customerName }}</div>
                                         <div class="text-xs font-semibold text-slate-600 flex items-center gap-2">
-                                            <a :href="'tel:' + file.customerPhone" class="hover:text-indigo-600 transition flex items-center gap-1">
+                                            <a :href="'tel:' + file.customerPhone" class="hover:text-[#4F46E5] transition flex items-center gap-1">
                                                 <i class="fas fa-phone text-[10px] text-slate-400"></i>
                                                 <span>{{ file.customerPhone }}</span>
                                             </a>
@@ -3538,11 +3554,12 @@
                                     <div class="space-y-0.5">
                                         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Car Model & Loan</div>
                                         <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                                            <i class="fas fa-car text-indigo-500"></i>
+                                            <i class="fas fa-car text-[#4F46E5] text-xs"></i>
                                             <span>{{ file.vehicleModel }}</span>
                                         </div>
-                                        <div class="text-xs font-black text-slate-700">
-                                            Requested: <span class="text-emerald-600">₹{{ file.loanAmount }} L</span>
+                                        <div class="text-xs font-bold text-slate-700">
+                                            Loan: <span class="text-[#4F46E5] font-black">₹{{ file.loanAmount }} L</span>
+                                            <span v-if="file.onRoadPrice" class="text-slate-400 font-normal"> (₹{{ file.onRoadPrice }} L On-Road)</span>
                                         </div>
                                     </div>
 
@@ -3553,13 +3570,13 @@
                                                 <i class="fas fa-user-shield text-[#4F46E5] text-[10px]"></i>
                                                 <span>{{ file.roName }}</span>
                                             </div>
-                                            <a :href="'https://wa.me/?text=' + encodeURIComponent('Hi ' + file.roName + ', checking status for car loan file of ' + file.customerName + ' (' + file.vehicleModel + ') - ' + (file.dealershipName || 'Showroom'))" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700">
-                                                <i class="fab fa-whatsapp"></i>
-                                                <span>WhatsApp RO</span>
+                                            <a :href="'https://wa.me/?text=' + encodeURIComponent('Hi ' + file.roName + ', checking status for car loan file of ' + file.customerName + ' (' + file.vehicleModel + ') - ' + (file.dealershipName || 'Showroom'))" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-[#4F46E5] transition">
+                                                <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                <span>Chat with RO</span>
                                             </a>
                                         </div>
                                         <div v-else class="text-xs text-amber-700 font-medium">
-                                            Awaiting SM RO assignment
+                                            Awaiting SM Allocation
                                         </div>
                                     </div>
                                 </div>
@@ -5794,7 +5811,7 @@
                             <i class="fas fa-car-side text-lg mb-0.5"></i>
                             <span class="text-[10px]">Radar</span>
                         </a>
-                        <a href="#" @click.prevent="openDseFileModal" class="flex flex-col items-center py-2.5 px-2 flex-1 text-emerald-600 font-bold transition-colors cursor-pointer">
+                        <a href="#" @click.prevent="openDseFileModal" class="flex flex-col items-center py-2.5 px-2 flex-1 text-[#4F46E5] font-bold transition-colors cursor-pointer">
                             <i class="fas fa-plus-circle text-lg mb-0.5"></i>
                             <span class="text-[10px]">Punch Lead</span>
                         </a>
@@ -6175,15 +6192,15 @@
         <!-- DSE: PUNCH LOAN FILE MODAL -->
         <div v-if="isDseFileModalOpen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 my-auto animate-in fade-in zoom-in-95 duration-150">
-                <!-- Modal Header -->
-                <div class="px-6 py-5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex justify-between items-start">
+                <!-- Modal Header (SalesLink Unified Gradient) -->
+                <div class="px-6 py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/20">
                             <i class="fas fa-car-side text-base"></i>
                         </div>
                         <div>
-                            <h3 class="font-black text-base leading-tight">Punch New Customer Loan File</h3>
-                            <p class="text-xs text-emerald-100 mt-0.5">Route car loan inquiry directly to partner bank branch hub</p>
+                            <h3 class="font-extrabold text-base leading-tight">Punch New Customer Loan File</h3>
+                            <p class="text-xs text-indigo-100/90 mt-0.5">Route car loan inquiry directly to partner bank branch hub</p>
                         </div>
                     </div>
                     <button type="button" @click="closeDseFileModal" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer">
@@ -6206,7 +6223,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-building-columns absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <select v-model="newDseFileForm.targetTenantId" required class="w-full pl-9 pr-7 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 transition cursor-pointer appearance-none">
+                            <select v-model="newDseFileForm.targetTenantId" required class="w-full pl-9 pr-7 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 transition cursor-pointer appearance-none">
                                 <option value="" disabled>-- Select Lending Partner Hub --</option>
                                 <option v-for="ws in allWorkspaces" :key="ws.id" :value="ws.id">
                                     {{ ws.bankName || 'Axis Bank' }} — {{ ws.name }} (SM: {{ ws.managerName || 'Branch SM' }})
@@ -6223,7 +6240,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <input v-model="newDseFileForm.customerName" type="text" required placeholder="e.g. Mohan Sharma" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 uppercase transition">
+                            <input v-model="newDseFileForm.customerName" type="text" required placeholder="e.g. Mohan Sharma" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 uppercase transition">
                         </div>
                     </div>
 
@@ -6234,7 +6251,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <input v-model="newDseFileForm.customerPhone" type="tel" required placeholder="e.g. 9876543210" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 transition">
+                            <input v-model="newDseFileForm.customerPhone" type="tel" required placeholder="e.g. 9876543210" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 transition">
                         </div>
                     </div>
 
@@ -6245,7 +6262,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-car absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <input v-model="newDseFileForm.vehicleModel" type="text" required placeholder="e.g. Brezza ZXi+ / Creta SX (O) Turbo" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 uppercase transition">
+                            <input v-model="newDseFileForm.vehicleModel" type="text" required placeholder="e.g. Brezza ZXi+ / Creta SX (O) Turbo" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 uppercase transition">
                         </div>
                     </div>
 
@@ -6255,13 +6272,13 @@
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                                 On-Road (₹ Lakhs)
                             </label>
-                            <input v-model="newDseFileForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 9.80" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 transition">
+                            <input v-model="newDseFileForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 9.80" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 transition">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                                 Loan Req (₹ Lakhs) <span class="text-rose-500">*</span>
                             </label>
-                            <input v-model="newDseFileForm.loanAmount" type="number" step="0.01" required placeholder="e.g. 7.50" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 transition">
+                            <input v-model="newDseFileForm.loanAmount" type="number" step="0.01" required placeholder="e.g. 7.50" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 transition">
                         </div>
                     </div>
 
@@ -6272,7 +6289,7 @@
                         </label>
                         <div class="relative">
                             <i class="fas fa-id-card-clip absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <select v-model="newDseFileForm.customerProfile" class="w-full pl-9 pr-7 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-bold text-slate-800 transition cursor-pointer appearance-none">
+                            <select v-model="newDseFileForm.customerProfile" class="w-full pl-9 pr-7 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-bold text-slate-800 transition cursor-pointer appearance-none">
                                 <option value="Salaried (Form 16 / ITR)">Salaried (Form 16 / ITR)</option>
                                 <option value="Self-Employed / Business">Self-Employed / Business</option>
                                 <option value="Agriculture / Rural Cash">Agriculture / Rural Cash</option>
@@ -6287,7 +6304,7 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                             Showroom Priority Notes
                         </label>
-                        <textarea v-model="newDseFileForm.notes" rows="2" placeholder="e.g. Customer wants Dhanteras delivery / fast sanction required" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-600 text-xs font-medium text-slate-800 transition resize-none"></textarea>
+                        <textarea v-model="newDseFileForm.notes" rows="2" placeholder="e.g. Customer wants Dhanteras delivery / fast sanction required" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 text-xs font-medium text-slate-800 transition resize-none"></textarea>
                     </div>
 
                     <!-- Buttons -->
@@ -6295,7 +6312,7 @@
                         <button type="button" @click="closeDseFileModal" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
                             Cancel
                         </button>
-                        <button type="submit" :disabled="isSubmittingDseFile" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                        <button type="submit" :disabled="isSubmittingDseFile" class="px-5 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition flex items-center gap-2 cursor-pointer disabled:opacity-50">
                             <span v-if="isSubmittingDseFile">Submitting...</span>
                             <span v-else class="flex items-center gap-1.5">
                                 <i class="fas fa-paper-plane text-xs"></i>
@@ -7606,13 +7623,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-123"></script>
+    <script type="module" src="js/app.js?v=force-update-124"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-123')
+                navigator.serviceWorker.register('./sw.js?v=force-update-124')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

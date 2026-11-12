@@ -1416,6 +1416,8 @@ const app = createApp({
 
         const getTabTitle = (tab) => {
             switch (tab) {
+                case 'dse-dashboard': return 'Showroom Delivery Radar';
+                case 'sm-inbound': return 'Showroom Inflow Queue';
                 case 'ro-dashboard': return 'Portfolio Overview';
                 case 'ro-tracking': return 'Saved Login Details';
                 case 'ro-add-file': return 'New Customer Login';
