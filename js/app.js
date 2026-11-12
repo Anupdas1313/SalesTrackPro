@@ -114,6 +114,7 @@ const app = createApp({
         const isRegistering = ref(false);
         const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
         const showRegisterMode = ref(false);
+        const loginPortalMode = ref('bank'); // 'bank' | 'dealer'
         const showMobileFeatures = ref(false);
         const showBankSelector = ref(false);
         const registerForm = ref({ role: 'sm', name: '', employeeCode: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
@@ -197,6 +198,10 @@ const app = createApp({
 
         const selectRegisterRole = (role) => {
             registerForm.value.role = role;
+            if (role === 'dse') {
+                registerForm.value.showroomBrand = registerForm.value.showroomBrand || 'Maruti Suzuki Arena';
+                registerForm.value.dealershipName = registerForm.value.dealershipName || '';
+            }
             registerStep.value = 2;
             registerError.value = '';
             registerConfirmed.value = true;
@@ -4429,7 +4434,7 @@ const app = createApp({
 
                 await loadData();
             } else {
-                loginError.value = `⛔ Access Denied: The Google account (${email}) is not registered in SalesLink. Only officers added by their Sales Manager in the SM portal are authorized to log in.`;
+                loginError.value = `⛔ Account Not Registered: The Google account (${email}) is not registered in SalesLink. If you are a Dealership Sales Executive (DSE) or Sales Manager, please register your account below.`;
             }
         };
 
@@ -5359,7 +5364,7 @@ const app = createApp({
             showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            showRegisterMode, showMobileFeatures, showBankSelector, registerForm, registerStep, registerConfirmed, selectRegisterRole, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
+            showRegisterMode, loginPortalMode, showMobileFeatures, showBankSelector, registerForm, registerStep, registerConfirmed, selectRegisterRole, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
             showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
