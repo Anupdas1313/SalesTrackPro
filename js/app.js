@@ -120,6 +120,81 @@ const app = createApp({
         const registerStep = ref(1);
         const registerConfirmed = ref(false);
 
+        // --- Dealership & DSE Ecosystem State ---
+        const dseFiles = ref([]);
+        const isDseFileModalOpen = ref(false);
+        const isSubmittingDseFile = ref(false);
+        const dseFileError = ref('');
+        const dseFilterStatus = ref('all');
+        const newDseFileForm = ref({
+            customerName: '',
+            customerPhone: '',
+            vehicleModel: '',
+            onRoadPrice: '',
+            loanAmount: '',
+            targetTenantId: '',
+            customerProfile: 'Salaried (Form 16 / ITR)',
+            notes: ''
+        });
+        const showroomBrandOptions = [
+            'Maruti Suzuki Arena',
+            'Maruti Suzuki Nexa',
+            'Hyundai Motor India',
+            'Tata Motors Passenger Vehicles',
+            'Mahindra & Mahindra',
+            'Kia India',
+            'Toyota Kirloskar',
+            'Honda Cars India',
+            'MG Motor India',
+            'Skoda Auto',
+            'Volkswagen India',
+            'Renault India',
+            'Nissan India',
+            'Other Multi-Brand / Luxury'
+        ];
+
+        const dseStats = computed(() => {
+            const list = dseFiles.value || [];
+            const total = list.length;
+            const totalVol = list.reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
+            const pendingSm = list.filter(f => f.allocationStatus === 'pending_sm_dispatch').length;
+            const sanctioned = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').length;
+            const sanctionedVol = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
+            const disbursed = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').length;
+            const disbursedVol = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
+            return {
+                total,
+                totalVol,
+                pendingSm,
+                sanctioned,
+                sanctionedVol,
+                disbursed,
+                disbursedVol
+            };
+        });
+
+        const filteredDseFiles = computed(() => {
+            let list = dseFiles.value || [];
+            if (dseFilterStatus.value === 'pending') {
+                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch');
+            } else if (dseFilterStatus.value === 'login') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'LOGIN');
+            } else if (dseFilterStatus.value === 'fi') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'FI');
+            } else if (dseFilterStatus.value === 'sanction') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION');
+            } else if (dseFilterStatus.value === 'disbursed') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED');
+            }
+            return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        });
+
+        // SM Inbound Queue State
+        const inboundShowroomFiles = ref([]);
+        const inboundSelectedRo = ref({});
+        const inboundSubmitting = ref({});
+        const smInboundSubTab = ref('pending');
+
         const selectRegisterRole = (role) => {
             registerForm.value.role = role;
             registerStep.value = 2;
@@ -265,6 +340,7 @@ const app = createApp({
             if (initialUser.role === 'zsm') return 'zsm-dashboard';
             if (initialUser.role === 'asm') return 'asm-dashboard';
             if (initialUser.role === 'sm' || initialUser.role === 'admin') return 'dashboard';
+            if (initialUser.role === 'dse') return 'dse-dashboard';
             return 'ro-dashboard';
         };
         const currentTab = ref(getInitialTab());
@@ -506,6 +582,8 @@ const app = createApp({
         const isRO = computed(() => (currentUser.value?.role || '').toLowerCase() === 'ro');
         const isASM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'asm');
         const isZSM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'zsm');
+        const isDSE = computed(() => (currentUser.value?.role || '').toLowerCase() === 'dse');
+        const isDealerAdmin = computed(() => (currentUser.value?.role || '').toLowerCase() === 'dealer_admin');
 
 
 
@@ -3572,6 +3650,182 @@ const app = createApp({
             allFiles.value = await db.getAllLoanFiles();
         };
 
+        const loadDseData = async () => {
+            if (!currentUser.value?.id) return;
+            try {
+                dseFiles.value = await db.getLoanFilesByDSE(currentUser.value.id);
+                allWorkspaces.value = await db.getAllWorkspaces();
+                if (!newDseFileForm.value.targetTenantId && allWorkspaces.value.length > 0) {
+                    newDseFileForm.value.targetTenantId = allWorkspaces.value[0].id;
+                }
+            } catch (e) {
+                console.warn("loadDseData error:", e);
+            }
+        };
+
+        const openDseFileModal = async () => {
+            dseFileError.value = '';
+            if (allWorkspaces.value.length === 0) {
+                try {
+                    allWorkspaces.value = await db.getAllWorkspaces();
+                } catch(e) {}
+            }
+            newDseFileForm.value = {
+                customerName: '',
+                customerPhone: '',
+                vehicleModel: '',
+                onRoadPrice: '',
+                loanAmount: '',
+                targetTenantId: allWorkspaces.value.length > 0 ? allWorkspaces.value[0].id : '',
+                customerProfile: 'Salaried (Form 16 / ITR)',
+                notes: ''
+            };
+            isDseFileModalOpen.value = true;
+        };
+
+        const closeDseFileModal = () => {
+            isDseFileModalOpen.value = false;
+            dseFileError.value = '';
+        };
+
+        const submitDseLoanFile = async () => {
+            if (isSubmittingDseFile.value) return;
+            dseFileError.value = '';
+
+            const custName = newDseFileForm.value.customerName?.trim();
+            const custPhone = newDseFileForm.value.customerPhone?.trim();
+            const vehModel = newDseFileForm.value.vehicleModel?.trim();
+            const loanAmt = Number(newDseFileForm.value.loanAmount);
+            const targetTenantId = newDseFileForm.value.targetTenantId;
+
+            if (!custName) {
+                dseFileError.value = 'Customer Name is mandatory.';
+                return;
+            }
+            if (!custPhone || custPhone.replace(/\D/g, '').length < 10) {
+                dseFileError.value = 'Please provide a valid 10-digit customer mobile number.';
+                return;
+            }
+            if (!vehModel) {
+                dseFileError.value = 'Vehicle Model & Variant is mandatory.';
+                return;
+            }
+            if (!loanAmt || loanAmt <= 0) {
+                dseFileError.value = 'Loan Amount requested is mandatory (e.g. 7.50 L).';
+                return;
+            }
+            if (!targetTenantId) {
+                dseFileError.value = 'Please select a target Lending Partner & Branch Hub.';
+                return;
+            }
+
+            const selectedHub = allWorkspaces.value.find(w => w.id === targetTenantId) || {
+                id: targetTenantId,
+                name: 'Selected Branch Hub',
+                bankName: 'Axis Bank',
+                managerName: 'Branch SM'
+            };
+
+            isSubmittingDseFile.value = true;
+            try {
+                const createdAtIso = new Date().toISOString();
+                const randId = 'DLR' + Math.floor(100000 + Math.random() * 900000);
+                const newFile = {
+                    appId: randId,
+                    customerName: custName.toUpperCase(),
+                    customerPhone: custPhone,
+                    vehicleModel: vehModel.toUpperCase(),
+                    onRoadPrice: Number(newDseFileForm.value.onRoadPrice) || 0,
+                    loanAmount: loanAmt,
+                    customerProfile: newDseFileForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
+                    notes: (newDseFileForm.value.notes || '').trim(),
+                    nclUcl: 'NCL',
+                    sourcingChannel: currentUser.value.showroomBrand || 'DEALER',
+                    loginDate: createdAtIso.split('T')[0],
+                    origin: 'dealer_portal',
+                    dealershipName: currentUser.value.dealershipName || '',
+                    showroomBrand: currentUser.value.showroomBrand || '',
+                    dseId: currentUser.value.id,
+                    dseName: currentUser.value.name,
+                    dsePhone: currentUser.value.phone || '',
+                    dseEmployeeCode: currentUser.value.employeeCode || '',
+                    tenantId: selectedHub.id,
+                    targetBankName: selectedHub.bankName || 'Axis Bank',
+                    targetHubName: selectedHub.name,
+                    smName: selectedHub.managerName || 'Branch SM',
+                    allocationStatus: 'pending_sm_dispatch',
+                    status: 'Inbound',
+                    roId: null,
+                    roName: 'Pending SM Dispatch',
+                    createdAt: createdAtIso,
+                    updatedAt: createdAtIso
+                };
+
+                await db.addLoanFile(newFile);
+                isDseFileModalOpen.value = false;
+                await loadDseData();
+            } catch (e) {
+                console.error("submitDseLoanFile error:", e);
+                dseFileError.value = e.message || 'Error submitting loan file.';
+            } finally {
+                isSubmittingDseFile.value = false;
+            }
+        };
+
+        const loadInboundShowroomFiles = async () => {
+            if (!currentUser.value?.tenantId) return;
+            try {
+                inboundShowroomFiles.value = await db.getInboundShowroomFilesByTenant(currentUser.value.tenantId);
+            } catch (e) {
+                console.warn("loadInboundShowroomFiles error:", e);
+            }
+        };
+
+        const assignInboundFileToRo = async (file, roId) => {
+            if (!file || !roId) return;
+            const ro = roUsers.value.find(u => u.id === roId);
+            if (!ro) return;
+
+            inboundSubmitting.value[file.id] = true;
+            try {
+                await db.assignInboundFileToRO(file.id, ro);
+                file.roId = ro.id;
+                file.roName = ro.name;
+                file.allocationStatus = 'dispatched_to_ro';
+                file.status = 'Login';
+                file.allocatedAt = new Date().toISOString();
+                
+                const idx = allFiles.value.findIndex(f => f.id === file.id);
+                if (idx !== -1) {
+                    allFiles.value[idx].roId = ro.id;
+                    allFiles.value[idx].roName = ro.name;
+                    allFiles.value[idx].allocationStatus = 'dispatched_to_ro';
+                    allFiles.value[idx].status = 'Login';
+                }
+            } catch (e) {
+                console.error("assignInboundFileToRo error:", e);
+                alert("Failed to allocate file: " + e.message);
+            } finally {
+                inboundSubmitting.value[file.id] = false;
+            }
+        };
+
+        const sendRoDispatchWhatsApp = (file) => {
+            const ro = roUsers.value.find(u => u.id === file.roId);
+            if (!ro || !ro.phone) return;
+            const msg = `🚗 *New Showroom Loan Lead Assigned!*\n\n` +
+                `Showroom: *${file.dealershipName || file.sourcingChannel}*\n` +
+                `DSE: *${file.dseName}* (📞 ${file.dsePhone || 'N/A'})\n` +
+                `Customer: *${file.customerName}* (📞 ${file.customerPhone || 'N/A'})\n` +
+                `Car Model: *${file.vehicleModel || 'N/A'}*\n` +
+                `Loan Amount: *₹${file.loanAmount} L*\n` +
+                `Profile: *${file.customerProfile || 'Salaried'}*\n\n` +
+                `Please initiate customer contact & docs pickup immediately.`;
+            const cleanPhone = ro.phone.replace(/\D/g, '');
+            const fullPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
         const loadSmData = async () => {
             if (!currentUser.value?.tenantId) {
                 // Legacy SM data load (accounts without tenantId)
@@ -3646,6 +3900,9 @@ const app = createApp({
                 await loadAsmData();
             } else if (isSM.value) {
                 await loadSmData();
+                await loadInboundShowroomFiles();
+            } else if (isDSE.value) {
+                await loadDseData();
             } else {
                 await loadRoData();
             }
@@ -3819,6 +4076,104 @@ const app = createApp({
         const registerSM = async () => {
             if (isRegistering.value) return;
             registerError.value = '';
+
+            const chosenRole = registerForm.value.role || 'sm';
+
+            if (chosenRole === 'dse') {
+                const dseBrand = registerForm.value.showroomBrand?.trim() || 'Maruti Suzuki Arena';
+                const dseDealership = registerForm.value.dealershipName?.trim();
+                const dseName = registerForm.value.name?.trim();
+                const dseCode = registerForm.value.employeeCode?.trim();
+                const dseCity = registerForm.value.region?.trim();
+                const dsePhone = registerForm.value.phone?.trim() || '';
+
+                if (!dseDealership) {
+                    registerError.value = 'Dealership / Showroom Name is mandatory.';
+                    return;
+                }
+                if (!dseName) {
+                    registerError.value = 'Sales Consultant Full Name is mandatory.';
+                    return;
+                }
+                if (!dseCode) {
+                    registerError.value = 'Official Staff / Employee ID is mandatory.';
+                    return;
+                }
+                if (!dseCity) {
+                    registerError.value = 'Showroom Location / City is mandatory.';
+                    return;
+                }
+                if (!dsePhone || dsePhone.replace(/\D/g, '').length < 10) {
+                    registerError.value = 'Please provide a valid 10-digit mobile number.';
+                    return;
+                }
+
+                isRegistering.value = true;
+                registerStage.value = 'selecting';
+                try {
+                    const googleUser = await db.loginWithGoogle();
+                    registerStage.value = 'setting_up';
+                    const email = googleUser.email.toLowerCase();
+
+                    const existing = await db.getUserByEmail(email);
+                    if (existing) {
+                        registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
+                        return;
+                    }
+
+                    const newSalesLinkId = db.generateSalesLinkId('dse');
+
+                    const newUserId = await db.addUser({
+                        email: email,
+                        role: 'dse',
+                        name: dseName,
+                        dealershipName: dseDealership,
+                        showroomBrand: dseBrand,
+                        employeeCode: dseCode,
+                        region: dseCity,
+                        phone: dsePhone,
+                        salesLinkId: newSalesLinkId,
+                        status: 'active',
+                        createdAt: new Date().toISOString()
+                    });
+
+                    const sessionUser = {
+                        id: newUserId || email,
+                        email: email,
+                        username: dseName,
+                        role: 'dse',
+                        name: dseName,
+                        dealershipName: dseDealership,
+                        showroomBrand: dseBrand,
+                        employeeCode: dseCode,
+                        region: dseCity,
+                        phone: dsePhone,
+                        salesLinkId: newSalesLinkId,
+                        tenantId: null
+                    };
+
+                    localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+                    currentUser.value = sessionUser;
+                    currentTab.value = 'dse-dashboard';
+                    await loadDseData();
+
+                    showRegisterMode.value = false;
+                    registerStep.value = 1;
+                    registerConfirmed.value = false;
+                    registerForm.value = { role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
+                    return;
+                } catch (error) {
+                    console.error("DSE Registration Error:", error);
+                    if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
+                        return;
+                    }
+                    registerError.value = error.message || 'Error creating DSE account.';
+                    return;
+                } finally {
+                    isRegistering.value = false;
+                    registerStage.value = '';
+                }
+            }
 
             if (!registerConfirmed.value) {
                 registerError.value = 'Please confirm the leadership mandate checkbox before proceeding.';
@@ -4049,6 +4404,8 @@ const app = createApp({
                     phone: user.phone || '',
                     bankName: user.bankName,
                     division: user.division,
+                    dealershipName: user.dealershipName || '',
+                    showroomBrand: user.showroomBrand || '',
                     region: user.region,
                     employeeCode: user.employeeCode || '',
                     designation: user.designation || '',
@@ -4067,6 +4424,7 @@ const app = createApp({
                 else if (isZSM.value) currentTab.value = 'zsm-dashboard';
                 else if (isASM.value) currentTab.value = 'asm-dashboard';
                 else if (isSM.value) currentTab.value = 'dashboard';
+                else if (isDSE.value) currentTab.value = 'dse-dashboard';
                 else currentTab.value = 'ro-dashboard';
 
                 await loadData();
@@ -5031,7 +5389,10 @@ const app = createApp({
             drivesWithProgress, activeSalesDrivesCount, showSetTargetModal, targetModalForm,
             isSavingTarget, targetSaveSuccess, targetSaveError, openSetTargetModal, saveSalesTarget,
             showNewDriveModal, driveModalForm, isSavingDrive, driveSaveSuccess, driveSaveError,
-            openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote
+            openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote,
+            isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles,
+            openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
+            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp
         };
     }
 });

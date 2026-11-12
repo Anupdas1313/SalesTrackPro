@@ -232,6 +232,44 @@ export const deleteLoanFile = async (id) => {
     await deleteDoc(docRef);
 };
 
+// --- Dealership & DSE Ecosystem Queries ---
+export const getLoanFilesByDSE = async (dseId) => {
+    if (!dseId) return [];
+    try {
+        const q = query(filesCol, where('dseId', '==', dseId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+        console.warn("Index query for getLoanFilesByDSE failed, falling back to scan:", e);
+        const all = await getAllLoanFiles();
+        return all.filter(f => f.dseId === dseId);
+    }
+};
+
+export const getInboundShowroomFilesByTenant = async (tenantId) => {
+    if (!tenantId) return [];
+    try {
+        const all = await getLoanFilesByTenant(tenantId);
+        return all.filter(f => f.origin === 'dealer_portal');
+    } catch (e) {
+        console.warn("Failed to get inbound showroom files:", e);
+        return [];
+    }
+};
+
+export const assignInboundFileToRO = async (fileId, roUser) => {
+    if (!fileId || !roUser) return;
+    const docRef = doc(db, 'loanFiles', fileId);
+    await updateDoc(docRef, {
+        roId: roUser.id,
+        roName: roUser.name,
+        allocationStatus: 'dispatched_to_ro',
+        status: 'Login',
+        allocatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    });
+};
+
 // --- System ---
 export const getAnnouncement = async () => {
     const docRef = doc(db, 'system', 'announcement');
