@@ -297,6 +297,232 @@ const app = createApp({
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         };
 
+        // --- Showroom QR & Public Apply Ecosystem ---
+        const isPublicApplyMode = ref(false);
+        const publicApplyWorkspace = ref(null);
+        const publicApplySmUser = ref(null);
+        const isResolvingPublicHub = ref(false);
+        const publicHubError = ref('');
+        const showSmQrStandeeModal = ref(false);
+
+        const publicApplyForm = ref({
+            dealershipName: '',
+            showroomBrand: 'Maruti Suzuki Arena',
+            dseName: '',
+            dsePhone: '',
+            customerName: '',
+            customerPhone: '',
+            vehicleModel: '',
+            onRoadPrice: '',
+            loanAmount: '',
+            customerProfile: 'Salaried (Form 16 / ITR)',
+            notes: ''
+        });
+        const isSubmittingPublicApply = ref(false);
+        const publicApplyError = ref('');
+        const publicApplySubmitted = ref(false);
+        const publicApplySuccessFile = ref(null);
+
+        const smPublicApplyUrl = computed(() => {
+            const tenantId = currentUser.value?.tenantId || '';
+            const salesLinkId = currentUser.value?.salesLinkId || '';
+            const param = tenantId || salesLinkId;
+            if (!param) return window.location.origin;
+            return `${window.location.origin}/?apply=${param}`;
+        });
+
+        const copySmApplyLink = async () => {
+            const url = smPublicApplyUrl.value;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(url);
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                }
+                copiedSalesLinkIdToast.value = true;
+                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
+            } catch (e) {
+                alert("Apply link copied: " + url);
+            }
+        };
+
+        const shareSmApplyWhatsApp = () => {
+            const url = smPublicApplyUrl.value;
+            const bank = currentUser.value?.bankName || 'Axis Bank';
+            const hub = currentUser.value?.region || 'Branch Hub';
+            const msg = `Dear Car Showroom Partners,\n\n` +
+                `Please use our official *${bank} (${hub})* showroom digital car loan desk to submit customer inquiries directly to our branch credit team for spot sanctions:\n\n` +
+                `📲 *Apply Online / Punch File:* ${url}\n\n` +
+                `Every customer file is tracked live by our branch desk.\n\n` +
+                `Regards,\n*${currentUser.value?.name || 'Sales Manager'}*\nSales Manager, ${bank}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        const initPublicApplyHub = async (hubKey) => {
+            if (!hubKey) return;
+            isResolvingPublicHub.value = true;
+            publicHubError.value = '';
+            try {
+                let ws = await db.getWorkspace(hubKey);
+                if (!ws) {
+                    const allWs = await db.getAllWorkspaces();
+                    ws = allWs.find(w => w.id === hubKey || w.salesLinkId === hubKey);
+                }
+                if (!ws) {
+                    const allUsers = await db.getAllUsers();
+                    const smUser = allUsers.find(u => u.salesLinkId === hubKey || u.id === hubKey || u.tenantId === hubKey);
+                    if (smUser) {
+                        publicApplySmUser.value = smUser;
+                        if (smUser.tenantId) {
+                            ws = await db.getWorkspace(smUser.tenantId);
+                        } else {
+                            ws = {
+                                id: smUser.tenantId || smUser.id,
+                                name: smUser.region || `${smUser.name}'s Branch Hub`,
+                                bankName: smUser.bankName || 'Axis Bank',
+                                managerName: smUser.name,
+                                managerPhone: smUser.phone || '',
+                                division: smUser.division || 'Auto Loans (Car Loans)'
+                            };
+                        }
+                    }
+                }
+
+                if (ws) {
+                    publicApplyWorkspace.value = ws;
+                    isPublicApplyMode.value = true;
+                } else {
+                    publicHubError.value = 'Showroom branch link not found. Please contact your Sales Manager.';
+                }
+            } catch (e) {
+                console.warn("initPublicApplyHub error:", e);
+                publicHubError.value = 'Failed to load showroom credit desk.';
+            } finally {
+                isResolvingPublicHub.value = false;
+            }
+        };
+
+        const submitPublicLoanApplication = async () => {
+            if (isSubmittingPublicApply.value) return;
+            publicApplyError.value = '';
+
+            const custName = publicApplyForm.value.customerName?.trim();
+            const custPhone = publicApplyForm.value.customerPhone?.trim();
+            const vehModel = publicApplyForm.value.vehicleModel?.trim();
+            const loanAmt = Number(publicApplyForm.value.loanAmount);
+
+            if (!custName) {
+                publicApplyError.value = 'Customer Name is mandatory.';
+                return;
+            }
+            if (!custPhone || custPhone.replace(/\D/g, '').length < 10) {
+                publicApplyError.value = 'Please provide a valid 10-digit customer mobile number.';
+                return;
+            }
+            if (!vehModel) {
+                publicApplyError.value = 'Car Model & Variant is mandatory (e.g. Brezza ZXi+ / Creta SX).';
+                return;
+            }
+            if (!loanAmt || loanAmt <= 0) {
+                publicApplyError.value = 'Please enter a valid Loan Amount requested (₹ Lakhs).';
+                return;
+            }
+
+            if (!publicApplyWorkspace.value?.id) {
+                publicApplyError.value = 'Branch hub reference missing. Please refresh the page.';
+                return;
+            }
+
+            isSubmittingPublicApply.value = true;
+            try {
+                const createdAtIso = new Date().toISOString();
+                const randId = 'QR' + Math.floor(100000 + Math.random() * 900000);
+                const ws = publicApplyWorkspace.value;
+                const newFile = {
+                    appId: randId,
+                    customerName: custName.toUpperCase(),
+                    customerPhone: custPhone,
+                    vehicleModel: vehModel.toUpperCase(),
+                    onRoadPrice: Number(publicApplyForm.value.onRoadPrice) || 0,
+                    loanAmount: loanAmt,
+                    customerProfile: publicApplyForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
+                    notes: (publicApplyForm.value.notes || '').trim(),
+                    nclUcl: 'NCL',
+                    sourcingChannel: publicApplyForm.value.dealershipName?.trim() || 'SHOWROOM_QR',
+                    dealershipName: (publicApplyForm.value.dealershipName || '').trim(),
+                    showroomBrand: (publicApplyForm.value.showroomBrand || 'Car Showroom Partner').trim(),
+                    dseName: (publicApplyForm.value.dseName || '').trim(),
+                    dsePhone: (publicApplyForm.value.dsePhone || '').trim(),
+                    loginDate: createdAtIso.split('T')[0],
+                    origin: 'showroom_qr',
+                    tenantId: ws.id,
+                    targetBankName: ws.bankName || 'Axis Bank',
+                    targetHubName: ws.name || 'Branch Hub',
+                    smName: ws.managerName || (publicApplySmUser.value?.name || 'Branch SM'),
+                    allocationStatus: 'pending_sm_dispatch',
+                    status: 'Inbound',
+                    roId: null,
+                    roName: 'Pending SM Dispatch',
+                    createdAt: createdAtIso,
+                    updatedAt: createdAtIso
+                };
+
+                await db.addLoanFile(newFile);
+                publicApplySuccessFile.value = newFile;
+                publicApplySubmitted.value = true;
+            } catch (e) {
+                console.error("submitPublicLoanApplication error:", e);
+                publicApplyError.value = e.message || 'Error submitting application.';
+            } finally {
+                isSubmittingPublicApply.value = false;
+            }
+        };
+
+        const resetPublicApplyForm = () => {
+            publicApplyForm.value = {
+                dealershipName: publicApplyForm.value.dealershipName || '',
+                showroomBrand: publicApplyForm.value.showroomBrand || 'Maruti Suzuki Arena',
+                dseName: publicApplyForm.value.dseName || '',
+                dsePhone: publicApplyForm.value.dsePhone || '',
+                customerName: '',
+                customerPhone: '',
+                vehicleModel: '',
+                onRoadPrice: '',
+                loanAmount: '',
+                customerProfile: 'Salaried (Form 16 / ITR)',
+                notes: ''
+            };
+            publicApplySubmitted.value = false;
+            publicApplySuccessFile.value = null;
+            publicApplyError.value = '';
+        };
+
+        const sendPublicApplySmWhatsApp = () => {
+            if (!publicApplySuccessFile.value || !publicApplyWorkspace.value) return;
+            const file = publicApplySuccessFile.value;
+            const ws = publicApplyWorkspace.value;
+            const msg = `Hi ${ws.managerName || 'Sales Manager'}, a new car loan inquiry has been submitted via your Showroom QR!\n\n` +
+                `👤 Customer: *${file.customerName}* (📞 ${file.customerPhone})\n` +
+                `🚗 Car: *${file.vehicleModel}*\n` +
+                `💰 Loan Req: *₹${file.loanAmount} Lakhs*` + (file.onRoadPrice ? ` (On-Road: ₹${file.onRoadPrice} L)` : '') + `\n` +
+                (file.dealershipName ? `🏢 Dealership: *${file.dealershipName}*\n` : '') +
+                (file.dseName ? `👨‍💼 Showroom Exec: *${file.dseName}* (📞 ${file.dsePhone || 'N/A'})\n` : '') +
+                (file.notes ? `📝 Remarks: "${file.notes}"\n` : '') +
+                `\nFile is waiting in your SalesLink Inbound Radar for RO allocation.`;
+            
+            const smPhone = publicApplySmUser.value?.phone || ws.managerPhone || '';
+            const smPhoneDigits = smPhone.replace(/\D/g, '');
+            const targetUrl = smPhoneDigits.length === 10 
+                ? `https://wa.me/91${smPhoneDigits}?text=${encodeURIComponent(msg)}`
+                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.open(targetUrl, '_blank');
+        };
+
         // SM Inbound Queue State
         const inboundShowroomFiles = ref([]);
         const inboundSelectedRo = ref({});
@@ -5334,6 +5560,16 @@ const app = createApp({
 
         onMounted(async () => {
             loadAppSettings();
+            // Check for Public Showroom QR Apply URL parameter (?apply=TENANT_ID or ?hub=TENANT_ID)
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const applyParam = urlParams.get('apply') || urlParams.get('hub') || urlParams.get('ref');
+                if (applyParam) {
+                    await initPublicApplyHub(applyParam);
+                }
+            } catch (err) {
+                console.warn("Public apply param error:", err);
+            }
             // PWA Standalone & Install detection
             isStandalone.value = checkStandalone();
             isIos.value = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -5510,7 +5746,8 @@ const app = createApp({
             openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote,
             isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
             openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
-            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp
+            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
+            isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp
         };
     }
 });

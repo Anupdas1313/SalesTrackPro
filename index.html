@@ -208,8 +208,194 @@
                     </div>
                 </div>
 
+                <!-- Center Public Car Loan Application Container (When visiting via QR / Link) -->
+                <div v-if="isPublicApplyMode && publicApplyWorkspace" class="my-auto max-w-lg w-full mx-auto py-4 animate-fade-in">
+                    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
+                        <!-- Top Header Banner -->
+                        <div class="px-6 py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start">
+                            <div class="space-y-1">
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/15 backdrop-blur-md border border-white/20">
+                                    <i class="fas fa-building-columns text-[9px]"></i>
+                                    <span>{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
+                                </div>
+                                <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">
+                                    Car Loan Quick Application
+                                </h2>
+                                <p class="text-xs text-indigo-100/90">
+                                    Branch Credit Desk • Sales Manager: {{ publicApplyWorkspace.managerName }}
+                                </p>
+                            </div>
+                            <button type="button" @click="isPublicApplyMode = false" class="text-xs text-white/80 hover:text-white font-bold underline transition cursor-pointer">
+                                Officer Login →
+                            </button>
+                        </div>
+
+                        <!-- SUCCESS SCREEN -->
+                        <div v-if="publicApplySubmitted" class="p-6 sm:p-8 text-center space-y-4 animate-fade-in">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
+                                <i class="fas fa-circle-check"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                                    Application Received!
+                                </h3>
+                                <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                                    Your customer's file has been directly routed to the credit desk at <strong class="text-slate-800">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</strong>.
+                                </p>
+                            </div>
+
+                            <!-- Lead Summary Ticket -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 text-left space-y-2.5 text-xs">
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Reference Lead ID</span>
+                                    <span class="font-mono font-bold text-[#4F46E5]">{{ publicApplySuccessFile?.appId }}</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Customer</div>
+                                        <div class="font-black text-slate-900">{{ publicApplySuccessFile?.customerName }}</div>
+                                        <div class="text-[11px] text-slate-600 font-mono">{{ publicApplySuccessFile?.customerPhone }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Car Model & Loan</div>
+                                        <div class="font-bold text-slate-900">{{ publicApplySuccessFile?.vehicleModel }}</div>
+                                        <div class="font-black text-emerald-600">₹{{ publicApplySuccessFile?.loanAmount }} L Requested</div>
+                                    </div>
+                                </div>
+                                <div v-if="publicApplySuccessFile?.dealershipName" class="pt-1 text-[11px] text-slate-500">
+                                    Showroom: <strong class="text-slate-800">{{ publicApplySuccessFile.dealershipName }}</strong>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="space-y-2 pt-2">
+                                <button type="button" @click="sendPublicApplySmWhatsApp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
+                                    <i class="fab fa-whatsapp text-sm"></i>
+                                    <span>Notify Sales Manager via WhatsApp</span>
+                                </button>
+                                <button type="button" @click="resetPublicApplyForm" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
+                                    Punch Another Customer File
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- INPUT FORM -->
+                        <form v-else @submit.prevent="submitPublicLoanApplication" class="p-6 space-y-4">
+                            <!-- Error Alert -->
+                            <div v-if="publicApplyError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
+                                <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
+                                <span>{{ publicApplyError }}</span>
+                            </div>
+
+                            <!-- Showroom & Executive Attribution (2 Cols) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                        Dealership / Showroom Name
+                                    </label>
+                                    <input v-model="publicApplyForm.dealershipName" type="text" placeholder="e.g. Maruti Suzuki - Saraighat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                        Sales Consultant (DSE) & Mobile
+                                    </label>
+                                    <input v-model="publicApplyForm.dseName" type="text" placeholder="e.g. Rahul Sharma - 9876543210" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                                </div>
+                            </div>
+
+                            <!-- Customer Name -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Customer Full Name <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input v-model="publicApplyForm.customerName" type="text" required placeholder="e.g. Mohan Sharma" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
+                                </div>
+                            </div>
+
+                            <!-- Customer Mobile -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Customer Mobile / WhatsApp (10 Digits) <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input v-model="publicApplyForm.customerPhone" type="tel" required placeholder="e.g. 9876543210" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                                </div>
+                            </div>
+
+                            <!-- Car Model & Variant -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Car Model & Variant <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-car absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input v-model="publicApplyForm.vehicleModel" type="text" required placeholder="e.g. Brezza ZXi+ / Creta SX (O)" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
+                                </div>
+                            </div>
+
+                            <!-- Price & Loan (2 Cols) -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        On-Road Price (₹ Lakhs)
+                                    </label>
+                                    <input v-model="publicApplyForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 10.50" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                        Loan Req (₹ Lakhs) <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input v-model="publicApplyForm.loanAmount" type="number" step="0.01" required placeholder="e.g. 8.20" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                                </div>
+                            </div>
+
+                            <!-- Customer Profile -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Customer Profile
+                                </label>
+                                <div class="relative">
+                                    <select v-model="publicApplyForm.customerProfile" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition appearance-none cursor-pointer">
+                                        <option value="Salaried (Form 16 / ITR)">Salaried (Form 16 / ITR)</option>
+                                        <option value="Self-Employed / Business">Self-Employed / Business</option>
+                                        <option value="Agriculture / Rural Cash">Agriculture / Rural Cash</option>
+                                        <option value="Doctor / Professional">Doctor / Professional</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down text-[10px] text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <!-- Priority Remarks -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Showroom Delivery Remarks
+                                </label>
+                                <textarea v-model="publicApplyForm.notes" rows="2" placeholder="e.g. Dhanteras delivery / fast sanction required" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-medium text-slate-800 transition resize-none"></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" :disabled="isSubmittingPublicApply" class="w-full h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-2xl shadow-xs active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                                <span v-if="isSubmittingPublicApply">Submitting File to Credit Desk...</span>
+                                <span v-else class="flex items-center gap-2">
+                                    <span>Submit File to Branch Credit Desk</span>
+                                    <i class="fas fa-arrow-right text-xs"></i>
+                                </span>
+                            </button>
+
+                            <!-- Trust Bar -->
+                            <div class="text-center text-[10px] text-slate-400 pt-1">
+                                <i class="fas fa-shield-halved text-emerald-500 mr-1"></i>
+                                <span>Official Digital Desk • {{ publicApplyWorkspace.bankName || 'Axis Bank' }}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Center Authentication Container -->
-                <div class="my-auto max-w-sm w-full mx-auto py-4">
+                <div v-else class="my-auto max-w-sm w-full mx-auto py-4">
 
                     <!-- VIEW 1: Sign In -->
                     <div v-if="!showRegisterMode" class="space-y-4 animate-fade-in">
@@ -3136,6 +3322,48 @@
                             </div>
                         </div>
 
+                        <!-- Showroom QR Standee & Digital Link Hub -->
+                        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-3xl shadow-sm border border-slate-800 flex flex-col md:flex-row items-center gap-5 justify-between">
+                            <div class="flex items-start gap-4">
+                                <!-- QR Preview -->
+                                <div class="bg-white p-2 rounded-2xl shadow-md shrink-0 border border-white/20 text-center">
+                                    <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(smPublicApplyUrl)" alt="Hub QR Code" class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-contain mx-auto">
+                                    <div class="text-[9px] font-black text-slate-900 uppercase tracking-wider mt-1">Scan to Apply</div>
+                                </div>
+                                <div class="space-y-1.5 min-w-0">
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                        <i class="fas fa-qrcode text-[9px]"></i>
+                                        <span>Showroom QR Standee & Link</span>
+                                    </div>
+                                    <h3 class="text-base sm:text-lg font-black text-white tracking-tight">
+                                        Showroom Inflow Desk
+                                    </h3>
+                                    <p class="text-xs text-slate-300 leading-relaxed max-w-lg">
+                                        Place this QR standee on partner car showroom desks (Maruti, Hyundai, Tata) or share your digital apply link. Inquiries punched by consultants land right here in your radar.
+                                    </p>
+                                    <div class="text-[11px] font-mono text-indigo-200/80 truncate">
+                                        {{ smPublicApplyUrl }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
+                                <button type="button" @click="copySmApplyLink" class="flex-1 md:flex-initial px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                                    <i class="fas fa-copy text-[#4F46E5]"></i>
+                                    <span>Copy Apply Link</span>
+                                </button>
+                                <button type="button" @click="shareSmApplyWhatsApp" class="flex-1 md:flex-initial px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                                    <i class="fab fa-whatsapp"></i>
+                                    <span>Share to Dealers</span>
+                                </button>
+                                <button type="button" @click="showSmQrStandeeModal = true" class="flex-1 md:flex-initial px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer border border-white/20">
+                                    <i class="fas fa-print"></i>
+                                    <span>Print Standee</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Sub-tab switcher -->
                         <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl w-fit">
                             <button type="button" @click="smInboundSubTab = 'pending'" :class="[smInboundSubTab === 'pending' ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-500 font-medium hover:text-slate-900', 'px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5']">
@@ -3168,9 +3396,16 @@
                                 <!-- Card Top Row: Dealership & Lead Age -->
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                                        <span v-if="file.origin === 'showroom_qr'" class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                                            <i class="fas fa-qrcode text-emerald-600"></i>
+                                            <span>Showroom QR</span>
+                                        </span>
+                                        <span v-else class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
                                             <i class="fas fa-store text-amber-600"></i>
                                             <span>{{ file.dealershipName || file.sourcingChannel }}</span>
+                                        </span>
+                                        <span v-if="file.dealershipName && file.origin === 'showroom_qr'" class="text-xs font-bold text-slate-800">
+                                            {{ file.dealershipName }}
                                         </span>
                                         <span class="text-[11px] font-semibold text-slate-500">
                                             {{ file.showroomBrand }}
@@ -6152,6 +6387,77 @@
             </div>
         </div>
 
+        <!-- SM: PRINTABLE SHOWROOM QR DESK STANDEE MODAL -->
+        <div v-if="showSmQrStandeeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200/80 my-auto animate-in fade-in zoom-in-95 duration-150">
+                <!-- Modal Bar -->
+                <div class="px-5 py-3.5 bg-slate-900 text-white flex justify-between items-center print:hidden">
+                    <span class="text-xs font-bold flex items-center gap-2">
+                        <i class="fas fa-qrcode text-[#4F46E5]"></i>
+                        <span>Showroom Desk Acrylic Standee</span>
+                    </span>
+                    <button type="button" @click="showSmQrStandeeModal = false" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Standee Print Content -->
+                <div class="p-6 text-center space-y-4 bg-gradient-to-b from-slate-50 to-white print:p-8">
+                    <!-- Bank Brand Header -->
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-black text-[#4F46E5] uppercase tracking-wider">
+                            <i class="fas fa-building-columns"></i>
+                            <span>{{ currentUser.bankName || 'Axis Bank' }}</span>
+                        </div>
+                        <h2 class="text-lg font-black text-slate-900 tracking-tight">
+                            Car Loan Spot Approval Desk
+                        </h2>
+                        <p class="text-xs text-slate-500 font-medium">
+                            {{ currentUser.region || 'Branch Sales Desk' }}
+                        </p>
+                    </div>
+
+                    <!-- Big QR Code Inset -->
+                    <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 shadow-sm max-w-[240px] mx-auto">
+                        <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(smPublicApplyUrl)" alt="QR Standee" class="w-44 h-44 rounded-xl object-contain mx-auto">
+                        <div class="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center justify-center gap-1.5">
+                            <i class="fas fa-camera text-[#4F46E5]"></i>
+                            <span>Scan with Camera to Apply</span>
+                        </div>
+                    </div>
+
+                    <!-- Key Benefits -->
+                    <div class="grid grid-cols-2 gap-2 text-left max-w-[300px] mx-auto text-[11px]">
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-bolt text-amber-500 text-xs"></i>
+                            <span>Spot In-Principle Sanction</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-car-side text-indigo-500 text-xs"></i>
+                            <span>Fast Delivery Clearance</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer SM Signoff -->
+                    <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                        <div>Direct Branch Desk: <strong class="text-slate-800">{{ currentUser.name }}</strong> (Sales Manager)</div>
+                        <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ smPublicApplyUrl }}</div>
+                    </div>
+                </div>
+
+                <!-- Modal Action Buttons (Hidden when printing) -->
+                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5 print:hidden">
+                    <button type="button" @click="showSmQrStandeeModal = false" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                        Close
+                    </button>
+                    <button type="button" onclick="window.print()" class="px-4 py-2 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-print"></i>
+                        <span>Print Standee</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- DSE: PUNCH LOAN FILE MODAL -->
         <div v-if="isDseFileModalOpen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 my-auto animate-in fade-in zoom-in-95 duration-150">
@@ -7586,13 +7892,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-127"></script>
+    <script type="module" src="js/app.js?v=force-update-128"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-127')
+                navigator.serviceWorker.register('./sw.js?v=force-update-128')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

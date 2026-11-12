@@ -250,7 +250,7 @@ export const getInboundShowroomFilesByTenant = async (tenantId) => {
     if (!tenantId) return [];
     try {
         const all = await getLoanFilesByTenant(tenantId);
-        return all.filter(f => f.origin === 'dealer_portal');
+        return all.filter(f => f.origin === 'dealer_portal' || f.origin === 'showroom_qr' || f.origin === 'qr_inbound' || (f.allocationStatus && f.allocationStatus.includes('sm_dispatch')));
     } catch (e) {
         console.warn("Failed to get inbound showroom files:", e);
         return [];
