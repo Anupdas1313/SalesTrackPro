@@ -127,6 +127,7 @@ const app = createApp({
         const isSubmittingDseFile = ref(false);
         const dseFileError = ref('');
         const dseFilterStatus = ref('all');
+        const dseSearchQuery = ref('');
         const newDseFileForm = ref({
             customerName: '',
             customerPhone: '',
@@ -157,16 +158,17 @@ const app = createApp({
         const dseStats = computed(() => {
             const list = dseFiles.value || [];
             const total = list.length;
-            const totalVol = list.reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
-            const pendingSm = list.filter(f => f.allocationStatus === 'pending_sm_dispatch').length;
+            const inProgress = list.filter(f => {
+                const s = (f.status || '').toUpperCase();
+                return f.allocationStatus === 'pending_sm_dispatch' || s === 'INBOUND' || s === 'LOGIN' || s === 'FI';
+            }).length;
             const sanctioned = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').length;
-            const sanctionedVol = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
             const disbursed = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').length;
+            const sanctionedVol = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
             const disbursedVol = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
             return {
                 total,
-                totalVol,
-                pendingSm,
+                inProgress,
                 sanctioned,
                 sanctionedVol,
                 disbursed,
@@ -176,12 +178,21 @@ const app = createApp({
 
         const filteredDseFiles = computed(() => {
             let list = dseFiles.value || [];
-            if (dseFilterStatus.value === 'pending') {
-                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch');
-            } else if (dseFilterStatus.value === 'login') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'LOGIN');
-            } else if (dseFilterStatus.value === 'fi') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'FI');
+            const q = (dseSearchQuery.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(f => 
+                    (f.customerName || '').toLowerCase().includes(q) ||
+                    (f.customerPhone || '').includes(q) ||
+                    (f.vehicleModel || '').toLowerCase().includes(q) ||
+                    (f.targetBankName || '').toLowerCase().includes(q) ||
+                    (f.roName || '').toLowerCase().includes(q)
+                );
+            }
+            if (dseFilterStatus.value === 'in_progress') {
+                list = list.filter(f => {
+                    const s = (f.status || '').toUpperCase();
+                    return f.allocationStatus === 'pending_sm_dispatch' || s === 'INBOUND' || s === 'LOGIN' || s === 'FI';
+                });
             } else if (dseFilterStatus.value === 'sanction') {
                 list = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION');
             } else if (dseFilterStatus.value === 'disbursed') {
@@ -189,6 +200,102 @@ const app = createApp({
             }
             return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         });
+
+        const getDseStatusInfo = (file) => {
+            if (!file) return { label: 'Submitted', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', icon: 'fas fa-clock', title: 'Submitted' };
+            const status = (file.status || '').toUpperCase();
+            if (status === 'DISBURSED') {
+                return {
+                    label: 'Delivered',
+                    title: 'Car Delivered & Financed',
+                    badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+                    pillClass: 'bg-purple-100 text-purple-800',
+                    icon: 'fas fa-car-side',
+                    borderClass: 'border-purple-200 hover:border-purple-300',
+                    bannerClass: 'bg-purple-50/80 border-purple-200 text-purple-900',
+                    bannerText: 'Car Delivered & Disbursed'
+                };
+            }
+            if (status === 'SANCTION') {
+                return {
+                    label: 'Approved',
+                    title: 'Loan Approved — Ready for Car Delivery!',
+                    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    pillClass: 'bg-emerald-100 text-emerald-800',
+                    icon: 'fas fa-check-circle',
+                    borderClass: 'border-emerald-300 ring-1 ring-emerald-500/20 hover:border-emerald-400',
+                    bannerClass: 'bg-emerald-50/90 border-emerald-200 text-emerald-900',
+                    bannerText: 'Loan Approved — Cleared for Delivery'
+                };
+            }
+            if (file.allocationStatus === 'pending_sm_dispatch') {
+                return {
+                    label: 'Submitted',
+                    title: 'Awaiting Bank Officer Assignment',
+                    badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+                    pillClass: 'bg-amber-100 text-amber-800',
+                    icon: 'fas fa-paper-plane',
+                    borderClass: 'border-amber-200 hover:border-amber-300',
+                    bannerClass: 'bg-amber-50/80 border-amber-200 text-amber-900',
+                    bannerText: 'Submitted to Bank Hub — Assigning RO'
+                };
+            }
+            return {
+                label: 'In Progress',
+                title: 'Bank Verification in Progress',
+                badgeClass: 'bg-indigo-50 text-[#4F46E5] border-indigo-200',
+                pillClass: 'bg-indigo-100 text-indigo-800',
+                icon: 'fas fa-arrows-rotate',
+                borderClass: 'border-indigo-200 hover:border-indigo-300',
+                bannerClass: 'bg-indigo-50/80 border-indigo-200 text-indigo-900',
+                bannerText: file.roName && file.roName !== 'Pending SM Dispatch'
+                    ? `Processing with ${file.roName} (${file.targetBankName || 'Bank'})`
+                    : `In Bank Verification (${file.targetBankName || 'Bank'})`
+            };
+        };
+
+        const getRelativeTime = (isoString) => {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                const diffHours = Math.floor(diffMins / 60);
+                const diffDays = Math.floor(diffHours / 24);
+
+                if (diffMins < 2) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                if (diffHours < 24) return `${diffHours}h ago`;
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return `${diffDays}d ago`;
+                return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            } catch (e) {
+                return '';
+            }
+        };
+
+        const sendCustomerLoanUpdateWhatsApp = (file) => {
+            if (!file || !file.customerPhone) return;
+            const statusUpper = (file.status || '').toUpperCase();
+            let msg = '';
+            if (statusUpper === 'SANCTION') {
+                msg = `Hi ${file.customerName}, great news from ${currentUser.value?.dealershipName || 'our showroom'}! 🎉 Your car loan of ₹${file.sanctionAmount || file.loanAmount} Lakhs for ${file.vehicleModel} has been APPROVED by ${file.targetBankName || 'the bank'}. We are getting your car ready for delivery!`;
+            } else if (statusUpper === 'DISBURSED') {
+                msg = `Congratulations ${file.customerName}! 🚗 Your car loan for ${file.vehicleModel} is disbursed and car delivery is confirmed. Thank you for choosing ${currentUser.value?.dealershipName || 'us'}!`;
+            } else {
+                msg = `Hi ${file.customerName}, this is ${currentUser.value?.name || 'your Sales Executive'} from ${currentUser.value?.dealershipName || 'the dealership'}. Your car loan application for ${file.vehicleModel} with ${file.targetBankName || 'our partner bank'} is currently in progress. We will keep you updated!`;
+            }
+            const phoneDigits = file.customerPhone.replace(/\D/g, '');
+            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
+            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        const sendDseRoNudgeWhatsApp = (file) => {
+            if (!file) return;
+            const msg = `Hi ${file.roName || 'Officer'}, checking update for car loan of *${file.customerName}* (${file.vehicleModel}) punched from *${currentUser.value?.dealershipName || 'our showroom'}*. Could you please share the latest sanction / delivery status? Thanks!`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        };
 
         // SM Inbound Queue State
         const inboundShowroomFiles = ref([]);
@@ -5401,7 +5508,7 @@ const app = createApp({
             isSavingTarget, targetSaveSuccess, targetSaveError, openSetTargetModal, saveSalesTarget,
             showNewDriveModal, driveModalForm, isSavingDrive, driveSaveSuccess, driveSaveError,
             openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote,
-            isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles,
+            isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
             openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
             inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp
         };
