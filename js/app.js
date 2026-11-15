@@ -577,7 +577,8 @@ const app = createApp({
                         region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
                         phone: form.phone.trim(),
                         salesLinkId: newSalesLinkId,
-                        tenantId: tenantId,
+                        tenantId: null, // DSE belongs to Showroom, not bank branch!
+                        linkedBankTenantId: tenantId,
                         designation: 'Dealership Sales Executive (DSE)',
                         status: 'active',
                         activeSessionId: newSessionId,
@@ -597,7 +598,8 @@ const app = createApp({
                         region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
                         phone: form.phone.trim(),
                         salesLinkId: newSalesLinkId,
-                        tenantId: tenantId,
+                        tenantId: null,
+                        linkedBankTenantId: tenantId,
                         designation: 'Dealership Sales Executive (DSE)',
                         status: 'active',
                         activeSessionId: newSessionId
@@ -612,7 +614,8 @@ const app = createApp({
                         employeeCode: form.employeeCode.trim().toUpperCase() || user.employeeCode || '',
                         region: form.region?.trim() || user.region || publicApplyWorkspace.value?.name || 'Branch Hub',
                         phone: form.phone.trim() || user.phone || '',
-                        tenantId: tenantId || user.tenantId || null,
+                        tenantId: null, // Clear bank tenantId so DSE never lands inside SM workspace!
+                        linkedBankTenantId: tenantId || user.linkedBankTenantId || user.tenantId || null,
                         designation: 'Dealership Sales Executive (DSE)',
                         status: 'active',
                         activeSessionId: newSessionId,
@@ -1773,7 +1776,7 @@ const app = createApp({
 
         const tenantHealthList = computed(() => {
             return allWorkspaces.value.map(workspace => {
-                const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id);
+                const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id && u.role !== 'dse' && !u.dealershipName);
                 const wFiles = allFiles.value.filter(f => f.tenantId === workspace.id || (!f.tenantId && f.smName === workspace.id));
                 
                 let lastActive = null;
@@ -1818,8 +1821,34 @@ const app = createApp({
             }
         }, { immediate: true });
 
+        const superAdminUsersTab = ref('bank'); // 'bank' | 'dse'
+        const dseDirectorySearch = ref('');
+        const dseDirectoryFilterBrand = ref('all');
+        const dseDirectoryFilterStatus = ref('all');
+
+        const goToSuperAdminDirectory = (tab) => {
+            currentTab.value = 'super-admin-users';
+            superAdminUsersTab.value = tab || 'bank';
+        };
+
+        const totalBankUsersCount = computed(() => {
+            return (roUsers.value || []).filter(u => 
+                (u.role === 'sm' || u.role === 'ro' || u.role === 'admin' || u.role === 'asm' || u.role === 'zsm') && 
+                u.email !== 'anupdas8354@gmail.com' && 
+                u.role !== 'super_admin' && 
+                u.role !== 'dse' &&
+                !u.dealershipName
+            ).length;
+        });
+
         const groupedUsers = computed(() => {
-            let allPlatformUsers = roUsers.value.filter(u => u.role !== 'super_admin' && u.email !== 'anupdas8354@gmail.com');
+            // Strictly Bank Platform Users: SM, RO, ASM, ZSM (Strictly EXCLUDES DSEs so they never land inside an SM!)
+            let allPlatformUsers = (roUsers.value || []).filter(u => 
+                u.role !== 'super_admin' && 
+                u.email !== 'anupdas8354@gmail.com' &&
+                u.role !== 'dse' &&
+                !u.dealershipName
+            );
             
             if (userFilterStatus.value !== 'all') {
                 allPlatformUsers = allPlatformUsers.filter(u => (u.status || 'active') === userFilterStatus.value);
@@ -1827,7 +1856,7 @@ const app = createApp({
             if (userSearchQuery.value) {
                 const q = userSearchQuery.value.toLowerCase();
                 allPlatformUsers = allPlatformUsers.filter(u => 
-                    u.name.toLowerCase().includes(q) || 
+                    (u.name && u.name.toLowerCase().includes(q)) || 
                     (u.email && u.email.toLowerCase().includes(q))
                 );
             }
@@ -1838,7 +1867,7 @@ const app = createApp({
                 const wUsers = allPlatformUsers.filter(u => u.tenantId === workspace.id);
                 
                 const enhancedUsers = wUsers.map(u => {
-                    const uFiles = allFiles.value.filter(f => f.userId === u.id);
+                    const uFiles = allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
                     let lastActive = null;
                     if (uFiles.length > 0) {
                         lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
@@ -1849,15 +1878,15 @@ const app = createApp({
                 return {
                     workspace,
                     isExpanded: expandedWorkspaces.value.includes(workspace.id),
-                    smUsers: enhancedUsers.filter(u => u.role === 'sm'),
-                    roUsers: enhancedUsers.filter(u => u.role === 'ro' || u.role !== 'sm') // Catch-all for non-sm
+                    smUsers: enhancedUsers.filter(u => u.role === 'sm' || u.role === 'admin'),
+                    roUsers: enhancedUsers.filter(u => u.role === 'ro') // STRICTLY RO ONLY!
                 };
             }).filter(group => group.smUsers.length > 0 || group.roUsers.length > 0)
               .sort((a, b) => a.workspace.name.localeCompare(b.workspace.name));
             
             if (systemUsers.length > 0) {
                 const enhancedSystem = systemUsers.map(u => {
-                    const uFiles = allFiles.value.filter(f => f.userId === u.id);
+                    const uFiles = allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
                     let lastActive = null;
                     if (uFiles.length > 0) {
                         lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
@@ -1865,18 +1894,93 @@ const app = createApp({
                     return { ...u, fileCount: uFiles.length, lastActive };
                 });
                 grouped.push({
-                    workspace: { id: 'system', name: 'System / Unassigned', status: 'active' },
+                    workspace: { id: 'system', name: 'System / Unassigned Officers', status: 'active' },
                     isExpanded: expandedWorkspaces.value.includes('system'),
-                    smUsers: enhancedSystem.filter(u => u.role === 'sm'),
-                    roUsers: enhancedSystem.filter(u => u.role !== 'sm')
+                    smUsers: enhancedSystem.filter(u => u.role === 'sm' || u.role === 'admin'),
+                    roUsers: enhancedSystem.filter(u => u.role === 'ro')
                 });
             }
             
             return grouped;
         });
 
+        // Dedicated Dealership & DSE Directory
+        const dseDirectoryList = computed(() => {
+            let list = (roUsers.value || []).filter(u => 
+                u.role === 'dse' || 
+                (u.dealershipName && u.role !== 'super_admin' && u.role !== 'sm' && u.role !== 'ro' && u.role !== 'asm' && u.role !== 'zsm')
+            );
+
+            if (dseDirectoryFilterBrand.value !== 'all') {
+                list = list.filter(u => (u.showroomBrand || '') === dseDirectoryFilterBrand.value);
+            }
+            if (dseDirectoryFilterStatus.value !== 'all') {
+                list = list.filter(u => (u.status || 'active') === dseDirectoryFilterStatus.value);
+            }
+            const q = (dseDirectorySearch.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(u => 
+                    (u.name && u.name.toLowerCase().includes(q)) ||
+                    (u.email && u.email.toLowerCase().includes(q)) ||
+                    (u.phone && String(u.phone).includes(q)) ||
+                    (u.dealershipName && u.dealershipName.toLowerCase().includes(q)) ||
+                    (u.showroomBrand && u.showroomBrand.toLowerCase().includes(q)) ||
+                    (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                    (u.salesLinkId && String(u.salesLinkId).toLowerCase().includes(q))
+                );
+            }
+
+            return list.map(dse => {
+                const email = (dse.email || '').toLowerCase();
+                const sid = dse.salesLinkId || '';
+                const files = (allFiles.value || []).filter(f => 
+                    f.dseId === dse.id || 
+                    (sid && f.dseId === sid) ||
+                    (email && f.userEmail && f.userEmail.toLowerCase() === email) ||
+                    (dse.name && f.dseName && f.dseName.toLowerCase() === dse.name.toLowerCase())
+                );
+                const totalPunched = files.length;
+                const totalSanctioned = files.filter(f => (f.status || '').toUpperCase() === 'SANCTION').length;
+                const totalDelivered = files.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').length;
+                const totalVolume = files.reduce((acc, f) => acc + (Number(f.sanctionAmount || f.loanAmount) || 0), 0);
+
+                let lastActive = dse.lastLoginAt || null;
+                if (files.length > 0) {
+                    const sorted = [...files].sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                    lastActive = sorted[0].createdAt;
+                }
+
+                let linkedHub = null;
+                const tid = dse.linkedBankTenantId || dse.tenantId;
+                if (tid) {
+                    linkedHub = (allWorkspaces.value || []).find(w => w.id === tid);
+                }
+
+                return {
+                    ...dse,
+                    totalPunched,
+                    totalSanctioned,
+                    totalDelivered,
+                    totalVolume: totalVolume.toFixed(2),
+                    lastActive,
+                    linkedHubName: linkedHub ? linkedHub.name : (dse.region || 'Multi-Bank Desk')
+                };
+            }).sort((a, b) => b.totalPunched - a.totalPunched || (b.createdAt || '').localeCompare(a.createdAt || ''));
+        });
+
+        const dseDirectoryStats = computed(() => {
+            const list = (roUsers.value || []).filter(u => u.role === 'dse' || (u.dealershipName && u.role !== 'super_admin' && u.role !== 'sm' && u.role !== 'ro'));
+            const dealerships = new Set(list.map(u => (u.dealershipName || '').trim()).filter(Boolean));
+            const activeDse = list.filter(u => (u.status || 'active') === 'active').length;
+            return {
+                totalDse: list.length,
+                activeDse,
+                uniqueDealerships: dealerships.size
+            };
+        });
+
         const showEditUserModal = ref(false);
-        const editUserForm = ref({ id: '', name: '', email: '', tenantId: '', role: '' });
+        const editUserForm = ref({ id: '', name: '', email: '', tenantId: '', role: '', dealershipName: '', showroomBrand: 'Maruti Suzuki Arena' });
 
         const openEditUserModal = (user) => {
             editUserForm.value = {
@@ -1886,7 +1990,9 @@ const app = createApp({
                 employeeCode: user.employeeCode || '',
                 phone: user.phone || '',
                 tenantId: user.tenantId || '',
-                role: user.role || 'ro'
+                role: user.role || 'ro',
+                dealershipName: user.dealershipName || '',
+                showroomBrand: user.showroomBrand || 'Maruti Suzuki Arena'
             };
             showEditUserModal.value = true;
         };
@@ -1933,8 +2039,14 @@ const app = createApp({
                 };
                 if (editUserForm.value.role) {
                     updatePayload.role = editUserForm.value.role;
+                    if (editUserForm.value.role === 'dse') {
+                        updatePayload.dealershipName = (editUserForm.value.dealershipName || '').trim();
+                        updatePayload.showroomBrand = editUserForm.value.showroomBrand || 'Maruti Suzuki Arena';
+                        updatePayload.designation = 'Dealership Sales Executive (DSE)';
+                        updatePayload.tenantId = null; // Clear bank tenant so DSE belongs exclusively to DSE Directory!
+                    }
                 }
-                if (editUserForm.value.tenantId !== undefined) {
+                if (editUserForm.value.role !== 'dse' && editUserForm.value.tenantId !== undefined) {
                     updatePayload.tenantId = editUserForm.value.tenantId;
                 }
 
@@ -1944,12 +2056,7 @@ const app = createApp({
                 if (index !== -1) {
                     roUsers.value[index] = {
                         ...roUsers.value[index],
-                        name: cleanedName,
-                        email: cleanedEmail,
-                        employeeCode: cleanedEmp,
-                        phone: cleanedPhone,
-                        role: updatePayload.role || roUsers.value[index].role,
-                        tenantId: updatePayload.tenantId !== undefined ? updatePayload.tenantId : roUsers.value[index].tenantId
+                        ...updatePayload
                     };
                 }
 
@@ -5201,8 +5308,12 @@ const app = createApp({
                     if (user.dealershipName || user.showroomBrand) {
                         user.role = 'dse';
                         user.designation = user.designation || 'Dealership Sales Executive (DSE)';
+                        if (user.tenantId) {
+                            user.linkedBankTenantId = user.tenantId;
+                            user.tenantId = null;
+                        }
                         try {
-                            await db.updateUser(user.id, { role: 'dse', designation: user.designation });
+                            await db.updateUser(user.id, { role: 'dse', designation: user.designation, tenantId: null, linkedBankTenantId: user.linkedBankTenantId || null });
                         } catch (e) {}
                     } else {
                         try {
@@ -5213,15 +5324,30 @@ const app = createApp({
                                 user.dealershipName = showroomFile.dealershipName || showroomFile.sourcingChannel || 'Car Showroom Partner';
                                 user.showroomBrand = showroomFile.showroomBrand || 'Showroom Partner';
                                 user.designation = 'Dealership Sales Executive (DSE)';
+                                if (user.tenantId) {
+                                    user.linkedBankTenantId = user.tenantId;
+                                    user.tenantId = null;
+                                }
                                 await db.updateUser(user.id, {
                                     role: 'dse',
                                     dealershipName: user.dealershipName,
                                     showroomBrand: user.showroomBrand,
-                                    designation: user.designation
+                                    designation: user.designation,
+                                    tenantId: null,
+                                    linkedBankTenantId: user.linkedBankTenantId || null
                                 });
                             }
                         } catch (e) {}
                     }
+                }
+
+                // If user is already DSE and has a bank tenantId, clear it so they belong exclusively to DSE Directory
+                if (user.role === 'dse' && user.tenantId) {
+                    user.linkedBankTenantId = user.tenantId;
+                    user.tenantId = null;
+                    try {
+                        await db.updateUser(user.id, { tenantId: null, linkedBankTenantId: user.linkedBankTenantId });
+                    } catch (e) {}
                 }
 
                 // Record login timestamp
@@ -6300,6 +6426,7 @@ const app = createApp({
             showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
             availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
             userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
+            superAdminUsersTab, dseDirectorySearch, dseDirectoryFilterBrand, dseDirectoryFilterStatus, dseDirectoryList, dseDirectoryStats, totalBankUsersCount, goToSuperAdminDirectory,
             showRegisterMode, loginPortalMode, showMobileFeatures, showBankSelector, registerForm, registerStep, registerConfirmed, selectRegisterRole, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
             showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
             newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
