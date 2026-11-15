@@ -192,6 +192,46 @@
                             <span>{{ publicApplyError }}</span>
                         </div>
 
+                        <!-- DSE Account Advantage Card (Prompt before submission) -->
+                        <div v-if="!currentUser" class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-blue-50/90 border border-indigo-100 shadow-2xs space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                                    <i class="fas fa-car-side"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-black text-slate-900">Showroom Sales Consultant (DSE)?</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800">Seamless Radar</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 leading-snug mt-0.5">
+                                        Create a free account for live tracking from review to delivery, and punch future files in 1 tap without re-entering showroom details.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-0.5">
+                                <button type="button" @click="openDseRegisterFromApply" class="flex-1 py-1.5 px-3 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-user-plus text-[10px]"></i>
+                                    <span>Create Consultant Account</span>
+                                </button>
+                                <button type="button" @click="loginDseFromApply" class="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                                    <span>Sign In</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Logged In DSE Banner -->
+                        <div v-else-if="isDSE" class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                                <div class="text-xs text-emerald-900 truncate">
+                                    Logged in as <strong class="font-black">{{ currentUser.name }}</strong> ({{ currentUser.dealershipName }})
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 shrink-0">
+                                Auto-Tracked
+                            </span>
+                        </div>
+
                         <!-- Showroom & Executive Attribution (2 Cols) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
@@ -312,6 +352,134 @@
                     SalesLink Lending OS • All inquiries are routed directly to the branch Sales Manager.
                 </div>
             </footer>
+
+            <!-- Modal: Prompt DSE to Create Account Before Submission -->
+            <div v-if="showDseAccountPromptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+                <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-2xl mx-auto shadow-xs">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                            Create Account for Live Tracking?
+                        </h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Create your free Dealership Consultant account before submitting to track <strong class="text-slate-800">{{ publicApplyForm.customerName }}</strong>'s loan live to delivery!
+                        </p>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-left space-y-2 text-xs">
+                        <div class="flex items-center gap-2 text-slate-700 font-semibold">
+                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <span>Live Radar: In Review → Approved 🚗 → Delivered</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-700 font-semibold">
+                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <span>1-Tap WhatsApp car delivery updates to buyer</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-700 font-semibold">
+                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <span>Punch future customer files in 1 tap</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-1">
+                        <button type="button" @click="proceedDseAccountRegistration" class="w-full py-3 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
+                            <i class="fab fa-google text-xs"></i>
+                            <span>Create Account & Submit File</span>
+                        </button>
+                        <button type="button" @click="confirmGuestSubmission" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition cursor-pointer">
+                            Submit without Account (Guest Punch)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal: Quick DSE Account Registration -->
+            <div v-if="showDseQuickRegisterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+                <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900 tracking-tight">Create Showroom Consultant Account</h3>
+                                <span class="text-[10px] text-slate-400 font-medium">Auto-connected to {{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</span>
+                            </div>
+                        </div>
+                        <button type="button" @click="showDseQuickRegisterModal = false" class="text-slate-400 hover:text-slate-700 transition cursor-pointer">
+                            <i class="fas fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Registration Error -->
+                    <div v-if="dseRegisterError" class="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
+                        <i class="fas fa-circle-exclamation text-rose-500 text-xs shrink-0 mt-0.5"></i>
+                        <span>{{ dseRegisterError }}</span>
+                    </div>
+
+                    <form @submit.prevent="submitDseQuickRegistration" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Car Brand / OEM <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <select v-model="dseQuickRegisterForm.showroomBrand" required class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 transition appearance-none cursor-pointer">
+                                        <option v-for="b in showroomBrandOptions" :key="b" :value="b">{{ b }}</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down text-[9px] text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Dealership / Showroom <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="dseQuickRegisterForm.dealershipName" type="text" required placeholder="e.g. Saraighat Motors" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Consultant Full Name <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="dseQuickRegisterForm.name" type="text" required placeholder="e.g. Rahul Sharma" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Official Staff / Employee ID <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="dseQuickRegisterForm.employeeCode" type="text" required placeholder="e.g. MS-9841" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 uppercase transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Showroom City / Location <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="dseQuickRegisterForm.region" type="text" required placeholder="e.g. Indore / Guwahati" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Mobile Number (10 Digits) <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="dseQuickRegisterForm.phone" type="tel" required placeholder="e.g. 9876543210" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 transition">
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" :disabled="isDseRegistering" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-2xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm">
+                                <i class="fab fa-google text-xs"></i>
+                                <span v-if="isDseRegistering">Activating DSE Account with Google...</span>
+                                <span v-else>Continue with Google to Activate DSE Account</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- ======================================================== -->
@@ -584,8 +752,8 @@
                                     <i class="fas fa-chevron-right text-xs text-slate-300 group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition shrink-0"></i>
                                 </button>
 
-                                <!-- Option 4: DSE (Car Showroom Sales Partner - Currently Hidden) -->
-                                <button v-if="false" type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
+                                <!-- Option 4: DSE (Car Showroom Sales Partner) -->
+                                <button type="button" @click="selectRegisterRole('dse')" class="w-full text-left p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#4F46E5]/40 rounded-2xl transition-all cursor-pointer group flex items-center gap-3.5 shadow-2xs hover:shadow-xs">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-[#4F46E5] flex items-center justify-center text-base shrink-0 transition-colors">
                                         <i class="fas fa-car-side"></i>
                                     </div>
@@ -7931,13 +8099,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-129"></script>
+    <script type="module" src="js/app.js?v=force-update-130"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-129')
+                navigator.serviceWorker.register('./sw.js?v=force-update-130')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

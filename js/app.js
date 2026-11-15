@@ -333,6 +333,198 @@ const app = createApp({
         const publicApplySubmitted = ref(false);
         const publicApplySuccessFile = ref(null);
 
+        // Showroom Consultant Account Onboarding
+        const showDseAccountPromptModal = ref(false);
+        const showDseQuickRegisterModal = ref(false);
+        const dseQuickRegisterForm = ref({
+            showroomBrand: 'Maruti Suzuki Arena',
+            dealershipName: '',
+            name: '',
+            employeeCode: '',
+            region: '',
+            phone: ''
+        });
+        const isDseRegistering = ref(false);
+        const dseRegisterError = ref('');
+
+        const openDseRegisterFromApply = () => {
+            dseRegisterError.value = '';
+            dseQuickRegisterForm.value = {
+                showroomBrand: publicApplyForm.value.showroomBrand || 'Maruti Suzuki Arena',
+                dealershipName: publicApplyForm.value.dealershipName || '',
+                name: publicApplyForm.value.dseName || '',
+                employeeCode: '',
+                region: publicApplyWorkspace.value?.name || '',
+                phone: publicApplyForm.value.dsePhone || ''
+            };
+            showDseAccountPromptModal.value = false;
+            showDseQuickRegisterModal.value = true;
+        };
+
+        const loginDseFromApply = async () => {
+            dseRegisterError.value = '';
+            try {
+                const googleUser = await db.loginWithGoogle();
+                const email = googleUser.email.toLowerCase();
+                const existing = await db.getUserByEmail(email);
+                if (existing) {
+                    if (existing.status === 'resigned' || existing.status === 'suspended') {
+                        alert("Your account has been deactivated. Please contact your manager.");
+                        return;
+                    }
+                    localStorage.setItem('axis_user', JSON.stringify(existing));
+                    currentUser.value = existing;
+                    isPublicApplyMode.value = false;
+                    if (existing.role === 'dse') {
+                        currentTab.value = 'dse-dashboard';
+                        await loadDseData();
+                    } else {
+                        currentTab.value = 'dashboard';
+                        await loadData();
+                    }
+                } else {
+                    openDseRegisterFromApply();
+                }
+            } catch (err) {
+                console.warn("DSE sign in error:", err);
+            }
+        };
+
+        const proceedDseAccountRegistration = () => {
+            openDseRegisterFromApply();
+        };
+
+        const submitDseQuickRegistration = async () => {
+            if (isDseRegistering.value) return;
+            dseRegisterError.value = '';
+
+            const form = dseQuickRegisterForm.value;
+            if (!form.dealershipName?.trim()) {
+                dseRegisterError.value = 'Dealership / Showroom Name is mandatory.';
+                return;
+            }
+            if (!form.name?.trim()) {
+                dseRegisterError.value = 'Sales Consultant Full Name is mandatory.';
+                return;
+            }
+            if (!form.employeeCode?.trim()) {
+                dseRegisterError.value = 'Official Staff / Employee ID is mandatory.';
+                return;
+            }
+            if (!form.phone || form.phone.replace(/\D/g, '').length < 10) {
+                dseRegisterError.value = 'Please provide a valid 10-digit mobile number.';
+                return;
+            }
+
+            isDseRegistering.value = true;
+            try {
+                const googleUser = await db.loginWithGoogle();
+                const email = googleUser.email.toLowerCase();
+                let user = await db.getUserByEmail(email);
+
+                const newSalesLinkId = db.generateSalesLinkId('dse');
+                const tenantId = publicApplyWorkspace.value?.id || null;
+
+                if (!user) {
+                    const newUserId = await db.addUser({
+                        email: email,
+                        role: 'dse',
+                        name: form.name.trim(),
+                        dealershipName: form.dealershipName.trim(),
+                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
+                        employeeCode: form.employeeCode.trim(),
+                        region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
+                        phone: form.phone.trim(),
+                        salesLinkId: newSalesLinkId,
+                        tenantId: tenantId,
+                        status: 'active',
+                        createdAt: new Date().toISOString()
+                    });
+
+                    user = {
+                        id: newUserId || email,
+                        email: email,
+                        username: form.name.trim(),
+                        role: 'dse',
+                        name: form.name.trim(),
+                        dealershipName: form.dealershipName.trim(),
+                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
+                        employeeCode: form.employeeCode.trim(),
+                        region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
+                        phone: form.phone.trim(),
+                        salesLinkId: newSalesLinkId,
+                        tenantId: tenantId
+                    };
+                }
+
+                localStorage.setItem('axis_user', JSON.stringify(user));
+                currentUser.value = user;
+
+                // If customer details were filled in publicApplyForm, automatically punch the lead under this DSE!
+                const custName = publicApplyForm.value.customerName?.trim();
+                const custPhone = publicApplyForm.value.customerPhone?.trim();
+                const vehModel = publicApplyForm.value.vehicleModel?.trim();
+                const loanAmt = Number(publicApplyForm.value.loanAmount);
+
+                if (custName && custPhone && vehModel && loanAmt > 0) {
+                    const createdAtIso = new Date().toISOString();
+                    const randId = 'QR' + Math.floor(100000 + Math.random() * 900000);
+                    const ws = publicApplyWorkspace.value || {};
+                    const newFile = {
+                        appId: randId,
+                        customerName: custName.toUpperCase(),
+                        customerPhone: custPhone,
+                        vehicleModel: vehModel.toUpperCase(),
+                        onRoadPrice: Number(publicApplyForm.value.onRoadPrice) || 0,
+                        loanAmount: loanAmt,
+                        customerProfile: publicApplyForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
+                        notes: (publicApplyForm.value.notes || '').trim(),
+                        nclUcl: 'NCL',
+                        userId: user.id,
+                        userEmail: user.email,
+                        sourcingChannel: form.dealershipName.trim(),
+                        dealershipName: form.dealershipName.trim(),
+                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
+                        dseId: user.id,
+                        dseName: user.name,
+                        dsePhone: user.phone,
+                        loginDate: createdAtIso.split('T')[0],
+                        origin: 'showroom_qr',
+                        tenantId: tenantId || ws.id,
+                        targetBankName: ws.bankName || 'Axis Bank',
+                        targetHubName: ws.name || 'Branch Hub',
+                        smName: ws.managerName || 'Branch SM',
+                        allocationStatus: 'pending_sm_dispatch',
+                        status: 'Inbound',
+                        roId: null,
+                        roName: 'Pending SM Dispatch',
+                        createdAt: createdAtIso,
+                        updatedAt: createdAtIso
+                    };
+
+                    try {
+                        await db.addLoanFile(newFile);
+                    } catch (e) {
+                        console.warn("Could not write file immediately:", e);
+                    }
+                    publicApplySuccessFile.value = newFile;
+                }
+
+                showDseQuickRegisterModal.value = false;
+                showDseAccountPromptModal.value = false;
+                isPublicApplyMode.value = false;
+                currentTab.value = 'dse-dashboard';
+                await loadDseData();
+
+                alert(`🎉 DSE Account Activated!\n\nWelcome, ${user.name}! Your showroom desk is connected to ${publicApplyWorkspace.value?.bankName || 'Axis Bank'} (${publicApplyWorkspace.value?.name || 'Branch Hub'}).\n\nAll customer loan sanctions & delivery statuses are live in your Showroom Radar.`);
+            } catch (err) {
+                console.error("DSE quick registration error:", err);
+                dseRegisterError.value = err.message || 'Error signing in with Google.';
+            } finally {
+                isDseRegistering.value = false;
+            }
+        };
+
         const smPublicApplyUrl = computed(() => {
             const tenantId = currentUser.value?.tenantId || currentUser.value?.salesLinkId || '';
             if (!tenantId) return window.location.origin;
@@ -462,26 +654,45 @@ const app = createApp({
                 return;
             }
 
+            // If not logged in, ask the DSE to create an account for live tracking before submission
+            if (!currentUser.value) {
+                showDseAccountPromptModal.value = true;
+                return;
+            }
+
+            await executePublicFileSubmission();
+        };
+
+        const confirmGuestSubmission = async () => {
+            showDseAccountPromptModal.value = false;
+            await executePublicFileSubmission();
+        };
+
+        const executePublicFileSubmission = async () => {
             isSubmittingPublicApply.value = true;
             try {
                 const createdAtIso = new Date().toISOString();
                 const randId = 'QR' + Math.floor(100000 + Math.random() * 900000);
                 const ws = publicApplyWorkspace.value;
+                const user = currentUser.value;
                 const newFile = {
                     appId: randId,
-                    customerName: custName.toUpperCase(),
-                    customerPhone: custPhone,
-                    vehicleModel: vehModel.toUpperCase(),
+                    customerName: publicApplyForm.value.customerName?.trim().toUpperCase(),
+                    customerPhone: publicApplyForm.value.customerPhone?.trim(),
+                    vehicleModel: publicApplyForm.value.vehicleModel?.trim().toUpperCase(),
                     onRoadPrice: Number(publicApplyForm.value.onRoadPrice) || 0,
-                    loanAmount: loanAmt,
+                    loanAmount: Number(publicApplyForm.value.loanAmount),
                     customerProfile: publicApplyForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
                     notes: (publicApplyForm.value.notes || '').trim(),
                     nclUcl: 'NCL',
-                    sourcingChannel: publicApplyForm.value.dealershipName?.trim() || 'SHOWROOM_QR',
-                    dealershipName: (publicApplyForm.value.dealershipName || '').trim(),
-                    showroomBrand: (publicApplyForm.value.showroomBrand || 'Car Showroom Partner').trim(),
-                    dseName: (publicApplyForm.value.dseName || '').trim(),
-                    dsePhone: (publicApplyForm.value.dsePhone || '').trim(),
+                    userId: user?.id || null,
+                    userEmail: user?.email || null,
+                    sourcingChannel: (user?.dealershipName || publicApplyForm.value.dealershipName || 'SHOWROOM_QR').trim(),
+                    dealershipName: (user?.dealershipName || publicApplyForm.value.dealershipName || '').trim(),
+                    showroomBrand: (user?.showroomBrand || publicApplyForm.value.showroomBrand || 'Car Showroom Partner').trim(),
+                    dseId: user?.id || null,
+                    dseName: (user?.name || publicApplyForm.value.dseName || '').trim(),
+                    dsePhone: (user?.phone || publicApplyForm.value.dsePhone || '').trim(),
                     loginDate: createdAtIso.split('T')[0],
                     origin: 'showroom_qr',
                     tenantId: ws.id,
@@ -5835,7 +6046,8 @@ const app = createApp({
             isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
             openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
             inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
-            isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp
+            isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp,
+            showDseAccountPromptModal, showDseQuickRegisterModal, dseQuickRegisterForm, isDseRegistering, dseRegisterError, openDseRegisterFromApply, loginDseFromApply, proceedDseAccountRegistration, submitDseQuickRegistration, confirmGuestSubmission
         };
     }
 });
