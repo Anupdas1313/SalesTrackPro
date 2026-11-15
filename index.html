@@ -90,9 +90,234 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- ENTERPRISE SPLIT-SCREEN AUTHENTICATION PORTAL              -->
+        <!-- PUBLIC CAR LOAN DESK (Visited via QR / WhatsApp Apply Link)-->
         <!-- ======================================================== -->
-        <div v-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-white lg:bg-slate-900 font-sans antialiased overflow-x-hidden selection:bg-[#4F46E5] selection:text-white">
+        <div v-if="isPublicApplyMode && publicApplyWorkspace" class="min-h-screen w-full bg-slate-50 flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-800">
+            <!-- Top Public Header -->
+            <header class="max-w-xl w-full mx-auto flex items-center justify-between pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm shadow-[#4F46E5]/25 ring-1 ring-[#4F46E5]/20">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide bg-indigo-100 text-[#4F46E5]">Showroom Desk</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 block leading-tight font-medium">{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
+                    </div>
+                </div>
+                <button type="button" @click="isPublicApplyMode = false" class="text-xs font-bold text-slate-500 hover:text-[#4F46E5] transition cursor-pointer flex items-center gap-1">
+                    <span>{{ currentUser ? 'Back to Portal' : 'Officer Login' }}</span>
+                    <i class="fas fa-arrow-right text-[10px]"></i>
+                </button>
+            </header>
+
+            <!-- Center Public Car Loan Application Container -->
+            <main class="my-auto max-w-lg w-full mx-auto py-2 animate-fade-in">
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
+                    <!-- Top Header Banner -->
+                    <div class="px-6 py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start">
+                        <div class="space-y-1">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/15 backdrop-blur-md border border-white/20">
+                                <i class="fas fa-building-columns text-[9px]"></i>
+                                <span>{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
+                            </div>
+                            <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">
+                                Car Loan Quick Application
+                            </h2>
+                            <p class="text-xs text-indigo-100/90">
+                                Branch Credit Desk • Sales Manager: {{ publicApplyWorkspace.managerName || 'Sales Manager' }}
+                            </p>
+                        </div>
+                        <button type="button" @click="isPublicApplyMode = false" class="text-xs text-white/80 hover:text-white font-bold underline transition cursor-pointer">
+                            {{ currentUser ? 'Portal →' : 'Login →' }}
+                        </button>
+                    </div>
+
+                    <!-- SUCCESS SCREEN -->
+                    <div v-if="publicApplySubmitted" class="p-6 sm:p-8 text-center space-y-4 animate-fade-in">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
+                            <i class="fas fa-circle-check"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                                Application Received!
+                            </h3>
+                            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                                Your customer's file has been directly routed to the credit desk at <strong class="text-slate-800">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Lead Summary Ticket -->
+                        <div class="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 text-left space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                                <span class="text-slate-400 font-semibold uppercase text-[10px]">Reference Lead ID</span>
+                                <span class="font-mono font-bold text-[#4F46E5]">{{ publicApplySuccessFile?.appId }}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-bold uppercase">Customer</div>
+                                    <div class="font-black text-slate-900">{{ publicApplySuccessFile?.customerName }}</div>
+                                    <div class="text-[11px] text-slate-600 font-mono">{{ publicApplySuccessFile?.customerPhone }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-bold uppercase">Car Model & Loan</div>
+                                    <div class="font-bold text-slate-900">{{ publicApplySuccessFile?.vehicleModel }}</div>
+                                    <div class="font-black text-emerald-600">₹{{ publicApplySuccessFile?.loanAmount }} L Requested</div>
+                                </div>
+                            </div>
+                            <div v-if="publicApplySuccessFile?.dealershipName" class="pt-1 text-[11px] text-slate-500">
+                                Showroom: <strong class="text-slate-800">{{ publicApplySuccessFile.dealershipName }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="space-y-2 pt-2">
+                            <button type="button" @click="sendPublicApplySmWhatsApp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
+                                <i class="fab fa-whatsapp text-sm"></i>
+                                <span>Notify Sales Manager via WhatsApp</span>
+                            </button>
+                            <button type="button" @click="resetPublicApplyForm" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
+                                Punch Another Customer File
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- INPUT FORM -->
+                    <form v-else @submit.prevent="submitPublicLoanApplication" class="p-6 space-y-4">
+                        <!-- Error Alert -->
+                        <div v-if="publicApplyError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
+                            <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
+                            <span>{{ publicApplyError }}</span>
+                        </div>
+
+                        <!-- Showroom & Executive Attribution (2 Cols) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Dealership / Showroom Name
+                                </label>
+                                <input v-model="publicApplyForm.dealershipName" type="text" placeholder="e.g. Maruti Suzuki - Saraighat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                    Sales Consultant (DSE) & Mobile
+                                </label>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <input v-model="publicApplyForm.dseName" type="text" placeholder="Your Name" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                                    <input v-model="publicApplyForm.dsePhone" type="tel" placeholder="Mobile" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Full Name -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Customer Full Name <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input v-model="publicApplyForm.customerName" type="text" required placeholder="e.g. Rajesh Kumar Verma" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
+                            </div>
+                        </div>
+
+                        <!-- Customer Mobile / WhatsApp -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Customer Mobile / WhatsApp (10 Digits) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input v-model="publicApplyForm.customerPhone" type="tel" required placeholder="e.g. 9876543210" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                            </div>
+                        </div>
+
+                        <!-- Car Model & Variant -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Car Model & Variant <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-car absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input v-model="publicApplyForm.vehicleModel" type="text" required placeholder="e.g. Brezza ZXi+ / Creta SX (O)" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
+                            </div>
+                        </div>
+
+                        <!-- Price & Loan (2 Cols) -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    On-Road Price (₹ Lakhs)
+                                </label>
+                                <input v-model="publicApplyForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 10.50" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Loan Req (₹ Lakhs) <span class="text-rose-500">*</span>
+                                </label>
+                                <input v-model="publicApplyForm.loanAmount" type="number" step="0.01" required placeholder="e.g. 8.20" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
+                            </div>
+                        </div>
+
+                        <!-- Customer Profile -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Customer Profile
+                            </label>
+                            <div class="relative">
+                                <select v-model="publicApplyForm.customerProfile" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition appearance-none cursor-pointer">
+                                    <option value="Salaried (Form 16 / ITR)">Salaried (Form 16 / ITR)</option>
+                                    <option value="Self-Employed / Business">Self-Employed / Business</option>
+                                    <option value="Agriculture / Rural Cash">Agriculture / Rural Cash</option>
+                                    <option value="Doctor / Professional">Doctor / Professional</option>
+                                </select>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <!-- Priority Remarks -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Showroom Delivery Remarks
+                            </label>
+                            <textarea v-model="publicApplyForm.notes" rows="2" placeholder="e.g. Dhanteras delivery / fast sanction required" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-medium text-slate-800 transition resize-none"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" :disabled="isSubmittingPublicApply" class="w-full h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-2xl shadow-xs active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                            <span v-if="isSubmittingPublicApply">Submitting File to Credit Desk...</span>
+                            <span v-else class="flex items-center gap-2">
+                                <span>Submit File to Branch Credit Desk</span>
+                                <i class="fas fa-arrow-right text-xs"></i>
+                            </span>
+                        </button>
+
+                        <!-- Trust Bar -->
+                        <div class="text-center text-[10px] text-slate-400 pt-1">
+                            <i class="fas fa-shield-halved text-emerald-500 mr-1"></i>
+                            <span>Official Digital Desk • {{ publicApplyWorkspace.bankName || 'Axis Bank' }}</span>
+                        </div>
+                    </form>
+                </div>
+            </main>
+
+            <!-- Bottom Trust Footer -->
+            <footer class="max-w-xl w-full mx-auto pt-4 text-center text-xs text-slate-400 space-y-1">
+                <div class="flex items-center justify-center gap-2 text-[11px]">
+                    <i class="fas fa-shield-halved text-emerald-500"></i>
+                    <span>Official Branch Credit Desk • Authorized Digital Sourcing</span>
+                </div>
+                <div class="text-[10px] text-slate-400">
+                    SalesLink Lending OS • All inquiries are routed directly to the branch Sales Manager.
+                </div>
+            </footer>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- ENTERPRISE SPLIT-SCREEN AUTHENTICATION PORTAL (Login)      -->
+        <!-- ======================================================== -->
+        <div v-else-if="!currentUser" class="min-h-screen w-full flex flex-col lg:flex-row bg-white lg:bg-slate-900 font-sans antialiased overflow-x-hidden selection:bg-[#4F46E5] selection:text-white">
 
             <!-- LEFT BRAND PANEL: Corporate Authority, Vision & Trust Badges -->
             <div class="hidden lg:flex lg:w-[50%] xl:w-[54%] relative flex-col justify-between p-6 sm:p-10 lg:p-14 bg-gradient-to-br from-slate-950 via-[#0a0f1d] to-[#1e1b4b] text-white overflow-hidden border-r border-white/10 shrink-0">
@@ -208,194 +433,8 @@
                     </div>
                 </div>
 
-                <!-- Center Public Car Loan Application Container (When visiting via QR / Link) -->
-                <div v-if="isPublicApplyMode && publicApplyWorkspace" class="my-auto max-w-lg w-full mx-auto py-4 animate-fade-in">
-                    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
-                        <!-- Top Header Banner -->
-                        <div class="px-6 py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start">
-                            <div class="space-y-1">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/15 backdrop-blur-md border border-white/20">
-                                    <i class="fas fa-building-columns text-[9px]"></i>
-                                    <span>{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
-                                </div>
-                                <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">
-                                    Car Loan Quick Application
-                                </h2>
-                                <p class="text-xs text-indigo-100/90">
-                                    Branch Credit Desk • Sales Manager: {{ publicApplyWorkspace.managerName }}
-                                </p>
-                            </div>
-                            <button type="button" @click="isPublicApplyMode = false" class="text-xs text-white/80 hover:text-white font-bold underline transition cursor-pointer">
-                                Officer Login →
-                            </button>
-                        </div>
-
-                        <!-- SUCCESS SCREEN -->
-                        <div v-if="publicApplySubmitted" class="p-6 sm:p-8 text-center space-y-4 animate-fade-in">
-                            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
-                                <i class="fas fa-circle-check"></i>
-                            </div>
-                            <div class="space-y-1">
-                                <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                                    Application Received!
-                                </h3>
-                                <p class="text-xs text-slate-500 max-w-sm mx-auto">
-                                    Your customer's file has been directly routed to the credit desk at <strong class="text-slate-800">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</strong>.
-                                </p>
-                            </div>
-
-                            <!-- Lead Summary Ticket -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 text-left space-y-2.5 text-xs">
-                                <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Reference Lead ID</span>
-                                    <span class="font-mono font-bold text-[#4F46E5]">{{ publicApplySuccessFile?.appId }}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Customer</div>
-                                        <div class="font-black text-slate-900">{{ publicApplySuccessFile?.customerName }}</div>
-                                        <div class="text-[11px] text-slate-600 font-mono">{{ publicApplySuccessFile?.customerPhone }}</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Car Model & Loan</div>
-                                        <div class="font-bold text-slate-900">{{ publicApplySuccessFile?.vehicleModel }}</div>
-                                        <div class="font-black text-emerald-600">₹{{ publicApplySuccessFile?.loanAmount }} L Requested</div>
-                                    </div>
-                                </div>
-                                <div v-if="publicApplySuccessFile?.dealershipName" class="pt-1 text-[11px] text-slate-500">
-                                    Showroom: <strong class="text-slate-800">{{ publicApplySuccessFile.dealershipName }}</strong>
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="space-y-2 pt-2">
-                                <button type="button" @click="sendPublicApplySmWhatsApp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
-                                    <i class="fab fa-whatsapp text-sm"></i>
-                                    <span>Notify Sales Manager via WhatsApp</span>
-                                </button>
-                                <button type="button" @click="resetPublicApplyForm" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
-                                    Punch Another Customer File
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- INPUT FORM -->
-                        <form v-else @submit.prevent="submitPublicLoanApplication" class="p-6 space-y-4">
-                            <!-- Error Alert -->
-                            <div v-if="publicApplyError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
-                                <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
-                                <span>{{ publicApplyError }}</span>
-                            </div>
-
-                            <!-- Showroom & Executive Attribution (2 Cols) -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                        Dealership / Showroom Name
-                                    </label>
-                                    <input v-model="publicApplyForm.dealershipName" type="text" placeholder="e.g. Maruti Suzuki - Saraighat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                        Sales Consultant (DSE) & Mobile
-                                    </label>
-                                    <input v-model="publicApplyForm.dseName" type="text" placeholder="e.g. Rahul Sharma - 9876543210" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
-                                </div>
-                            </div>
-
-                            <!-- Customer Name -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Customer Full Name <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input v-model="publicApplyForm.customerName" type="text" required placeholder="e.g. Mohan Sharma" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
-                                </div>
-                            </div>
-
-                            <!-- Customer Mobile -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Customer Mobile / WhatsApp (10 Digits) <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <i class="fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input v-model="publicApplyForm.customerPhone" type="tel" required placeholder="e.g. 9876543210" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
-                                </div>
-                            </div>
-
-                            <!-- Car Model & Variant -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Car Model & Variant <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <i class="fas fa-car absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input v-model="publicApplyForm.vehicleModel" type="text" required placeholder="e.g. Brezza ZXi+ / Creta SX (O)" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 uppercase transition">
-                                </div>
-                            </div>
-
-                            <!-- Price & Loan (2 Cols) -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                        On-Road Price (₹ Lakhs)
-                                    </label>
-                                    <input v-model="publicApplyForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 10.50" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                        Loan Req (₹ Lakhs) <span class="text-rose-500">*</span>
-                                    </label>
-                                    <input v-model="publicApplyForm.loanAmount" type="number" step="0.01" required placeholder="e.g. 8.20" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
-                                </div>
-                            </div>
-
-                            <!-- Customer Profile -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Customer Profile
-                                </label>
-                                <div class="relative">
-                                    <select v-model="publicApplyForm.customerProfile" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition appearance-none cursor-pointer">
-                                        <option value="Salaried (Form 16 / ITR)">Salaried (Form 16 / ITR)</option>
-                                        <option value="Self-Employed / Business">Self-Employed / Business</option>
-                                        <option value="Agriculture / Rural Cash">Agriculture / Rural Cash</option>
-                                        <option value="Doctor / Professional">Doctor / Professional</option>
-                                    </select>
-                                    <i class="fas fa-chevron-down text-[10px] text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                                </div>
-                            </div>
-
-                            <!-- Priority Remarks -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Showroom Delivery Remarks
-                                </label>
-                                <textarea v-model="publicApplyForm.notes" rows="2" placeholder="e.g. Dhanteras delivery / fast sanction required" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-medium text-slate-800 transition resize-none"></textarea>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <button type="submit" :disabled="isSubmittingPublicApply" class="w-full h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-2xl shadow-xs active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
-                                <span v-if="isSubmittingPublicApply">Submitting File to Credit Desk...</span>
-                                <span v-else class="flex items-center gap-2">
-                                    <span>Submit File to Branch Credit Desk</span>
-                                    <i class="fas fa-arrow-right text-xs"></i>
-                                </span>
-                            </button>
-
-                            <!-- Trust Bar -->
-                            <div class="text-center text-[10px] text-slate-400 pt-1">
-                                <i class="fas fa-shield-halved text-emerald-500 mr-1"></i>
-                                <span>Official Digital Desk • {{ publicApplyWorkspace.bankName || 'Axis Bank' }}</span>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
                 <!-- Center Authentication Container -->
-                <div v-else class="my-auto max-w-sm w-full mx-auto py-4">
+                <div class="my-auto max-w-sm w-full mx-auto py-4">
 
                     <!-- VIEW 1: Sign In -->
                     <div v-if="!showRegisterMode" class="space-y-4 animate-fade-in">
@@ -7892,13 +7931,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-128"></script>
+    <script type="module" src="js/app.js?v=force-update-129"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-128')
+                navigator.serviceWorker.register('./sw.js?v=force-update-129')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

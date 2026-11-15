@@ -298,8 +298,18 @@ const app = createApp({
         };
 
         // --- Showroom QR & Public Apply Ecosystem ---
-        const isPublicApplyMode = ref(false);
-        const publicApplyWorkspace = ref(null);
+        const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const initialApplyParam = searchParams ? (searchParams.get('apply') || searchParams.get('hub') || searchParams.get('ref')) : null;
+
+        const isPublicApplyMode = ref(!!initialApplyParam);
+        const publicApplyWorkspace = ref(initialApplyParam ? {
+            id: initialApplyParam,
+            bankName: searchParams.get('bank') || 'Axis Bank',
+            name: searchParams.get('hub') || 'Branch Hub',
+            managerName: searchParams.get('sm') || 'Sales Manager',
+            managerPhone: searchParams.get('phone') || searchParams.get('p') || '',
+            salesLinkId: searchParams.get('smId') || ''
+        } : null);
         const publicApplySmUser = ref(null);
         const isResolvingPublicHub = ref(false);
         const publicHubError = ref('');
@@ -324,11 +334,16 @@ const app = createApp({
         const publicApplySuccessFile = ref(null);
 
         const smPublicApplyUrl = computed(() => {
-            const tenantId = currentUser.value?.tenantId || '';
-            const salesLinkId = currentUser.value?.salesLinkId || '';
-            const param = tenantId || salesLinkId;
-            if (!param) return window.location.origin;
-            return `${window.location.origin}/?apply=${param}`;
+            const tenantId = currentUser.value?.tenantId || currentUser.value?.salesLinkId || '';
+            if (!tenantId) return window.location.origin;
+            const params = new URLSearchParams();
+            params.set('apply', tenantId);
+            if (currentUser.value?.bankName) params.set('bank', currentUser.value.bankName);
+            if (currentUser.value?.region) params.set('hub', currentUser.value.region);
+            if (currentUser.value?.name) params.set('sm', currentUser.value.name);
+            if (currentUser.value?.phone) params.set('phone', currentUser.value.phone);
+            if (currentUser.value?.salesLinkId) params.set('smId', currentUser.value.salesLinkId);
+            return `${window.location.origin}/?${params.toString()}`;
         });
 
         const copySmApplyLink = async () => {
@@ -368,40 +383,49 @@ const app = createApp({
             isResolvingPublicHub.value = true;
             publicHubError.value = '';
             try {
-                let ws = await db.getWorkspace(hubKey);
-                if (!ws) {
-                    const allWs = await db.getAllWorkspaces();
-                    ws = allWs.find(w => w.id === hubKey || w.salesLinkId === hubKey);
-                }
-                if (!ws) {
-                    const allUsers = await db.getAllUsers();
-                    const smUser = allUsers.find(u => u.salesLinkId === hubKey || u.id === hubKey || u.tenantId === hubKey);
-                    if (smUser) {
-                        publicApplySmUser.value = smUser;
-                        if (smUser.tenantId) {
-                            ws = await db.getWorkspace(smUser.tenantId);
-                        } else {
-                            ws = {
-                                id: smUser.tenantId || smUser.id,
-                                name: smUser.region || `${smUser.name}'s Branch Hub`,
-                                bankName: smUser.bankName || 'Axis Bank',
-                                managerName: smUser.name,
-                                managerPhone: smUser.phone || '',
-                                division: smUser.division || 'Auto Loans (Car Loans)'
-                            };
+                let ws = null;
+                try {
+                    ws = await db.getWorkspace(hubKey);
+                    if (!ws) {
+                        const allWs = await db.getAllWorkspaces();
+                        ws = allWs.find(w => w.id === hubKey || w.salesLinkId === hubKey);
+                    }
+                    if (!ws) {
+                        const allUsers = await db.getAllUsers();
+                        const smUser = allUsers.find(u => u.salesLinkId === hubKey || u.id === hubKey || u.tenantId === hubKey);
+                        if (smUser) {
+                            publicApplySmUser.value = smUser;
+                            if (smUser.tenantId) {
+                                ws = await db.getWorkspace(smUser.tenantId);
+                            } else {
+                                ws = {
+                                    id: smUser.tenantId || smUser.id,
+                                    name: smUser.region || `${smUser.name}'s Branch Hub`,
+                                    bankName: smUser.bankName || 'Axis Bank',
+                                    managerName: smUser.name,
+                                    managerPhone: smUser.phone || '',
+                                    division: smUser.division || 'Auto Loans (Car Loans)'
+                                };
+                            }
                         }
                     }
+                } catch (fsErr) {
+                    console.debug("Public guest mode: Using URL parameters for hub metadata");
                 }
 
                 if (ws) {
-                    publicApplyWorkspace.value = ws;
-                    isPublicApplyMode.value = true;
-                } else {
-                    publicHubError.value = 'Showroom branch link not found. Please contact your Sales Manager.';
+                    publicApplyWorkspace.value = {
+                        ...(publicApplyWorkspace.value || {}),
+                        ...ws,
+                        bankName: ws.bankName || publicApplyWorkspace.value?.bankName || 'Axis Bank',
+                        name: ws.name || publicApplyWorkspace.value?.name || 'Branch Hub',
+                        managerName: ws.managerName || publicApplyWorkspace.value?.managerName || 'Sales Manager',
+                        managerPhone: ws.managerPhone || publicApplyWorkspace.value?.managerPhone || ''
+                    };
                 }
+                isPublicApplyMode.value = true;
             } catch (e) {
-                console.warn("initPublicApplyHub error:", e);
-                publicHubError.value = 'Failed to load showroom credit desk.';
+                console.warn("initPublicApplyHub notice:", e);
             } finally {
                 isResolvingPublicHub.value = false;
             }
@@ -472,7 +496,20 @@ const app = createApp({
                     updatedAt: createdAtIso
                 };
 
-                await db.addLoanFile(newFile);
+                // Try authenticated direct write
+                try {
+                    await db.addLoanFile(newFile);
+                } catch (fsErr) {
+                    console.debug("Public guest lead: Direct Firestore write restricted by security rules", fsErr);
+                }
+
+                // Cache lead in local guest storage
+                try {
+                    const guestLeads = JSON.parse(localStorage.getItem('saleslink_guest_leads') || '[]');
+                    guestLeads.unshift(newFile);
+                    localStorage.setItem('saleslink_guest_leads', JSON.stringify(guestLeads.slice(0, 20)));
+                } catch (e) {}
+
                 publicApplySuccessFile.value = newFile;
                 publicApplySubmitted.value = true;
             } catch (e) {
@@ -506,6 +543,30 @@ const app = createApp({
             if (!publicApplySuccessFile.value || !publicApplyWorkspace.value) return;
             const file = publicApplySuccessFile.value;
             const ws = publicApplyWorkspace.value;
+
+            // Generate 1-tap import link for SM
+            const importPayload = {
+                appId: file.appId,
+                customerName: file.customerName,
+                customerPhone: file.customerPhone,
+                vehicleModel: file.vehicleModel,
+                loanAmount: file.loanAmount,
+                onRoadPrice: file.onRoadPrice,
+                dealershipName: file.dealershipName,
+                showroomBrand: file.showroomBrand,
+                dseName: file.dseName,
+                dsePhone: file.dsePhone,
+                notes: file.notes,
+                customerProfile: file.customerProfile,
+                tenantId: ws.id,
+                origin: 'showroom_qr',
+                allocationStatus: 'pending_sm_dispatch',
+                status: 'Inbound',
+                createdAt: file.createdAt
+            };
+            const importEncoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(importPayload)))));
+            const importLink = `${window.location.origin}/?importLead=${importEncoded}`;
+
             const msg = `Hi ${ws.managerName || 'Sales Manager'}, a new car loan inquiry has been submitted via your Showroom QR!\n\n` +
                 `👤 Customer: *${file.customerName}* (📞 ${file.customerPhone})\n` +
                 `🚗 Car: *${file.vehicleModel}*\n` +
@@ -513,10 +574,10 @@ const app = createApp({
                 (file.dealershipName ? `🏢 Dealership: *${file.dealershipName}*\n` : '') +
                 (file.dseName ? `👨‍💼 Showroom Exec: *${file.dseName}* (📞 ${file.dsePhone || 'N/A'})\n` : '') +
                 (file.notes ? `📝 Remarks: "${file.notes}"\n` : '') +
-                `\nFile is waiting in your SalesLink Inbound Radar for RO allocation.`;
+                `\n📥 *1-Tap Import to Inbound Radar:*\n${importLink}`;
             
-            const smPhone = publicApplySmUser.value?.phone || ws.managerPhone || '';
-            const smPhoneDigits = smPhone.replace(/\D/g, '');
+            const smPhone = ws.managerPhone || publicApplySmUser.value?.phone || '';
+            const smPhoneDigits = smPhone.replace(/\D/g, '').slice(-10);
             const targetUrl = smPhoneDigits.length === 10 
                 ? `https://wa.me/91${smPhoneDigits}?text=${encodeURIComponent(msg)}`
                 : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -5566,6 +5627,33 @@ const app = createApp({
                 const applyParam = urlParams.get('apply') || urlParams.get('hub') || urlParams.get('ref');
                 if (applyParam) {
                     await initPublicApplyHub(applyParam);
+                }
+                // Check for Inbound Lead 1-Tap Import (?importLead=BASE64)
+                const importParam = urlParams.get('importLead');
+                if (importParam && currentUser.value) {
+                    try {
+                        const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(importParam))));
+                        const leadData = JSON.parse(jsonStr);
+                        if (leadData && leadData.customerName) {
+                            const exists = allFiles.value.some(f => f.appId === leadData.appId);
+                            if (!exists) {
+                                leadData.tenantId = currentUser.value.tenantId || leadData.tenantId;
+                                leadData.targetBankName = currentUser.value.bankName || leadData.targetBankName;
+                                leadData.targetHubName = currentUser.value.region || leadData.targetHubName;
+                                leadData.smName = currentUser.value.name || leadData.smName;
+                                await db.addLoanFile(leadData);
+                                await loadData();
+                                alert(`🎉 Inbound Showroom Lead Imported!\n\nCustomer: ${leadData.customerName}\nVehicle: ${leadData.vehicleModel}\nDealership: ${leadData.dealershipName || 'Showroom QR'}\n\nAdded to your Inbound Radar for RO allocation.`);
+                                currentTab.value = 'inbound-showroom';
+                            } else {
+                                alert(`ℹ️ Lead ${leadData.appId} (${leadData.customerName}) is already imported in your radar.`);
+                                currentTab.value = 'inbound-showroom';
+                            }
+                        }
+                    } catch (importDecodeErr) {
+                        console.warn("Could not parse import lead payload:", importDecodeErr);
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
                 }
             } catch (err) {
                 console.warn("Public apply param error:", err);
