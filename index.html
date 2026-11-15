@@ -92,160 +92,165 @@
         <!-- ======================================================== -->
         <!-- PUBLIC CAR LOAN DESK (Visited via QR / WhatsApp Apply Link)-->
         <!-- ======================================================== -->
-        <div v-if="isPublicApplyMode && publicApplyWorkspace" class="min-h-screen w-full bg-slate-50 flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-800">
+        <div v-if="isPublicApplyMode && publicApplyWorkspace" class="min-h-screen w-full bg-slate-50 flex flex-col px-3 py-3 sm:px-6 sm:py-6 lg:p-8 font-sans antialiased text-slate-800 overflow-x-hidden overflow-y-auto">
             <!-- Top Public Header -->
-            <header class="max-w-xl w-full mx-auto flex items-center justify-between pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-base shadow-sm shadow-[#4F46E5]/25 ring-1 ring-[#4F46E5]/20">
+            <header class="max-w-xl w-full mx-auto flex items-center justify-between pb-2.5 sm:pb-3 shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#4F46E5] to-[#6366F1] flex items-center justify-center text-white text-xs sm:text-sm shadow-sm shadow-[#4F46E5]/25 ring-1 ring-[#4F46E5]/20 shrink-0">
                         <i class="fas fa-layer-group"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide bg-indigo-100 text-[#4F46E5]">Showroom Desk</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-sm sm:text-base font-black tracking-tight text-slate-900 leading-tight">SalesLink</span>
+                            <span class="px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide bg-indigo-100 text-[#4F46E5]">Showroom Desk</span>
                         </div>
-                        <span class="text-[10px] text-slate-400 block leading-tight font-medium">{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
+                        <span class="text-[10px] text-slate-400 block leading-tight font-medium truncate max-w-[190px] sm:max-w-none">{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
                     </div>
                 </div>
-                <button type="button" @click="isPublicApplyMode = false" class="text-xs font-bold text-slate-500 hover:text-[#4F46E5] transition cursor-pointer flex items-center gap-1">
+                <button type="button" @click="isPublicApplyMode = false" class="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-[#4F46E5] transition cursor-pointer flex items-center gap-1 shrink-0 ml-2">
                     <span>{{ currentUser ? 'Back to Portal' : 'Officer Login' }}</span>
-                    <i class="fas fa-arrow-right text-[10px]"></i>
+                    <i class="fas fa-arrow-right text-[9px] sm:text-[10px]"></i>
                 </button>
             </header>
 
             <!-- Center Public Car Loan Application Container -->
-            <main class="my-auto max-w-lg w-full mx-auto py-2 animate-fade-in">
-                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
+            <main class="w-full max-w-lg mx-auto my-0 sm:my-auto py-1 sm:py-3 animate-fade-in">
+                <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-lg sm:shadow-xl overflow-hidden">
                     <!-- Top Header Banner -->
-                    <div class="px-6 py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start">
-                        <div class="space-y-1">
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/15 backdrop-blur-md border border-white/20">
-                                <i class="fas fa-building-columns text-[9px]"></i>
-                                <span>{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
+                    <div class="px-4 py-3.5 sm:px-6 sm:py-5 bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white flex justify-between items-start gap-2">
+                        <div class="space-y-1 min-w-0 flex-1">
+                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-white/15 backdrop-blur-md border border-white/20 max-w-full">
+                                <i class="fas fa-building-columns text-[8px] sm:text-[9px] shrink-0"></i>
+                                <span class="truncate">{{ publicApplyWorkspace.bankName || 'Axis Bank' }} • {{ publicApplyWorkspace.name || 'Branch Hub' }}</span>
                             </div>
-                            <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">
+                            <h2 class="text-base sm:text-xl font-black text-white tracking-tight leading-snug">
                                 Car Loan Quick Application
                             </h2>
-                            <p class="text-xs text-indigo-100/90">
-                                Branch Credit Desk • Sales Manager: {{ publicApplyWorkspace.managerName || 'Sales Manager' }}
+                            <p class="text-[11px] sm:text-xs text-indigo-100/90 truncate">
+                                Branch Credit Desk • SM: {{ publicApplyWorkspace.managerName || 'Sales Manager' }}
                             </p>
                         </div>
-                        <button type="button" @click="isPublicApplyMode = false" class="text-xs text-white/80 hover:text-white font-bold underline transition cursor-pointer">
+                        <button type="button" @click="isPublicApplyMode = false" class="text-xs text-white/90 hover:text-white font-bold underline transition cursor-pointer shrink-0 pt-0.5">
                             {{ currentUser ? 'Portal →' : 'Login →' }}
                         </button>
                     </div>
 
                     <!-- SUCCESS SCREEN -->
-                    <div v-if="publicApplySubmitted" class="p-6 sm:p-8 text-center space-y-4 animate-fade-in">
-                        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
+                    <div v-if="publicApplySubmitted" class="p-4 sm:p-8 text-center space-y-3.5 sm:space-y-4 animate-fade-in">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl sm:text-2xl mx-auto shadow-sm">
                             <i class="fas fa-circle-check"></i>
                         </div>
                         <div class="space-y-1">
-                            <h3 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                            <h3 class="text-base sm:text-xl font-black text-slate-900 tracking-tight">
                                 Application Received!
                             </h3>
                             <p class="text-xs text-slate-500 max-w-sm mx-auto">
-                                Your customer's file has been directly routed to the credit desk at <strong class="text-slate-800">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</strong>.
+                                Customer file routed directly to <strong class="text-slate-800">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</strong>.
                             </p>
                         </div>
 
                         <!-- Lead Summary Ticket -->
-                        <div class="bg-slate-50 rounded-2xl border border-slate-200/80 p-4 text-left space-y-2.5 text-xs">
-                            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                        <div class="bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 text-left space-y-2 text-xs">
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                                 <span class="text-slate-400 font-semibold uppercase text-[10px]">Reference Lead ID</span>
                                 <span class="font-mono font-bold text-[#4F46E5]">{{ publicApplySuccessFile?.appId }}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <div class="text-[10px] text-slate-400 font-bold uppercase">Customer</div>
-                                    <div class="font-black text-slate-900">{{ publicApplySuccessFile?.customerName }}</div>
+                                    <div class="font-black text-slate-900 truncate">{{ publicApplySuccessFile?.customerName }}</div>
                                     <div class="text-[11px] text-slate-600 font-mono">{{ publicApplySuccessFile?.customerPhone }}</div>
                                 </div>
                                 <div>
-                                    <div class="text-[10px] text-slate-400 font-bold uppercase">Car Model & Loan</div>
-                                    <div class="font-bold text-slate-900">{{ publicApplySuccessFile?.vehicleModel }}</div>
+                                    <div class="text-[10px] text-slate-400 font-bold uppercase">Car & Loan</div>
+                                    <div class="font-bold text-slate-900 truncate">{{ publicApplySuccessFile?.vehicleModel }}</div>
                                     <div class="font-black text-emerald-600">₹{{ publicApplySuccessFile?.loanAmount }} L Requested</div>
                                 </div>
                             </div>
-                            <div v-if="publicApplySuccessFile?.dealershipName" class="pt-1 text-[11px] text-slate-500">
+                            <div v-if="publicApplySuccessFile?.dealershipName" class="pt-1 text-[11px] text-slate-500 truncate">
                                 Showroom: <strong class="text-slate-800">{{ publicApplySuccessFile.dealershipName }}</strong>
                             </div>
                         </div>
 
                         <!-- Actions -->
-                        <div class="space-y-2 pt-2">
-                            <button type="button" @click="sendPublicApplySmWhatsApp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
+                        <div class="space-y-2 pt-1 sm:pt-2">
+                            <button type="button" @click="sendPublicApplySmWhatsApp" class="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
                                 <i class="fab fa-whatsapp text-sm"></i>
                                 <span>Notify Sales Manager via WhatsApp</span>
                             </button>
-                            <button type="button" @click="resetPublicApplyForm" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
+                            <button type="button" @click="resetPublicApplyForm" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer">
                                 Punch Another Customer File
                             </button>
                         </div>
                     </div>
 
                     <!-- INPUT FORM -->
-                    <form v-else @submit.prevent="submitPublicLoanApplication" class="p-6 space-y-4">
+                    <form v-else @submit.prevent="submitPublicLoanApplication" class="p-3.5 sm:p-6 space-y-3 sm:space-y-4">
                         <!-- Error Alert -->
-                        <div v-if="publicApplyError" class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
+                        <div v-if="publicApplyError" class="p-2.5 sm:p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-xl flex items-start gap-2">
                             <i class="fas fa-circle-exclamation text-rose-500 text-sm shrink-0 mt-0.5"></i>
                             <span>{{ publicApplyError }}</span>
                         </div>
 
                         <!-- DSE Account Advantage Card (Prompt before submission) -->
-                        <div v-if="!currentUser" class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-blue-50/90 border border-indigo-100 shadow-2xs space-y-2.5">
+                        <div v-if="!currentUser" class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-50/90 to-blue-50/90 border border-indigo-100 shadow-2xs space-y-2">
                             <div class="flex items-start gap-2.5">
                                 <div class="w-8 h-8 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
                                     <i class="fas fa-car-side"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="text-xs font-black text-slate-900">Showroom Sales Consultant (DSE)?</span>
-                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800">Seamless Radar</span>
+                                        <span class="text-xs font-black text-slate-900">Showroom Consultant (DSE)?</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-100 text-emerald-800">Auto-Radar</span>
                                     </div>
                                     <p class="text-[11px] text-slate-600 leading-snug mt-0.5">
-                                        Create a free account for live tracking from review to delivery, and punch future files in 1 tap without re-entering showroom details.
+                                        Create a free account to track this car loan live to delivery and punch future files in 1 tap.
                                     </p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 pt-0.5">
-                                <button type="button" @click="openDseRegisterFromApply" class="flex-1 py-1.5 px-3 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <i class="fas fa-user-plus text-[10px]"></i>
+                                <button type="button" @click="openDseRegisterFromApply" class="flex-1 py-1.5 px-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-user-plus text-[9px]"></i>
                                     <span>Create Consultant Account</span>
                                 </button>
-                                <button type="button" @click="loginDseFromApply" class="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                                <button type="button" @click="loginDseFromApply" class="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] sm:text-xs font-bold rounded-xl transition cursor-pointer shrink-0">
                                     <span>Sign In</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Logged In DSE Banner -->
-                        <div v-else-if="isDSE" class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2">
+                        <div v-else-if="isDSE" class="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
                                 <div class="text-xs text-emerald-900 truncate">
                                     Logged in as <strong class="font-black">{{ currentUser.name }}</strong> ({{ currentUser.dealershipName }})
                                 </div>
                             </div>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 shrink-0">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 shrink-0">
                                 Auto-Tracked
                             </span>
                         </div>
 
-                        <!-- Showroom & Executive Attribution (2 Cols) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Showroom & Executive Attribution (2 Cols on desktop, stacked on mobile) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                                     Dealership / Showroom Name
                                 </label>
                                 <input v-model="publicApplyForm.dealershipName" type="text" placeholder="e.g. Maruti Suzuki - Saraighat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                    Sales Consultant (DSE) & Mobile
-                                </label>
-                                <div class="grid grid-cols-2 gap-1.5">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                        DSE Name
+                                    </label>
                                     <input v-model="publicApplyForm.dseName" type="text" placeholder="Your Name" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                        DSE Mobile
+                                    </label>
                                     <input v-model="publicApplyForm.dsePhone" type="tel" placeholder="Mobile" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-semibold text-slate-800 transition">
                                 </div>
                             </div>
@@ -285,10 +290,10 @@
                         </div>
 
                         <!-- Price & Loan (2 Cols) -->
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    On-Road Price (₹ Lakhs)
+                                    On-Road (₹ Lakhs)
                                 </label>
                                 <input v-model="publicApplyForm.onRoadPrice" type="number" step="0.01" placeholder="e.g. 10.50" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-xs font-bold text-slate-800 transition">
                             </div>
@@ -325,7 +330,7 @@
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" :disabled="isSubmittingPublicApply" class="w-full h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-2xl shadow-xs active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                        <button type="submit" :disabled="isSubmittingPublicApply" class="w-full h-11 sm:h-12 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white font-bold rounded-xl sm:rounded-2xl shadow-xs active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm">
                             <span v-if="isSubmittingPublicApply">Submitting File to Credit Desk...</span>
                             <span v-else class="flex items-center gap-2">
                                 <span>Submit File to Branch Credit Desk</span>
@@ -334,7 +339,7 @@
                         </button>
 
                         <!-- Trust Bar -->
-                        <div class="text-center text-[10px] text-slate-400 pt-1">
+                        <div class="text-center text-[10px] text-slate-400 pt-0.5">
                             <i class="fas fa-shield-halved text-emerald-500 mr-1"></i>
                             <span>Official Digital Desk • {{ publicApplyWorkspace.bankName || 'Axis Bank' }}</span>
                         </div>
@@ -343,20 +348,20 @@
             </main>
 
             <!-- Bottom Trust Footer -->
-            <footer class="max-w-xl w-full mx-auto pt-4 text-center text-xs text-slate-400 space-y-1">
-                <div class="flex items-center justify-center gap-2 text-[11px]">
+            <footer class="max-w-xl w-full mx-auto pt-3 pb-2 text-center text-xs text-slate-400 space-y-1 shrink-0">
+                <div class="flex items-center justify-center gap-2 text-[10px] sm:text-[11px]">
                     <i class="fas fa-shield-halved text-emerald-500"></i>
                     <span>Official Branch Credit Desk • Authorized Digital Sourcing</span>
                 </div>
-                <div class="text-[10px] text-slate-400">
-                    SalesLink Lending OS • All inquiries are routed directly to the branch Sales Manager.
+                <div class="text-[9px] sm:text-[10px] text-slate-400">
+                    SalesLink Lending OS • All inquiries routed directly to branch Sales Manager.
                 </div>
             </footer>
 
             <!-- Modal: Prompt DSE to Create Account Before Submission -->
-            <div v-if="showDseAccountPromptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-                <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100 text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-2xl mx-auto shadow-xs">
+            <div v-if="showDseAccountPromptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in overflow-y-auto">
+                <div class="bg-white rounded-2xl sm:rounded-3xl max-w-sm w-full p-4 sm:p-6 space-y-3.5 sm:space-y-4 shadow-2xl border border-slate-100 text-center my-auto">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl sm:text-2xl mx-auto shadow-xs">
                         <i class="fas fa-car-side"></i>
                     </div>
                     <div class="space-y-1">
@@ -368,27 +373,27 @@
                         </p>
                     </div>
 
-                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-left space-y-2 text-xs">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left space-y-1.5 text-xs">
                         <div class="flex items-center gap-2 text-slate-700 font-semibold">
-                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <i class="fas fa-circle-check text-emerald-500 text-xs shrink-0"></i>
                             <span>Live Radar: In Review → Approved 🚗 → Delivered</span>
                         </div>
                         <div class="flex items-center gap-2 text-slate-700 font-semibold">
-                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <i class="fas fa-circle-check text-emerald-500 text-xs shrink-0"></i>
                             <span>1-Tap WhatsApp car delivery updates to buyer</span>
                         </div>
                         <div class="flex items-center gap-2 text-slate-700 font-semibold">
-                            <i class="fas fa-circle-check text-emerald-500 text-xs"></i>
+                            <i class="fas fa-circle-check text-emerald-500 text-xs shrink-0"></i>
                             <span>Punch future customer files in 1 tap</span>
                         </div>
                     </div>
 
                     <div class="space-y-2 pt-1">
-                        <button type="button" @click="proceedDseAccountRegistration" class="w-full py-3 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
+                        <button type="button" @click="proceedDseAccountRegistration" class="w-full py-2.5 sm:py-3 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer">
                             <i class="fab fa-google text-xs"></i>
                             <span>Create Account & Submit File</span>
                         </button>
-                        <button type="button" @click="confirmGuestSubmission" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition cursor-pointer">
+                        <button type="button" @click="confirmGuestSubmission" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer">
                             Submit without Account (Guest Punch)
                         </button>
                     </div>
@@ -396,19 +401,19 @@
             </div>
 
             <!-- Modal: Quick DSE Account Registration -->
-            <div v-if="showDseQuickRegisterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-                <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+            <div v-if="showDseQuickRegisterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in overflow-y-auto">
+                <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 space-y-3.5 sm:space-y-4 shadow-2xl border border-slate-100 my-auto max-h-[92vh] overflow-y-auto">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm shrink-0">
                                 <i class="fas fa-car"></i>
                             </div>
-                            <div>
-                                <h3 class="text-sm font-black text-slate-900 tracking-tight">Create Showroom Consultant Account</h3>
-                                <span class="text-[10px] text-slate-400 font-medium">Auto-connected to {{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</span>
+                            <div class="min-w-0">
+                                <h3 class="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate">Create Consultant Account</h3>
+                                <span class="text-[10px] text-slate-400 font-medium block truncate">{{ publicApplyWorkspace.bankName }} ({{ publicApplyWorkspace.name }})</span>
                             </div>
                         </div>
-                        <button type="button" @click="showDseQuickRegisterModal = false" class="text-slate-400 hover:text-slate-700 transition cursor-pointer">
+                        <button type="button" @click="showDseQuickRegisterModal = false" class="text-slate-400 hover:text-slate-700 transition cursor-pointer p-1">
                             <i class="fas fa-xmark text-sm"></i>
                         </button>
                     </div>
@@ -419,8 +424,8 @@
                         <span>{{ dseRegisterError }}</span>
                     </div>
 
-                    <form @submit.prevent="submitDseQuickRegistration" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-2.5">
+                    <form @submit.prevent="submitDseQuickRegistration" class="space-y-2.5 sm:space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                                     Car Brand / OEM <span class="text-rose-500">*</span>
@@ -440,7 +445,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                                     Consultant Full Name <span class="text-rose-500">*</span>
@@ -449,13 +454,13 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                    Official Staff / Employee ID <span class="text-rose-500">*</span>
+                                    Staff ID / Employee Code <span class="text-rose-500">*</span>
                                 </label>
                                 <input v-model="dseQuickRegisterForm.employeeCode" type="text" required placeholder="e.g. MS-9841" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-800 uppercase transition">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                                     Showroom City / Location <span class="text-rose-500">*</span>
@@ -470,8 +475,8 @@
                             </div>
                         </div>
 
-                        <div class="pt-2">
-                            <button type="submit" :disabled="isDseRegistering" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-2xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm">
+                        <div class="pt-1.5 sm:pt-2">
+                            <button type="submit" :disabled="isDseRegistering" class="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm">
                                 <i class="fab fa-google text-xs"></i>
                                 <span v-if="isDseRegistering">Activating DSE Account with Google...</span>
                                 <span v-else>Continue with Google to Activate DSE Account</span>
@@ -8099,13 +8104,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-130"></script>
+    <script type="module" src="js/app.js?v=force-update-131"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-130')
+                navigator.serviceWorker.register('./sw.js?v=force-update-131')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
