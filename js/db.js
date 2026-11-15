@@ -242,7 +242,8 @@ export const getLoanFilesByDSE = async (dseId) => {
     } catch (e) {
         console.warn("Index query for getLoanFilesByDSE failed, falling back to scan:", e);
         const all = await getAllLoanFiles();
-        return all.filter(f => f.dseId === dseId);
+        const clean = dseId.toLowerCase();
+        return all.filter(f => f.dseId === dseId || (f.userEmail && f.userEmail.toLowerCase() === clean));
     }
 };
 

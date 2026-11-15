@@ -1,4 +1,4 @@
-﻿import * as db from './db.js';
+import * as db from './db.js';
 const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 const app = createApp({
@@ -366,22 +366,36 @@ const app = createApp({
             try {
                 const googleUser = await db.loginWithGoogle();
                 const email = googleUser.email.toLowerCase();
-                const existing = await db.getUserByEmail(email);
+                let existing = await db.getUserByEmail(email);
                 if (existing) {
                     if (existing.status === 'resigned' || existing.status === 'suspended') {
                         alert("Your account has been deactivated. Please contact your manager.");
                         return;
                     }
+                    if (existing.role !== 'dse') {
+                        if (!existing.dealershipName) {
+                            openDseRegisterFromApply();
+                            return;
+                        }
+                        existing.role = 'dse';
+                        await db.updateUser(existing.id, { role: 'dse' });
+                    }
+                    const newSessionId = generateSessionId();
+                    localStorage.setItem('axis_active_session_id', newSessionId);
+                    existing.activeSessionId = newSessionId;
+                    try {
+                        await db.updateUser(existing.id, { activeSessionId: newSessionId, lastLoginAt: new Date().toISOString() });
+                    } catch (e) {}
+
                     localStorage.setItem('axis_user', JSON.stringify(existing));
                     currentUser.value = existing;
+                    startUserSecurityListener(existing.id);
                     isPublicApplyMode.value = false;
-                    if (existing.role === 'dse') {
-                        currentTab.value = 'dse-dashboard';
-                        await loadDseData();
-                    } else {
-                        currentTab.value = 'dashboard';
-                        await loadData();
+                    currentTab.value = 'dse-dashboard';
+                    if (window.history && window.history.replaceState) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
                     }
+                    await loadDseData();
                 } else {
                     openDseRegisterFromApply();
                 }
@@ -424,6 +438,8 @@ const app = createApp({
 
                 const newSalesLinkId = db.generateSalesLinkId('dse');
                 const tenantId = publicApplyWorkspace.value?.id || null;
+                const newSessionId = generateSessionId();
+                localStorage.setItem('axis_active_session_id', newSessionId);
 
                 if (!user) {
                     const newUserId = await db.addUser({
@@ -432,13 +448,16 @@ const app = createApp({
                         name: form.name.trim(),
                         dealershipName: form.dealershipName.trim(),
                         showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
-                        employeeCode: form.employeeCode.trim(),
+                        employeeCode: form.employeeCode.trim().toUpperCase(),
                         region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
                         phone: form.phone.trim(),
                         salesLinkId: newSalesLinkId,
                         tenantId: tenantId,
+                        designation: 'Dealership Sales Executive (DSE)',
                         status: 'active',
-                        createdAt: new Date().toISOString()
+                        activeSessionId: newSessionId,
+                        createdAt: new Date().toISOString(),
+                        lastLoginAt: new Date().toISOString()
                     });
 
                     user = {
@@ -449,16 +468,45 @@ const app = createApp({
                         name: form.name.trim(),
                         dealershipName: form.dealershipName.trim(),
                         showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
-                        employeeCode: form.employeeCode.trim(),
+                        employeeCode: form.employeeCode.trim().toUpperCase(),
                         region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
                         phone: form.phone.trim(),
                         salesLinkId: newSalesLinkId,
-                        tenantId: tenantId
+                        tenantId: tenantId,
+                        designation: 'Dealership Sales Executive (DSE)',
+                        status: 'active',
+                        activeSessionId: newSessionId
+                    };
+                } else {
+                    // Upgrading / linking existing user account to DSE Showroom Partner
+                    const updatePayload = {
+                        role: 'dse',
+                        name: form.name.trim() || user.name || googleUser.displayName || 'Showroom Consultant',
+                        dealershipName: form.dealershipName.trim(),
+                        showroomBrand: form.showroomBrand || user.showroomBrand || 'Maruti Suzuki Arena',
+                        employeeCode: form.employeeCode.trim().toUpperCase() || user.employeeCode || '',
+                        region: form.region?.trim() || user.region || publicApplyWorkspace.value?.name || 'Branch Hub',
+                        phone: form.phone.trim() || user.phone || '',
+                        tenantId: tenantId || user.tenantId || null,
+                        designation: 'Dealership Sales Executive (DSE)',
+                        status: 'active',
+                        activeSessionId: newSessionId,
+                        lastLoginAt: new Date().toISOString()
+                    };
+                    if (!user.salesLinkId) {
+                        updatePayload.salesLinkId = newSalesLinkId;
+                    }
+                    await db.updateUser(user.id, updatePayload);
+                    user = {
+                        ...user,
+                        ...updatePayload,
+                        salesLinkId: user.salesLinkId || newSalesLinkId
                     };
                 }
 
                 localStorage.setItem('axis_user', JSON.stringify(user));
                 currentUser.value = user;
+                startUserSecurityListener(user.id);
 
                 // If customer details were filled in publicApplyForm, automatically punch the lead under this DSE!
                 const custName = publicApplyForm.value.customerName?.trim();
@@ -482,18 +530,18 @@ const app = createApp({
                         nclUcl: 'NCL',
                         userId: user.id,
                         userEmail: user.email,
-                        sourcingChannel: form.dealershipName.trim(),
-                        dealershipName: form.dealershipName.trim(),
-                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
+                        sourcingChannel: user.dealershipName || form.dealershipName.trim(),
+                        dealershipName: user.dealershipName || form.dealershipName.trim(),
+                        showroomBrand: user.showroomBrand || form.showroomBrand || 'Maruti Suzuki Arena',
                         dseId: user.id,
                         dseName: user.name,
                         dsePhone: user.phone,
                         loginDate: createdAtIso.split('T')[0],
                         origin: 'showroom_qr',
-                        tenantId: tenantId || ws.id,
+                        tenantId: user.tenantId || ws.id,
                         targetBankName: ws.bankName || 'Axis Bank',
                         targetHubName: ws.name || 'Branch Hub',
-                        smName: ws.managerName || 'Branch SM',
+                        smName: ws.managerName || (publicApplySmUser.value?.name || 'Branch SM'),
                         allocationStatus: 'pending_sm_dispatch',
                         status: 'Inbound',
                         roId: null,
@@ -514,6 +562,9 @@ const app = createApp({
                 showDseAccountPromptModal.value = false;
                 isPublicApplyMode.value = false;
                 currentTab.value = 'dse-dashboard';
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
                 await loadDseData();
 
                 alert(`🎉 DSE Account Activated!\n\nWelcome, ${user.name}! Your showroom desk is connected to ${publicApplyWorkspace.value?.bankName || 'Axis Bank'} (${publicApplyWorkspace.value?.name || 'Branch Hub'}).\n\nAll customer loan sanctions & delivery statuses are live in your Showroom Radar.`);
@@ -3457,7 +3508,7 @@ const app = createApp({
 
         const initProfileForm = () => {
             if (!currentUser.value) return;
-            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'SM (Sales Manager)' : 'Relationship Officer')));
+            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'SM (Sales Manager)' : (isDSE.value ? 'Dealership Sales Executive (DSE)' : 'Relationship Officer'))));
             profileForm.value = {
                 name: currentUser.value.name || currentUser.value.username || '',
                 phone: currentUser.value.phone || '',
@@ -4269,7 +4320,21 @@ const app = createApp({
         const loadDseData = async () => {
             if (!currentUser.value?.id) return;
             try {
-                dseFiles.value = await db.getLoanFilesByDSE(currentUser.value.id);
+                let files = await db.getLoanFilesByDSE(currentUser.value.id);
+                try {
+                    const all = await db.getAllLoanFiles();
+                    const email = (currentUser.value.email || '').toLowerCase();
+                    const salesLinkId = currentUser.value.salesLinkId || '';
+                    const extraFiles = all.filter(f => 
+                        f.dseId === currentUser.value.id || 
+                        (email && f.userEmail && f.userEmail.toLowerCase() === email) || 
+                        (salesLinkId && f.dseId === salesLinkId)
+                    );
+                    if (extraFiles.length > files.length) {
+                        files = extraFiles;
+                    }
+                } catch (extraErr) {}
+                dseFiles.value = files;
                 allWorkspaces.value = await db.getAllWorkspaces();
                 if (!newDseFileForm.value.targetTenantId && allWorkspaces.value.length > 0) {
                     newDseFileForm.value.targetTenantId = allWorkspaces.value[0].id;
@@ -4733,8 +4798,38 @@ const app = createApp({
 
                     const existing = await db.getUserByEmail(email);
                     if (existing) {
-                        registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
-                        return;
+                        if (existing.role === 'dse') {
+                            localStorage.setItem('axis_user', JSON.stringify(existing));
+                            currentUser.value = existing;
+                            currentTab.value = 'dse-dashboard';
+                            await loadDseData();
+                            showRegisterMode.value = false;
+                            registerStep.value = 1;
+                            registerConfirmed.value = false;
+                            return;
+                        } else {
+                            const updatePayload = {
+                                role: 'dse',
+                                name: dseName || existing.name,
+                                dealershipName: dseDealership,
+                                showroomBrand: dseBrand,
+                                employeeCode: dseCode,
+                                region: dseCity,
+                                phone: dsePhone,
+                                designation: 'Dealership Sales Executive (DSE)',
+                                status: 'active'
+                            };
+                            await db.updateUser(existing.id, updatePayload);
+                            const sessionUser = { ...existing, ...updatePayload };
+                            localStorage.setItem('axis_user', JSON.stringify(sessionUser));
+                            currentUser.value = sessionUser;
+                            currentTab.value = 'dse-dashboard';
+                            await loadDseData();
+                            showRegisterMode.value = false;
+                            registerStep.value = 1;
+                            registerConfirmed.value = false;
+                            return;
+                        }
                     }
 
                     const newSalesLinkId = db.generateSalesLinkId('dse');
@@ -5970,6 +6065,9 @@ const app = createApp({
                                 if (fresh.employeeCode) currentUser.value.employeeCode = fresh.employeeCode;
                                 if (fresh.designation) currentUser.value.designation = fresh.designation;
                                 if (fresh.branchAddress) currentUser.value.branchAddress = fresh.branchAddress;
+                                if (fresh.dealershipName) currentUser.value.dealershipName = fresh.dealershipName;
+                                if (fresh.showroomBrand) currentUser.value.showroomBrand = fresh.showroomBrand;
+                                if (fresh.role) currentUser.value.role = fresh.role;
                                 if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
                                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
                             }
@@ -5980,7 +6078,11 @@ const app = createApp({
                 })();
 
                 try {
-                    await loadData();
+                    if (currentUser.value?.role === 'dse') {
+                        await loadDseData();
+                    } else {
+                        await loadData();
+                    }
                 } catch (e) {
                     console.error("Failed to load initial data, you may need to re-login:", e);
                 }
