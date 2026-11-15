@@ -5071,6 +5071,34 @@ const app = createApp({
                     }
                 }
 
+                // Auto-heal DSE accounts: If user has showroom attributes or punched showroom leads, ensure role is 'dse'
+                if (user.role !== 'super_admin' && user.role !== 'zsm' && user.role !== 'asm' && user.role !== 'sm' && user.role !== 'dse') {
+                    if (user.dealershipName || user.showroomBrand) {
+                        user.role = 'dse';
+                        user.designation = user.designation || 'Dealership Sales Executive (DSE)';
+                        try {
+                            await db.updateUser(user.id, { role: 'dse', designation: user.designation });
+                        } catch (e) {}
+                    } else {
+                        try {
+                            const allFiles = await db.getAllLoanFiles();
+                            const showroomFile = allFiles.find(f => (f.dseId === user.id || (f.userEmail && f.userEmail.toLowerCase() === user.email.toLowerCase())) && (f.origin === 'showroom_qr' || f.origin === 'dealer_portal' || f.dealershipName));
+                            if (showroomFile) {
+                                user.role = 'dse';
+                                user.dealershipName = showroomFile.dealershipName || showroomFile.sourcingChannel || 'Car Showroom Partner';
+                                user.showroomBrand = showroomFile.showroomBrand || 'Showroom Partner';
+                                user.designation = 'Dealership Sales Executive (DSE)';
+                                await db.updateUser(user.id, {
+                                    role: 'dse',
+                                    dealershipName: user.dealershipName,
+                                    showroomBrand: user.showroomBrand,
+                                    designation: user.designation
+                                });
+                            }
+                        } catch (e) {}
+                    }
+                }
+
                 // Record login timestamp
                 try {
                     await db.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
@@ -6068,6 +6096,39 @@ const app = createApp({
                                 if (fresh.dealershipName) currentUser.value.dealershipName = fresh.dealershipName;
                                 if (fresh.showroomBrand) currentUser.value.showroomBrand = fresh.showroomBrand;
                                 if (fresh.role) currentUser.value.role = fresh.role;
+
+                                // Auto-heal session if user punched showroom lead or has dealership
+                                if (currentUser.value.role !== 'super_admin' && currentUser.value.role !== 'zsm' && currentUser.value.role !== 'asm' && currentUser.value.role !== 'sm' && currentUser.value.role !== 'dse') {
+                                    if (fresh.dealershipName || fresh.showroomBrand) {
+                                        fresh.role = 'dse';
+                                        currentUser.value.role = 'dse';
+                                        await db.updateUser(fresh.id, { role: 'dse' }).catch(() => {});
+                                    } else {
+                                        try {
+                                            const allFiles = await db.getAllLoanFiles();
+                                            const email = (currentUser.value.email || '').toLowerCase();
+                                            const showroomFile = allFiles.find(f => (f.dseId === fresh.id || (f.userEmail && f.userEmail.toLowerCase() === email)) && (f.origin === 'showroom_qr' || f.origin === 'dealer_portal' || f.dealershipName));
+                                            if (showroomFile) {
+                                                fresh.role = 'dse';
+                                                fresh.dealershipName = showroomFile.dealershipName || showroomFile.sourcingChannel || 'Car Showroom Partner';
+                                                fresh.showroomBrand = showroomFile.showroomBrand || 'Showroom Partner';
+                                                currentUser.value.role = 'dse';
+                                                currentUser.value.dealershipName = fresh.dealershipName;
+                                                currentUser.value.showroomBrand = fresh.showroomBrand;
+                                                await db.updateUser(fresh.id, {
+                                                    role: 'dse',
+                                                    dealershipName: fresh.dealershipName,
+                                                    showroomBrand: fresh.showroomBrand,
+                                                    designation: 'Dealership Sales Executive (DSE)'
+                                                });
+                                                if (currentTab.value === 'ro-dashboard' || currentTab.value === 'dashboard') {
+                                                    currentTab.value = 'dse-dashboard';
+                                                    await loadDseData();
+                                                }
+                                            }
+                                        } catch (e) {}
+                                    }
+                                }
                                 if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
                                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
                             }

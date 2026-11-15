@@ -7168,6 +7168,7 @@
                         <select v-model="editUserForm.role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#4F46E5] text-sm font-semibold text-slate-800 transition">
                             <option value="sm">Sales Manager (SM)</option>
                             <option value="ro">Officer (RO)</option>
+                            <option value="dse">Dealership Consultant (DSE)</option>
                         </select>
                     </div>
                     <div v-if="isSuperAdmin">
@@ -8107,13 +8108,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-132"></script>
+    <script type="module" src="js/app.js?v=force-update-133"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-132')
+                navigator.serviceWorker.register('./sw.js?v=force-update-133')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
