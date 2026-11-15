@@ -138,6 +138,27 @@ const app = createApp({
             customerProfile: 'Salaried (Form 16 / ITR)',
             notes: ''
         });
+        const dseTrackingFilter = ref('all'); // 'all' | 'sanction' | 'in_progress' | 'pending_ro' | 'disbursed'
+        const dseTrackingSearch = ref('');
+        const showDseInspectorDrawer = ref(false);
+        const selectedDseFile = ref(null);
+        const showDseQrModal = ref(false);
+
+        const openDseInspector = (file) => {
+            selectedDseFile.value = file;
+            showDseInspectorDrawer.value = true;
+        };
+        const closeDseInspector = () => {
+            showDseInspectorDrawer.value = false;
+            selectedDseFile.value = null;
+        };
+
+        const openDseQrModal = () => {
+            showDseQrModal.value = true;
+        };
+        const closeDseQrModal = () => {
+            showDseQrModal.value = false;
+        };
         const showroomBrandOptions = [
             'Maruti Suzuki Arena',
             'Maruti Suzuki Nexa',
@@ -200,6 +221,103 @@ const app = createApp({
             }
             return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         });
+
+        const getDseDeliveryStage = (file) => {
+            if (!file) return { stageIndex: 1, stageName: 'Punch Submitted', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', isReady: false, isDelivered: false };
+            const s = (file.status || '').toUpperCase();
+            if (s === 'DISBURSED') {
+                return { stageIndex: 5, stageName: 'Delivered & Disbursed', badgeClass: 'bg-purple-100 text-purple-800 border-purple-200', isReady: true, isDelivered: true };
+            }
+            if (s === 'SANCTION') {
+                return { stageIndex: 4, stageName: 'Sanctioned & DO Released', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', isReady: true, isDelivered: false };
+            }
+            if (s === 'REJECTED' || s === 'CANCELLED') {
+                return { stageIndex: 0, stageName: 'Declined / Re-route Bank', badgeClass: 'bg-rose-100 text-rose-800 border-rose-200', isReady: false, isDelivered: false };
+            }
+            if (file.roName && file.roName !== 'Pending SM Dispatch') {
+                return { stageIndex: 3, stageName: 'Bank Credit Review', badgeClass: 'bg-indigo-100 text-[#4F46E5] border-indigo-200', isReady: false, isDelivered: false };
+            }
+            if (file.allocationStatus === 'pending_sm_dispatch') {
+                return { stageIndex: 1, stageName: 'Punch Received at Hub', badgeClass: 'bg-amber-100 text-amber-800 border-amber-200', isReady: false, isDelivered: false };
+            }
+            return { stageIndex: 2, stageName: 'Bank RO Assigned', badgeClass: 'bg-blue-100 text-blue-800 border-blue-200', isReady: false, isDelivered: false };
+        };
+
+        const filteredDseTrackingFiles = computed(() => {
+            let list = dseFiles.value || [];
+            const q = (dseTrackingSearch.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(f => 
+                    (f.customerName || '').toLowerCase().includes(q) ||
+                    (f.customerPhone || '').includes(q) ||
+                    (f.vehicleModel || '').toLowerCase().includes(q) ||
+                    (f.appId || '').toLowerCase().includes(q) ||
+                    (f.targetBankName || '').toLowerCase().includes(q) ||
+                    (f.roName || '').toLowerCase().includes(q)
+                );
+            }
+            const filter = dseTrackingFilter.value;
+            if (filter === 'sanction') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION');
+            } else if (filter === 'in_progress') {
+                list = list.filter(f => {
+                    const s = (f.status || '').toUpperCase();
+                    return s !== 'SANCTION' && s !== 'DISBURSED' && s !== 'REJECTED' && s !== 'CANCELLED' && f.allocationStatus !== 'pending_sm_dispatch';
+                });
+            } else if (filter === 'pending_ro') {
+                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch' || !f.roName || f.roName === 'Pending SM Dispatch');
+            } else if (filter === 'disbursed') {
+                list = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED');
+            }
+            return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        });
+
+        const dsePersonalApplyUrl = computed(() => {
+            if (!currentUser.value) return window.location.origin;
+            const params = new URLSearchParams();
+            const tenantId = currentUser.value.tenantId || '';
+            if (tenantId) params.set('apply', tenantId);
+            if (currentUser.value.dealershipName) params.set('dealer', currentUser.value.dealershipName);
+            if (currentUser.value.showroomBrand) params.set('brand', currentUser.value.showroomBrand);
+            if (currentUser.value.name) params.set('dse', currentUser.value.name);
+            if (currentUser.value.phone) params.set('dsePhone', currentUser.value.phone);
+            if (currentUser.value.salesLinkId) params.set('dseId', currentUser.value.salesLinkId);
+            return `${window.location.origin}/?${params.toString()}`;
+        });
+
+        const copyDsePersonalApplyLink = async () => {
+            const url = dsePersonalApplyUrl.value;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(url);
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                }
+                copiedSalesLinkIdToast.value = true;
+                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
+            } catch (e) {
+                alert("Showroom Apply Link copied: " + url);
+            }
+        };
+
+        const shareDsePersonalWhatsApp = () => {
+            const url = dsePersonalApplyUrl.value;
+            const brand = currentUser.value?.showroomBrand || 'Car Showroom';
+            const dealership = currentUser.value?.dealershipName || 'Our Showroom';
+            const dseName = currentUser.value?.name || 'Sales Consultant';
+            const msg = `Dear Customer,\n\n` +
+                `Welcome to *${dealership}* (${brand})!\n\n` +
+                `Please use my official showroom digital loan desk to check car loan eligibility and get instant bank sanction approvals:\n\n` +
+                `📲 *Apply Online / Punch Loan:* ${url}\n\n` +
+                `We will track your sanction live and fast-track your car delivery!\n\n` +
+                `Regards,\n*${dseName}*\nSales Consultant, ${dealership}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        };
 
         const getDseStatusInfo = (file) => {
             if (!file) return { label: 'Submitted', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', icon: 'fas fa-clock', title: 'Submitted' };
@@ -294,7 +412,14 @@ const app = createApp({
         const sendDseRoNudgeWhatsApp = (file) => {
             if (!file) return;
             const msg = `Hi ${file.roName || 'Officer'}, checking update for car loan of *${file.customerName}* (${file.vehicleModel}) punched from *${currentUser.value?.dealershipName || 'our showroom'}*. Could you please share the latest sanction / delivery status? Thanks!`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            const phone = file.roPhone || file.assignedRoPhone || '';
+            const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
+            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
+            if (targetPhone) {
+                window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+            } else {
+                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            }
         };
 
         // --- Showroom QR & Public Apply Ecosystem ---
@@ -316,10 +441,10 @@ const app = createApp({
         const showSmQrStandeeModal = ref(false);
 
         const publicApplyForm = ref({
-            dealershipName: '',
-            showroomBrand: 'Maruti Suzuki Arena',
-            dseName: '',
-            dsePhone: '',
+            dealershipName: searchParams ? (searchParams.get('dealer') || searchParams.get('dealership') || '') : '',
+            showroomBrand: searchParams ? (searchParams.get('brand') || 'Maruti Suzuki Arena') : 'Maruti Suzuki Arena',
+            dseName: searchParams ? (searchParams.get('dse') || searchParams.get('executive') || '') : '',
+            dsePhone: searchParams ? (searchParams.get('dsePhone') || searchParams.get('dp') || '') : '',
             customerName: '',
             customerPhone: '',
             vehicleModel: '',
@@ -6207,6 +6332,7 @@ const app = createApp({
             showNewDriveModal, driveModalForm, isSavingDrive, driveSaveSuccess, driveSaveError,
             openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote,
             isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
+            dseTrackingFilter, dseTrackingSearch, showDseInspectorDrawer, selectedDseFile, showDseQrModal, openDseInspector, closeDseInspector, openDseQrModal, closeDseQrModal, dsePersonalApplyUrl, copyDsePersonalApplyLink, shareDsePersonalWhatsApp, getDseDeliveryStage, filteredDseTrackingFiles,
             openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
             inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
             isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp,

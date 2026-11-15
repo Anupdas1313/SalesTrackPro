@@ -1162,8 +1162,19 @@
                             <a href="#" @click.prevent="goToTab('dse-dashboard')" :class="[currentTab === 'dse-dashboard' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs']">
                                 <i class="fas fa-car-side w-5 text-sm"></i> Showroom Radar
                             </a>
+                            <a href="#" @click.prevent="goToTab('dse-tracking')" :class="[currentTab === 'dse-tracking' ? 'bg-[#4F46E5] text-white shadow-xs' : 'hover:bg-slate-50 hover:text-slate-900 text-slate-600', 'flex items-center justify-between px-1.5 py-1 rounded-lg transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer select-none']">
+                                <div class="flex items-center">
+                                    <i class="fas fa-layer-group w-5 text-sm"></i> Application Tracker
+                                </div>
+                                <span v-if="dseStats.sanctioned > 0" class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-500 text-white animate-pulse" title="Ready for Car Delivery!">
+                                    {{ dseStats.sanctioned }} 🚗
+                                </span>
+                            </a>
                             <a href="#" @click.prevent="openDseFileModal" class="flex items-center px-1.5 py-1 rounded-lg bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-all duration-200 font-semibold text-xs mt-1 cursor-pointer shadow-2xs">
-                                <i class="fas fa-plus-circle w-5 text-sm"></i> Punch New Lead
+                                <i class="fas fa-plus-circle w-5 text-sm"></i> Punch Customer File
+                            </a>
+                            <a href="#" @click.prevent="openDseQrModal" class="flex items-center px-1.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#4F46E5] border border-indigo-200 transition-all duration-200 font-bold text-xs mt-1 cursor-pointer">
+                                <i class="fas fa-qrcode w-5 text-sm"></i> Showroom QR Desk
                             </a>
                         </template>
 
@@ -3993,6 +4004,328 @@
                                             <i class="fas fa-comment-sms text-[10px]"></i>
                                             <span>Nudge RO</span>
                                         </button>
+                                        <button type="button" @click="openDseInspector(file)" class="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[#4F46E5] hover:bg-[#4338CA] px-2.5 py-1 rounded-lg transition cursor-pointer shadow-2xs">
+                                            <i class="fas fa-id-card text-[10px]"></i>
+                                            <span>Inspect</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================== -->
+                    <!-- DSE: DEDICATED APPLICATION STATUS & TRACKING  -->
+                    <!-- ============================================== -->
+                    <div v-if="currentTab === 'dse-tracking' && isDSE" class="space-y-4 max-w-5xl mx-auto pb-14 animate-fade-in">
+                        <!-- Top Header & Showroom Identity -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3.5 min-w-0">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl shrink-0 shadow-2xs">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate">
+                                            Application Tracker & Delivery Radar
+                                        </h2>
+                                        <span class="px-2 py-0.5 bg-indigo-50 text-[#4F46E5] border border-indigo-100 rounded-md text-[10px] font-bold">
+                                            {{ currentUser.dealershipName || 'Showroom Sales Desk' }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 font-medium flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-700">{{ currentUser.showroomBrand || 'Showroom Partner' }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="font-mono text-slate-400">Consultant: {{ currentUser.name }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="text-emerald-600 font-bold flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>Live Multi-Lender Credit Pipeline</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions: Punch File & QR Desk -->
+                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                <button type="button" @click="openDseQrModal" class="px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-qrcode text-xs"></i>
+                                    <span>My QR Desk</span>
+                                </button>
+                                <button type="button" @click="openDseFileModal" class="px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-2 cursor-pointer">
+                                    <i class="fas fa-plus text-xs"></i>
+                                    <span>Punch File</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 Delivery Status KPI Metrics Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Metric 1: Total Showroom Applications -->
+                            <div @click="dseTrackingFilter = 'all'" :class="dseTrackingFilter === 'all' ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-[#4F46E5]/40 transition group">
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-[#4F46E5]/10 group-hover:text-[#4F46E5] transition">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">All Applications</p>
+                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-[#4F46E5] transition">{{ dseStats.total }}</p>
+                                    <p class="text-[9px] font-bold text-slate-500">Showroom Total</p>
+                                </div>
+                            </div>
+
+                            <!-- Metric 2: Ready for Car Delivery 🚗 -->
+                            <div @click="dseTrackingFilter = 'sanction'" :class="dseTrackingFilter === 'sanction' ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-emerald-500/40 transition group relative overflow-hidden">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-emerald-100 transition">
+                                    <i class="fas fa-circle-check"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider flex items-center gap-1">
+                                        <span>Ready for Delivery</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    </p>
+                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition">{{ dseStats.sanctioned }}</p>
+                                    <p class="text-[9px] font-bold text-emerald-600">DO & Sanction Issued 🚗</p>
+                                </div>
+                            </div>
+
+                            <!-- Metric 3: Under Bank Review -->
+                            <div @click="dseTrackingFilter = 'in_progress'" :class="dseTrackingFilter === 'in_progress' ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-[#4F46E5]/40 transition group">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-indigo-100 transition">
+                                    <i class="fas fa-clock-rotate-left"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">Under Bank Review</p>
+                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-[#4F46E5] transition">{{ dseStats.inProgress }}</p>
+                                    <p class="text-[9px] font-bold text-[#4F46E5]">Appraisal in Progress</p>
+                                </div>
+                            </div>
+
+                            <!-- Metric 4: Delivered & Financed -->
+                            <div @click="dseTrackingFilter = 'disbursed'" :class="dseTrackingFilter === 'disbursed' ? 'border-purple-400 ring-2 ring-purple-400/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-purple-400/40 transition group">
+                                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-purple-100 transition">
+                                    <i class="fas fa-car-side"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">Delivered</p>
+                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-purple-600 transition">{{ dseStats.disbursed }}</p>
+                                    <p class="text-[9px] font-bold text-purple-600">Disbursed & Handover 🔑</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search & Status Filter Controls -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div class="relative flex-1 min-w-[200px]">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input v-model="dseTrackingSearch" type="text" placeholder="Search customer, phone, car model, bank, app ID..." class="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-semibold outline-none focus:border-[#4F46E5] text-slate-800 shadow-2xs placeholder-slate-400">
+                                <button v-if="dseTrackingSearch" @click="dseTrackingSearch = ''" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Filter Chips -->
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                                <button type="button" @click="dseTrackingFilter = 'all'" :class="[dseTrackingFilter === 'all' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
+                                    All ({{ dseFiles.length }})
+                                </button>
+                                <button type="button" @click="dseTrackingFilter = 'sanction'" :class="[dseTrackingFilter === 'sanction' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5']">
+                                    <span>Ready for Delivery 🚗 ({{ dseStats.sanctioned }})</span>
+                                </button>
+                                <button type="button" @click="dseTrackingFilter = 'in_progress'" :class="[dseTrackingFilter === 'in_progress' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
+                                    In Bank Review ({{ dseStats.inProgress }})
+                                </button>
+                                <button type="button" @click="dseTrackingFilter = 'pending_ro'" :class="[dseTrackingFilter === 'pending_ro' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-amber-700 hover:bg-amber-50 border border-amber-200', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
+                                    Awaiting Officer
+                                </button>
+                                <button type="button" @click="dseTrackingFilter = 'disbursed'" :class="[dseTrackingFilter === 'disbursed' ? 'bg-purple-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
+                                    Delivered ({{ dseStats.disbursed }})
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- LIVE APPLICATION TRACKING PIPELINE CARDS -->
+                        <div class="space-y-3">
+                            <!-- Empty State -->
+                            <div v-if="filteredDseTrackingFiles.length === 0" class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl mx-auto">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <h3 class="text-sm font-bold text-slate-800">
+                                        {{ dseTrackingSearch ? 'No customer applications matching search' : 'No applications in this category' }}
+                                    </h3>
+                                    <p class="text-xs text-slate-400 max-w-sm mx-auto">
+                                        Track customer loan sanctions, bank officer assignment, and car delivery clearances live.
+                                    </p>
+                                </div>
+                                <div class="pt-1 flex items-center justify-center gap-2">
+                                    <button v-if="dseTrackingSearch" type="button" @click="dseTrackingSearch = ''" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+                                        Clear Search
+                                    </button>
+                                    <button type="button" @click="openDseFileModal" class="inline-flex items-center gap-2 px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer">
+                                        <i class="fas fa-plus text-xs"></i>
+                                        <span>Punch Customer File</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Delivery Application Card with 5-Stage Stepper -->
+                            <div v-for="file in filteredDseTrackingFiles" :key="'track-' + file.id" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-[#4F46E5]/40 transition p-4 sm:p-5 space-y-3 relative overflow-hidden">
+                                
+                                <!-- Top Delivery Clearance Banner -->
+                                <div class="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-100">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span :class="getDseDeliveryStage(file).badgeClass" class="px-2.5 py-1 rounded-full text-xs font-extrabold flex items-center gap-1.5 border shrink-0">
+                                            <span v-if="getDseDeliveryStage(file).isReady && !getDseDeliveryStage(file).isDelivered" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>{{ getDseDeliveryStage(file).stageName }}</span>
+                                        </span>
+                                        <span class="text-xs font-bold text-slate-800 truncate">
+                                            {{ file.customerName }}
+                                        </span>
+                                        <span class="text-[11px] text-slate-400 font-mono">
+                                            #{{ file.appId || file.id }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span class="text-[11px] font-semibold text-slate-400">
+                                            {{ getRelativeTime(file.createdAt) }}
+                                        </span>
+                                        <button type="button" @click="openDseInspector(file)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-[#4F46E5] border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                            <i class="fas fa-id-card text-[10px]"></i>
+                                            <span>Inspect Dossier</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 5-Stage Visual Stepper Bar -->
+                                <div class="px-1 py-1">
+                                    <div class="relative flex items-center justify-between">
+                                        <!-- Background Connecting Track -->
+                                        <div class="absolute left-3 right-3 top-1/2 -translate-y-1/2 h-1 bg-slate-100 -z-0 rounded-full"></div>
+                                        <div class="absolute left-3 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 -z-0 rounded-full transition-all duration-300" :style="{ width: ((Math.min(getDseDeliveryStage(file).stageIndex, 5) - 1) / 4 * 100) + '%' }"></div>
+
+                                        <!-- Step 1: Punched -->
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div :class="getDseDeliveryStage(file).stageIndex >= 1 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                                <i class="fas fa-check text-[9px]" v-if="getDseDeliveryStage(file).stageIndex > 1"></i>
+                                                <span v-else>1</span>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap hidden sm:block">Punched</span>
+                                        </div>
+
+                                        <!-- Step 2: RO Assigned -->
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div :class="getDseDeliveryStage(file).stageIndex >= 2 ? (getDseDeliveryStage(file).stageIndex > 2 ? 'bg-emerald-500 text-white' : 'bg-[#4F46E5] text-white ring-2 ring-[#4F46E5]/20') : 'bg-slate-200 text-slate-500'" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                                <i class="fas fa-check text-[9px]" v-if="getDseDeliveryStage(file).stageIndex > 2"></i>
+                                                <span v-else>2</span>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap hidden sm:block">RO Linked</span>
+                                        </div>
+
+                                        <!-- Step 3: Credit Appraisal -->
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div :class="getDseDeliveryStage(file).stageIndex >= 3 ? (getDseDeliveryStage(file).stageIndex > 3 ? 'bg-emerald-500 text-white' : 'bg-[#4F46E5] text-white ring-2 ring-[#4F46E5]/20') : 'bg-slate-200 text-slate-500'" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                                <i class="fas fa-check text-[9px]" v-if="getDseDeliveryStage(file).stageIndex > 3"></i>
+                                                <span v-else>3</span>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap hidden sm:block">Credit Review</span>
+                                        </div>
+
+                                        <!-- Step 4: Approved / DO Ready 🚗 -->
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div :class="getDseDeliveryStage(file).stageIndex >= 4 ? (getDseDeliveryStage(file).stageIndex > 4 ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white ring-4 ring-emerald-500/30 animate-pulse') : 'bg-slate-200 text-slate-500'" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                                <i class="fas fa-car-side text-[9px]"></i>
+                                            </div>
+                                            <span :class="getDseDeliveryStage(file).stageIndex === 4 ? 'text-emerald-700 font-black' : 'text-slate-600 font-bold'" class="text-[9px] mt-1 whitespace-nowrap hidden sm:block">DO Ready 🚗</span>
+                                        </div>
+
+                                        <!-- Step 5: Delivered & Disbursed -->
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div :class="getDseDeliveryStage(file).stageIndex >= 5 ? 'bg-purple-600 text-white ring-2 ring-purple-600/20' : 'bg-slate-200 text-slate-500'" class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                                <i class="fas fa-key text-[9px]"></i>
+                                            </div>
+                                            <span class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap hidden sm:block">Delivered 🔑</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3-Column Detailed Information Grid -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                                    <!-- Col 1: Customer Contact -->
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Buyer Details</div>
+                                        <div class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                                            <a :href="'tel:' + file.customerPhone" class="hover:text-[#4F46E5] transition inline-flex items-center gap-1 font-mono text-xs">
+                                                <i class="fas fa-phone text-[10px] text-slate-400"></i>
+                                                <span>{{ file.customerPhone }}</span>
+                                            </a>
+                                            <button type="button" @click="sendCustomerLoanUpdateWhatsApp(file)" title="Send official status WhatsApp to customer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[10px] font-bold transition cursor-pointer">
+                                                <i class="fab fa-whatsapp"></i>
+                                                <span>Chat</span>
+                                            </button>
+                                        </div>
+                                        <div class="text-[10px] text-slate-500 truncate">
+                                            Profile: {{ file.customerProfile || 'Salaried (Form 16 / ITR)' }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Col 2: Vehicle Model & Financing Split -->
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Car & Financing</div>
+                                        <div class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5 truncate">
+                                            <i class="fas fa-car text-[#4F46E5] text-xs shrink-0"></i>
+                                            <span class="truncate">{{ file.vehicleModel }}</span>
+                                        </div>
+                                        <div class="text-[11px] font-semibold text-slate-700">
+                                            Sanction: <span class="text-[#4F46E5] font-black">₹{{ file.sanctionAmount || file.loanAmount }} L</span>
+                                            <span v-if="file.onRoadPrice" class="text-slate-400"> (On-Road: ₹{{ file.onRoadPrice }} L)</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Col 3: Lending Partner & Branch Officer -->
+                                    <div class="space-y-1">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bank Desk & Officer</div>
+                                        <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5 truncate">
+                                            <i class="fas fa-building-columns text-[#4F46E5] text-[10px]"></i>
+                                            <span>{{ file.targetBankName || 'Axis Bank' }}</span>
+                                            <span class="text-slate-400 font-normal text-[10px]">({{ file.targetHubName || 'Hub' }})</span>
+                                        </div>
+                                        <div v-if="file.roName && file.allocationStatus === 'dispatched_to_ro'" class="flex items-center gap-2">
+                                            <span class="text-xs font-semibold text-slate-700 truncate">Officer: {{ file.roName }}</span>
+                                            <button type="button" @click="sendDseRoNudgeWhatsApp(file)" title="Nudge Bank RO on WhatsApp" class="text-slate-500 hover:text-emerald-600 transition cursor-pointer text-xs">
+                                                <i class="fab fa-whatsapp text-emerald-600"></i>
+                                            </button>
+                                        </div>
+                                        <div v-else class="text-[11px] font-bold text-amber-600 flex items-center gap-1">
+                                            <i class="fas fa-clock text-[10px]"></i>
+                                            <span>Awaiting Officer Allocation</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Action Bar -->
+                                <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span v-if="file.notes" class="text-slate-600 italic truncate text-[11px]">
+                                            <i class="fas fa-comment-dots text-slate-400 mr-1"></i>"{{ file.notes }}"
+                                        </span>
+                                        <span v-else class="text-slate-400 text-[11px]">
+                                            Target Hub: {{ file.targetHubName || 'Branch Hub' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button type="button" @click="sendCustomerLoanUpdateWhatsApp(file)" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                            <i class="fab fa-whatsapp"></i>
+                                            <span>Buyer WhatsApp</span>
+                                        </button>
+                                        <button v-if="file.roName && file.allocationStatus === 'dispatched_to_ro'" type="button" @click="sendDseRoNudgeWhatsApp(file)" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                            <i class="fas fa-comment-sms text-[10px]"></i>
+                                            <span>Nudge RO</span>
+                                        </button>
+                                        <button type="button" @click="openDseInspector(file)" class="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[#4F46E5] hover:bg-[#4338CA] px-3 py-1 rounded-lg transition cursor-pointer shadow-2xs">
+                                            <span>Open Dossier</span>
+                                            <i class="fas fa-arrow-right text-[9px]"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -6220,19 +6553,26 @@
                         </a>
                     </template>
                     <template v-else-if="isDSE">
-                        <a href="#" @click.prevent="currentTab = 'dse-dashboard'" :class="[currentTab === 'dse-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
+                        <a href="#" @click.prevent="currentTab = 'dse-dashboard'" :class="[currentTab === 'dse-dashboard' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2 px-1 flex-1 transition-colors']">
                             <i class="fas fa-car-side text-lg mb-0.5"></i>
                             <span class="text-[10px]">Radar</span>
                         </a>
-                        <a href="#" @click.prevent="openDseFileModal" class="flex flex-col items-center py-2.5 px-2 flex-1 text-[#4F46E5] font-bold transition-colors cursor-pointer">
+                        <a href="#" @click.prevent="currentTab = 'dse-tracking'" :class="[currentTab === 'dse-tracking' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2 px-1 flex-1 transition-colors relative']">
+                            <div class="relative">
+                                <i class="fas fa-layer-group text-lg mb-0.5"></i>
+                                <span v-if="dseStats.sanctioned > 0" class="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            </div>
+                            <span class="text-[10px]">Tracker</span>
+                        </a>
+                        <a href="#" @click.prevent="openDseFileModal" class="flex flex-col items-center py-2 px-1 flex-1 text-[#4F46E5] font-bold transition-colors cursor-pointer">
                             <i class="fas fa-plus-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Punch Lead</span>
+                            <span class="text-[10px]">Punch</span>
                         </a>
-                        <a href="#" @click.prevent="goToTab('profile')" :class="[currentTab === 'profile' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
-                            <i class="fas fa-user-circle text-lg mb-0.5"></i>
-                            <span class="text-[10px]">Profile</span>
+                        <a href="#" @click.prevent="openDseQrModal" class="flex flex-col items-center py-2 px-1 flex-1 text-slate-500 hover:text-indigo-600 font-medium transition-colors cursor-pointer">
+                            <i class="fas fa-qrcode text-lg mb-0.5"></i>
+                            <span class="text-[10px]">QR Desk</span>
                         </a>
-                        <a href="#" @click.prevent="showMoreModal = true" class="flex flex-col items-center py-2.5 px-2 flex-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
+                        <a href="#" @click.prevent="showMoreModal = true" class="flex flex-col items-center py-2 px-1 flex-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
                             <i class="fas fa-ellipsis text-lg mb-0.5"></i>
                             <span class="text-[10px] font-medium">More</span>
                         </a>
@@ -6805,6 +7145,418 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- DSE APPLICATION DOSSIER INSPECTOR DRAWER -->
+        <div v-if="showDseInspectorDrawer && selectedDseFile" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-end z-50 overflow-hidden animate-fade-in">
+            <div class="bg-white w-full max-w-lg h-full shadow-2xl flex flex-col border-l border-slate-200 overflow-hidden animate-in slide-in-from-right duration-200">
+                <!-- Drawer Header -->
+                <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span :class="getDseDeliveryStage(selectedDseFile).badgeClass" class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border">
+                                {{ getDseDeliveryStage(selectedDseFile).stageName }}
+                            </span>
+                            <span class="text-xs text-slate-300 font-mono truncate">
+                                #{{ selectedDseFile.appId || selectedDseFile.id }}
+                            </span>
+                        </div>
+                        <h3 class="text-base font-black text-white truncate mt-1">
+                            {{ selectedDseFile.customerName }}
+                        </h3>
+                    </div>
+                    <button type="button" @click="closeDseInspector" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer shrink-0">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Drawer Scrollable Body -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-5">
+                    
+                    <!-- Delivery Readiness & Clearance Hero Banner -->
+                    <div v-if="(selectedDseFile.status || '').toUpperCase() === 'SANCTION'" class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-car-side"></i>
+                                <span>DO Ready • Release Car</span>
+                            </span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+                        </div>
+                        <h4 class="text-base font-black leading-snug">
+                            Delivery Order Approved by {{ selectedDseFile.targetBankName || 'Bank' }}!
+                        </h4>
+                        <p class="text-xs text-emerald-50 leading-relaxed">
+                            Sanction of ₹{{ selectedDseFile.sanctionAmount || selectedDseFile.loanAmount }} Lakhs is released. You can allocate the VIN / Chassis from your stockyard and schedule the customer delivery ceremony.
+                        </p>
+                    </div>
+
+                    <div v-else-if="(selectedDseFile.status || '').toUpperCase() === 'DISBURSED'" class="p-4 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-sm space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-key"></i>
+                                <span>Keys Handed Over</span>
+                            </span>
+                            <i class="fas fa-check-circle text-purple-200"></i>
+                        </div>
+                        <h4 class="text-base font-black leading-snug">
+                            Car Financed & Disbursed
+                        </h4>
+                        <p class="text-xs text-purple-100 leading-relaxed">
+                            Financing cycle complete. Loan payout is processed to the dealership account.
+                        </p>
+                    </div>
+
+                    <div v-else-if="(selectedDseFile.status || '').toUpperCase() === 'REJECTED' || (selectedDseFile.status || '').toUpperCase() === 'CANCELLED'" class="p-4 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-sm space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-circle-xmark"></i>
+                                <span>Lender Declined</span>
+                            </span>
+                        </div>
+                        <h4 class="text-base font-black leading-snug">
+                            Declined by {{ selectedDseFile.targetBankName || 'Bank Desk' }}
+                        </h4>
+                        <p class="text-xs text-rose-100 leading-relaxed">
+                            Credit underwriting did not approve this application. You can re-punch or re-route this customer to an alternate lender hub.
+                        </p>
+                    </div>
+
+                    <div v-else class="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-[#4F46E5] text-white shadow-sm space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-clock"></i>
+                                <span>Bank Underwriting</span>
+                            </span>
+                            <span class="w-2 h-2 rounded-full bg-yellow-300 animate-pulse"></span>
+                        </div>
+                        <h4 class="text-base font-black leading-snug">
+                            {{ selectedDseFile.roName && selectedDseFile.allocationStatus === 'dispatched_to_ro' ? 'Credit Appraisal In Progress' : 'Inbound at Lender Hub' }}
+                        </h4>
+                        <p class="text-xs text-indigo-100 leading-relaxed">
+                            {{ selectedDseFile.roName && selectedDseFile.allocationStatus === 'dispatched_to_ro' ? 'Assigned bank relationship officer is conducting KYC, CIBIL check, and income verification.' : 'Application is logged at the bank desk. Sales Manager will assign an RO shortly.' }}
+                        </p>
+                    </div>
+
+                    <!-- 5-Stage Stepper Progress Card -->
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700">Delivery Progression</span>
+                            <span class="text-[11px] font-bold text-[#4F46E5]">{{ getDseDeliveryStage(selectedDseFile).stageName }}</span>
+                        </div>
+
+                        <!-- Stepper dots -->
+                        <div class="space-y-2 pt-1">
+                            <div class="flex items-start gap-3">
+                                <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold bg-emerald-500 text-white mt-0.5">
+                                    <i class="fas fa-check text-[8px]"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-800">1. Customer Loan Punched</p>
+                                    <p class="text-[11px] text-slate-400">{{ formatDate(selectedDseFile.createdAt) }} • Sourced via Showroom Desk</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 2 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'" class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                                    <i class="fas fa-check text-[8px]" v-if="getDseDeliveryStage(selectedDseFile).stageIndex >= 2"></i>
+                                    <span v-else>2</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-800">2. Bank Officer (RO) Assigned</p>
+                                    <p class="text-[11px] text-slate-500">
+                                        {{ selectedDseFile.roName && selectedDseFile.roName !== 'Pending SM Dispatch' ? selectedDseFile.roName + ' (' + (selectedDseFile.targetBankName || 'Bank') + ')' : 'Awaiting SM Dispatch' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 3 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'" class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                                    <i class="fas fa-check text-[8px]" v-if="getDseDeliveryStage(selectedDseFile).stageIndex >= 3"></i>
+                                    <span v-else>3</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-800">3. Credit Underwriting & FI</p>
+                                    <p class="text-[11px] text-slate-500">CIBIL review, banking evaluation, and income appraisal</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'bg-emerald-500 text-white ring-2 ring-emerald-500/20' : 'bg-slate-200 text-slate-500'" class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                                    <i class="fas fa-car text-[8px]" v-if="getDseDeliveryStage(selectedDseFile).stageIndex >= 4"></i>
+                                    <span v-else>4</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-800">4. Sanction & DO Released 🚗</p>
+                                    <p class="text-[11px] text-slate-500">
+                                        <span v-if="getDseDeliveryStage(selectedDseFile).stageIndex >= 4" class="text-emerald-700 font-bold">Approved: ₹{{ selectedDseFile.sanctionAmount || selectedDseFile.loanAmount }} Lakhs</span>
+                                        <span v-else>Delivery Order issue pending final credit decision</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 5 ? 'bg-purple-600 text-white ring-2 ring-purple-600/20' : 'bg-slate-200 text-slate-500'" class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold mt-0.5">
+                                    <i class="fas fa-key text-[8px]" v-if="getDseDeliveryStage(selectedDseFile).stageIndex >= 5"></i>
+                                    <span v-else>5</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-800">5. Car Delivered & Disbursed 🔑</p>
+                                    <p class="text-[11px] text-slate-500">Customer handover complete and payout settled</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial & Delivery Numbers Breakdown -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vehicle & Financing Math</h4>
+                        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-sm">
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-black text-slate-900">{{ selectedDseFile.vehicleModel }}</div>
+                                        <div class="text-[10px] text-slate-400">{{ selectedDseFile.brand || selectedDseFile.showroomBrand || currentUser.showroomBrand || 'Showroom' }}</div>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-bold">
+                                    {{ selectedDseFile.customerProfile || 'Salaried' }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-2.5 bg-slate-50 rounded-xl space-y-0.5">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">On-Road Vehicle Price</div>
+                                    <div class="text-sm font-black text-slate-900">
+                                        {{ selectedDseFile.onRoadPrice ? '₹' + selectedDseFile.onRoadPrice + ' L' : (selectedDseFile.carPrice ? '₹' + selectedDseFile.carPrice + ' L' : 'Not specified') }}
+                                    </div>
+                                </div>
+                                <div class="p-2.5 bg-indigo-50 rounded-xl space-y-0.5">
+                                    <div class="text-[10px] font-bold text-indigo-500 uppercase">Sanction / Loan Req.</div>
+                                    <div class="text-sm font-black text-[#4F46E5]">
+                                        ₹{{ selectedDseFile.sanctionAmount || selectedDseFile.loanAmount || selectedDseFile.amount }} Lakhs
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Net Down Payment to Collect from Buyer -->
+                            <div v-if="selectedDseFile.onRoadPrice && (selectedDseFile.sanctionAmount || selectedDseFile.loanAmount)" class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <div class="text-[10px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                                        <i class="fas fa-calculator text-emerald-600"></i>
+                                        <span>Est. Net Down Payment to Collect</span>
+                                    </div>
+                                    <div class="text-[11px] text-emerald-700">On-Road minus Sanctioned Loan</div>
+                                </div>
+                                <div class="text-sm font-black text-emerald-700">
+                                    ₹{{ Math.max(0, Number(selectedDseFile.onRoadPrice) - Number(selectedDseFile.sanctionAmount || selectedDseFile.loanAmount)).toFixed(2) }} L
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assigned Bank Officer (RO) Card -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Assigned Bank Officer</h4>
+                            <span class="text-[10px] font-bold text-indigo-600 flex items-center gap-1">
+                                <i class="fas fa-building-columns"></i>
+                                <span>{{ selectedDseFile.targetBankName || 'Axis Bank' }}</span>
+                            </span>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-bold text-sm shrink-0">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-black text-slate-900 truncate">
+                                        {{ selectedDseFile.roName && selectedDseFile.roName !== 'Pending SM Dispatch' ? selectedDseFile.roName : 'Awaiting SM Dispatch' }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 truncate">
+                                        {{ selectedDseFile.targetHubName || 'Branch Lending Hub' }} • Bank Credit Desk
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" @click="sendDseRoNudgeWhatsApp(selectedDseFile)" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                                <i class="fab fa-whatsapp text-emerald-600"></i>
+                                <span>Nudge RO</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Customer Quick Contact & WhatsApp Updates -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Buyer Communication</h4>
+                        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-xs font-black text-slate-900">{{ selectedDseFile.customerName }}</div>
+                                    <div class="text-xs font-mono text-slate-500">{{ selectedDseFile.customerPhone }}</div>
+                                </div>
+                                <a :href="'tel:' + selectedDseFile.customerPhone" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-phone text-xs"></i>
+                                    <span>Call Buyer</span>
+                                </a>
+                            </div>
+
+                            <button type="button" @click="sendCustomerLoanUpdateWhatsApp(selectedDseFile)" class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                                <i class="fab fa-whatsapp text-base"></i>
+                                <span>Send WhatsApp Loan Status Update to Customer</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Showroom Delivery Checklist -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Showroom Delivery Checklist</h4>
+                        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-2">
+                            <div class="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
+                                <i class="fas fa-check-circle text-emerald-500"></i>
+                                <span>Customer Loan Punched to Lender Desk</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold" :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 2 ? 'text-slate-700' : 'text-slate-400'">
+                                <i :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 2 ? 'fas fa-check-circle text-emerald-500' : 'far fa-circle text-slate-300'"></i>
+                                <span>Bank RO Assigned & Documents Verified</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold" :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'text-slate-700' : 'text-slate-400'">
+                                <i :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'fas fa-check-circle text-emerald-500' : 'far fa-circle text-slate-300'"></i>
+                                <span>Delivery Order (DO) / Sanction Letter Received</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold" :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'text-slate-700' : 'text-slate-400'">
+                                <i :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'fas fa-check-circle text-emerald-500' : 'far fa-circle text-slate-300'"></i>
+                                <span>Down Payment & Insurance Settled</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold" :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'text-slate-700' : 'text-slate-400'">
+                                <i :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 4 ? 'fas fa-check-circle text-emerald-500' : 'far fa-circle text-slate-300'"></i>
+                                <span>Stockyard VIN Allocated & PDI Complete</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold" :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 5 ? 'text-slate-700' : 'text-slate-400'">
+                                <i :class="getDseDeliveryStage(selectedDseFile).stageIndex >= 5 ? 'fas fa-check-circle text-purple-600' : 'far fa-circle text-slate-300'"></i>
+                                <span>Customer Delivery Ceremony & Key Handover</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes if any -->
+                    <div v-if="selectedDseFile.notes" class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+                        <div class="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
+                            <i class="fas fa-sticky-note text-slate-400"></i>
+                            <span>Showroom Punch Notes</span>
+                        </div>
+                        <p>{{ selectedDseFile.notes }}</p>
+                    </div>
+
+                </div>
+
+                <!-- Drawer Footer Actions -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between gap-3 shrink-0">
+                    <button type="button" @click="closeDseInspector" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                        Close Dossier
+                    </button>
+                    <button v-if="(selectedDseFile.status || '').toUpperCase() === 'SANCTION'" type="button" @click="sendCustomerLoanUpdateWhatsApp(selectedDseFile)" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Send DO Ready to Buyer</span>
+                    </button>
+                    <button v-else type="button" @click="sendDseRoNudgeWhatsApp(selectedDseFile)" class="px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Nudge Officer</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DSE: SHOWROOM QR DESK & STANDEE MODAL -->
+        <div v-if="showDseQrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-fade-in">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200/80 my-auto animate-in fade-in zoom-in-95 duration-150">
+                <!-- Modal Top Bar -->
+                <div class="px-5 py-3.5 bg-slate-900 text-white flex justify-between items-center print:hidden">
+                    <span class="text-xs font-bold flex items-center gap-2">
+                        <i class="fas fa-qrcode text-[#4F46E5]"></i>
+                        <span>Showroom Desk Acrylic Standee</span>
+                    </span>
+                    <button type="button" @click="closeDseQrModal" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Standee Print Content -->
+                <div class="p-6 text-center space-y-4 bg-gradient-to-b from-slate-50 to-white print:p-8">
+                    <!-- Showroom Brand Header -->
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-black text-[#4F46E5] uppercase tracking-wider">
+                            <i class="fas fa-store"></i>
+                            <span>{{ currentUser.showroomBrand || 'Car Showroom' }}</span>
+                        </div>
+                        <h2 class="text-lg font-black text-slate-900 tracking-tight">
+                            {{ currentUser.dealershipName || 'Showroom Digital Loan Desk' }}
+                        </h2>
+                        <p class="text-xs text-slate-500 font-medium">
+                            Instant In-Principle Car Loan Approval Desk
+                        </p>
+                    </div>
+
+                    <!-- Big QR Code Inset -->
+                    <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 shadow-sm max-w-[240px] mx-auto">
+                        <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(dsePersonalApplyUrl)" alt="DSE Personal Showroom QR" class="w-44 h-44 rounded-xl object-contain mx-auto">
+                        <div class="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center justify-center gap-1.5">
+                            <i class="fas fa-camera text-[#4F46E5]"></i>
+                            <span>Scan with Camera to Apply</span>
+                        </div>
+                    </div>
+
+                    <!-- Key Benefits -->
+                    <div class="grid grid-cols-2 gap-2 text-left max-w-[300px] mx-auto text-[11px]">
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-bolt text-amber-500 text-xs"></i>
+                            <span>Spot In-Principle Sanction</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-car-side text-indigo-500 text-xs"></i>
+                            <span>Fast Delivery Clearance</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-building-columns text-emerald-600 text-xs"></i>
+                            <span>Multi-Bank Tie-up</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-slate-700 font-semibold">
+                            <i class="fas fa-shield-halved text-blue-500 text-xs"></i>
+                            <span>100% Digital & Secure</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Consultant Signoff -->
+                    <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                        <div>Showroom Consultant: <strong class="text-slate-800">{{ currentUser.name }}</strong></div>
+                        <div class="font-mono text-[10px] text-slate-400 mt-0.5 truncate">{{ dsePersonalApplyUrl }}</div>
+                    </div>
+                </div>
+
+                <!-- Modal Action Buttons (Hidden when printing) -->
+                <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 print:hidden">
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" @click="copyDsePersonalApplyLink" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="far fa-copy"></i>
+                            <span>Copy Link</span>
+                        </button>
+                        <button type="button" @click="shareDsePersonalWhatsApp" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" @click="closeDseQrModal" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                            Close
+                        </button>
+                        <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-print"></i>
+                            <span>Print Standee</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -8108,13 +8860,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-133"></script>
+    <script type="module" src="js/app.js?v=force-update-134"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-133')
+                navigator.serviceWorker.register('./sw.js?v=force-update-134')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
