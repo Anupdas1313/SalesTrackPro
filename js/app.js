@@ -24,10 +24,8 @@ const app = createApp({
         // --- State ---
         const currentUser = ref(initialUser);
 
-        // --- Bank-Grade Security & Session Gatekeeper ---
+        // --- Real-time Security & Account Sync Gatekeeper ---
         let userSecurityUnsub = null;
-        let inactivityTimer = null;
-        const INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes auto-lock
 
         const generateSessionId = () => {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -40,34 +38,12 @@ const app = createApp({
                 userSecurityUnsub();
                 userSecurityUnsub = null;
             }
-            if (inactivityTimer) {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = null;
-            }
             localStorage.removeItem('axis_user');
             localStorage.removeItem('axis_active_session_id');
             currentUser.value = null;
             alert(`⛔ Security Alert: Access Terminated\n\n${reason}`);
             window.location.reload();
         };
-
-        const resetInactivityTimer = () => {
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-            if (!currentUser.value?.id) return;
-
-            inactivityTimer = setTimeout(() => {
-                handleSecurityLockout('Your session has timed out due to 20 minutes of inactivity for banking data privacy.');
-            }, INACTIVITY_TIMEOUT_MS);
-        };
-
-        // Attach global user activity listeners for inactivity auto-lock
-        if (typeof window !== 'undefined') {
-            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-                window.addEventListener(evt, () => {
-                    if (currentUser.value?.id) resetInactivityTimer();
-                }, { passive: true });
-            });
-        }
 
         const startUserSecurityListener = (userId) => {
             if (userSecurityUnsub) {
@@ -82,30 +58,20 @@ const app = createApp({
                     return;
                 }
 
-                // Check 1: Real-time Account Status (Freeze / Suspend / Resign)
+                // Check 1: Real-time Account Status (Freeze / Suspend / Resign by Admin/Supervisor)
                 if (freshUser.status === 'suspended' || freshUser.status === 'resigned' || freshUser.status === 'inactive') {
                     const statusText = freshUser.status === 'suspended' ? 'FROZEN & LOCKED' : 'REVOKED (Offboarded)';
                     handleSecurityLockout(`Your account has been ${statusText} by your Sales Manager (${freshUser.supervisorName || 'Supervisor'}). Access is immediately terminated.`);
                     return;
                 }
 
-                // Check 2: Single-Device Concurrency (Credential Sharing Protection)
-                const currentLocalSessionId = localStorage.getItem('axis_active_session_id');
-                if (freshUser.activeSessionId && currentLocalSessionId && freshUser.activeSessionId !== currentLocalSessionId) {
-                    handleSecurityLockout('Your account was logged in from another device. SalesLink allows only one active device session per officer to prevent credential sharing.');
-                    return;
-                }
-
-                // Check 3: Dynamic Sync of Supervisor and Tenant changes
+                // Dynamic Sync of Supervisor, Tenant, and Profile changes in real-time
                 if (currentUser.value) {
                     if (freshUser.supervisorName) currentUser.value.supervisorName = freshUser.supervisorName;
                     if (freshUser.supervisorId) currentUser.value.supervisorId = freshUser.supervisorId;
                     if (freshUser.tenantId) currentUser.value.tenantId = freshUser.tenantId;
                 }
             });
-
-            // Start Inactivity Timer for Banking Privacy
-            resetInactivityTimer();
         };
         const loginForm = ref({ username: '', password: '' });
         const loginError = ref('');
@@ -509,7 +475,7 @@ const app = createApp({
                     localStorage.setItem('axis_active_session_id', newSessionId);
                     existing.activeSessionId = newSessionId;
                     try {
-                        await db.updateUser(existing.id, { activeSessionId: newSessionId, lastLoginAt: new Date().toISOString() });
+                        await db.updateUser(existing.id, { lastLoginAt: new Date().toISOString() });
                     } catch (e) {}
 
                     localStorage.setItem('axis_user', JSON.stringify(existing));
@@ -5366,16 +5332,15 @@ const app = createApp({
                     }
                 }
 
-                // Generate & Bind Single-Device Session ID
+                // Record login timestamp
                 const newSessionId = generateSessionId();
                 localStorage.setItem('axis_active_session_id', newSessionId);
                 try {
                     await db.updateUser(user.id, {
-                        activeSessionId: newSessionId,
                         lastLoginAt: new Date().toISOString()
                     });
                 } catch (e) {
-                    console.warn("Could not write activeSessionId to Firestore:", e);
+                    console.warn("Could not write lastLoginAt to Firestore:", e);
                 }
 
                 // Store user session
@@ -5463,10 +5428,6 @@ const app = createApp({
             if (userSecurityUnsub) {
                 userSecurityUnsub();
                 userSecurityUnsub = null;
-            }
-            if (inactivityTimer) {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = null;
             }
             localStorage.removeItem('axis_user');
             localStorage.removeItem('axis_active_session_id');
@@ -6293,14 +6254,11 @@ const app = createApp({
             if (currentUser.value) {
                 initUserSm();
 
-                // Ensure active session token exists
+                // Ensure session token exists locally
                 let localSess = localStorage.getItem('axis_active_session_id');
                 if (!localSess) {
                     localSess = generateSessionId();
                     localStorage.setItem('axis_active_session_id', localSess);
-                    if (currentUser.value.id) {
-                        db.updateUser(currentUser.value.id, { activeSessionId: localSess }).catch(() => {});
-                    }
                 }
 
                 // Attach real-time security watcher immediately
