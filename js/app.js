@@ -944,7 +944,9 @@ const app = createApp({
         const inboundShowroomFiles = ref([]);
         const inboundSelectedRo = ref({});
         const inboundSubmitting = ref({});
-        const smInboundSubTab = ref('pending');
+        const smInboundSubTab = ref('all');
+        const smInboundSearch = ref('');
+        const smInboundFilter = ref('all');
 
         const selectRegisterRole = (role) => {
             registerForm.value.role = role;
@@ -1106,6 +1108,9 @@ const app = createApp({
                     return;
                 }
                 currentTab.value = tab;
+                if (tab === 'sm-inbound' && isSM.value) {
+                    loadInboundShowroomFiles();
+                }
                 if (tab === 'profile') {
                     initProfileForm();
                     profileActiveTab.value = 'overview';
@@ -4705,6 +4710,90 @@ const app = createApp({
             window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, '_blank');
         };
 
+        const smInboundStats = computed(() => {
+            const list = inboundShowroomFiles.value || [];
+            const total = list.length;
+            const pending = list.filter(f => f.allocationStatus === 'pending_sm_dispatch').length;
+            const dispatched = list.filter(f => f.allocationStatus === 'dispatched_to_ro').length;
+            const sanctioned = list.filter(f => {
+                const s = (f.status || '').toUpperCase();
+                return s === 'SANCTION' || s === 'DISBURSED';
+            }).length;
+            const totalVol = list.reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
+            return {
+                total,
+                pending,
+                dispatched,
+                sanctioned,
+                totalVol: totalVol.toFixed(1)
+            };
+        });
+
+        const filteredInboundFiles = computed(() => {
+            let list = inboundShowroomFiles.value || [];
+
+            // Tab / Status filter
+            if (smInboundFilter.value === 'pending') {
+                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch');
+            } else if (smInboundFilter.value === 'dispatched') {
+                list = list.filter(f => f.allocationStatus === 'dispatched_to_ro');
+            } else if (smInboundFilter.value === 'sanction') {
+                list = list.filter(f => {
+                    const s = (f.status || '').toUpperCase();
+                    return s === 'SANCTION' || s === 'DISBURSED';
+                });
+            }
+
+            // Search query filter
+            const q = (smInboundSearch.value || '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(f => {
+                    const customerName = (f.customerName || '').toLowerCase();
+                    const customerPhone = (f.customerPhone || '').toLowerCase();
+                    const vehicle = (f.vehicleModel || '').toLowerCase();
+                    const dse = (f.dseName || '').toLowerCase();
+                    const dealer = (f.dealershipName || f.sourcingChannel || '').toLowerCase();
+                    const brand = (f.showroomBrand || '').toLowerCase();
+                    const ro = (f.roName || '').toLowerCase();
+                    const id = (f.salesLinkId || f.id || '').toLowerCase();
+                    return customerName.includes(q) ||
+                        customerPhone.includes(q) ||
+                        vehicle.includes(q) ||
+                        dse.includes(q) ||
+                        dealer.includes(q) ||
+                        brand.includes(q) ||
+                        ro.includes(q) ||
+                        id.includes(q);
+                });
+            }
+
+            // Order: pending files first, then newest first
+            return [...list].sort((a, b) => {
+                const aPending = a.allocationStatus === 'pending_sm_dispatch' ? 1 : 0;
+                const bPending = b.allocationStatus === 'pending_sm_dispatch' ? 1 : 0;
+                if (aPending !== bPending) return bPending - aPending;
+                const timeA = new Date(a.createdAt || 0).getTime();
+                const timeB = new Date(b.createdAt || 0).getTime();
+                return timeB - timeA;
+            });
+        });
+
+        const contactCustomerWhatsApp = (file) => {
+            if (!file || !file.customerPhone) return;
+            const msg = `Hi ${file.customerName}, this is ${currentUser.value?.name || 'the Sales Manager'} from ${currentUser.value?.branchName || 'the Bank'}. We received your car loan application for *${file.vehicleModel || 'your vehicle'}* from *${file.dealershipName || 'the showroom'}*. Our Relationship Officer will assist you for fast track sanction and delivery.`;
+            const phoneDigits = file.customerPhone.replace(/\D/g, '');
+            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
+            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        const contactDseWhatsApp = (file) => {
+            if (!file || !file.dsePhone) return;
+            const msg = `Hi ${file.dseName}, Sales Manager ${currentUser.value?.name || ''} here. We have received your car loan punch for *${file.customerName}* (${file.vehicleModel || 'Car Loan'}). We have routed it into active underwriting for priority sanction!`;
+            const phoneDigits = file.dsePhone.replace(/\D/g, '');
+            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
+            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
         const loadSmData = async () => {
             if (!currentUser.value?.tenantId) {
                 // Legacy SM data load (accounts without tenantId)
@@ -6419,7 +6508,7 @@ const app = createApp({
             isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
             dseTrackingFilter, dseTrackingSearch, showDseInspectorDrawer, selectedDseFile, showDseQrModal, openDseInspector, closeDseInspector, openDseQrModal, closeDseQrModal, dsePersonalApplyUrl, copyDsePersonalApplyLink, shareDsePersonalWhatsApp, getDseDeliveryStage, filteredDseTrackingFiles,
             openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
-            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
+            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, smInboundSearch, smInboundFilter, smInboundStats, filteredInboundFiles, contactCustomerWhatsApp, contactDseWhatsApp, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
             isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp,
             showDseAccountPromptModal, showDseQuickRegisterModal, dseQuickRegisterForm, isDseRegistering, dseRegisterError, openDseRegisterFromApply, loginDseFromApply, proceedDseAccountRegistration, submitDseQuickRegistration, confirmGuestSubmission
         };
