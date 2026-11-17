@@ -3708,14 +3708,14 @@
                     <!-- ============================================== -->
                     <!-- SM: SHOWROOM INFLOW RADAR (DEALER QUEUE)       -->
                     <!-- ============================================== -->
-                    <div v-if="currentTab === 'sm-inbound' && isSM" class="space-y-4 max-w-5xl mx-auto pb-14 animate-fade-in">
-                        <!-- Streamlined Top Bar -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div v-if="currentTab === 'sm-inbound' && isSM" class="space-y-3.5 max-w-5xl mx-auto pb-14 animate-fade-in px-1 sm:px-0">
+                        <!-- Streamlined Top Identity Bar -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-[#4F46E5] flex items-center justify-center text-lg shrink-0">
                                     <i class="fas fa-satellite-dish"></i>
                                 </div>
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
                                             Showroom Inbound
@@ -3730,48 +3730,50 @@
                                         </span>
                                     </div>
                                     <p class="text-xs text-slate-500 truncate">
-                                        Direct car loan leads punched by partner showroom sales consultants (DSEs)
+                                        Car loan leads from partner showroom sales desks (DSEs)
                                     </p>
                                 </div>
                             </div>
 
-                            <!-- QR Standee & Quick Share Actions -->
-                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                                <button type="button" @click="showSmQrStandeeModal = true" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                            <!-- Mobile Balanced Action Strip -->
+                            <div class="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                                <button type="button" @click="showSmQrStandeeModal = true" class="flex-1 sm:flex-initial px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i class="fas fa-qrcode text-xs"></i>
-                                    <span>Showroom QR Standee</span>
+                                    <span>QR Standee</span>
                                 </button>
-                                <button type="button" @click="copySmApplyLink" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition cursor-pointer" title="Copy Apply Link">
+                                <button type="button" @click="copySmApplyLink" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1" title="Copy Apply Link">
                                     <i class="fas fa-link text-xs"></i>
+                                    <span class="sm:hidden text-xs font-semibold">Copy</span>
                                 </button>
-                                <button type="button" @click="shareSmApplyWhatsApp" class="p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 rounded-xl text-xs font-bold transition cursor-pointer" title="Share on WhatsApp">
+                                <button type="button" @click="shareSmApplyWhatsApp" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1" title="Share on WhatsApp">
                                     <i class="fab fa-whatsapp text-xs"></i>
+                                    <span class="sm:hidden text-xs font-semibold">Share</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Frictionless Triage Control Bar: Segmented Pills + Search -->
+                        <!-- Mobile Optimized Segmented Filter Bar -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                            <!-- Segmented Filter Pills -->
-                            <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 overflow-x-auto">
-                                <button type="button" @click="smInboundFilter = 'pending'" :class="smInboundFilter === 'pending' ? 'bg-white text-amber-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+                            <!-- Full-width segmented tabs on mobile -->
+                            <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 w-full sm:w-auto">
+                                <button type="button" @click="smInboundFilter = 'pending'" :class="smInboundFilter === 'pending' ? 'bg-white text-amber-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center justify-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-amber-500" :class="{'animate-pulse': smInboundStats.pending > 0}"></span>
-                                    <span>Awaiting Dispatch</span>
-                                    <span v-if="smInboundStats.pending > 0" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-500 text-white">
+                                    <span>Pending</span>
+                                    <span v-if="smInboundStats.pending > 0" class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-500 text-white">
                                         {{ smInboundStats.pending }}
                                     </span>
                                 </button>
-                                <button type="button" @click="smInboundFilter = 'dispatched'" :class="smInboundFilter === 'dispatched' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
-                                    <i class="fas fa-paper-plane text-xs"></i>
+                                <button type="button" @click="smInboundFilter = 'dispatched'" :class="smInboundFilter === 'dispatched' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center justify-center gap-1.5">
+                                    <i class="fas fa-paper-plane text-[11px]"></i>
                                     <span>Dispatched ({{ smInboundStats.dispatched }})</span>
                                 </button>
-                                <button type="button" @click="smInboundFilter = 'all'" :class="smInboundFilter === 'all' ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+                                <button type="button" @click="smInboundFilter = 'all'" :class="smInboundFilter === 'all' ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center justify-center gap-1.5">
                                     <span>All ({{ smInboundStats.total }})</span>
                                 </button>
                             </div>
 
-                            <!-- Compact Search -->
-                            <div class="relative min-w-[200px] flex-1 sm:flex-initial">
+                            <!-- Search -->
+                            <div class="relative w-full sm:w-64">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                 <input v-model="smInboundSearch" type="text" placeholder="Search buyer, phone, car, dealer..." class="w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-[#4F46E5] text-slate-800 shadow-2xs placeholder-slate-400">
                                 <button v-if="smInboundSearch" @click="smInboundSearch = ''" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
@@ -3814,69 +3816,75 @@
                                 </button>
                             </div>
 
-                            <!-- Showroom Inbound Lead Cards -->
-                            <div v-for="file in filteredInboundFiles" :key="file.id" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'border-amber-300/80 ring-1 ring-amber-400/20' : 'border-slate-200/80'" class="bg-white rounded-2xl border p-4 sm:p-5 space-y-3 transition hover:shadow-xs">
-                                <!-- Top Bar: Dealership provenance, Brand, DSE, Age -->
-                                <div class="flex items-center justify-between gap-2 flex-wrap">
-                                    <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'">
-                                            {{ file.dealershipName || file.sourcingChannel || 'Showroom Floor' }}
-                                        </span>
-                                        <span v-if="file.showroomBrand" class="text-xs font-bold text-slate-700">
-                                            {{ file.showroomBrand }}
-                                        </span>
-                                        <span v-if="file.dseName" class="text-xs text-slate-500 font-medium truncate">
-                                            • DSE: <strong class="text-slate-800">{{ file.dseName }}</strong>
-                                        </span>
+                            <!-- Showroom Inbound Lead Cards (Mobile-Perfected) -->
+                            <div v-for="file in filteredInboundFiles" :key="file.id" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'border-amber-300 ring-1 ring-amber-400/20' : 'border-slate-200/80'" class="bg-white rounded-2xl border p-3.5 sm:p-4 space-y-3 transition shadow-2xs hover:shadow-xs">
+                                <!-- Card Header: Dealer Badge, Brand, DSE & Age -->
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0 flex-1 space-y-0.5">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider truncate max-w-[180px] sm:max-w-none" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'">
+                                                {{ file.dealershipName || file.sourcingChannel || 'Showroom Floor' }}
+                                            </span>
+                                            <span v-if="file.showroomBrand" class="text-xs font-bold text-slate-700 truncate">
+                                                {{ file.showroomBrand }}
+                                            </span>
+                                        </div>
+                                        <div v-if="file.dseName" class="text-xs text-slate-500 font-medium truncate">
+                                            DSE: <strong class="text-slate-800">{{ file.dseName }}</strong>
+                                            <span v-if="file.dsePhone" class="text-slate-400 font-normal">({{ file.dsePhone }})</span>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2 shrink-0">
+                                    <div class="flex flex-col items-end shrink-0 gap-1">
                                         <span v-if="file.allocationStatus === 'pending_sm_dispatch'" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">
-                                            Awaiting Dispatch
+                                            Action Needed
                                         </span>
                                         <span v-else :class="getStatusBadgeClass(file.status)" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
                                             {{ file.status || 'Dispatched' }}
                                         </span>
-                                        <span class="text-[11px] text-slate-400 font-medium">
+                                        <span class="text-[10px] text-slate-400 font-medium">
                                             {{ getRelativeTime(file.createdAt) || formatDate(file.createdAt) }}
                                         </span>
                                     </div>
                                 </div>
 
-                                <!-- Middle Row: Customer Info & Car/Loan Details -->
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
-                                    <!-- Customer Profile -->
-                                    <div class="space-y-0.5 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="text-base font-black text-slate-900 tracking-tight truncate">
-                                                {{ file.customerName }}
-                                            </h3>
-                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
-                                                {{ file.customerProfile || 'Salaried' }}
-                                            </span>
+                                <!-- Buyer & Vehicle Details Box (Ultra Clean Mobile Layout) -->
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-100 space-y-2">
+                                    <!-- Customer Name + 1-Tap Call & Chat -->
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <h3 class="text-sm font-black text-slate-900 truncate">
+                                                    {{ file.customerName }}
+                                                </h3>
+                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-white text-slate-600 border border-slate-200">
+                                                    {{ file.customerProfile || 'Salaried' }}
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-slate-500 font-mono mt-0.5">
+                                                {{ file.customerPhone || 'No Phone' }}
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-3 text-xs text-slate-500">
-                                            <a v-if="file.customerPhone" :href="'tel:' + file.customerPhone" class="hover:text-[#4F46E5] font-medium flex items-center gap-1 transition">
-                                                <i class="fas fa-phone text-[10px] text-slate-400"></i>
-                                                <span>{{ file.customerPhone }}</span>
+
+                                        <!-- Quick Call & WhatsApp Action Buttons -->
+                                        <div v-if="file.customerPhone" class="flex items-center gap-1.5 shrink-0">
+                                            <a :href="'tel:' + file.customerPhone" class="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs transition shadow-2xs" title="Call Customer">
+                                                <i class="fas fa-phone"></i>
                                             </a>
-                                            <button v-if="file.customerPhone" type="button" @click="contactCustomerWhatsApp(file)" class="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1 text-[11px] cursor-pointer">
-                                                <i class="fab fa-whatsapp"></i>
-                                                <span>Chat</span>
+                                            <button type="button" @click="contactCustomerWhatsApp(file)" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xs transition shadow-2xs cursor-pointer" title="WhatsApp Customer">
+                                                <i class="fab fa-whatsapp text-sm"></i>
                                             </button>
                                         </div>
                                     </div>
 
-                                    <!-- Car & Loan Amount Pill -->
-                                    <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
-                                        <div class="px-3 py-1.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-left sm:text-right">
-                                            <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
-                                                <i class="fas fa-car-side text-[10px]"></i>
-                                                <span>{{ file.vehicleModel || 'Car Loan' }}</span>
-                                            </div>
-                                            <div class="text-sm font-black text-indigo-700">
-                                                ₹{{ file.loanAmount }} Lakhs
-                                                <span v-if="file.onRoadPrice" class="text-[10px] text-slate-400 font-normal">({{ file.onRoadPrice }} L On-Road)</span>
-                                            </div>
+                                    <!-- Vehicle Model & Requested Loan Amount Bar -->
+                                    <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 min-w-0 truncate">
+                                            <i class="fas fa-car-side text-[#4F46E5] text-xs shrink-0"></i>
+                                            <span class="truncate">{{ file.vehicleModel || 'Car Loan' }}</span>
+                                        </div>
+                                        <div class="text-xs font-black text-[#4F46E5] shrink-0 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
+                                            ₹{{ file.loanAmount }} Lakhs
+                                            <span v-if="file.onRoadPrice" class="text-[10px] text-slate-400 font-normal">({{ file.onRoadPrice }} L On-Road)</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3884,47 +3892,64 @@
                                 <!-- Remarks Note if present -->
                                 <div v-if="file.notes" class="px-3 py-1.5 bg-slate-50 rounded-lg text-xs text-slate-600 border border-slate-100 flex items-start gap-1.5">
                                     <i class="fas fa-comment-dots text-slate-400 text-[10px] mt-0.5 shrink-0"></i>
-                                    <span class="italic text-[11px]">"{{ file.notes }}"</span>
+                                    <span class="italic text-[11px] line-clamp-2">"{{ file.notes }}"</span>
                                 </div>
 
-                                <!-- Action Row: Pending Dispatch vs Dispatched Status -->
-                                <div v-if="file.allocationStatus === 'pending_sm_dispatch'" class="p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                                    <div class="flex items-center gap-2 flex-1">
-                                        <span class="text-xs font-bold text-amber-900 shrink-0 flex items-center gap-1">
+                                <!-- Action Area: Pending Dispatch vs Dispatched Status -->
+                                <div v-if="file.allocationStatus === 'pending_sm_dispatch'" class="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                                    <div class="flex items-center justify-between text-[11px] font-bold text-amber-900">
+                                        <span class="flex items-center gap-1">
                                             <i class="fas fa-user-plus text-amber-600"></i>
-                                            <span>Assign RO:</span>
+                                            <span>Assign Relationship Officer:</span>
                                         </span>
-                                        <select v-model="inboundSelectedRo[file.id]" class="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-[#4F46E5] transition shadow-2xs cursor-pointer">
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <select v-model="inboundSelectedRo[file.id]" class="w-full sm:flex-1 bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#4F46E5] shadow-2xs transition cursor-pointer">
                                             <option value="">-- Choose Relationship Officer --</option>
                                             <option v-for="ro in activeRoUsers" :key="ro.id" :value="ro.id">
                                                 {{ ro.name }} ({{ ro.salesLinkId || ro.employeeCode || 'RO' }})
                                             </option>
                                         </select>
+
+                                        <button type="button" @click="assignInboundFileToRo(file, inboundSelectedRo[file.id])" :disabled="!inboundSelectedRo[file.id] || inboundSubmitting[file.id]" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white rounded-xl text-xs font-black shadow-xs active:scale-[0.98] transition disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                            <i class="fas fa-bolt text-yellow-300"></i>
+                                            <span>Dispatch to RO</span>
+                                        </button>
                                     </div>
-                                    <button type="button" @click="assignInboundFileToRo(file, inboundSelectedRo[file.id])" :disabled="!inboundSelectedRo[file.id] || inboundSubmitting[file.id]" class="w-full sm:w-auto px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-lg text-xs font-bold shadow-xs active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5 cursor-pointer">
-                                        <i class="fas fa-bolt text-yellow-300"></i>
-                                        <span>Dispatch to RO</span>
-                                    </button>
                                 </div>
 
-                                <div v-else class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2 text-xs text-slate-700">
-                                        <i class="fas fa-user-shield text-[#4F46E5]"></i>
-                                        <span>Assigned RO: <strong class="text-slate-900">{{ file.roName || 'Branch RO' }}</strong></span>
-                                        <span class="text-slate-300">•</span>
-                                        <span class="text-[11px] text-slate-400">{{ formatDate(file.allocatedAt || file.updatedAt) }}</span>
+                                <div v-else class="p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <div class="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 text-[#4F46E5] flex items-center justify-center text-xs shrink-0 font-bold">
+                                                <i class="fas fa-user-shield"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="text-xs font-bold text-slate-900 truncate">
+                                                    RO: <span class="text-[#4F46E5]">{{ file.roName || 'Branch RO' }}</span>
+                                                </div>
+                                                <div class="text-[10px] text-slate-400">
+                                                    Dispatched {{ getRelativeTime(file.allocatedAt || file.updatedAt) }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" @click="sendRoDispatchWhatsApp(file)" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer shrink-0 shadow-2xs">
+                                            <i class="fab fa-whatsapp text-emerald-600"></i>
+                                            <span>Nudge RO</span>
+                                        </button>
                                     </div>
-                                    <div class="flex items-center gap-2 self-end sm:self-center">
-                                        <select v-model="inboundSelectedRo[file.id]" @change="assignInboundFileToRo(file, inboundSelectedRo[file.id])" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none focus:border-[#4F46E5] transition cursor-pointer">
-                                            <option value="">Reassign RO...</option>
+
+                                    <!-- Reassign RO on mobile -->
+                                    <div class="pt-1.5 border-t border-slate-200/60 flex items-center gap-2">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase shrink-0">Reassign:</label>
+                                        <select v-model="inboundSelectedRo[file.id]" @change="assignInboundFileToRo(file, inboundSelectedRo[file.id])" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 outline-none focus:border-[#4F46E5] transition cursor-pointer">
+                                            <option value="">Choose another RO...</option>
                                             <option v-for="ro in activeRoUsers" :key="ro.id" :value="ro.id">
                                                 {{ ro.name }}
                                             </option>
                                         </select>
-                                        <button type="button" @click="sendRoDispatchWhatsApp(file)" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer">
-                                            <i class="fab fa-whatsapp text-emerald-600"></i>
-                                            <span>Nudge RO</span>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -9034,13 +9059,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-138"></script>
+    <script type="module" src="js/app.js?v=force-update-139"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-138')
+                navigator.serviceWorker.register('./sw.js?v=force-update-139')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
