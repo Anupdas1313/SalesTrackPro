@@ -946,7 +946,7 @@ const app = createApp({
         const inboundSubmitting = ref({});
         const smInboundSubTab = ref('all');
         const smInboundSearch = ref('');
-        const smInboundFilter = ref('all');
+        const smInboundFilter = ref('pending');
 
         const selectRegisterRole = (role) => {
             registerForm.value.role = role;

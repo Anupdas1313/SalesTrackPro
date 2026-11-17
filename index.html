@@ -3709,348 +3709,221 @@
                     <!-- SM: SHOWROOM INFLOW RADAR (DEALER QUEUE)       -->
                     <!-- ============================================== -->
                     <div v-if="currentTab === 'sm-inbound' && isSM" class="space-y-4 max-w-5xl mx-auto pb-14 animate-fade-in">
-                        <!-- Top Header & Showroom Inbound Identity -->
-                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div class="flex items-center gap-3.5 min-w-0">
-                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl shrink-0 shadow-2xs">
+                        <!-- Streamlined Top Bar -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-[#4F46E5] flex items-center justify-center text-lg shrink-0">
                                     <i class="fas fa-satellite-dish"></i>
                                 </div>
-                                <div class="space-y-0.5 min-w-0">
+                                <div class="min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                                            Showroom Inflow Radar
+                                            Showroom Inbound
                                         </h2>
-                                        <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                                            Multi-Lender Hub
+                                        <span v-if="smInboundStats.pending > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span>{{ smInboundStats.pending }} to dispatch</span>
                                         </span>
-                                        <span v-if="smInboundStats.pending > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
-                                            {{ smInboundStats.pending }} Action Required
-                                        </span>
-                                    </div>
-                                    <div class="text-xs text-slate-500 font-medium flex items-center gap-2 flex-wrap">
-                                        <span class="font-bold text-slate-700">{{ currentUser.branchName || currentUser.tenantId || 'Bank Branch Hub' }}</span>
-                                        <span class="text-slate-300">•</span>
-                                        <span class="font-mono text-slate-400">SM: {{ currentUser.name }}</span>
-                                        <span class="text-slate-300">•</span>
-                                        <span class="text-indigo-600 font-bold flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                                            <span>Live Showroom Floor Sourcing</span>
+                                        <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                            <i class="fas fa-check text-[9px]"></i>
+                                            <span>All Dispatched</span>
                                         </span>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Actions: Desk Standee QR, Copy Link, WhatsApp Desk -->
-                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                                <button type="button" @click="showSmQrStandeeModal = true" class="px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fas fa-qrcode text-xs"></i>
-                                    <span>Desk Standee QR</span>
-                                </button>
-                                <button type="button" @click="copySmApplyLink" class="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fas fa-link text-xs"></i>
-                                    <span>Copy Apply Link</span>
-                                </button>
-                                <button type="button" @click="shareSmApplyWhatsApp" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fab fa-whatsapp text-xs"></i>
-                                    <span>WhatsApp Desk</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 4 Delivery Status KPI Metrics Cards (Interactive Filter) -->
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <!-- Metric 1: Total Showroom Inflow -->
-                            <div @click="smInboundFilter = 'all'" :class="smInboundFilter === 'all' ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-[#4F46E5]/40 transition group">
-                                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-[#4F46E5]/10 group-hover:text-[#4F46E5] transition">
-                                    <i class="fas fa-folder-open"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">All Inbound</p>
-                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-[#4F46E5] transition">{{ smInboundStats.total }}</p>
-                                    <p class="text-[9px] font-bold text-slate-500">Vol: ₹{{ smInboundStats.totalVol }} L</p>
-                                </div>
-                            </div>
-
-                            <!-- Metric 2: Awaiting RO Allocation -->
-                            <div @click="smInboundFilter = 'pending'" :class="smInboundFilter === 'pending' ? 'border-amber-400 ring-2 ring-amber-400/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-amber-400/40 transition group">
-                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-amber-100 transition">
-                                    <i class="fas fa-bolt"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">Awaiting Dispatch</p>
-                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-amber-600 transition">{{ smInboundStats.pending }}</p>
-                                    <p class="text-[9px] font-bold text-amber-600">Action Required ⚡</p>
-                                </div>
-                            </div>
-
-                            <!-- Metric 3: Dispatched to RO -->
-                            <div @click="smInboundFilter = 'dispatched'" :class="smInboundFilter === 'dispatched' ? 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-[#4F46E5]/40 transition group">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-indigo-100 transition">
-                                    <i class="fas fa-paper-plane"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">Dispatched to RO</p>
-                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-[#4F46E5] transition">{{ smInboundStats.dispatched }}</p>
-                                    <p class="text-[9px] font-bold text-indigo-600">In Bank Review 🚀</p>
-                                </div>
-                            </div>
-
-                            <!-- Metric 4: Approved / DO Ready -->
-                            <div @click="smInboundFilter = 'sanction'" :class="smInboundFilter === 'sanction' ? 'border-emerald-400 ring-2 ring-emerald-400/10' : 'border-slate-200/80'" class="bg-white rounded-2xl shadow-xs border p-4 flex items-center cursor-pointer hover:border-emerald-400/40 transition group">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base mr-3 shrink-0 group-hover:bg-emerald-100 transition">
-                                    <i class="fas fa-car-side"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider truncate">DO Ready</p>
-                                    <p class="text-xl font-black text-slate-900 leading-tight group-hover:text-emerald-600 transition">{{ smInboundStats.sanctioned }}</p>
-                                    <p class="text-[9px] font-bold text-emerald-600">Approved for Delivery 🚗</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Showroom Floor Desk & QR Standee Banner -->
-                        <div class="bg-gradient-to-r from-indigo-50/70 via-white to-slate-50 rounded-2xl border border-indigo-100/80 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div class="flex items-center gap-4 min-w-0 w-full md:w-auto">
-                                <div class="bg-white p-2 rounded-xl shadow-xs shrink-0 border border-indigo-100 text-center">
-                                    <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(smPublicApplyUrl)" alt="Hub QR Code" class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-contain mx-auto">
-                                    <div class="text-[8px] font-black text-indigo-700 uppercase tracking-wider mt-1">Scan to Punch</div>
-                                </div>
-                                <div class="space-y-1 min-w-0">
-                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100/70 text-indigo-800 border border-indigo-200">
-                                        <i class="fas fa-store text-[9px]"></i>
-                                        <span>Showroom QR Standee & Digital Desk</span>
-                                    </div>
-                                    <h3 class="text-sm sm:text-base font-black text-slate-900 tracking-tight truncate">
-                                        Partner Showroom Application Desk & Multi-Lender Inflow Hub
-                                    </h3>
-                                    <p class="text-xs text-slate-500 max-w-xl line-clamp-2">
-                                        Share this QR standee or link with showroom sales consultants (Maruti, Hyundai, Tata, Kia, etc.). Leads punched on the floor flow directly into this radar for instant RO dispatch.
+                                    <p class="text-xs text-slate-500 truncate">
+                                        Direct car loan leads punched by partner showroom sales consultants (DSEs)
                                     </p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
-                                <button type="button" @click="showSmQrStandeeModal = true" class="flex-1 md:flex-initial px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
-                                    <i class="fas fa-expand text-slate-500"></i>
-                                    <span>Print Standee</span>
+
+                            <!-- QR Standee & Quick Share Actions -->
+                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                <button type="button" @click="showSmQrStandeeModal = true" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[#4F46E5] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-qrcode text-xs"></i>
+                                    <span>Showroom QR Standee</span>
                                 </button>
-                                <button type="button" @click="copySmApplyLink" class="flex-1 md:flex-initial px-3.5 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
-                                    <i class="fas fa-copy text-xs"></i>
-                                    <span>Copy Desk Link</span>
+                                <button type="button" @click="copySmApplyLink" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition cursor-pointer" title="Copy Apply Link">
+                                    <i class="fas fa-link text-xs"></i>
+                                </button>
+                                <button type="button" @click="shareSmApplyWhatsApp" class="p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 rounded-xl text-xs font-bold transition cursor-pointer" title="Share on WhatsApp">
+                                    <i class="fab fa-whatsapp text-xs"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Search & Status Filter Controls -->
+                        <!-- Frictionless Triage Control Bar: Segmented Pills + Search -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                            <div class="relative flex-1 min-w-[200px]">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                <input v-model="smInboundSearch" type="text" placeholder="Search customer, phone, car model, showroom, DSE, or RO..." class="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-semibold outline-none focus:border-[#4F46E5] text-slate-800 shadow-2xs placeholder-slate-400">
-                                <button v-if="smInboundSearch" @click="smInboundSearch = ''" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
-                                    <i class="fas fa-times"></i>
+                            <!-- Segmented Filter Pills -->
+                            <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 overflow-x-auto">
+                                <button type="button" @click="smInboundFilter = 'pending'" :class="smInboundFilter === 'pending' ? 'bg-white text-amber-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500" :class="{'animate-pulse': smInboundStats.pending > 0}"></span>
+                                    <span>Awaiting Dispatch</span>
+                                    <span v-if="smInboundStats.pending > 0" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-500 text-white">
+                                        {{ smInboundStats.pending }}
+                                    </span>
                                 </button>
-                            </div>
-
-                            <!-- Filter Chips -->
-                            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                                <button type="button" @click="smInboundFilter = 'all'" :class="[smInboundFilter === 'all' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap']">
-                                    All ({{ smInboundStats.total }})
-                                </button>
-                                <button type="button" @click="smInboundFilter = 'pending'" :class="[smInboundFilter === 'pending' ? 'bg-amber-500 text-white shadow-xs' : 'bg-white text-amber-700 hover:bg-amber-50 border border-amber-200', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5']">
-                                    <i class="fas fa-bolt text-xs"></i>
-                                    <span>Awaiting Dispatch ({{ smInboundStats.pending }})</span>
-                                </button>
-                                <button type="button" @click="smInboundFilter = 'dispatched'" :class="[smInboundFilter === 'dispatched' ? 'bg-[#4F46E5] text-white shadow-xs' : 'bg-white text-[#4F46E5] hover:bg-indigo-50 border border-indigo-200', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5']">
+                                <button type="button" @click="smInboundFilter = 'dispatched'" :class="smInboundFilter === 'dispatched' ? 'bg-white text-indigo-700 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
                                     <i class="fas fa-paper-plane text-xs"></i>
                                     <span>Dispatched ({{ smInboundStats.dispatched }})</span>
                                 </button>
-                                <button type="button" @click="smInboundFilter = 'sanction'" :class="[smInboundFilter === 'sanction' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200', 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5']">
-                                    <i class="fas fa-car-side text-xs"></i>
-                                    <span>DO Ready ({{ smInboundStats.sanctioned }})</span>
+                                <button type="button" @click="smInboundFilter = 'all'" :class="smInboundFilter === 'all' ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-semibold'" class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+                                    <span>All ({{ smInboundStats.total }})</span>
+                                </button>
+                            </div>
+
+                            <!-- Compact Search -->
+                            <div class="relative min-w-[200px] flex-1 sm:flex-initial">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input v-model="smInboundSearch" type="text" placeholder="Search buyer, phone, car, dealer..." class="w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-[#4F46E5] text-slate-800 shadow-2xs placeholder-slate-400">
+                                <button v-if="smInboundSearch" @click="smInboundSearch = ''" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+                                    <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- INBOUND CARDS LIST -->
+                        <!-- STREAMLINED INBOUND LEADS LIST -->
                         <div class="space-y-3">
-                            <!-- Empty State -->
-                            <div v-if="filteredInboundFiles.length === 0" class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-2">
-                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center text-xl mx-auto">
-                                    <i class="fas fa-inbox"></i>
+                            <!-- Empty State: Pending Queue Clean -->
+                            <div v-if="filteredInboundFiles.length === 0 && smInboundFilter === 'pending' && !smInboundSearch" class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mx-auto shadow-2xs">
+                                    <i class="fas fa-check-circle"></i>
                                 </div>
-                                <h3 class="text-sm font-bold text-slate-800">No Showroom Leads Found</h3>
-                                <p class="text-xs text-slate-400 max-w-md mx-auto">
-                                    {{ smInboundSearch ? 'No showroom applications matched your search criteria.' : 'When partner showroom consultants submit new car loan requests to your branch hub, they will appear here instantly.' }}
-                                </p>
-                                <div v-if="smInboundSearch" class="pt-2">
-                                    <button type="button" @click="smInboundSearch = ''" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer">
-                                        Clear Search Filter
+                                <div class="space-y-1">
+                                    <h3 class="text-sm font-bold text-slate-900">All Showroom Leads Dispatched!</h3>
+                                    <p class="text-xs text-slate-400 max-w-sm mx-auto">
+                                        There are no unassigned dealer files in your queue. When showroom consultants punch a new file, it will appear here immediately.
+                                    </p>
+                                </div>
+                                <div v-if="smInboundStats.dispatched > 0" class="pt-1">
+                                    <button type="button" @click="smInboundFilter = 'dispatched'" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-[#4F46E5] border border-indigo-200 rounded-xl text-xs font-bold transition cursor-pointer">
+                                        View Dispatched Leads ({{ smInboundStats.dispatched }})
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Showroom Inbound File Cards -->
-                            <div v-for="file in filteredInboundFiles" :key="file.id" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'border-amber-200 bg-white hover:border-amber-300' : 'border-slate-200/80 bg-white hover:border-[#4F46E5]/40'" class="rounded-2xl border shadow-xs transition p-4 sm:p-5 space-y-3.5 relative">
-                                <!-- Card Header Row: Dealership / Brand, Lead Stage, Lead Age -->
-                                <div class="flex items-center justify-between gap-2 flex-wrap">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span v-if="file.origin === 'showroom_qr'" class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                                            <i class="fas fa-qrcode text-emerald-600"></i>
-                                            <span>Showroom QR</span>
-                                        </span>
-                                        <span v-else class="px-2.5 py-1 bg-indigo-50 text-[#4F46E5] border border-indigo-200 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                                            <i class="fas fa-store text-indigo-600"></i>
-                                            <span>{{ file.dealershipName || file.sourcingChannel || 'Partner Showroom' }}</span>
-                                        </span>
+                            <!-- Empty State: General / Search -->
+                            <div v-else-if="filteredInboundFiles.length === 0" class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-2">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto">
+                                    <i class="fas fa-inbox"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-800">No Leads Found</h3>
+                                <p class="text-xs text-slate-400 max-w-sm mx-auto">
+                                    {{ smInboundSearch ? 'No showroom applications matched your search.' : 'No files found in this tab.' }}
+                                </p>
+                                <button v-if="smInboundSearch" type="button" @click="smInboundSearch = ''" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer mt-1">
+                                    Clear Search
+                                </button>
+                            </div>
 
-                                        <span v-if="file.showroomBrand" class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-semibold">
+                            <!-- Showroom Inbound Lead Cards -->
+                            <div v-for="file in filteredInboundFiles" :key="file.id" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'border-amber-300/80 ring-1 ring-amber-400/20' : 'border-slate-200/80'" class="bg-white rounded-2xl border p-4 sm:p-5 space-y-3 transition hover:shadow-xs">
+                                <!-- Top Bar: Dealership provenance, Brand, DSE, Age -->
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider" :class="file.allocationStatus === 'pending_sm_dispatch' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'">
+                                            {{ file.dealershipName || file.sourcingChannel || 'Showroom Floor' }}
+                                        </span>
+                                        <span v-if="file.showroomBrand" class="text-xs font-bold text-slate-700">
                                             {{ file.showroomBrand }}
                                         </span>
-
-                                        <span v-if="file.salesLinkId" class="font-mono text-[11px] text-slate-400">
-                                            #{{ file.salesLinkId }}
+                                        <span v-if="file.dseName" class="text-xs text-slate-500 font-medium truncate">
+                                            • DSE: <strong class="text-slate-800">{{ file.dseName }}</strong>
                                         </span>
                                     </div>
-
-                                    <div class="flex items-center gap-2">
-                                        <!-- Stage Badge -->
-                                        <span v-if="file.allocationStatus === 'pending_sm_dispatch'" class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                            <span>Awaiting Dispatch</span>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span v-if="file.allocationStatus === 'pending_sm_dispatch'" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">
+                                            Awaiting Dispatch
                                         </span>
-                                        <span v-else :class="getStatusBadgeClass(file.status)" class="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
-                                            <span>{{ file.status || 'Login' }}</span>
+                                        <span v-else :class="getStatusBadgeClass(file.status)" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                            {{ file.status || 'Dispatched' }}
                                         </span>
-
-                                        <!-- Relative Time -->
-                                        <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                            <i class="fas fa-clock text-[10px]"></i>
-                                            <span>{{ getRelativeTime(file.createdAt) || formatDate(file.createdAt) }}</span>
+                                        <span class="text-[11px] text-slate-400 font-medium">
+                                            {{ getRelativeTime(file.createdAt) || formatDate(file.createdAt) }}
                                         </span>
                                     </div>
                                 </div>
 
-                                <!-- Card 3-Column Info Grid -->
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+                                <!-- Middle Row: Customer Info & Car/Loan Details -->
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
                                     <!-- Customer Profile -->
-                                    <div class="space-y-1">
-                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Details</div>
-                                        <div class="text-sm font-black text-slate-900">{{ file.customerName }}</div>
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <a v-if="file.customerPhone" :href="'tel:' + file.customerPhone" class="text-xs font-semibold text-slate-600 hover:text-[#4F46E5] flex items-center gap-1 transition">
+                                    <div class="space-y-0.5 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="text-base font-black text-slate-900 tracking-tight truncate">
+                                                {{ file.customerName }}
+                                            </h3>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                                                {{ file.customerProfile || 'Salaried' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-xs text-slate-500">
+                                            <a v-if="file.customerPhone" :href="'tel:' + file.customerPhone" class="hover:text-[#4F46E5] font-medium flex items-center gap-1 transition">
                                                 <i class="fas fa-phone text-[10px] text-slate-400"></i>
                                                 <span>{{ file.customerPhone }}</span>
                                             </a>
-                                            <button v-if="file.customerPhone" type="button" @click="contactCustomerWhatsApp(file)" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md text-[10px] font-bold flex items-center gap-1 transition cursor-pointer">
-                                                <i class="fab fa-whatsapp text-emerald-600"></i>
-                                                <span>Chat</span>
-                                            </button>
-                                        </div>
-                                        <div class="text-[11px] text-slate-500">
-                                            Profile: <span class="font-semibold text-slate-700">{{ file.customerProfile || 'Salaried' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Vehicle & Loan Request -->
-                                    <div class="space-y-1">
-                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vehicle & Finance</div>
-                                        <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5 truncate">
-                                            <i class="fas fa-car-side text-indigo-500 text-xs shrink-0"></i>
-                                            <span class="truncate">{{ file.vehicleModel || 'Car Model N/A' }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                                                Req: ₹{{ file.loanAmount }} L
-                                            </span>
-                                            <span v-if="file.onRoadPrice" class="text-[11px] font-medium text-slate-500">
-                                                (On-Road: ₹{{ file.onRoadPrice }} L)
-                                            </span>
-                                        </div>
-                                        <div v-if="file.loanTenureMonths" class="text-[11px] text-slate-500">
-                                            Tenure: <span class="font-semibold text-slate-700">{{ file.loanTenureMonths }} Months</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Showroom Sourcing Desk & Consultant -->
-                                    <div class="space-y-1">
-                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Showroom Sourcing</div>
-                                        <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                                            <i class="fas fa-user-tie text-slate-500 text-[10px]"></i>
-                                            <span>{{ file.dseName || 'Showroom Consultant' }}</span>
-                                            <span v-if="file.dseEmployeeCode" class="text-slate-400 font-normal">({{ file.dseEmployeeCode }})</span>
-                                        </div>
-                                        <div v-if="file.dealershipName" class="text-[11px] text-slate-600 font-medium truncate">
-                                            🏢 {{ file.dealershipName }}
-                                        </div>
-                                        <div v-if="file.dsePhone" class="flex items-center gap-2 flex-wrap">
-                                            <a :href="'tel:' + file.dsePhone" class="text-xs font-semibold text-slate-600 hover:text-[#4F46E5] flex items-center gap-1 transition">
-                                                <i class="fas fa-phone text-[10px] text-slate-400"></i>
-                                                <span>{{ file.dsePhone }}</span>
-                                            </a>
-                                            <button type="button" @click="contactDseWhatsApp(file)" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md text-[10px] font-bold flex items-center gap-1 transition cursor-pointer">
-                                                <i class="fab fa-whatsapp text-emerald-600"></i>
+                                            <button v-if="file.customerPhone" type="button" @click="contactCustomerWhatsApp(file)" class="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1 text-[11px] cursor-pointer">
+                                                <i class="fab fa-whatsapp"></i>
                                                 <span>Chat</span>
                                             </button>
                                         </div>
                                     </div>
+
+                                    <!-- Car & Loan Amount Pill -->
+                                    <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+                                        <div class="px-3 py-1.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-left sm:text-right">
+                                            <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
+                                                <i class="fas fa-car-side text-[10px]"></i>
+                                                <span>{{ file.vehicleModel || 'Car Loan' }}</span>
+                                            </div>
+                                            <div class="text-sm font-black text-indigo-700">
+                                                ₹{{ file.loanAmount }} Lakhs
+                                                <span v-if="file.onRoadPrice" class="text-[10px] text-slate-400 font-normal">({{ file.onRoadPrice }} L On-Road)</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Remarks / Notes if present -->
-                                <div v-if="file.notes" class="p-2.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-100 flex items-start gap-2">
-                                    <i class="fas fa-comment-dots text-slate-400 mt-0.5 shrink-0"></i>
-                                    <span class="line-clamp-2">{{ file.notes }}</span>
+                                <!-- Remarks Note if present -->
+                                <div v-if="file.notes" class="px-3 py-1.5 bg-slate-50 rounded-lg text-xs text-slate-600 border border-slate-100 flex items-start gap-1.5">
+                                    <i class="fas fa-comment-dots text-slate-400 text-[10px] mt-0.5 shrink-0"></i>
+                                    <span class="italic text-[11px]">"{{ file.notes }}"</span>
                                 </div>
 
-                                <!-- Allocation Bar: Action Area -->
-                                <!-- State 1: Awaiting RO Dispatch -->
-                                <div v-if="file.allocationStatus === 'pending_sm_dispatch'" class="pt-3 border-t border-amber-100/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/40 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3 sm:px-5 rounded-b-2xl">
-                                    <div class="flex items-center gap-2 flex-1 max-w-md">
-                                        <label class="text-xs font-bold text-amber-900 shrink-0 flex items-center gap-1">
+                                <!-- Action Row: Pending Dispatch vs Dispatched Status -->
+                                <div v-if="file.allocationStatus === 'pending_sm_dispatch'" class="p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        <span class="text-xs font-bold text-amber-900 shrink-0 flex items-center gap-1">
                                             <i class="fas fa-user-plus text-amber-600"></i>
                                             <span>Assign RO:</span>
-                                        </label>
-                                        <select v-model="inboundSelectedRo[file.id]" class="flex-1 bg-white border border-amber-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-[#4F46E5] transition cursor-pointer shadow-2xs">
+                                        </span>
+                                        <select v-model="inboundSelectedRo[file.id]" class="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-[#4F46E5] transition shadow-2xs cursor-pointer">
                                             <option value="">-- Choose Relationship Officer --</option>
                                             <option v-for="ro in activeRoUsers" :key="ro.id" :value="ro.id">
                                                 {{ ro.name }} ({{ ro.salesLinkId || ro.employeeCode || 'RO' }})
                                             </option>
                                         </select>
                                     </div>
-
-                                    <button type="button" @click="assignInboundFileToRo(file, inboundSelectedRo[file.id])" :disabled="!inboundSelectedRo[file.id] || inboundSubmitting[file.id]" class="px-4 py-2 bg-gradient-to-r from-[#4F46E5] to-[#4338CA] hover:from-[#4338CA] hover:to-[#3730A3] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <button type="button" @click="assignInboundFileToRo(file, inboundSelectedRo[file.id])" :disabled="!inboundSelectedRo[file.id] || inboundSubmitting[file.id]" class="w-full sm:w-auto px-4 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-lg text-xs font-bold shadow-xs active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5 cursor-pointer">
                                         <i class="fas fa-bolt text-yellow-300"></i>
                                         <span>Dispatch to RO</span>
                                     </button>
                                 </div>
 
-                                <!-- State 2: Dispatched to Branch RO -->
-                                <div v-else class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3 sm:px-5 rounded-b-2xl">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-[#4F46E5] flex items-center justify-center text-xs shrink-0 font-black">
-                                            <i class="fas fa-user-shield"></i>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-bold text-slate-900 truncate">
-                                                Assigned RO: <span class="text-[#4F46E5]">{{ file.roName || 'Branch RO' }}</span>
-                                            </div>
-                                            <div class="text-[10px] text-slate-400">
-                                                Dispatched: {{ formatDate(file.allocatedAt || file.updatedAt) }}
-                                            </div>
-                                        </div>
+                                <div v-else class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 text-xs text-slate-700">
+                                        <i class="fas fa-user-shield text-[#4F46E5]"></i>
+                                        <span>Assigned RO: <strong class="text-slate-900">{{ file.roName || 'Branch RO' }}</strong></span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="text-[11px] text-slate-400">{{ formatDate(file.allocatedAt || file.updatedAt) }}</span>
                                     </div>
-
                                     <div class="flex items-center gap-2 self-end sm:self-center">
-                                        <!-- Reassign RO select (optional dropdown) -->
-                                        <select v-model="inboundSelectedRo[file.id]" @change="assignInboundFileToRo(file, inboundSelectedRo[file.id])" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-[#4F46E5] transition cursor-pointer shadow-2xs">
+                                        <select v-model="inboundSelectedRo[file.id]" @change="assignInboundFileToRo(file, inboundSelectedRo[file.id])" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none focus:border-[#4F46E5] transition cursor-pointer">
                                             <option value="">Reassign RO...</option>
                                             <option v-for="ro in activeRoUsers" :key="ro.id" :value="ro.id">
                                                 {{ ro.name }}
                                             </option>
                                         </select>
-
-                                        <button type="button" @click="sendRoDispatchWhatsApp(file)" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs">
+                                        <button type="button" @click="sendRoDispatchWhatsApp(file)" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer">
                                             <i class="fab fa-whatsapp text-emerald-600"></i>
-                                            <span>WhatsApp RO</span>
+                                            <span>Nudge RO</span>
                                         </button>
                                     </div>
                                 </div>
@@ -9161,13 +9034,13 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-137"></script>
+    <script type="module" src="js/app.js?v=force-update-138"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-137')
+                navigator.serviceWorker.register('./sw.js?v=force-update-138')
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);
