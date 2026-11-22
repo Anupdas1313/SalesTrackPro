@@ -1,101 +1,219 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // -------------------------------------------------------------
-    // 1. MASTER SUPER ADMIN
-    // -------------------------------------------------------------
-    function isSuperAdmin() {
-      return request.auth != null && request.auth.token.email == 'anupdas8354@gmail.com';
-    }
-    
-    function isAuthenticated() {
+
+    function signedIn() {
       return request.auth != null;
+    }
+
+    function dir() {
+      return get(/databases/$(database)/documents/directory/$(request.auth.uid)).data;
+    }
+
+    function hasDir() {
+      return signedIn() && exists(/databases/$(database)/documents/directory/$(request.auth.uid));
+    }
+
+    function active() {
+      return hasDir() && dir().status == 'active';
+    }
+
+    function role() {
+      return active() ? dir().role : '';
+    }
+
+    function tenant() {
+      return active() ? dir().tenantId : null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && (
+        request.auth.token.email == 'anupdas8354@gmail.com' ||
+        (hasDir() && dir().role == 'super_admin')
+      );
     }
 
     // Master override for Platform Owner
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }
-    
+
+    // -------------------------------------------------------------
+    // 1. IDENTITY DIRECTORY (/directory)
+    // -------------------------------------------------------------
+    match /directory/{uid} {
+      allow read: if signedIn() && (isSuperAdmin() || request.auth.uid == uid);
+      allow write: if signedIn() && (isSuperAdmin() || (request.auth.uid == uid && request.resource.data.email == request.auth.token.email));
+    }
+
     // -------------------------------------------------------------
     // 2. USER ACCOUNTS & PROFILES (/users)
     // -------------------------------------------------------------
     match /users/{userId} {
-      // Any authenticated user can read users to find supervisors/officers
-      allow read: if isAuthenticated();
+      // Allow reading own profile by uid or by email query, or supervisor/super_admin or same tenant
+      allow read: if signedIn() && (
+        isSuperAdmin() ||
+        resource.data.email == request.auth.token.email ||
+        userId == request.auth.uid ||
+        (active() && (
+          role() in ['super_admin', 'zsm', 'asm'] ||
+          (resource.data.tenantId != null && resource.data.tenantId == tenant()) ||
+          resource.data.supervisorId == request.auth.uid
+        ))
+      );
       
-      // CREATE: Cannot create a super_admin account unless you are the owner
-      allow create: if isAuthenticated() && 
-        request.resource.data.role != 'super_admin';
+      // CREATE: super_admin or branch/area managers inviting officers
+      allow create: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && role() in ['super_admin', 'sm', 'asm', 'zsm']) ||
+        request.resource.data.email == request.auth.token.email
+      );
       
-      // UPDATE: 
-      // - Cannot elevate self to super_admin
-      // - Suspended accounts cannot un-suspend themselves
-      allow update: if isAuthenticated() && 
-        (isSuperAdmin() || request.resource.data.role != 'super_admin');
+      // UPDATE: Self or tenant-scoped manager or super_admin
+      allow update: if signedIn() && (
+        isSuperAdmin() ||
+        resource.data.email == request.auth.token.email ||
+        userId == request.auth.uid ||
+        (active() && (
+          role() == 'super_admin' ||
+          (resource.data.tenantId != null && resource.data.tenantId == tenant()) ||
+          resource.data.supervisorId == request.auth.uid
+        ))
+      );
       
-      // DELETE: Only Super Admin and SMs can delete RO profiles; ROs cannot delete SMs
-      allow delete: if isAuthenticated() && 
-        (isSuperAdmin() || resource.data.role == 'ro');
+      // DELETE: Super Admin or SM offboarding RO
+      allow delete: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (role() == 'super_admin' || (role() == 'sm' && resource.data.tenantId == tenant())))
+      );
     }
-    
+
     // -------------------------------------------------------------
     // 3. WORKSPACES & BRANCH HUBS (/workspaces)
     // -------------------------------------------------------------
-    match /workspaces/{workspaceId} {
-      allow read: if isAuthenticated();
-      // Only Super Admin can create or delete branch workspaces
+    match /workspaces/{wsId} {
+      // Authenticated users and DSEs can read workspaces to discover branches
+      allow read: if signedIn();
       allow create, delete: if isSuperAdmin();
-      // Updating branch details requires authentication
-      allow update: if isAuthenticated();
+      allow update: if signedIn() && (isSuperAdmin() || (active() && (role() == 'sm' && wsId == tenant())));
     }
-    
+
     // -------------------------------------------------------------
     // 4. LOAN FILES (/loanFiles)
     // -------------------------------------------------------------
     match /loanFiles/{fileId} {
-      allow read: if isAuthenticated();
-      
-      // CREATE: Must contain tenantId and customer details
-      allow create: if isAuthenticated() && 
-        request.resource.data.tenantId != null &&
-        request.resource.data.customerName != null;
-      
-      // UPDATE: Authenticated branch members can update deal stages
-      allow update: if isAuthenticated();
-      
-      // DELETE: Only the creator of the file or Super Admin can delete files
-      allow delete: if isAuthenticated() && 
-        (isSuperAdmin() || resource.data.userId == request.auth.uid || resource.data.roId == request.auth.uid);
+      allow read: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          role() in ['super_admin', 'zsm', 'asm'] ||
+          (resource.data.tenantId != null && resource.data.tenantId == tenant()) ||
+          resource.data.roId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          resource.data.dseId == request.auth.uid ||
+          (resource.data.userEmail != null && resource.data.userEmail == request.auth.token.email)
+        ))
+      );
+
+      allow create: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          (request.resource.data.tenantId != null && request.resource.data.tenantId == tenant()) ||
+          (role() == 'dse' && request.resource.data.dseId == request.auth.uid) ||
+          role() in ['super_admin', 'sm', 'ro']
+        ))
+      );
+
+      allow update: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          role() in ['super_admin', 'zsm', 'asm'] ||
+          (resource.data.tenantId != null && resource.data.tenantId == tenant()) ||
+          resource.data.roId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          resource.data.dseId == request.auth.uid
+        ))
+      );
+
+      allow delete: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          resource.data.roId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          (role() == 'sm' && resource.data.tenantId == tenant())
+        ))
+      );
     }
-    
+
     // -------------------------------------------------------------
     // 5. DAILY EOD SUBMISSIONS (/eod_reports)
     // -------------------------------------------------------------
     match /eod_reports/{reportId} {
-      allow read: if isAuthenticated();
-      // ROs and SMs can submit or revise their daily EOD reports
-      allow create, update: if isAuthenticated() && request.resource.data.roName != null;
-      // Officers CANNOT delete historical EOD reports (Prevents covering up numbers)
+      allow read: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          role() in ['super_admin', 'zsm', 'asm'] ||
+          (resource.data.tenantId != null && resource.data.tenantId == tenant()) ||
+          resource.data.userId == request.auth.uid
+        ))
+      );
+
+      allow create: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          (request.resource.data.tenantId != null && request.resource.data.tenantId == tenant()) ||
+          request.resource.data.userId == request.auth.uid
+        ))
+      );
+
+      allow update: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && resource.data.userId == request.auth.uid)
+      );
+
       allow delete: if isSuperAdmin();
     }
-    
+
     // -------------------------------------------------------------
-    // 6. AREA & SUPERVISOR INVITATIONS (/invitations)
+    // 6. INVITATIONS (/invitations)
     // -------------------------------------------------------------
     match /invitations/{inviteId} {
-      allow read, write: if isAuthenticated();
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if signedIn() && (isSuperAdmin() || (active() && resource.data.fromUserId == request.auth.uid));
     }
-    
+
     // -------------------------------------------------------------
-    // 7. GLOBAL ANNOUNCEMENTS & SYSTEM (/system)
+    // 7. SALES TARGETS & DRIVES (/salesTargets, /salesDrives)
+    // -------------------------------------------------------------
+    match /salesTargets/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn() && (isSuperAdmin() || (active() && role() in ['sm', 'asm', 'zsm', 'super_admin']));
+    }
+
+    match /salesDrives/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn() && (isSuperAdmin() || (active() && role() in ['sm', 'asm', 'zsm', 'super_admin']));
+    }
+
+    // -------------------------------------------------------------
+    // 8. SYSTEM CONFIG & OWNERS (/system)
     // -------------------------------------------------------------
     match /system/{document=**} {
-      // Everyone can read system announcements
-      allow read: if isAuthenticated();
-      // ONLY Super Admin can broadcast or alter global system settings
+      allow read: if signedIn();
       allow write: if isSuperAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // 9. PUBLIC LEAD INTAKE (/publicLeads)
+    // -------------------------------------------------------------
+    match /publicLeads/{id} {
+      allow create: if request.resource.data.keys().hasAll(['tenantId','customerName','customerPhone','loanAmount','createdAt'])
+                    && request.resource.data.loanAmount > 0
+                    && request.resource.data.customerPhone is string
+                    && request.resource.data.customerPhone.size() >= 10
+                    && request.resource.data.tenantId is string;
+      allow read: if signedIn() && (isSuperAdmin() || (active() && (role() in ['super_admin', 'sm', 'asm', 'zsm'])));
+      allow update, delete: if isSuperAdmin();
     }
   }
 }

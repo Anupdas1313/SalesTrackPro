@@ -52,11 +52,88 @@ export const deleteWorkspace = async (id) => {
     await deleteDoc(docRef);
 };
 
+export const getWorkspaceBySalesLinkId = async (salesLinkId) => {
+    if (!salesLinkId) return null;
+    try {
+        const q = query(workspacesCol, where('salesLinkId', '==', salesLinkId.toUpperCase()), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) return null;
+        return { id: snap.docs[0].id, ...snap.docs[0].data() };
+    } catch (e) {
+        return null;
+    }
+};
+
+export const getActiveWorkspaces = async () => {
+    try {
+        const q = query(workspacesCol, where('status', '==', 'active'));
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+    } catch (e) {
+        console.warn("getActiveWorkspaces failed:", e);
+        return [];
+    }
+};
+
 // --- Users ---
 export const getROUsersByTenant = async (tenantId) => {
     const q = query(usersCol, where('role', '==', 'ro'), where('tenantId', '==', tenantId));
     const snapshot = await getDocs(q);
     return mapSnapshot(snapshot);
+};
+
+export const getUsersByTenant = async (tenantId) => {
+    if (!tenantId) return [];
+    try {
+        const q = query(usersCol, where('tenantId', '==', tenantId));
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+    } catch (e) {
+        console.warn("getUsersByTenant failed:", e);
+        return [];
+    }
+};
+
+export const getSMUserByTenant = async (tenantId) => {
+    if (!tenantId) return null;
+    try {
+        const q = query(usersCol, where('tenantId', '==', tenantId), where('role', 'in', ['sm', 'admin']), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            const data = { id: snap.docs[0].id, ...snap.docs[0].data() };
+            if (data.role) data.role = normaliseRole(data.role);
+            return data;
+        }
+    } catch (e) {
+        console.warn("getSMUserByTenant query failed:", e);
+    }
+    return null;
+};
+
+export const getUsersByRole = async (role) => {
+    if (!role) return [];
+    try {
+        const q = query(usersCol, where('role', '==', normaliseRole(role)));
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+    } catch (e) {
+        console.warn("getUsersByRole failed:", e);
+        return [];
+    }
+};
+
+// --- Identity Directory (Firestore Security Authorization) ---
+export const upsertDirectoryEntry = async (uid, payload) => {
+    if (!uid) return;
+    try {
+        const docRef = doc(db, 'directory', uid);
+        await setDoc(docRef, {
+            ...payload,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    } catch (e) {
+        console.warn("Could not upsert directory entry:", e);
+    }
 };
 
 export const addUser = async (userData) => {
@@ -73,6 +150,7 @@ export const getAllUsers = async () => {
 
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
+export { auth };
 
 export const loginWithGoogle = async () => {
     googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -122,16 +200,15 @@ export const getUserByEmployeeCode = async (employeeCode) => {
     try {
         const q = query(usersCol, where('employeeCode', '==', clean), limit(1));
         const snapshot = await getDocs(q);
-        if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        if (!snapshot.empty) {
+            const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            if (data.role) data.role = normaliseRole(data.role);
+            return data;
+        }
     } catch (e) {
-        console.warn("Index query for employeeCode failed, falling back to full scan:", e);
+        console.warn("Index query for employeeCode failed:", e);
     }
-    try {
-        const all = await getAllUsers();
-        return all.find(u => u.employeeCode && u.employeeCode.trim().toUpperCase() === clean) || null;
-    } catch (e) {
-        return null;
-    }
+    return null;
 };
 
 export const getUserByPhone = async (phone) => {
@@ -139,18 +216,18 @@ export const getUserByPhone = async (phone) => {
     const cleanDigits = String(phone).replace(/\D/g, '').slice(-10);
     if (!cleanDigits || cleanDigits.length < 10) return null;
     try {
-        const q = query(usersCol, where('phone', '==', cleanDigits), limit(1));
+        const candidates = [cleanDigits, '+91' + cleanDigits, '91' + cleanDigits];
+        const q = query(usersCol, where('phone', 'in', candidates), limit(1));
         const snapshot = await getDocs(q);
-        if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        if (!snapshot.empty) {
+            const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            if (data.role) data.role = normaliseRole(data.role);
+            return data;
+        }
     } catch (e) {
-        console.warn("Index query for phone failed, falling back to full scan:", e);
+        console.warn("Query for phone failed:", e);
     }
-    try {
-        const all = await getAllUsers();
-        return all.find(u => u.phone && String(u.phone).replace(/\D/g, '').endsWith(cleanDigits)) || null;
-    } catch (e) {
-        return null;
-    }
+    return null;
 };
 
 export const getSupervisorNameForUser = async (user) => {
@@ -167,8 +244,7 @@ export const getSupervisorNameForUser = async (user) => {
     }
     if (user.tenantId) {
         try {
-            const all = await getAllUsers();
-            const sm = all.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
+            const sm = await getSMUserByTenant(user.tenantId);
             if (sm && sm.name) return sm.name;
         } catch (e) {}
     }
@@ -257,10 +333,8 @@ export const getLoanFilesByDSE = async (dseId) => {
         const snapshot = await getDocs(q);
         return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (e) {
-        console.warn("Index query for getLoanFilesByDSE failed, falling back to scan:", e);
-        const all = await getAllLoanFiles();
-        const clean = dseId.toLowerCase();
-        return all.filter(f => f.dseId === dseId || (f.userEmail && f.userEmail.toLowerCase() === clean));
+        console.warn("Index query for getLoanFilesByDSE failed:", e);
+        return [];
     }
 };
 
@@ -426,15 +500,8 @@ export const createInvitation = async (inviteData) => {
     let targetUser = null;
     if (targetEmail) targetUser = await getUserByEmail(targetEmail);
     if (!targetUser && targetSalesLinkId) targetUser = await getUserBySalesLinkId(targetSalesLinkId);
-    if (!targetUser && (targetPhone || targetEmp)) {
-        try {
-            const all = await getAllUsers();
-            targetUser = all.find(u => 
-                (targetPhone && u.phone && u.phone.replace(/\D/g, '').endsWith(targetPhone)) ||
-                (targetEmp && u.employeeCode && u.employeeCode.toUpperCase() === targetEmp)
-            );
-        } catch (e) {}
-    }
+    if (!targetUser && targetPhone) targetUser = await getUserByPhone(targetPhone);
+    if (!targetUser && targetEmp) targetUser = await getUserByEmployeeCode(targetEmp);
 
     if (targetUser && targetUser.supervisorId && targetUser.supervisorId !== inviteData.fromUserId) {
         let mgrName = targetUser.supervisorName || 'another Area Sales Manager';
@@ -789,19 +856,6 @@ export const findUserByAnyIdentifier = async (identifier) => {
         const snapEmp = await getDocs(qEmp);
         if (!snapEmp.empty) return { id: snapEmp.docs[0].id, ...snapEmp.docs[0].data() };
     }
-
-    // 5. Fallback scan all users if not found by index
-    try {
-        const all = await getAllUsers();
-        const found = all.find(u => 
-            (u.email && u.email.toLowerCase() === cleanLower) ||
-            (u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper) ||
-            (u.phone && u.phone.replace(/\D/g, '').endsWith(cleanDigits.slice(-10))) ||
-            (u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper) ||
-            (u.name && u.name.toLowerCase() === cleanLower)
-        );
-        if (found) return found;
-    } catch (e) {}
 
     return null;
 };

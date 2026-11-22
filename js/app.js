@@ -71,6 +71,17 @@ const app = createApp({
                     if (freshUser.supervisorId) currentUser.value.supervisorId = freshUser.supervisorId;
                     if (freshUser.tenantId) currentUser.value.tenantId = freshUser.tenantId;
                 }
+
+                // Sync directory entry on real-time profile changes
+                if (db.auth?.currentUser?.uid && freshUser) {
+                    db.upsertDirectoryEntry(db.auth.currentUser.uid, {
+                        email: freshUser.email,
+                        role: freshUser.role,
+                        tenantId: freshUser.tenantId || null,
+                        status: freshUser.status || 'active',
+                        userId: freshUser.id
+                    }).catch(() => {});
+                }
             });
         };
         const loginForm = ref({ username: '', password: '' });
@@ -724,12 +735,10 @@ const app = createApp({
                 try {
                     ws = await db.getWorkspace(hubKey);
                     if (!ws) {
-                        const allWs = await db.getAllWorkspaces();
-                        ws = allWs.find(w => w.id === hubKey || w.salesLinkId === hubKey);
+                        ws = await db.getWorkspaceBySalesLinkId(hubKey);
                     }
                     if (!ws) {
-                        const allUsers = await db.getAllUsers();
-                        const smUser = allUsers.find(u => u.salesLinkId === hubKey || u.id === hubKey || u.tenantId === hubKey);
+                        const smUser = await db.getUserBySalesLinkId(hubKey) || await db.getUserById(hubKey);
                         if (smUser) {
                             publicApplySmUser.value = smUser;
                             if (smUser.tenantId) {
@@ -4113,8 +4122,8 @@ const app = createApp({
 
                 // Fetch all registered SM users for dropdown and live multi-identifier matching
                 try {
-                    const allUsers = await db.getAllUsers();
-                    allRegisteredSMs.value = allUsers.filter(u => u.role === 'sm' && u.id !== currentUser.value.id);
+                    const smList = await db.getUsersByRole('sm');
+                    allRegisteredSMs.value = smList.filter(u => u.id !== currentUser.value.id);
                 } catch (smErr) {
                     console.warn("Could not load all SMs:", smErr);
                 }
@@ -4513,30 +4522,19 @@ const app = createApp({
 
         // Data Loading
         const loadSuperAdminData = async () => {
+            // super_admin only: system-wide workspace inventory
             allWorkspaces.value = await db.getAllWorkspaces();
+            // super_admin only: full platform personnel roster
             roUsers.value = await db.getAllUsers();
+            // super_admin only: system-wide loan file ledger
             allFiles.value = await db.getAllLoanFiles();
         };
 
         const loadDseData = async () => {
             if (!currentUser.value?.id) return;
             try {
-                let files = await db.getLoanFilesByDSE(currentUser.value.id);
-                try {
-                    const all = await db.getAllLoanFiles();
-                    const email = (currentUser.value.email || '').toLowerCase();
-                    const salesLinkId = currentUser.value.salesLinkId || '';
-                    const extraFiles = all.filter(f => 
-                        f.dseId === currentUser.value.id || 
-                        (email && f.userEmail && f.userEmail.toLowerCase() === email) || 
-                        (salesLinkId && f.dseId === salesLinkId)
-                    );
-                    if (extraFiles.length > files.length) {
-                        files = extraFiles;
-                    }
-                } catch (extraErr) {}
-                dseFiles.value = files;
-                allWorkspaces.value = await db.getAllWorkspaces();
+                dseFiles.value = await db.getLoanFilesByDSE(currentUser.value.id);
+                allWorkspaces.value = await db.getActiveWorkspaces();
                 if (!newDseFileForm.value.targetTenantId && allWorkspaces.value.length > 0) {
                     newDseFileForm.value.targetTenantId = allWorkspaces.value[0].id;
                 }
@@ -4549,7 +4547,7 @@ const app = createApp({
             dseFileError.value = '';
             if (allWorkspaces.value.length === 0) {
                 try {
-                    allWorkspaces.value = await db.getAllWorkspaces();
+                    allWorkspaces.value = await db.getActiveWorkspaces();
                 } catch(e) {}
             }
             newDseFileForm.value = {
@@ -4793,17 +4791,14 @@ const app = createApp({
         };
 
         const loadSmData = async () => {
-            if (!currentUser.value?.tenantId) {
-                // Legacy SM data load (accounts without tenantId)
-                const files = await db.getAllLoanFiles();
-                allFiles.value = files.filter(f => !f.tenantId);
-                const allU = await db.getAllUsers();
-                roUsers.value = allU.filter(u => u.role === 'ro' && !u.tenantId);
-                smEods.value = [];
-            } else {
+            if (currentUser.value?.tenantId) {
                 allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
                 roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
                 smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
+            } else {
+                allFiles.value = [];
+                roUsers.value = [];
+                smEods.value = [];
             }
 
             // Ensure salesLinkId exists for SM
@@ -4958,8 +4953,7 @@ const app = createApp({
             } else if (currentUser.value.tenantId) {
                 // 2. Look in users collection for SM of this tenant
                 try {
-                    const allUsers = await db.getAllUsers();
-                    const smUser = allUsers.find(u => u.tenantId === currentUser.value.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                    const smUser = await db.getSMUserByTenant(currentUser.value.tenantId);
                     if (smUser) {
                         smName = smUser.name ? smUser.name.trim() : '';
                         smObj = {
@@ -5063,6 +5057,15 @@ const app = createApp({
 
                     const existing = await db.getUserByEmail(email);
                     if (existing) {
+                        if (googleUser?.uid) {
+                            db.upsertDirectoryEntry(googleUser.uid, {
+                                email: email,
+                                role: 'dse',
+                                tenantId: null,
+                                status: 'active',
+                                userId: existing.id
+                            }).catch(() => {});
+                        }
                         if (existing.role === 'dse') {
                             localStorage.setItem('axis_user', JSON.stringify(existing));
                             currentUser.value = existing;
@@ -5112,6 +5115,16 @@ const app = createApp({
                         status: 'active',
                         createdAt: new Date().toISOString()
                     });
+
+                    if (googleUser?.uid) {
+                        db.upsertDirectoryEntry(googleUser.uid, {
+                            email: email,
+                            role: 'dse',
+                            tenantId: null,
+                            status: 'active',
+                            userId: newUserId || email
+                        }).catch(() => {});
+                    }
 
                     const sessionUser = {
                         id: newUserId || email,
@@ -5239,6 +5252,16 @@ const app = createApp({
                     createdAt: new Date().toISOString()
                 });
 
+                if (googleUser?.uid) {
+                    db.upsertDirectoryEntry(googleUser.uid, {
+                        email: email,
+                        role: chosenRole,
+                        tenantId: workspaceId || null,
+                        status: 'active',
+                        userId: newUserId || email
+                    }).catch(() => {});
+                }
+
                 // Auto sign-in new user
                 const sessionUser = {
                     id: newUserId || email,
@@ -5299,6 +5322,18 @@ const app = createApp({
             }
             
             if (user) {
+                // Upsert identity directory entry for Firestore rules authorization
+                const authUid = googleUser?.uid || (db.auth?.currentUser ? db.auth.currentUser.uid : null);
+                if (authUid) {
+                    db.upsertDirectoryEntry(authUid, {
+                        email: user.email,
+                        role: user.role,
+                        tenantId: user.tenantId || null,
+                        status: user.status || 'active',
+                        userId: user.id
+                    }).catch(e => console.warn("Directory upsert notice:", e));
+                }
+
                 // Validate role against known roles
                 const validRoles = ['super_admin', 'zsm', 'asm', 'sm', 'ro', 'dse'];
                 const role = (user.role || '').toLowerCase().trim();
@@ -5330,8 +5365,7 @@ const app = createApp({
                 // If RO, ensure supervisor linkage is maintained
                 if (user.role === 'ro' && user.tenantId && (!user.supervisorId || !user.supervisorName)) {
                     try {
-                        const allUsers = await db.getAllUsers();
-                        const smUser = allUsers.find(u => u.tenantId === user.tenantId && (u.role === 'sm' || u.role === 'admin'));
+                        const smUser = await db.getSMUserByTenant(user.tenantId);
                         if (smUser) {
                             user.supervisorId = smUser.id;
                             user.supervisorName = smUser.name;
