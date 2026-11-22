@@ -31,11 +31,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Version Authority -->
+    <script src="js/version.js"></script>
+
     <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.27/vue.global.prod.min.js" integrity="sha384-zG+5z4iYz5ZWZ6DVbUCLQkLsseb7qYlyQTrKxiKzNYEwJtDfo8LqTOrWHGUOgKO7" crossorigin="anonymous"></script>
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.3" integrity="sha384-3eIL0rpIOGHnBRknN+xFqC/D/rZxbAtzeQGQ0sL9IsyePqGA7fLZpGRZaQTEBUov" crossorigin="anonymous"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -59,10 +62,10 @@
     </script>
 
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
     
     <!-- SheetJS (for Excel export) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js" integrity="sha384-7hwyYzxURfZMLwHgvEKrYEmM5tX+1DVWK5iDR4R69bOQeY90Q8B8n9Cobuyqybhw" crossorigin="anonymous"></script>
 
     <style>
         [v-cloak] { display: none !important; }
@@ -71,7 +74,7 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } 
     </style>
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" integrity="sha384-e6cc9LaIG7xZ3XD5B+jtr1NhTWPQGQdRCh6xiZ+ZFUtWCpg4ycv3Sh+SkZoopvUY" crossorigin="anonymous"></script>
 </head>
 <body class="text-slate-800 font-sans antialiased h-screen flex flex-col overflow-hidden bg-slate-50">
     
@@ -9057,13 +9060,14 @@
         </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js?v=force-update-140"></script>
+    <script type="module" src="js/app.js?v=1.4.1"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=force-update-140')
+                const version = window.APP_VERSION || '1.4.1';
+                navigator.serviceWorker.register('./sw.js?v=' + encodeURIComponent(version))
                     .then((reg) => {
                         reg.update();
                         console.log('SalesLink ServiceWorker registered with scope:', reg.scope);

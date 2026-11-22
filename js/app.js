@@ -6271,8 +6271,6 @@ const app = createApp({
                     const cacheKeys = await caches.keys();
                     await Promise.all(cacheKeys.map(k => caches.delete(k)));
                 }
-                localStorage.removeItem('cached_all_files');
-                localStorage.removeItem('cached_all_eods');
                 window.location.reload();
             } catch (e) {
                 console.error('Error clearing cache', e);

@@ -1,11 +1,13 @@
 // SalesLink - Modern High-Performance PWA Service Worker
-const CACHE_NAME = 'saleslink-v53';
+importScripts('./js/version.js');
+const CACHE_NAME = self.CACHE_NAME || 'saleslink-v1.4.1';
 
 // Core shell assets to pre-cache on install
 const PRECACHE_ASSETS = [
     './',
     './index.html',
     './manifest.json',
+    './js/version.js',
     './js/app.js',
     './js/db.js',
     './js/firebase-config.js',
@@ -15,10 +17,10 @@ const PRECACHE_ASSETS = [
     './icons/icon-maskable-512.png',
     './icons/apple-touch-icon.png',
     './icons/icon.svg',
-    'https://cdn.tailwindcss.com',
-    'https://unpkg.com/vue@3/dist/vue.global.js',
+    'https://cdn.tailwindcss.com/3.4.3',
+    'https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.27/vue.global.prod.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-    'https://cdn.jsdelivr.net/npm/chart.js',
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js',
     'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js',
     'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'
 ];
