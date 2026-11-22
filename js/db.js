@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getCountFromServer, limit, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, limit, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 const workspacesCol = collection(db, 'workspaces');
@@ -6,9 +6,22 @@ const usersCol = collection(db, 'users');
 const filesCol = collection(db, 'loanFiles');
 const invitationsCol = collection(db, 'invitations');
 
+// --- Role Validation & Normalization ---
+export const VALID_ROLES = ['super_admin', 'zsm', 'asm', 'sm', 'ro', 'dse'];
+
+export const normaliseRole = (role) => {
+    if (!role || typeof role !== 'string') return '';
+    const clean = role.toLowerCase().trim();
+    return VALID_ROLES.includes(clean) ? clean : clean;
+};
+
 // Helper to map snapshot to array with id
 const mapSnapshot = (snapshot) => {
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => {
+        const data = { id: doc.id, ...doc.data() };
+        if (data.role) data.role = normaliseRole(data.role);
+        return data;
+    });
 };
 
 // --- Workspaces ---
@@ -46,13 +59,10 @@ export const getROUsersByTenant = async (tenantId) => {
     return mapSnapshot(snapshot);
 };
 
-export const getUsersCount = async () => {
-    const snapshot = await getCountFromServer(usersCol);
-    return snapshot.data().count;
-};
-
 export const addUser = async (userData) => {
-    const docRef = await addDoc(usersCol, userData);
+    const data = { ...userData };
+    if (data.role) data.role = normaliseRole(data.role);
+    const docRef = await addDoc(usersCol, data);
     return docRef.id;
 };
 
@@ -100,7 +110,9 @@ export const getUserByEmail = async (email) => {
     const q = query(usersCol, where('email', '==', email.toLowerCase()), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    if (data.role) data.role = normaliseRole(data.role);
+    return data;
 };
 
 export const getUserByEmployeeCode = async (employeeCode) => {
@@ -168,7 +180,10 @@ export const getUserById = async (id) => {
     try {
         const docRef = doc(db, 'users', id);
         const snap = await getDoc(docRef);
-        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        if (!snap.exists()) return null;
+        const data = { id: snap.id, ...snap.data() };
+        if (data.role) data.role = normaliseRole(data.role);
+        return data;
     } catch (e) {
         console.warn("Error fetching user by ID:", e);
         return null;
@@ -190,8 +205,10 @@ export const onUserSnapshot = (userId, callback) => {
 };
 
 export const updateUser = async (id, updateData) => {
+    const data = { ...updateData };
+    if (data.role) data.role = normaliseRole(data.role);
     const docRef = doc(db, 'users', id);
-    await updateDoc(docRef, updateData);
+    await updateDoc(docRef, data);
 };
 
 export const deleteUser = async (id) => {
@@ -284,21 +301,17 @@ export const setAnnouncement = async (text) => {
     await setDoc(docRef, { text, updatedAt: new Date().toISOString() });
 };
 
-export const getManagerSecurityKey = async () => {
+export const getSystemOwners = async () => {
     try {
-        const docRef = doc(db, 'system', 'security');
+        const docRef = doc(db, 'system', 'owners');
         const docSnap = await getDoc(docRef);
-        if (!docSnap.exists() || !docSnap.data().managerKey) return 'AXIS-MGR-2026';
-        return docSnap.data().managerKey;
+        if (docSnap.exists() && Array.isArray(docSnap.data().emails)) {
+            return docSnap.data().emails.map(e => String(e).toLowerCase().trim());
+        }
     } catch (e) {
-        console.warn('Could not fetch manager key, fallback to default', e);
-        return 'AXIS-MGR-2026';
+        console.warn('Could not fetch system owners, fallback to empty list', e);
     }
-};
-
-export const setManagerSecurityKey = async (managerKey) => {
-    const docRef = doc(db, 'system', 'security');
-    await setDoc(docRef, { managerKey, updatedAt: new Date().toISOString() }, { merge: true });
+    return [];
 };
 
 export const addEODReport = async (reportData) => {
@@ -350,7 +363,9 @@ export const getUserBySalesLinkId = async (salesLinkId) => {
     const q = query(usersCol, where('salesLinkId', '==', cleanId), limit(1));
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+    if (data.role) data.role = normaliseRole(data.role);
+    return data;
 };
 
 export const getUsersBySupervisor = async (supervisorId) => {

@@ -1805,7 +1805,6 @@ const app = createApp({
         const totalBankUsersCount = computed(() => {
             return (roUsers.value || []).filter(u => 
                 (u.role === 'sm' || u.role === 'ro' || u.role === 'admin' || u.role === 'asm' || u.role === 'zsm') && 
-                u.email !== 'anupdas8354@gmail.com' && 
                 u.role !== 'super_admin' && 
                 u.role !== 'dse' &&
                 !u.dealershipName
@@ -1816,7 +1815,6 @@ const app = createApp({
             // Strictly Bank Platform Users: SM, RO, ASM, ZSM (Strictly EXCLUDES DSEs so they never land inside an SM!)
             let allPlatformUsers = (roUsers.value || []).filter(u => 
                 u.role !== 'super_admin' && 
-                u.email !== 'anupdas8354@gmail.com' &&
                 u.role !== 'dse' &&
                 !u.dealershipName
             );
@@ -4879,26 +4877,6 @@ const app = createApp({
                 const month = new Date().toISOString().substring(0, 7);
                 allSalesTargets.value = await db.getSalesTargets(month);
                 allSalesDrives.value = await db.getAllSalesDrives();
-                
-                // Seed initial drive if none exist
-                if (allSalesDrives.value.length === 0) {
-                    const sampleDrive = {
-                        title: 'Super Sprint: Auto Loan Disbursal Marathon',
-                        description: 'Accelerate dealer conversion and fast-track sanctions to maximize month-end disbursals.',
-                        targetMetric: 'volume',
-                        targetValue: 500,
-                        startDate: `${month}-01`,
-                        endDate: `${month}-30`,
-                        incentiveNote: 'Top 3 Performers earn Branch Recognition & Performance Bonus',
-                        scope: 'branch',
-                        createdByRole: isSM.value ? 'sm' : (isASM.value ? 'asm' : 'zsm'),
-                        createdByName: currentUser.value?.name || 'Sales Leadership',
-                        tenantId: currentUser.value?.tenantId || null
-                    };
-                    const driveId = await db.saveSalesDrive(sampleDrive);
-                    sampleDrive.id = driveId;
-                    allSalesDrives.value = [sampleDrive];
-                }
             } catch (err) {
                 console.warn("Could not load targets/drives:", err);
             }
@@ -5301,23 +5279,34 @@ const app = createApp({
         };
 
         const processUserLogin = async (googleUser) => {
-            const email = googleUser.email.toLowerCase();
+            const email = (googleUser.email || '').toLowerCase().trim();
             let user = await db.getUserByEmail(email);
 
-            // Ensure super_admin exists (hardcoded mapping)
-            if (email === 'anupdas8354@gmail.com' && !user) {
-                const ownerData = {
-                    email: email,
-                    role: 'super_admin',
-                    name: googleUser.displayName || 'Platform Owner',
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                };
-                await db.addUser(ownerData);
-                user = await db.getUserByEmail(email);
+            // Ensure super_admin can be bootstrapped from data-driven system/owners document
+            if (!user) {
+                const owners = await db.getSystemOwners();
+                if (owners.includes(email)) {
+                    const ownerData = {
+                        email: email,
+                        role: 'super_admin',
+                        name: googleUser.displayName || 'Platform Owner',
+                        status: 'active',
+                        createdAt: new Date().toISOString()
+                    };
+                    await db.addUser(ownerData);
+                    user = await db.getUserByEmail(email);
+                }
             }
             
             if (user) {
+                // Validate role against known roles
+                const validRoles = ['super_admin', 'zsm', 'asm', 'sm', 'ro', 'dse'];
+                const role = (user.role || '').toLowerCase().trim();
+                if (!validRoles.includes(role)) {
+                    loginError.value = `Access Denied: Unrecognized account role "${user.role}". Please contact platform administration.`;
+                    return;
+                }
+
                 // Check if account has been frozen/locked or resigned
                 if (user.status === 'suspended') {
                     const sup = user.supervisorName || 'your Sales Manager';
@@ -5357,58 +5346,6 @@ const app = createApp({
                         console.warn("Could not backfill supervisor on login:", e);
                     }
                 }
-
-                // Auto-heal DSE accounts: If user has showroom attributes or punched showroom leads, ensure role is 'dse'
-                if (user.role !== 'super_admin' && user.role !== 'zsm' && user.role !== 'asm' && user.role !== 'sm' && user.role !== 'dse') {
-                    if (user.dealershipName || user.showroomBrand) {
-                        user.role = 'dse';
-                        user.designation = user.designation || 'Dealership Sales Executive (DSE)';
-                        if (user.tenantId) {
-                            user.linkedBankTenantId = user.tenantId;
-                            user.tenantId = null;
-                        }
-                        try {
-                            await db.updateUser(user.id, { role: 'dse', designation: user.designation, tenantId: null, linkedBankTenantId: user.linkedBankTenantId || null });
-                        } catch (e) {}
-                    } else {
-                        try {
-                            const allFiles = await db.getAllLoanFiles();
-                            const showroomFile = allFiles.find(f => (f.dseId === user.id || (f.userEmail && f.userEmail.toLowerCase() === user.email.toLowerCase())) && (f.origin === 'showroom_qr' || f.origin === 'dealer_portal' || f.dealershipName));
-                            if (showroomFile) {
-                                user.role = 'dse';
-                                user.dealershipName = showroomFile.dealershipName || showroomFile.sourcingChannel || 'Car Showroom Partner';
-                                user.showroomBrand = showroomFile.showroomBrand || 'Showroom Partner';
-                                user.designation = 'Dealership Sales Executive (DSE)';
-                                if (user.tenantId) {
-                                    user.linkedBankTenantId = user.tenantId;
-                                    user.tenantId = null;
-                                }
-                                await db.updateUser(user.id, {
-                                    role: 'dse',
-                                    dealershipName: user.dealershipName,
-                                    showroomBrand: user.showroomBrand,
-                                    designation: user.designation,
-                                    tenantId: null,
-                                    linkedBankTenantId: user.linkedBankTenantId || null
-                                });
-                            }
-                        } catch (e) {}
-                    }
-                }
-
-                // If user is already DSE and has a bank tenantId, clear it so they belong exclusively to DSE Directory
-                if (user.role === 'dse' && user.tenantId) {
-                    user.linkedBankTenantId = user.tenantId;
-                    user.tenantId = null;
-                    try {
-                        await db.updateUser(user.id, { tenantId: null, linkedBankTenantId: user.linkedBankTenantId });
-                    } catch (e) {}
-                }
-
-                // Record login timestamp
-                try {
-                    await db.updateUser(user.id, { lastLoginAt: new Date().toISOString() });
-                } catch (e) {}
 
                 // Auto assign SalesLink ID if missing (backward compatibility)
                 if (!user.salesLinkId) {
@@ -6394,39 +6331,6 @@ const app = createApp({
                                 if (fresh.dealershipName) currentUser.value.dealershipName = fresh.dealershipName;
                                 if (fresh.showroomBrand) currentUser.value.showroomBrand = fresh.showroomBrand;
                                 if (fresh.role) currentUser.value.role = fresh.role;
-
-                                // Auto-heal session if user punched showroom lead or has dealership
-                                if (currentUser.value.role !== 'super_admin' && currentUser.value.role !== 'zsm' && currentUser.value.role !== 'asm' && currentUser.value.role !== 'sm' && currentUser.value.role !== 'dse') {
-                                    if (fresh.dealershipName || fresh.showroomBrand) {
-                                        fresh.role = 'dse';
-                                        currentUser.value.role = 'dse';
-                                        await db.updateUser(fresh.id, { role: 'dse' }).catch(() => {});
-                                    } else {
-                                        try {
-                                            const allFiles = await db.getAllLoanFiles();
-                                            const email = (currentUser.value.email || '').toLowerCase();
-                                            const showroomFile = allFiles.find(f => (f.dseId === fresh.id || (f.userEmail && f.userEmail.toLowerCase() === email)) && (f.origin === 'showroom_qr' || f.origin === 'dealer_portal' || f.dealershipName));
-                                            if (showroomFile) {
-                                                fresh.role = 'dse';
-                                                fresh.dealershipName = showroomFile.dealershipName || showroomFile.sourcingChannel || 'Car Showroom Partner';
-                                                fresh.showroomBrand = showroomFile.showroomBrand || 'Showroom Partner';
-                                                currentUser.value.role = 'dse';
-                                                currentUser.value.dealershipName = fresh.dealershipName;
-                                                currentUser.value.showroomBrand = fresh.showroomBrand;
-                                                await db.updateUser(fresh.id, {
-                                                    role: 'dse',
-                                                    dealershipName: fresh.dealershipName,
-                                                    showroomBrand: fresh.showroomBrand,
-                                                    designation: 'Dealership Sales Executive (DSE)'
-                                                });
-                                                if (currentTab.value === 'ro-dashboard' || currentTab.value === 'dashboard') {
-                                                    currentTab.value = 'dse-dashboard';
-                                                    await loadDseData();
-                                                }
-                                            }
-                                        } catch (e) {}
-                                    }
-                                }
                                 if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
                                 localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
                             }
