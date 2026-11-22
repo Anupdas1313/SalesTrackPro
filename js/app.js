@@ -624,7 +624,7 @@ const app = createApp({
 
                 if (custName && custPhone && vehModel && loanAmt > 0) {
                     const createdAtIso = new Date().toISOString();
-                    const randId = 'QR' + Math.floor(100000 + Math.random() * 900000);
+                    const randId = await db.generateUniqueAppId('QR');
                     const ws = publicApplyWorkspace.value || {};
                     const newFile = {
                         appId: randId,
@@ -827,10 +827,11 @@ const app = createApp({
 
         const executePublicFileSubmission = async () => {
             isSubmittingPublicApply.value = true;
+            publicApplyError.value = '';
             try {
                 const createdAtIso = new Date().toISOString();
-                const randId = 'QR' + Math.floor(100000 + Math.random() * 900000);
-                const ws = publicApplyWorkspace.value;
+                const randId = await db.generateUniqueAppId('QR');
+                const ws = publicApplyWorkspace.value || {};
                 const user = currentUser.value;
                 const newFile = {
                     appId: randId,
@@ -852,7 +853,7 @@ const app = createApp({
                     dsePhone: (user?.phone || publicApplyForm.value.dsePhone || '').trim(),
                     loginDate: createdAtIso.split('T')[0],
                     origin: 'showroom_qr',
-                    tenantId: ws.id,
+                    tenantId: ws.id || 'default-tenant',
                     targetBankName: ws.bankName || 'Axis Bank',
                     targetHubName: ws.name || 'Branch Hub',
                     smName: ws.managerName || (publicApplySmUser.value?.name || 'Branch SM'),
@@ -864,25 +865,35 @@ const app = createApp({
                     updatedAt: createdAtIso
                 };
 
-                // Try authenticated direct write
-                try {
-                    await db.addLoanFile(newFile);
-                } catch (fsErr) {
-                    console.debug("Public guest lead: Direct Firestore write restricted by security rules", fsErr);
+                let leadSaved = false;
+                // If user is authenticated, attempt direct loanFiles write
+                if (db.auth?.currentUser) {
+                    try {
+                        await db.addLoanFile(newFile);
+                        leadSaved = true;
+                    } catch (fsErr) {
+                        console.debug("Direct write restricted, falling back to public leads intake:", fsErr);
+                    }
                 }
 
-                // Cache lead in local guest storage
-                try {
-                    const guestLeads = JSON.parse(localStorage.getItem('saleslink_guest_leads') || '[]');
-                    guestLeads.unshift(newFile);
-                    localStorage.setItem('saleslink_guest_leads', JSON.stringify(guestLeads.slice(0, 20)));
-                } catch (e) {}
+                // If not saved via direct write, route to public leads intake
+                if (!leadSaved) {
+                    try {
+                        await db.addPublicLead(newFile);
+                        leadSaved = true;
+                    } catch (intakeErr) {
+                        console.error("Public intake error:", intakeErr);
+                        const fallbackPhone = ws.managerPhone ? ` (Branch Manager: ${ws.managerPhone})` : '';
+                        throw new Error(`Submission Failed: Unable to deliver customer lead to ${ws.name || 'Branch Hub'}${fallbackPhone}. Please verify connection and retry, or contact the branch directly.`);
+                    }
+                }
 
                 publicApplySuccessFile.value = newFile;
                 publicApplySubmitted.value = true;
             } catch (e) {
                 console.error("submitPublicLoanApplication error:", e);
                 publicApplyError.value = e.message || 'Error submitting application.';
+                publicApplySubmitted.value = false;
             } finally {
                 isSubmittingPublicApply.value = false;
             }
@@ -4612,7 +4623,7 @@ const app = createApp({
             isSubmittingDseFile.value = true;
             try {
                 const createdAtIso = new Date().toISOString();
-                const randId = 'DLR' + Math.floor(100000 + Math.random() * 900000);
+                const randId = await db.generateUniqueAppId('DLR');
                 const newFile = {
                     appId: randId,
                     customerName: custName.toUpperCase(),
@@ -4671,7 +4682,7 @@ const app = createApp({
 
             inboundSubmitting.value[file.id] = true;
             try {
-                await db.assignInboundFileToRO(file.id, ro);
+                await db.assignInboundFileToRO(file.id, ro, file);
                 file.roId = ro.id;
                 file.roName = ro.name;
                 file.allocationStatus = 'dispatched_to_ro';
@@ -5727,9 +5738,13 @@ const app = createApp({
         };
 
         // RO: Add File
-        const resetNewFileForm = () => {
+        const resetNewFileForm = async () => {
+            let uniqueAppId = 'ALA00000';
+            try {
+                uniqueAppId = await db.generateUniqueAppId('ALA');
+            } catch (e) {}
             newFileForm.value = {
-                appId: 'ALA00000',
+                appId: uniqueAppId,
                 customerName: '',
                 nclUcl: 'NCL',
                 sourcingChannel: 'DSA',

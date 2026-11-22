@@ -5,6 +5,7 @@ const workspacesCol = collection(db, 'workspaces');
 const usersCol = collection(db, 'users');
 const filesCol = collection(db, 'loanFiles');
 const invitationsCol = collection(db, 'invitations');
+const publicLeadsCol = collection(db, 'publicLeads');
 
 // --- Role Validation & Normalization ---
 export const VALID_ROLES = ['super_admin', 'zsm', 'asm', 'sm', 'ro', 'dse'];
@@ -365,19 +366,64 @@ export const getLoanFilesByDSE = async (dseId) => {
     }
 };
 
+export const addPublicLead = async (leadData) => {
+    const docRef = await addDoc(publicLeadsCol, leadData);
+    return docRef.id;
+};
+
+export const getPublicLeadsByTenant = async (tenantId) => {
+    if (!tenantId) return [];
+    try {
+        const q = query(publicLeadsCol, where('tenantId', '==', tenantId));
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+    } catch (e) {
+        console.warn("getPublicLeadsByTenant failed:", e);
+        return [];
+    }
+};
+
 export const getInboundShowroomFilesByTenant = async (tenantId) => {
     if (!tenantId) return [];
     try {
-        const all = await getLoanFilesByTenant(tenantId);
-        return all.filter(f => f.origin === 'dealer_portal' || f.origin === 'showroom_qr' || f.origin === 'qr_inbound' || (f.allocationStatus && f.allocationStatus.includes('sm_dispatch')));
+        const [loanFiles, publicLeads] = await Promise.all([
+            getLoanFilesByTenant(tenantId),
+            getPublicLeadsByTenant(tenantId)
+        ]);
+        const inboundLoanFiles = loanFiles.filter(f => f.origin === 'dealer_portal' || f.origin === 'showroom_qr' || f.origin === 'qr_inbound' || (f.allocationStatus && f.allocationStatus.includes('sm_dispatch')));
+        
+        // Merge pending publicLeads that have not yet been promoted to loanFiles
+        const existingAppIds = new Set(loanFiles.map(f => f.appId).filter(Boolean));
+        const unpromotedLeads = publicLeads
+            .filter(l => !existingAppIds.has(l.appId) && l.status !== 'promoted' && l.status !== 'deleted')
+            .map(l => ({ ...l, isPublicLead: true, origin: 'showroom_qr', allocationStatus: 'pending_sm_dispatch', status: 'Inbound' }));
+
+        return [...unpromotedLeads, ...inboundLoanFiles];
     } catch (e) {
         console.warn("Failed to get inbound showroom files:", e);
         return [];
     }
 };
 
-export const assignInboundFileToRO = async (fileId, roUser) => {
+export const assignInboundFileToRO = async (fileId, roUser, fileData = null) => {
     if (!fileId || !roUser) return;
+    if (fileData && fileData.isPublicLead) {
+        // Promote public lead into loanFiles
+        const cleanFile = { ...fileData };
+        delete cleanFile.id;
+        delete cleanFile.isPublicLead;
+        cleanFile.roId = roUser.id;
+        cleanFile.roName = roUser.name;
+        cleanFile.allocationStatus = 'dispatched_to_ro';
+        cleanFile.status = 'Login';
+        cleanFile.allocatedAt = new Date().toISOString();
+        cleanFile.updatedAt = new Date().toISOString();
+        await addDoc(filesCol, cleanFile);
+        try {
+            await updateDoc(doc(db, 'publicLeads', fileId), { status: 'promoted', updatedAt: new Date().toISOString() });
+        } catch (e) {}
+        return;
+    }
     const docRef = doc(db, 'loanFiles', fileId);
     await updateDoc(docRef, {
         roId: roUser.id,
@@ -446,16 +492,64 @@ export const getEODReportsByTenant = async (tenantId) => {
     }
 };
 
-// --- Hierarchy & Invitations ---
+// --- Hierarchy & Invitations & ID Generators ---
+
+export const generateSecureRandomCode = (len = 6) => {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let result = '';
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const bytes = new Uint8Array(len);
+        crypto.getRandomValues(bytes);
+        for (let i = 0; i < len; i++) {
+            result += chars.charAt(bytes[i] % chars.length);
+        }
+    } else {
+        for (let i = 0; i < len; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+    }
+    return result;
+};
 
 export const generateSalesLinkId = (role = 'ro') => {
     const cleanRole = (role || 'ro').toUpperCase();
-    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const code = generateSecureRandomCode(6);
     return `SL-${cleanRole}-${code}`;
+};
+
+export const generateUniqueSalesLinkId = async (role = 'ro') => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = generateSalesLinkId(role);
+        const existing = await getUserBySalesLinkId(candidate);
+        if (!existing) return candidate;
+    }
+    const cleanRole = (role || 'ro').toUpperCase();
+    return `SL-${cleanRole}-${generateSecureRandomCode(8)}`;
+};
+
+export const generateUniqueAppId = async (prefix = 'ALA') => {
+    const chars = '0123456789';
+    for (let attempt = 0; attempt < 5; attempt++) {
+        let code = '';
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const bytes = new Uint8Array(6);
+            crypto.getRandomValues(bytes);
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(bytes[i] % 10);
+            }
+        } else {
+            code = String(Math.floor(100000 + Math.random() * 900000));
+        }
+        const candidate = `${prefix}${code}`;
+        try {
+            const q = query(filesCol, where('appId', '==', candidate), limit(1));
+            const snap = await getDocs(q);
+            if (snap.empty) return candidate;
+        } catch (e) {
+            return candidate;
+        }
+    }
+    return `${prefix}${Date.now().toString().slice(-6)}`;
 };
 
 export const getUserBySalesLinkId = async (salesLinkId) => {
