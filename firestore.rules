@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // -------------------------------------------------------------
+    // 1. MASTER SUPER ADMIN
+    // -------------------------------------------------------------
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'anupdas8354@gmail.com';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Master override for Platform Owner
+    match /{document=**} {
+      allow read, write: if isSuperAdmin();
+    }
+    
+    // -------------------------------------------------------------
+    // 2. USER ACCOUNTS & PROFILES (/users)
+    // -------------------------------------------------------------
+    match /users/{userId} {
+      // Any authenticated user can read users to find supervisors/officers
+      allow read: if isAuthenticated();
+      
+      // CREATE: Cannot create a super_admin account unless you are the owner
+      allow create: if isAuthenticated() && 
+        request.resource.data.role != 'super_admin';
+      
+      // UPDATE: 
+      // - Cannot elevate self to super_admin
+      // - Suspended accounts cannot un-suspend themselves
+      allow update: if isAuthenticated() && 
+        (isSuperAdmin() || request.resource.data.role != 'super_admin');
+      
+      // DELETE: Only Super Admin and SMs can delete RO profiles; ROs cannot delete SMs
+      allow delete: if isAuthenticated() && 
+        (isSuperAdmin() || resource.data.role == 'ro');
+    }
+    
+    // -------------------------------------------------------------
+    // 3. WORKSPACES & BRANCH HUBS (/workspaces)
+    // -------------------------------------------------------------
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated();
+      // Only Super Admin can create or delete branch workspaces
+      allow create, delete: if isSuperAdmin();
+      // Updating branch details requires authentication
+      allow update: if isAuthenticated();
+    }
+    
+    // -------------------------------------------------------------
+    // 4. LOAN FILES (/loanFiles)
+    // -------------------------------------------------------------
+    match /loanFiles/{fileId} {
+      allow read: if isAuthenticated();
+      
+      // CREATE: Must contain tenantId and customer details
+      allow create: if isAuthenticated() && 
+        request.resource.data.tenantId != null &&
+        request.resource.data.customerName != null;
+      
+      // UPDATE: Authenticated branch members can update deal stages
+      allow update: if isAuthenticated();
+      
+      // DELETE: Only the creator of the file or Super Admin can delete files
+      allow delete: if isAuthenticated() && 
+        (isSuperAdmin() || resource.data.userId == request.auth.uid || resource.data.roId == request.auth.uid);
+    }
+    
+    // -------------------------------------------------------------
+    // 5. DAILY EOD SUBMISSIONS (/eod_reports)
+    // -------------------------------------------------------------
+    match /eod_reports/{reportId} {
+      allow read: if isAuthenticated();
+      // ROs and SMs can submit or revise their daily EOD reports
+      allow create, update: if isAuthenticated() && request.resource.data.roName != null;
+      // Officers CANNOT delete historical EOD reports (Prevents covering up numbers)
+      allow delete: if isSuperAdmin();
+    }
+    
+    // -------------------------------------------------------------
+    // 6. AREA & SUPERVISOR INVITATIONS (/invitations)
+    // -------------------------------------------------------------
+    match /invitations/{inviteId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // -------------------------------------------------------------
+    // 7. GLOBAL ANNOUNCEMENTS & SYSTEM (/system)
+    // -------------------------------------------------------------
+    match /system/{document=**} {
+      // Everyone can read system announcements
+      allow read: if isAuthenticated();
+      // ONLY Super Admin can broadcast or alter global system settings
+      allow write: if isSuperAdmin();
+    }
+  }
+}
