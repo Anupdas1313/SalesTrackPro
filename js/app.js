@@ -32,12 +32,15 @@ const app = createApp({
             return 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
         };
 
-        const handleSecurityLockout = (reason) => {
+        const handleSecurityLockout = async (reason) => {
             console.warn("Security Lockout Triggered:", reason);
             if (userSecurityUnsub) {
                 userSecurityUnsub();
                 userSecurityUnsub = null;
             }
+            try {
+                if (db.auth) await db.signOut(db.auth);
+            } catch (e) {}
             localStorage.removeItem('axis_user');
             localStorage.removeItem('axis_active_session_id');
             currentUser.value = null;
@@ -84,7 +87,7 @@ const app = createApp({
                 }
             });
         };
-        const loginForm = ref({ username: '', password: '' });
+        const loginForm = ref({ username: '' });
         const loginError = ref('');
         const isLoggingIn = ref(false);
         const loginStage = ref(''); // '' | 'selecting' | 'verifying'
@@ -4880,8 +4883,33 @@ const app = createApp({
         const originalUser = ref(null);
 
         const impersonateUser = async (user) => {
+            if (!user) return;
+
+            // Server-verified super_admin check
+            const actorEmail = (originalUser.value?.email || currentUser.value?.email || '').toLowerCase();
+            const actorDoc = await db.getUserByEmail(actorEmail);
+            if (!actorDoc || actorDoc.role !== 'super_admin') {
+                alert("Access Denied: Impersonation requires verified super_admin authority.");
+                return;
+            }
+
             if (!originalUser.value && currentUser.value.role === 'super_admin') {
                 originalUser.value = { ...currentUser.value };
+            }
+
+            // Write immutable audit log event
+            try {
+                await db.logAuditEvent({
+                    action: 'impersonate_user',
+                    actorEmail: actorEmail,
+                    actorId: actorDoc.id,
+                    targetEmail: user.email,
+                    targetRole: user.role,
+                    targetId: user.id,
+                    at: new Date().toISOString()
+                });
+            } catch (auditErr) {
+                console.warn("Audit logging notice:", auditErr);
             }
             
             const sessionUser = { 
@@ -5484,15 +5512,20 @@ const app = createApp({
             }
         };
 
-        const logout = () => {
+        const logout = async () => {
             if (userSecurityUnsub) {
                 userSecurityUnsub();
                 userSecurityUnsub = null;
             }
+            try {
+                if (db.auth) await db.signOut(db.auth);
+            } catch (e) {
+                console.warn("Firebase signOut error on logout:", e);
+            }
             localStorage.removeItem('axis_user');
             localStorage.removeItem('axis_active_session_id');
             currentUser.value = null;
-            loginForm.value = { username: '', password: '' };
+            loginForm.value = { username: '' };
             allWorkspaces.value = [];
             roUsers.value = [];
             allFiles.value = [];
@@ -5636,20 +5669,20 @@ const app = createApp({
             // Check if this RO has historical logged files
             const filesCount = (allFiles.value || []).filter(f => f.roId === user.id || (f.roName && f.roName.trim().toUpperCase() === (user.name || '').trim().toUpperCase())).length;
 
-            let confirmMsg = '';
             if (filesCount > 0) {
-                confirmMsg = `⚠️ IMPORTANT RESIGNATION ADVICE:\n\nOfficer "${user.name || 'User'}" has ${filesCount} loan file(s) logged in the branch pipeline!\n\n👉 If this officer has RESIGNED or left the company, please click CANCEL and use "SUSPEND" instead!\nSuspending locks their login immediately while safely preserving their loan history, disbursals, and Cockpit performance for audits.\n\nOnly use "DELETE" if this was an accidental typo or duplicate profile.\n\nDo you still wish to permanently delete this profile?`;
-            } else {
-                confirmMsg = `Are you sure you want to permanently delete profile "${user.name || 'User'}" (${user.email})?\n\nThis will remove their profile and login access immediately. This action cannot be undone.`;
+                alert(`⚠️ Cannot Delete Profile "${user.name || 'User'}":\n\nThis officer has ${filesCount} loan file(s) assigned in the branch pipeline.\n\nOpening the Offboarding & Pipeline Reassignment workflow so you can safely reassign their active files to another officer before removing their profile.`);
+                openOffboardModal(user);
+                return;
             }
 
+            const confirmMsg = `Are you sure you want to remove profile "${user.name || 'User'}" (${user.email})?\n\nThis will revoke their login access immediately.`;
             if (!confirm(confirmMsg)) return;
 
             try {
                 await db.deleteUser(user.id);
                 roUsers.value = roUsers.value.filter(u => u.id !== user.id);
                 await loadData();
-                alert(`User ${user.name || user.email} was successfully deleted.`);
+                alert(`User ${user.name || user.email} was successfully removed.`);
             } catch (error) {
                 console.error("Error deleting user:", error);
                 alert("Failed to delete user: " + (error.message || error));
@@ -5669,11 +5702,18 @@ const app = createApp({
                 return;
             }
 
-            let confirmMsg = `Are you sure you want to permanently delete workspace "${workspace.name}" (ID: ${workspace.id})?`;
-            if ((workspace.fileCount && workspace.fileCount > 0) || (workspace.roCount && workspace.roCount > 0)) {
-                confirmMsg += `\n\n⚠️ Caution: This workspace currently contains ${workspace.roCount || 0} user(s) and ${workspace.fileCount || 0} file(s). Please ensure any real users have been reassigned in Global User Directory before deleting.`;
+            // Verify live counts of users and files for this workspace to prevent orphaned data
+            const wsUsers = await db.getUsersByTenant(workspace.id);
+            const wsFiles = await db.getLoanFilesByTenant(workspace.id);
+            const userCount = wsUsers.filter(u => u.status !== 'deleted' && !u.deletedAt).length;
+            const fileCount = wsFiles.filter(f => f.status !== 'deleted' && !f.deletedAt).length;
+
+            if (userCount > 0 || fileCount > 0) {
+                alert(`⛔ Cannot Delete Workspace "${workspace.name}":\n\nThis workspace currently contains ${userCount} active user(s) and ${fileCount} active file(s).\n\nTo prevent orphaning records and locking out branch members, please reassign or offboard all users and files before deleting this workspace.`);
+                return;
             }
-            if (!confirm(confirmMsg)) return;
+
+            if (!confirm(`Are you sure you want to permanently delete empty workspace "${workspace.name}" (ID: ${workspace.id})?\n\nThis action cannot be undone.`)) return;
 
             try {
                 await db.deleteWorkspace(workspace.id);
@@ -6308,6 +6348,77 @@ const app = createApp({
                 loginError.value = e.message;
                 isLoggingIn.value = false;
                 loginStage.value = '';
+            }
+
+            // Authoritative Firebase Auth Gatekeeper & State Synchronizer
+            try {
+                if (db.onAuthStateChanged && db.auth) {
+                    db.onAuthStateChanged(db.auth, async (firebaseUser) => {
+                        if (firebaseUser && firebaseUser.email) {
+                            const email = firebaseUser.email.toLowerCase().trim();
+                            try {
+                                const fresh = await db.getUserByEmail(email);
+                                if (fresh) {
+                                    if (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive') {
+                                        await handleSecurityLockout('Your account has been deactivated or offboarded.');
+                                        return;
+                                    }
+                                    // Authoritative session directly validated from Firestore
+                                    const authUser = {
+                                        id: fresh.id,
+                                        email: fresh.email,
+                                        username: fresh.name,
+                                        role: fresh.role,
+                                        name: fresh.name,
+                                        salesLinkId: fresh.salesLinkId,
+                                        supervisorId: fresh.supervisorId || null,
+                                        supervisorName: fresh.supervisorName || null,
+                                        supervisorRole: fresh.supervisorRole || null,
+                                        supervisorSalesLinkId: fresh.supervisorSalesLinkId || null,
+                                        tenantId: fresh.tenantId || null,
+                                        phone: fresh.phone || '',
+                                        bankName: fresh.bankName,
+                                        division: fresh.division,
+                                        dealershipName: fresh.dealershipName || '',
+                                        showroomBrand: fresh.showroomBrand || '',
+                                        region: fresh.region,
+                                        employeeCode: fresh.employeeCode || '',
+                                        designation: fresh.designation || '',
+                                        branchAddress: fresh.branchAddress || '',
+                                        createdAt: fresh.createdAt || '',
+                                        activeSessionId: localStorage.getItem('axis_active_session_id') || generateSessionId()
+                                    };
+                                    localStorage.setItem('axis_user', JSON.stringify(authUser));
+                                    currentUser.value = authUser;
+                                    startUserSecurityListener(fresh.id);
+                                    db.upsertDirectoryEntry(firebaseUser.uid, {
+                                        email: fresh.email,
+                                        role: fresh.role,
+                                        tenantId: fresh.tenantId || null,
+                                        status: fresh.status || 'active',
+                                        userId: fresh.id
+                                    }).catch(() => {});
+                                } else {
+                                    // Firebase authenticated but no corresponding profile in Firestore
+                                    if (currentUser.value && !originalUser.value) {
+                                        localStorage.removeItem('axis_user');
+                                        currentUser.value = null;
+                                    }
+                                }
+                            } catch (authErr) {
+                                console.warn("Authoritative user verification warning:", authErr);
+                            }
+                        } else {
+                            // User is signed out in Firebase Auth: invalidate any local cache
+                            if (currentUser.value && !originalUser.value) {
+                                localStorage.removeItem('axis_user');
+                                currentUser.value = null;
+                            }
+                        }
+                    });
+                }
+            } catch (authErr) {
+                console.warn("Auth listener registration warning:", authErr);
             }
 
             // Check for existing session

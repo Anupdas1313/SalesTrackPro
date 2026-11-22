@@ -17,11 +17,13 @@ export const normaliseRole = (role) => {
 
 // Helper to map snapshot to array with id
 const mapSnapshot = (snapshot) => {
-    return snapshot.docs.map(doc => {
-        const data = { id: doc.id, ...doc.data() };
-        if (data.role) data.role = normaliseRole(data.role);
-        return data;
-    });
+    return snapshot.docs
+        .map(doc => {
+            const data = { id: doc.id, ...doc.data() };
+            if (data.role) data.role = normaliseRole(data.role);
+            return data;
+        })
+        .filter(doc => !doc.deletedAt && doc.status !== 'deleted');
 };
 
 // --- Workspaces ---
@@ -148,9 +150,9 @@ export const getAllUsers = async () => {
     return mapSnapshot(snapshot);
 };
 
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { auth, googleProvider } from "./firebase-config.js";
-export { auth };
+export { auth, onAuthStateChanged, signOut };
 
 export const loginWithGoogle = async () => {
     googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -287,9 +289,16 @@ export const updateUser = async (id, updateData) => {
     await updateDoc(docRef, data);
 };
 
-export const deleteUser = async (id) => {
+export const deleteUser = async (id, soft = true) => {
     const docRef = doc(db, 'users', id);
-    await deleteDoc(docRef);
+    if (soft) {
+        await updateDoc(docRef, {
+            status: 'deleted',
+            deletedAt: new Date().toISOString()
+        });
+    } else {
+        await deleteDoc(docRef);
+    }
 };
 
 // --- Loan Files ---
@@ -320,9 +329,27 @@ export const updateLoanFile = async (id, updateData) => {
     await updateDoc(docRef, updateData);
 };
 
-export const deleteLoanFile = async (id) => {
+export const deleteLoanFile = async (id, soft = true) => {
     const docRef = doc(db, 'loanFiles', id);
-    await deleteDoc(docRef);
+    if (soft) {
+        await updateDoc(docRef, {
+            status: 'Deleted',
+            deletedAt: new Date().toISOString()
+        });
+    } else {
+        await deleteDoc(docRef);
+    }
+};
+
+export const logAuditEvent = async (eventData) => {
+    try {
+        await addDoc(collection(db, 'auditLog'), {
+            ...eventData,
+            createdAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.warn("Failed to write audit log:", e);
+    }
 };
 
 // --- Dealership & DSE Ecosystem Queries ---

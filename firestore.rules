@@ -215,5 +215,14 @@ service cloud.firestore {
       allow read: if signedIn() && (isSuperAdmin() || (active() && (role() in ['super_admin', 'sm', 'asm', 'zsm'])));
       allow update, delete: if isSuperAdmin();
     }
+
+    // -------------------------------------------------------------
+    // 10. IMMUTABLE AUDIT LOG (/auditLog)
+    // -------------------------------------------------------------
+    match /auditLog/{id} {
+      allow create: if signedIn();
+      allow read: if isSuperAdmin();
+      allow update, delete: if false;
+    }
   }
 }
