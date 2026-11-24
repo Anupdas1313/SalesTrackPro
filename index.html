@@ -2247,43 +2247,38 @@
                                 </table>
                             </div>
 
-                            <!-- Mobile Clean Card List (Frictionless, Calm Monochrome) -->
-                            <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden flex-1 overflow-y-auto">
-                                <div v-for="file in filteredFiles" :key="'mob-admin-'+file.id" @click="openViewFileModal(file)" class="p-3.5 hover:bg-slate-50/70 active:bg-slate-100/70 transition space-y-2 cursor-pointer">
-                                    <!-- Row 1: Customer Name & Loan Amount -->
-                                    <div class="flex items-baseline justify-between gap-2">
-                                        <h4 class="font-bold text-slate-900 text-sm uppercase truncate">{{ file.customerName }}</h4>
-                                        <span class="text-sm font-extrabold text-slate-900 shrink-0">₹{{ formatCurrency(file.loanAmount) }}</span>
+                            <!-- Mobile Compact List (2-line rows, hugs content) -->
+                            <div v-if="filteredFiles.length > 0" class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
+                                <div v-for="file in filteredFiles" :key="'mob-admin-'+file.id" @click="openViewFileModal(file)" class="px-3.5 py-2.5 hover:bg-slate-50 active:bg-slate-100 transition cursor-pointer space-y-1">
+                                    <!-- Line 1: Customer Name + Amount & Status -->
+                                    <div class="flex items-center justify-between gap-2">
+                                        <h4 class="font-bold text-slate-900 text-xs uppercase truncate">{{ file.customerName }}</h4>
+                                        <div class="flex items-center gap-1.5 shrink-0">
+                                            <span class="text-xs font-extrabold text-slate-900">₹{{ formatCurrency(file.loanAmount) }}</span>
+                                            <span :class="getStatusBadgeClass(file.status)" class="!px-1.5 !py-0.5 !text-[9px] font-bold">{{ file.status }}</span>
+                                        </div>
                                     </div>
 
-                                    <!-- Row 2: Clean Metadata Line -->
-                                    <div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500 font-medium">
-                                        <span class="font-mono text-slate-600">#{{ file.appId || 'NO ID' }}</span>
-                                        <span>·</span>
-                                        <span class="truncate max-w-[130px]">{{ file.roName }}</span>
-                                        <span>·</span>
-                                        <span class="uppercase">{{ file.nclUcl || '-' }}</span>
-                                        <span>·</span>
-                                        <span class="uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
-                                        <span>·</span>
-                                        <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
-                                    </div>
-
-                                    <!-- Row 3: Status & Direct Actions -->
-                                    <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
-                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[10px] font-bold">{{ file.status }}</span>
-                                        <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-500" @click.stop>
-                                            <button @click="openViewFileModal(file)" class="hover:text-slate-900 cursor-pointer">View</button>
-                                            <button @click="openEditFileModal(file)" class="hover:text-slate-900 cursor-pointer">Edit</button>
-                                            <button @click="deleteFile(file)" class="text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                    <!-- Line 2: Compact Metadata & Quick Actions -->
+                                    <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                                        <div class="truncate min-w-0">
+                                            <span class="font-mono text-slate-600">#{{ file.appId || 'NO ID' }}</span>
+                                            <span> · {{ file.roName }} · {{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2.5 shrink-0 text-slate-400" @click.stop>
+                                            <button @click="openEditFileModal(file)" class="hover:text-slate-900 cursor-pointer" title="Edit">
+                                                <i class="fas fa-pen text-[10px]"></i>
+                                            </button>
+                                            <button @click="deleteFile(file)" class="hover:text-rose-600 cursor-pointer" title="Delete">
                                                 <i class="fas fa-trash-alt text-[10px]"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Mobile Empty State -->
-                                <div v-if="filteredFiles.length === 0" class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-xs">
+                            <!-- Mobile Empty State -->
+                            <div v-if="filteredFiles.length === 0" class="md:hidden p-6 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 shadow-xs">
                                     <i class="fas fa-calendar-day text-3xl mb-2 text-slate-300 block"></i>
                                     <p class="text-sm font-bold text-slate-700">No files for {{ getTimelineLabel(roFilters.timeline) }}</p>
                                     <p class="text-xs text-slate-400 mt-0.5">
@@ -2299,7 +2294,6 @@
                                         </button>
                                     </div>
                                 </div>
-                            </div>
 
                             <div class="bg-slate-50 px-1.5 py-1 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center rounded-b-xl">
                                 <span class="font-semibold text-[11px]">Showing {{ filteredFiles.length }} records</span>
