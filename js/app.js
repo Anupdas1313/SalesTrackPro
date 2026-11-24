@@ -625,7 +625,7 @@ const app = createApp({
 
         // --- Add RO Modal State & Handlers ---
         const showAddRoModal = ref(false);
-        const addRoStep = ref(1);
+        const addRoStep = ref('form');
         const addRoError = ref('');
         const isSavingRo = ref(false);
         const newlyCreatedRo = ref(null);
@@ -640,7 +640,7 @@ const app = createApp({
         });
 
         const openAddRoModal = () => {
-            addRoStep.value = 1;
+            addRoStep.value = 'form';
             addRoError.value = '';
             newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
             newlyCreatedRo.value = null;
