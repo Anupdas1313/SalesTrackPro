@@ -6838,6 +6838,17 @@
                         </div>
                     </button>
 
+                    <!-- Team Users (SM Only) -->
+                    <button v-if="isSM" @click="goToTab('users'); showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-6 text-center text-slate-400 group-hover:text-[#4F46E5] transition-colors">
+                                <i class="fas fa-users-cog text-base"></i>
+                            </div>
+                            <span class="font-semibold text-slate-800 text-sm">Team Users</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                    </button>
+
                     <!-- Sales Targets & Drives (Bank Roles Only) -->
                     <button v-if="!isDSE" @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
                         <div class="flex items-center gap-3.5">
