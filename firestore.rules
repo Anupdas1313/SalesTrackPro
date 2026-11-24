@@ -65,11 +65,11 @@ service cloud.firestore {
       allow get: if signedIn() && active() && role() == 'sm' && resource.data.role in ['asm', 'zsm'];
       allow list: if signedIn() && active() && role() == 'sm' && request.query.limit <= 1;
       
-      // CREATE: super_admin or branch/area managers inviting officers
+      // CREATE: super_admin, managers inviting officers, or self-registration (never super_admin)
       allow create: if signedIn() && (
         isSuperAdmin() ||
-        (active() && role() in ['super_admin', 'sm', 'asm', 'zsm']) ||
-        request.resource.data.email == request.auth.token.email
+        (active() && role() in ['super_admin', 'sm', 'asm', 'zsm'] && request.resource.data.role != 'super_admin') ||
+        (request.resource.data.email == request.auth.token.email && request.resource.data.role != 'super_admin')
       );
       
       // UPDATE: Self or tenant-scoped manager or super_admin
@@ -97,8 +97,18 @@ service cloud.firestore {
     match /workspaces/{wsId} {
       // Authenticated users and DSEs can read workspaces to discover branches
       allow read: if signedIn();
-      allow create, delete: if isSuperAdmin();
-      allow update: if signedIn() && (isSuperAdmin() || (active() && (role() == 'sm' && wsId == tenant())));
+      allow create: if signedIn() && (
+        isSuperAdmin() ||
+        (request.resource.data.keys().hasAll(['name', 'managerName']) && request.resource.data.status == 'active')
+      );
+      allow delete: if isSuperAdmin();
+      allow update: if signedIn() && (
+        isSuperAdmin() ||
+        (active() && (
+          (role() == 'sm' && wsId == tenant()) ||
+          role() in ['asm', 'zsm']
+        ))
+      );
     }
 
     // -------------------------------------------------------------
