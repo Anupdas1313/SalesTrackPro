@@ -790,14 +790,18 @@ export const unlinkSupervisor = async (subordinateUserId) => {
     return true;
 };
 
-export const linkSmToSupervisor = async (smUserId, supervisorIdentifier) => {
+export const linkSmToSupervisor = async (smUserId, supervisorIdentifier, preferredMethod = null) => {
     if (!smUserId || !supervisorIdentifier) throw new Error("SM User ID and Supervisor Identifier are required.");
 
     const cleanIdentifier = supervisorIdentifier.trim();
-    const supervisor = await findUserByAnyIdentifier(cleanIdentifier);
+    const supervisor = await findUserByAnyIdentifier(cleanIdentifier, preferredMethod);
 
     if (!supervisor) {
         throw new Error(`No Area Sales Manager found with "${supervisorIdentifier}". Please verify the Phone, Email, Employee ID, or SalesLink ID and try again.`);
+    }
+
+    if (supervisor.status === 'resigned' || supervisor.status === 'suspended' || supervisor.status === 'inactive') {
+        throw new Error(`Account Inactive: "${supervisor.name || supervisor.email}" is marked as ${supervisor.status} and cannot supervise a branch hub.`);
     }
 
     if (supervisor.role === 'ro') {
@@ -945,37 +949,49 @@ export const directConnectSupervisorToSm = async (supervisorUser, smUserId) => {
     return smData;
 };
 
-export const findUserByAnyIdentifier = async (identifier) => {
+export const findUserByAnyIdentifier = async (identifier, preferredMethod = null) => {
     if (!identifier) return null;
     const raw = identifier.trim();
     const cleanLower = raw.toLowerCase();
     const cleanDigits = raw.replace(/\D/g, '');
     const cleanUpper = raw.toUpperCase();
 
-    // 1. Check SalesLink ID
+    const lookupSalesLinkId = async () => getUserBySalesLinkId(cleanUpper);
+    const lookupEmail = async () => getUserByEmail(cleanLower);
+    const lookupPhone = async () => {
+        if (cleanDigits.length < 10) return null;
+        return getUserByPhone(cleanDigits.slice(-10));
+    };
+    const lookupEmployeeCode = async () => {
+        if (cleanUpper.length < 3) return null;
+        return getUserByEmployeeCode(cleanUpper);
+    };
+
+    // Respect explicit method selected in UI first
+    if (preferredMethod === 'phone') return await lookupPhone();
+    if (preferredMethod === 'email') return await lookupEmail();
+    if (preferredMethod === 'employeeCode') return await lookupEmployeeCode();
+    if (preferredMethod === 'salesLinkId') return await lookupSalesLinkId();
+
+    // Auto-detect order when no explicit method is supplied
     if (cleanUpper.startsWith('SL-')) {
-        const byId = await getUserBySalesLinkId(cleanUpper);
+        const byId = await lookupSalesLinkId();
         if (byId) return byId;
     }
 
-    // 2. Check Email
     if (cleanLower.includes('@')) {
-        const byEmail = await getUserByEmail(cleanLower);
+        const byEmail = await lookupEmail();
         if (byEmail) return byEmail;
     }
 
-    // 3. Check Phone (if 10 digits)
     if (cleanDigits.length >= 10) {
-        const qPhone = query(usersCol, where('phone', '==', cleanDigits.slice(-10)), limit(1));
-        const snapPhone = await getDocs(qPhone);
-        if (!snapPhone.empty) return { id: snapPhone.docs[0].id, ...snapPhone.docs[0].data() };
+        const byPhone = await lookupPhone();
+        if (byPhone) return byPhone;
     }
 
-    // 4. Check Employee Code
     if (cleanUpper.length >= 3) {
-        const qEmp = query(usersCol, where('employeeCode', '==', cleanUpper), limit(1));
-        const snapEmp = await getDocs(qEmp);
-        if (!snapEmp.empty) return { id: snapEmp.docs[0].id, ...snapEmp.docs[0].data() };
+        const byEmp = await lookupEmployeeCode();
+        if (byEmp) return byEmp;
     }
 
     return null;

@@ -145,7 +145,7 @@ export function useHierarchy({
 
         isConnectingSupervisor.value = true;
         try {
-            const supervisor = await db.linkSmToSupervisor(currentUser.value.id, val);
+            const supervisor = await db.linkSmToSupervisor(currentUser.value.id, val, connectSupervisorMethod.value);
             connectedSupervisorData.value = supervisor;
 
             // Update local user state
@@ -165,7 +165,12 @@ export function useHierarchy({
             }, 2500);
         } catch (err) {
             console.error('Error connecting supervisor:', err);
-            connectSupervisorError.value = err.message || 'Failed to connect supervisor.';
+            const msg = err.message || 'Failed to connect supervisor.';
+            if (msg.startsWith('Role Conflict:')) {
+                connectSupervisorWarning.value = msg.replace(/^Role Conflict:\s*/, '');
+            } else {
+                connectSupervisorError.value = msg;
+            }
         } finally {
             isConnectingSupervisor.value = false;
         }

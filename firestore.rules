@@ -61,6 +61,9 @@ service cloud.firestore {
           resource.data.supervisorId == request.auth.uid
         ))
       );
+      // Allow an active SM to fetch a specific ASM/ZSM profile or run limit(1) supervisor lookup
+      allow get: if signedIn() && active() && role() == 'sm' && resource.data.role in ['asm', 'zsm'];
+      allow list: if signedIn() && active() && role() == 'sm' && request.query.limit <= 1;
       
       // CREATE: super_admin or branch/area managers inviting officers
       allow create: if signedIn() && (
