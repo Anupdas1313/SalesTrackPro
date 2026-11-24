@@ -3165,139 +3165,58 @@
                     </div>
 
 <!-- ADMIN: USER MANAGEMENT -->
-                                                            <div v-if="currentTab === 'users' && isSM" class="space-y-4 sm:space-y-6">
-                        <!-- Top Header & Action Bar -->
-                        <div class="flex items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#4F46E5] shrink-0">
-                                    <i class="fas fa-users-gear text-sm sm:text-base"></i>
-                                </div>
+                    <div v-if="currentTab === 'users' && isSM" class="space-y-4 max-w-5xl mx-auto">
+                        <!-- Unified Header, Tabs & Search Toolbar -->
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3.5">
+                            <div class="flex items-center justify-between gap-3">
                                 <div class="min-w-0">
-                                    <h3 class="text-sm sm:text-lg font-bold text-slate-900 leading-tight truncate">Team User Management</h3>
-                                    <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">Officers, permissions, cockpit & handoffs</p>
+                                    <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Team Users</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">Manage relationship officers & access</p>
                                 </div>
-                            </div>
-                            <div class="shrink-0">
                                 <button @click="openAddRoModal"
-                                    class="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95">
-                                    <i class="fas fa-user-plus text-xs"></i>
+                                    class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                                    <i class="fas fa-user-plus text-[11px]"></i>
                                     <span>Add RO</span>
                                 </button>
                             </div>
-                        </div>
 
-                        <!-- Mobile Status Switcher Bar (Slim, 1-row segmented control) -->
-                        <div class="sm:hidden grid grid-cols-3 gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 text-xs font-bold">
-                            <button @click="smUsersTab = 'active'"
-                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
-                                :class="smUsersTab === 'active' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500" :class="smUsersTab === 'active' ? 'animate-pulse' : ''"></span>
-                                <span>Active ({{ activeRoUsers.length }})</span>
-                            </button>
-                            <button @click="smUsersTab = 'suspended'"
-                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
-                                :class="smUsersTab === 'suspended' ? 'bg-white text-amber-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
-                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                <span>Frozen ({{ suspendedRoUsers.length }})</span>
-                            </button>
-                            <button @click="smUsersTab = 'resigned'"
-                                class="py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
-                                :class="smUsersTab === 'resigned' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
-                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                                <span>Exit ({{ resignedRoUsers.length }})</span>
-                            </button>
-                        </div>
-
-                        <!-- Desktop Status Switcher Cards -->
-                        <div class="hidden sm:grid sm:grid-cols-3 gap-3">
-                            <!-- Active Tab Card -->
-                            <button @click="smUsersTab = 'active'"
-                                class="text-left p-4 rounded-2xl border transition relative flex items-center justify-between cursor-pointer group"
-                                :class="smUsersTab === 'active' ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition"
-                                        :class="smUsersTab === 'active' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'">
-                                        <i class="fas fa-user-check"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Active Officers</p>
-                                        <h4 class="text-xl font-extrabold text-slate-900">{{ activeRoUsers.length }}</h4>
-                                    </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-1 border-t border-slate-100">
+                                <!-- Segmented Status Tabs -->
+                                <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-xs sm:w-auto sm:min-w-[280px]">
+                                    <button @click="smUsersTab = 'active'"
+                                        class="py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                        :class="smUsersTab === 'active' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'">
+                                        <span>Active</span>
+                                        <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-bold">{{ activeRoUsers.length }}</span>
+                                    </button>
+                                    <button @click="smUsersTab = 'suspended'"
+                                        class="py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                        :class="smUsersTab === 'suspended' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'">
+                                        <span>Frozen</span>
+                                        <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-bold">{{ suspendedRoUsers.length }}</span>
+                                    </button>
+                                    <button @click="smUsersTab = 'resigned'"
+                                        class="py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                        :class="smUsersTab === 'resigned' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'">
+                                        <span>Exit</span>
+                                        <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-bold">{{ resignedRoUsers.length }}</span>
+                                    </button>
                                 </div>
-                                <span v-if="smUsersTab === 'active'" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 animate-pulse"></span>
-                            </button>
 
-                            <!-- Suspended Tab Card -->
-                            <button @click="smUsersTab = 'suspended'"
-                                class="text-left p-4 rounded-2xl border transition relative flex items-center justify-between cursor-pointer group"
-                                :class="smUsersTab === 'suspended' ? 'bg-amber-50/70 border-amber-300 ring-2 ring-amber-500/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition"
-                                        :class="smUsersTab === 'suspended' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 border border-amber-200/60'">
-                                        <i class="fas fa-user-lock"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Suspended / Frozen</p>
-                                        <h4 class="text-xl font-extrabold text-slate-900">{{ suspendedRoUsers.length }}</h4>
-                                    </div>
+                                <!-- Search Input -->
+                                <div class="relative flex-1">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                    <input type="text"
+                                        v-model="smUsersSearch"
+                                        placeholder="Search name, email, or code..."
+                                        class="w-full pl-8 pr-8 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition" />
+                                    <button v-if="smUsersSearch"
+                                        @click="smUsersSearch = ''"
+                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
+                                        title="Clear Search">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
                                 </div>
-                                <span v-if="smUsersTab === 'suspended'" class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-200 animate-pulse"></span>
-                            </button>
-
-                            <!-- Resigned Tab Card -->
-                            <button @click="smUsersTab = 'resigned'"
-                                class="text-left p-4 rounded-2xl border transition relative flex items-center justify-between cursor-pointer group"
-                                :class="smUsersTab === 'resigned' ? 'bg-slate-100 border-slate-400 ring-2 ring-slate-400/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition"
-                                        :class="smUsersTab === 'resigned' ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-700 border border-slate-200'">
-                                        <i class="fas fa-user-slash"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Offboarded / Resigned</p>
-                                        <h4 class="text-xl font-extrabold text-slate-900">{{ resignedRoUsers.length }}</h4>
-                                    </div>
-                                </div>
-                                <span v-if="smUsersTab === 'resigned'" class="w-2.5 h-2.5 rounded-full bg-slate-700 ring-4 ring-slate-300"></span>
-                            </button>
-                        </div>
-
-                        <!-- Live Search & Filter Bar -->
-                        <div class="bg-white p-2.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
-                            <div class="relative flex-1">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                                <input type="text"
-                                    v-model="smUsersSearch"
-                                    placeholder="Search by name, email, code..."
-                                    class="w-full pl-8 pr-8 py-1.5 sm:py-2 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition" />
-                                <button v-if="smUsersSearch"
-                                    @click="smUsersSearch = ''"
-                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
-                                    title="Clear Search">
-                                    <i class="fas fa-times text-xs"></i>
-                                </button>
-                            </div>
-                            <div class="text-[11px] text-slate-500 font-semibold shrink-0">
-                                <span v-if="smUsersTab === 'active'" class="hidden sm:inline">
-                                    Showing <strong class="text-slate-900">{{ filteredActiveRos.length }}</strong> of {{ activeRoUsers.length }}
-                                </span>
-                                <span v-if="smUsersTab === 'active'" class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
-                                    {{ filteredActiveRos.length }}/{{ activeRoUsers.length }}
-                                </span>
-
-                                <span v-else-if="smUsersTab === 'suspended'" class="hidden sm:inline">
-                                    Showing <strong class="text-slate-900">{{ filteredSuspendedRos.length }}</strong> of {{ suspendedRoUsers.length }}
-                                </span>
-                                <span v-else-if="smUsersTab === 'suspended'" class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
-                                    {{ filteredSuspendedRos.length }}/{{ suspendedRoUsers.length }}
-                                </span>
-
-                                <span v-else class="hidden sm:inline">
-                                    Showing <strong class="text-slate-900">{{ filteredResignedRos.length }}</strong> of {{ resignedRoUsers.length }}
-                                </span>
-                                <span v-else class="sm:hidden px-2 py-0.5 bg-slate-100 rounded-lg text-slate-700 font-bold text-[10px]">
-                                    {{ filteredResignedRos.length }}/{{ resignedRoUsers.length }}
-                                </span>
                             </div>
                         </div>
 
@@ -3306,75 +3225,67 @@
                             <!-- Desktop Table -->
                             <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                                 <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50/90 border-b border-slate-200/80 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                    <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                                         <tr>
-                                            <th class="px-4 py-3">Officer Name</th>
-                                            <th class="px-4 py-3">Contact & Email</th>
-                                            <th class="px-4 py-3 text-center">Status</th>
-                                            <th class="px-4 py-3 text-center">Date Added</th>
-                                            <th class="px-4 py-3 text-center">Actions</th>
+                                            <th class="px-4 py-3">Officer</th>
+                                            <th class="px-4 py-3">Contact</th>
+                                            <th class="px-4 py-3 text-center">Joined</th>
+                                            <th class="px-4 py-3 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
-                                        <tr v-for="user in filteredActiveRos" :key="user.id" class="hover:bg-slate-50/60 transition group">
+                                        <tr v-for="user in filteredActiveRos" :key="user.id" class="hover:bg-slate-50/60 transition">
                                             <td class="px-4 py-3.5">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-200/60">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                                         {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                                     </div>
                                                     <div>
-                                                        <h4 class="font-bold text-slate-900 capitalize">{{ user.name }}</h4>
-                                                        <p v-if="user.employeeCode" class="text-[10px] text-slate-400 font-medium">Code: {{ user.employeeCode }}</p>
+                                                        <div class="flex items-center gap-2">
+                                                            <h4 class="font-bold text-slate-900 capitalize">{{ user.name }}</h4>
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Active"></span>
+                                                        </div>
+                                                        <p v-if="user.employeeCode" class="text-[10px] text-slate-400 font-mono">{{ user.employeeCode }}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3.5">
                                                 <div class="space-y-0.5">
-                                                    <div class="text-slate-700 font-medium flex items-center gap-1.5">
-                                                        <i class="far fa-envelope text-[11px] text-slate-400"></i>
-                                                        <span>{{ user.email }}</span>
-                                                    </div>
-                                                    <div v-if="user.phone" class="text-[11px] text-slate-500 flex items-center gap-1.5">
-                                                        <i class="fab fa-whatsapp text-emerald-600 text-[11px]"></i>
-                                                        <a :href="'https://wa.me/91' + String(user.phone).replace(/\D/g,'')" target="_blank" class="hover:text-emerald-700 hover:underline">
+                                                    <div class="text-slate-700 font-medium">{{ user.email }}</div>
+                                                    <div v-if="user.phone" class="text-[11px] text-slate-500">
+                                                        <a :href="'https://wa.me/91' + String(user.phone).replace(/\D/g,'')" target="_blank" class="hover:text-slate-900 hover:underline">
                                                             {{ user.phone }}
                                                         </a>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="px-4 py-3.5 text-center">
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
-                                                </span>
-                                            </td>
                                             <td class="px-4 py-3.5 text-center text-slate-500 font-medium text-[11px]">
                                                 {{ formatDate(user.createdAt) }}
                                             </td>
-                                            <td class="px-4 py-3.5 text-center">
-                                                <div class="flex items-center justify-center gap-1.5">
+                                            <td class="px-4 py-3.5 text-right">
+                                                <div class="flex items-center justify-end gap-1.5">
                                                     <button @click="openRoInspector(user)"
-                                                        class="px-2.5 py-1.5 bg-[#4F46E5]/10 hover:bg-[#4F46E5] text-[#4F46E5] hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                                                        title="View RO Performance Cockpit">
-                                                        <i class="fas fa-chart-line text-[10px]"></i> Cockpit
+                                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-900 text-slate-800 hover:text-white rounded-lg text-xs font-bold transition cursor-pointer">
+                                                        Cockpit
                                                     </button>
                                                     <button @click="openEditUserModal(user)"
-                                                        class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
-                                                        title="Edit Officer Name & Email">
-                                                        <i class="fas fa-edit text-[10px]"></i> Edit
+                                                        class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                                                        title="Edit Officer">
+                                                        <i class="fas fa-pen text-xs"></i>
                                                     </button>
                                                     <button @click="toggleUserStatus(user)"
-                                                        class="px-2 py-1.5 rounded-lg text-xs font-semibold border transition text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-200/60 cursor-pointer"
-                                                        title="Freeze login access">
-                                                        <i class="fas fa-user-lock text-[10px]"></i> Suspend
+                                                        class="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                                        title="Freeze / Suspend">
+                                                        <i class="fas fa-user-lock text-xs"></i>
                                                     </button>
                                                     <button @click="openOffboardModal(user)"
-                                                        class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-200/60 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
-                                                        title="Safely Offboard & Transfer Pipeline">
-                                                        <i class="fas fa-arrow-right-from-bracket text-[10px]"></i> Offboard
+                                                        class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                                        title="Offboard & Transfer Pipeline">
+                                                        <i class="fas fa-arrow-right-from-bracket text-xs"></i>
                                                     </button>
                                                     <button @click="deleteRoUser(user)"
                                                         class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                                                        title="Permanently Delete Officer Profile">
+                                                        title="Delete Officer">
                                                         <i class="fas fa-trash-alt text-xs"></i>
                                                     </button>
                                                 </div>
@@ -3382,81 +3293,48 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <!-- Empty state -->
                                 <div v-if="filteredActiveRos.length === 0" class="py-12 text-center text-slate-400">
-                                    <i class="fas fa-users-slash text-3xl mb-2 text-slate-300"></i>
-                                    <p class="font-bold text-slate-600 text-sm">No active officers found</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">Try clearing search filters or add a new RO above</p>
+                                    <p class="font-semibold text-slate-600 text-sm">No active officers found</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Clear your search or add a new RO above</p>
                                 </div>
                             </div>
 
-                            <!-- Mobile Compact List (High Density, Zero Clutter) -->
+                            <!-- Mobile Clean List -->
                             <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
-                                <div v-for="user in filteredActiveRos" :key="'active-mob-'+user.id" class="p-3 hover:bg-slate-50/60 transition space-y-2">
-                                    <!-- Row 1: Avatar + Name + Code + Cockpit Button -->
-                                    <div class="flex items-center justify-between gap-2">
+                                <div v-for="user in filteredActiveRos" :key="'active-mob-'+user.id" class="p-3.5 space-y-2.5">
+                                    <div class="flex items-center justify-between gap-2.5">
                                         <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-emerald-200/60">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                                 {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <h4 class="font-bold text-slate-900 text-xs capitalize truncate leading-tight">{{ user.name }}</h4>
-                                                    <span v-if="user.employeeCode" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                                        {{ user.employeeCode }}
-                                                    </span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <h4 class="font-bold text-slate-900 text-xs capitalize truncate">{{ user.name }}</h4>
+                                                    <span v-if="user.employeeCode" class="text-[10px] font-mono text-slate-400 shrink-0">{{ user.employeeCode }}</span>
                                                 </div>
-                                                <div class="flex items-center gap-2 text-[11px] text-slate-400 font-medium truncate mt-0.5">
-                                                    <span class="truncate">{{ user.email }}</span>
-                                                </div>
+                                                <p class="text-[11px] text-slate-500 truncate">{{ user.phone || user.email }}</p>
                                             </div>
                                         </div>
-                                        <!-- Primary Cockpit Button -->
                                         <button @click="openRoInspector(user)"
-                                            class="px-2.5 py-1.5 bg-[#4F46E5] hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-2xs flex items-center gap-1 active:scale-95 transition cursor-pointer"
-                                            title="Performance Cockpit">
-                                            <i class="fas fa-chart-line text-[10px]"></i> Cockpit
+                                            class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[11px] font-bold shrink-0 cursor-pointer">
+                                            Cockpit
                                         </button>
                                     </div>
 
-                                    <!-- Row 2: Contact info & Action Pills -->
-                                    <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-100 text-[10px]">
-                                        <div class="text-slate-500 font-medium flex items-center gap-1 shrink-0">
-                                            <span v-if="user.phone" class="inline-flex items-center gap-1 text-emerald-600 font-bold">
-                                                <i class="fab fa-whatsapp text-[10px]"></i>
-                                                <a :href="'https://wa.me/91' + String(user.phone).replace(/\D/g,'')" target="_blank" class="hover:underline">
-                                                    {{ user.phone }}
-                                                </a>
-                                            </span>
-                                            <span v-else class="text-slate-400">{{ formatDateOnly(user.createdAt) }}</span>
-                                        </div>
-
-                                        <!-- Clean action pills -->
-                                        <div class="flex items-center gap-1">
-                                            <button @click="openEditUserModal(user)"
-                                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10px] transition cursor-pointer">
-                                                Edit
-                                            </button>
-                                            <button @click="toggleUserStatus(user)"
-                                                class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 rounded-lg font-bold text-[10px] transition cursor-pointer">
-                                                Freeze
-                                            </button>
-                                            <button @click="openOffboardModal(user)"
-                                                class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/60 rounded-lg font-bold text-[10px] transition cursor-pointer">
-                                                Exit
-                                            </button>
-                                            <button @click="deleteRoUser(user)"
-                                                class="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
-                                                title="Delete Profile">
+                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                                        <span class="text-slate-400 truncate max-w-[45%]">{{ user.email }}</span>
+                                        <div class="flex items-center gap-3 text-slate-500 font-semibold">
+                                            <button @click="openEditUserModal(user)" class="hover:text-slate-900 cursor-pointer">Edit</button>
+                                            <button @click="toggleUserStatus(user)" class="hover:text-amber-700 cursor-pointer">Freeze</button>
+                                            <button @click="openOffboardModal(user)" class="hover:text-rose-600 cursor-pointer">Exit</button>
+                                            <button @click="deleteRoUser(user)" class="text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete">
                                                 <i class="fas fa-trash-alt text-[10px]"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Empty state mobile -->
                                 <div v-if="filteredActiveRos.length === 0" class="p-8 text-center text-slate-400">
-                                    <i class="fas fa-users-slash text-2xl mb-1.5 text-slate-300"></i>
-                                    <p class="font-bold text-slate-600 text-xs">No active officers found</p>
+                                    <p class="font-semibold text-slate-600 text-xs">No active officers found</p>
                                 </div>
                             </div>
                         </div>
@@ -3466,68 +3344,55 @@
                             <!-- Desktop Table -->
                             <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                                 <table class="w-full text-left text-xs">
-                                    <thead class="bg-amber-50/70 border-b border-amber-200/60 text-[10px] uppercase font-bold text-amber-800 tracking-wider">
+                                    <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                                         <tr>
-                                            <th class="px-4 py-3">Officer Name</th>
-                                            <th class="px-4 py-3">Contact & Email</th>
-                                            <th class="px-4 py-3 text-center">Status</th>
-                                            <th class="px-4 py-3 text-center">Date Added</th>
-                                            <th class="px-4 py-3 text-center">Actions</th>
+                                            <th class="px-4 py-3">Officer</th>
+                                            <th class="px-4 py-3">Contact</th>
+                                            <th class="px-4 py-3 text-center">Joined</th>
+                                            <th class="px-4 py-3 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
-                                        <tr v-for="user in filteredSuspendedRos" :key="'susp-'+user.id" class="hover:bg-amber-50/30 transition group">
+                                        <tr v-for="user in filteredSuspendedRos" :key="'susp-'+user.id" class="hover:bg-slate-50/60 transition">
                                             <td class="px-4 py-3.5">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-200/60">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center shrink-0">
                                                         {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                                     </div>
                                                     <div>
-                                                        <h4 class="font-bold text-slate-800 capitalize">{{ user.name }}</h4>
-                                                        <p v-if="user.employeeCode" class="text-[10px] text-slate-400 font-medium">Code: {{ user.employeeCode }}</p>
+                                                        <div class="flex items-center gap-2">
+                                                            <h4 class="font-bold text-slate-800 capitalize">{{ user.name }}</h4>
+                                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700">Frozen</span>
+                                                        </div>
+                                                        <p v-if="user.employeeCode" class="text-[10px] text-slate-400 font-mono">{{ user.employeeCode }}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3.5">
-                                                <div class="space-y-0.5">
-                                                    <div class="text-slate-600 font-medium flex items-center gap-1.5">
-                                                        <i class="far fa-envelope text-[11px] text-slate-400"></i>
-                                                        <span>{{ user.email }}</span>
-                                                    </div>
-                                                    <div v-if="user.phone" class="text-[11px] text-slate-400 flex items-center gap-1.5">
-                                                        <i class="fas fa-phone text-[10px]"></i>
-                                                        <span>{{ user.phone }}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3.5 text-center">
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80">
-                                                    <i class="fas fa-lock text-[9px]"></i> Suspended
-                                                </span>
+                                                <div class="text-slate-600 font-medium">{{ user.email }}</div>
+                                                <div v-if="user.phone" class="text-[11px] text-slate-400">{{ user.phone }}</div>
                                             </td>
                                             <td class="px-4 py-3.5 text-center text-slate-500 font-medium text-[11px]">
                                                 {{ formatDate(user.createdAt) }}
                                             </td>
-                                            <td class="px-4 py-3.5 text-center">
-                                                <div class="flex items-center justify-center gap-1.5">
+                                            <td class="px-4 py-3.5 text-right">
+                                                <div class="flex items-center justify-end gap-1.5">
+                                                    <button @click="toggleUserStatus(user)"
+                                                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition cursor-pointer">
+                                                        Activate
+                                                    </button>
                                                     <button @click="openRoInspector(user)"
-                                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-[#4F46E5] text-slate-700 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                                                        title="View Historical Files">
-                                                        <i class="fas fa-history text-[10px]"></i> History
+                                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer">
+                                                        History
                                                     </button>
                                                     <button @click="openEditUserModal(user)"
-                                                        class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                                        class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                                         title="Edit Officer">
-                                                        <i class="fas fa-edit text-[10px]"></i> Edit
-                                                    </button>
-                                                    <button @click="toggleUserStatus(user)"
-                                                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold border transition text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200/80 flex items-center gap-1 cursor-pointer"
-                                                        title="Reactivate RO Account">
-                                                        <i class="fas fa-check text-[10px]"></i> Activate
+                                                        <i class="fas fa-pen text-xs"></i>
                                                     </button>
                                                     <button @click="deleteRoUser(user)"
                                                         class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                                                        title="Permanently Delete Profile">
+                                                        title="Delete Profile">
                                                         <i class="fas fa-trash-alt text-xs"></i>
                                                     </button>
                                                 </div>
@@ -3535,57 +3400,39 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <!-- Empty state -->
                                 <div v-if="filteredSuspendedRos.length === 0" class="py-12 text-center text-slate-400">
-                                    <i class="fas fa-user-check text-3xl mb-2 text-slate-300"></i>
-                                    <p class="font-bold text-slate-600 text-sm">No suspended accounts</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">All team members currently have active or offboarded status</p>
+                                    <p class="font-semibold text-slate-600 text-sm">No frozen accounts</p>
                                 </div>
                             </div>
 
-                            <!-- Mobile Compact List -->
-                            <div class="md:hidden bg-white border border-amber-200/80 rounded-2xl divide-y divide-amber-100 shadow-xs overflow-hidden">
-                                <div v-for="user in filteredSuspendedRos" :key="'susp-mob-'+user.id" class="p-3 hover:bg-amber-50/30 transition space-y-2">
-                                    <div class="flex items-center justify-between gap-2">
+                            <!-- Mobile Clean List -->
+                            <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
+                                <div v-for="user in filteredSuspendedRos" :key="'susp-mob-'+user.id" class="p-3.5 space-y-2.5">
+                                    <div class="flex items-center justify-between gap-2.5">
                                         <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs flex items-center justify-center shrink-0 border border-amber-200">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center shrink-0">
                                                 {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <h4 class="font-bold text-slate-800 text-xs capitalize truncate leading-tight">{{ user.name }}</h4>
-                                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                                        Frozen
-                                                    </span>
-                                                </div>
-                                                <p class="text-[11px] text-slate-400 truncate mt-0.5">{{ user.email }}</p>
+                                                <h4 class="font-bold text-slate-800 text-xs capitalize truncate">{{ user.name }}</h4>
+                                                <p class="text-[11px] text-slate-400 truncate">{{ user.email }}</p>
                                             </div>
                                         </div>
-                                        <!-- Activate Button -->
                                         <button @click="toggleUserStatus(user)"
-                                            class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer">
-                                            <i class="fas fa-check text-[10px]"></i> Activate
+                                            class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[11px] font-bold shrink-0 cursor-pointer">
+                                            Activate
                                         </button>
                                     </div>
-
-                                    <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-amber-100 text-[10px]">
+                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
                                         <span class="text-slate-400">{{ user.phone || formatDateOnly(user.createdAt) }}</span>
-                                        <div class="flex items-center gap-1">
-                                            <button @click="openRoInspector(user)"
-                                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10px] transition cursor-pointer">
-                                                History
-                                            </button>
-                                            <button @click="deleteRoUser(user)"
-                                                class="px-2 py-1 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg font-bold text-[10px] transition cursor-pointer">
-                                                Delete
-                                            </button>
+                                        <div class="flex items-center gap-3 text-slate-500 font-semibold">
+                                            <button @click="openRoInspector(user)" class="hover:text-slate-900 cursor-pointer">History</button>
+                                            <button @click="deleteRoUser(user)" class="hover:text-rose-600 cursor-pointer">Delete</button>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Empty state mobile -->
                                 <div v-if="filteredSuspendedRos.length === 0" class="p-8 text-center text-slate-400">
-                                    <i class="fas fa-user-check text-2xl mb-1.5 text-slate-300"></i>
-                                    <p class="font-bold text-slate-600 text-xs">No suspended accounts</p>
+                                    <p class="font-semibold text-slate-600 text-xs">No frozen accounts</p>
                                 </div>
                             </div>
                         </div>
