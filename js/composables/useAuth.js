@@ -34,6 +34,7 @@ export function useAuth({
     // --- State ---
     const currentUser = ref(initialUser);
     const originalUser = ref(null);
+    const registerError = ref('');
 
     // --- Real-time Security & Account Sync Gatekeeper ---
     let userSecurityUnsub = null;
