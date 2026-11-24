@@ -2247,49 +2247,36 @@
                                 </table>
                             </div>
 
-                            <!-- Mobile Card View (100% Screen Fit, Minimal, Clean & Modern) -->
-                            <div class="md:hidden flex flex-col gap-2.5 p-3 bg-slate-50/50 flex-1 overflow-y-auto">
-                                <div v-for="file in filteredFiles" :key="'mob-admin-'+file.id" class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-xs space-y-2.5">
-                                    <!-- Top: App ID & Date & Status Badge -->
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                            <span class="text-[#4F46E5]">#{{ file.appId || 'NO ID' }}</span>
-                                            <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                            <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
-                                        </div>
-                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[9px] font-bold shadow-xs">{{ file.status }}</span>
+                            <!-- Mobile Clean Card List (Frictionless, Calm Monochrome) -->
+                            <div class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden flex-1 overflow-y-auto">
+                                <div v-for="file in filteredFiles" :key="'mob-admin-'+file.id" @click="openViewFileModal(file)" class="p-3.5 hover:bg-slate-50/70 active:bg-slate-100/70 transition space-y-2 cursor-pointer">
+                                    <!-- Row 1: Customer Name & Loan Amount -->
+                                    <div class="flex items-baseline justify-between gap-2">
+                                        <h4 class="font-bold text-slate-900 text-sm uppercase truncate">{{ file.customerName }}</h4>
+                                        <span class="text-sm font-extrabold text-slate-900 shrink-0">₹{{ formatCurrency(file.loanAmount) }}</span>
                                     </div>
 
-                                    <!-- Middle: Customer Name & Loan Amount -->
-                                    <div class="flex justify-between items-baseline gap-2">
-                                        <h4 class="font-extrabold text-slate-900 text-sm leading-snug uppercase truncate">{{ file.customerName }}</h4>
-                                        <div class="text-sm font-black text-slate-900 shrink-0">₹{{ formatCurrency(file.loanAmount) }}</div>
+                                    <!-- Row 2: Clean Metadata Line -->
+                                    <div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500 font-medium">
+                                        <span class="font-mono text-slate-600">#{{ file.appId || 'NO ID' }}</span>
+                                        <span>·</span>
+                                        <span class="truncate max-w-[130px]">{{ file.roName }}</span>
+                                        <span>·</span>
+                                        <span class="uppercase">{{ file.nclUcl || '-' }}</span>
+                                        <span>·</span>
+                                        <span class="uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
+                                        <span>·</span>
+                                        <span>{{ file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt) }}</span>
                                     </div>
 
-                                    <!-- Tags Row: Category, Channel, RO & SM -->
-                                    <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
-                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200/60 uppercase">{{ file.nclUcl || '-' }}</span>
-                                        <span class="px-2 py-0.5 bg-slate-100 text-[#4F46E5] rounded-md border border-slate-200/60 uppercase">{{ file.sourcingChannel || 'DSA' }}</span>
-                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
-                                            <i class="fas fa-user text-[9px] text-slate-400"></i> RO: {{ file.roName }}
-                                        </span>
-                                        <span v-if="file.smName" class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200/60 uppercase flex items-center gap-1">
-                                            <i class="fas fa-user-tie text-[9px] text-slate-400"></i> SM: {{ file.smName }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Bottom: Updated Date & Actions -->
-                                    <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
-                                        <span class="text-[10px] font-medium text-slate-400">Updated: {{ formatDate(file.updatedAt || file.createdAt) }}</span>
-                                        <div class="flex items-center gap-1">
-                                            <button @click="openViewFileModal(file)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition" title="View">
-                                                <i class="fas fa-eye text-xs"></i>
-                                            </button>
-                                            <button @click="openEditFileModal(file)" class="w-7 h-7 flex items-center justify-center text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-full transition" title="Edit">
-                                                <i class="fas fa-pen-to-square text-xs"></i>
-                                            </button>
-                                            <button @click="deleteFile(file)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition" title="Delete">
-                                                <i class="fas fa-trash text-xs"></i>
+                                    <!-- Row 3: Status & Direct Actions -->
+                                    <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                                        <span :class="getStatusBadgeClass(file.status)" class="!px-2 !py-0.5 !text-[10px] font-bold">{{ file.status }}</span>
+                                        <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-500" @click.stop>
+                                            <button @click="openViewFileModal(file)" class="hover:text-slate-900 cursor-pointer">View</button>
+                                            <button @click="openEditFileModal(file)" class="hover:text-slate-900 cursor-pointer">Edit</button>
+                                            <button @click="deleteFile(file)" class="text-slate-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                                <i class="fas fa-trash-alt text-[10px]"></i>
                                             </button>
                                         </div>
                                     </div>
