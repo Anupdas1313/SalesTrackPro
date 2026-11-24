@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SalesLink</title>
 
     <!-- Progressive Web App (PWA) & Native Mobile App Meta -->
@@ -1252,12 +1252,12 @@
                             {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
                         </div>
 
-                        <!-- Top Header Quick Launcher: Targets & Drives (Bank Roles Only) -->
-                        <button v-if="!isDSE" @click="goToTab('targets-drives')" type="button" :class="currentTab === 'targets-drives' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none">
-                            <i class="fas fa-bullseye text-[11px]"></i>
-                            <span class="hidden sm:inline">Targets & Drives</span>
-                            <span class="sm:hidden">Targets</span>
-                            <span v-if="activeSalesDrivesCount > 0" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Active Campaign Drive Live"></span>
+                        <!-- Top Header Quick Launcher: Showroom Inbound (SM Only) -->
+                        <button v-if="isSM" @click="goToTab('sm-inbound')" type="button" :class="currentTab === 'sm-inbound' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80'" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none relative">
+                            <i class="fas fa-store text-[11px]"></i>
+                            <span>Inbound</span>
+                            <span v-if="smInboundStats && smInboundStats.pending > 0" class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ smInboundStats.pending }}</span>
+                            <span v-else-if="inboundShowroomFiles.length > 0" class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
                         </button>
 
                         <!-- Profile Avatar Pill (Tapping goes to Profile) -->
@@ -6725,14 +6725,6 @@
                             <i class="fas fa-layer-group text-lg mb-0.5"></i>
                             <span class="text-[10px]">Track</span>
                         </a>
-                        <a href="#" @click.prevent="currentTab = 'sm-inbound'" :class="[currentTab === 'sm-inbound' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors relative']">
-                            <div class="relative">
-                                <i class="fas fa-store text-lg mb-0.5"></i>
-                                <span v-if="smInboundStats && smInboundStats.pending > 0" class="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                <span v-else-if="inboundShowroomFiles.length > 0" class="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-indigo-500"></span>
-                            </div>
-                            <span class="text-[10px]">Inbound</span>
-                        </a>
                         <a href="#" @click.prevent="currentTab = 'sm-eod'" :class="[currentTab === 'sm-eod' ? 'text-[#4F46E5] font-bold' : 'text-slate-400 font-medium', 'flex flex-col items-center py-2.5 px-2 flex-1 transition-colors']">
                             <i class="fas fa-clipboard-check text-lg mb-0.5"></i>
                             <span class="text-[10px]">EODs</span>
@@ -6827,6 +6819,25 @@
 
                 <!-- Vertical Menu List (Matching Screenshot Style) -->
                 <div class="divide-y divide-slate-100 text-xs">
+                    <!-- Showroom Inbound (SM Only) -->
+                    <button v-if="isSM" @click="goToTab('sm-inbound'); showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-6 text-center text-slate-400 group-hover:text-[#4F46E5] transition-colors">
+                                <i class="fas fa-store text-base"></i>
+                            </div>
+                            <span class="font-semibold text-slate-800 text-sm">Showroom Inbound</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span v-if="smInboundStats && smInboundStats.pending > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
+                                {{ smInboundStats.pending }}
+                            </span>
+                            <span v-else-if="inboundShowroomFiles.length > 0" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                                {{ inboundShowroomFiles.length }}
+                            </span>
+                            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+                        </div>
+                    </button>
+
                     <!-- Sales Targets & Drives (Bank Roles Only) -->
                     <button v-if="!isDSE" @click="goToTab('targets-drives'); targetsDrivesSubTab = 'targets'; showMoreModal = false;" class="w-full py-3.5 px-1 flex items-center justify-between text-slate-700 hover:text-slate-900 transition text-left cursor-pointer group">
                         <div class="flex items-center gap-3.5">

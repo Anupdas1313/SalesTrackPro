@@ -1,1468 +1,59 @@
+// js/app.js - Main Application Orchestrator for SalesLink (Retail Auto-Loans PWA)
+
 import * as db from './db.js';
-const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+import {
+    STANDARD_STATUSES,
+    toLakhs,
+    formatCurrency,
+    formatLakhsToRupees,
+    formatDate,
+    formatDateOnly,
+    formatCapitalizeName,
+    getStatusBadgeClass,
+    getTabTitle,
+    getTimelineLabel,
+    getSortLabel,
+    getTodayDateStr,
+    getYesterdayDateStr,
+    isSanctionStatus,
+    isDisbursedStatus,
+    matchesTimeline,
+    matchesFileTimeline
+} from './composables/helpers.js';
+import { useAuth } from './composables/useAuth.js';
+import { useDse } from './composables/useDse.js';
+import { useHierarchy } from './composables/useHierarchy.js';
+import { useLoanFiles } from './composables/useLoanFiles.js';
+
+const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const app = createApp({
     setup() {
-        const showMobileFilterDrawer = ref(false);
-        const getInitialUser = () => {
-            const savedUser = localStorage.getItem('axis_user');
-            if (savedUser) {
-                try {
-                    const parsed = JSON.parse(savedUser);
-                    if (parsed.status === 'resigned' || parsed.status === 'suspended' || parsed.status === 'inactive') {
-                        localStorage.removeItem('axis_user');
-                        return null;
-                    }
-                    if (!parsed.email && parsed.role !== 'ro') return null;
-                    return parsed;
-                } catch(e) {}
-            }
-            return null;
-        };
-        const initialUser = getInitialUser();
-        
-        // --- State ---
-        const currentUser = ref(initialUser);
-
-        // --- Real-time Security & Account Sync Gatekeeper ---
-        let userSecurityUnsub = null;
-
-        const generateSessionId = () => {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
-        };
-
-        const handleSecurityLockout = async (reason) => {
-            console.warn("Security Lockout Triggered:", reason);
-            if (userSecurityUnsub) {
-                userSecurityUnsub();
-                userSecurityUnsub = null;
-            }
-            try {
-                if (db.auth) await db.signOut(db.auth);
-            } catch (e) {}
-            localStorage.removeItem('axis_user');
-            localStorage.removeItem('axis_active_session_id');
-            currentUser.value = null;
-            alert(`⛔ Security Alert: Access Terminated\n\n${reason}`);
-            window.location.reload();
-        };
-
-        const startUserSecurityListener = (userId) => {
-            if (userSecurityUnsub) {
-                userSecurityUnsub();
-                userSecurityUnsub = null;
-            }
-            if (!userId) return;
-
-            userSecurityUnsub = db.onUserSnapshot(userId, (freshUser) => {
-                if (!freshUser) {
-                    handleSecurityLockout('Your user profile has been removed by the administrator.');
-                    return;
-                }
-
-                // Check 1: Real-time Account Status (Freeze / Suspend / Resign by Admin/Supervisor)
-                if (freshUser.status === 'suspended' || freshUser.status === 'resigned' || freshUser.status === 'inactive') {
-                    const statusText = freshUser.status === 'suspended' ? 'FROZEN & LOCKED' : 'REVOKED (Offboarded)';
-                    handleSecurityLockout(`Your account has been ${statusText} by your Sales Manager (${freshUser.supervisorName || 'Supervisor'}). Access is immediately terminated.`);
-                    return;
-                }
-
-                // Dynamic Sync of Supervisor, Tenant, and Profile changes in real-time
-                if (currentUser.value) {
-                    if (freshUser.supervisorName) currentUser.value.supervisorName = freshUser.supervisorName;
-                    if (freshUser.supervisorId) currentUser.value.supervisorId = freshUser.supervisorId;
-                    if (freshUser.tenantId) currentUser.value.tenantId = freshUser.tenantId;
-                }
-
-                // Sync directory entry on real-time profile changes
-                if (db.auth?.currentUser?.uid && freshUser) {
-                    db.upsertDirectoryEntry(db.auth.currentUser.uid, {
-                        email: freshUser.email,
-                        role: freshUser.role,
-                        tenantId: freshUser.tenantId || null,
-                        status: freshUser.status || 'active',
-                        userId: freshUser.id
-                    }).catch(() => {});
-                }
-            });
-        };
-        const loginForm = ref({ username: '' });
-        const loginError = ref('');
-        const isLoggingIn = ref(false);
-        const loginStage = ref(''); // '' | 'selecting' | 'verifying'
-        const isRegistering = ref(false);
-        const registerStage = ref(''); // '' | 'selecting' | 'setting_up'
-        const showRegisterMode = ref(false);
-        const loginPortalMode = ref('bank'); // 'bank' | 'dealer'
-        const showMobileFeatures = ref(false);
-        const showBankSelector = ref(false);
-        const registerForm = ref({ role: 'sm', name: '', employeeCode: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' });
-        const registerStep = ref(1);
-        const registerConfirmed = ref(false);
-
-        // --- Dealership & DSE Ecosystem State ---
-        const dseFiles = ref([]);
-        const isDseFileModalOpen = ref(false);
-        const isSubmittingDseFile = ref(false);
-        const dseFileError = ref('');
-        const dseFilterStatus = ref('all');
-        const dseSearchQuery = ref('');
-        const newDseFileForm = ref({
-            customerName: '',
-            customerPhone: '',
-            vehicleModel: '',
-            onRoadPrice: '',
-            loanAmount: '',
-            targetTenantId: '',
-            customerProfile: 'Salaried (Form 16 / ITR)',
-            notes: ''
-        });
-        const dseTrackingFilter = ref('all'); // 'all' | 'sanction' | 'in_progress' | 'pending_ro' | 'disbursed'
-        const dseTrackingSearch = ref('');
-        const showDseInspectorDrawer = ref(false);
-        const selectedDseFile = ref(null);
-        const showDseQrModal = ref(false);
-
-        const openDseInspector = (file) => {
-            selectedDseFile.value = file;
-            showDseInspectorDrawer.value = true;
-        };
-        const closeDseInspector = () => {
-            showDseInspectorDrawer.value = false;
-            selectedDseFile.value = null;
-        };
-
-        const openDseQrModal = () => {
-            showDseQrModal.value = true;
-        };
-        const closeDseQrModal = () => {
-            showDseQrModal.value = false;
-        };
-        const showroomBrandOptions = [
-            'Maruti Suzuki Arena',
-            'Maruti Suzuki Nexa',
-            'Hyundai Motor India',
-            'Tata Motors Passenger Vehicles',
-            'Mahindra & Mahindra',
-            'Kia India',
-            'Toyota Kirloskar',
-            'Honda Cars India',
-            'MG Motor India',
-            'Skoda Auto',
-            'Volkswagen India',
-            'Renault India',
-            'Nissan India',
-            'Other Multi-Brand / Luxury'
-        ];
-
-        const dseStats = computed(() => {
-            const list = dseFiles.value || [];
-            const total = list.length;
-            const inProgress = list.filter(f => {
-                const s = (f.status || '').toUpperCase();
-                return f.allocationStatus === 'pending_sm_dispatch' || s === 'INBOUND' || s === 'LOGIN' || s === 'FI';
-            }).length;
-            const sanctioned = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').length;
-            const disbursed = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').length;
-            const sanctionedVol = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
-            const disbursedVol = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
-            return {
-                total,
-                inProgress,
-                sanctioned,
-                sanctionedVol,
-                disbursed,
-                disbursedVol
-            };
-        });
-
-        const filteredDseFiles = computed(() => {
-            let list = dseFiles.value || [];
-            const q = (dseSearchQuery.value || '').trim().toLowerCase();
-            if (q) {
-                list = list.filter(f => 
-                    (f.customerName || '').toLowerCase().includes(q) ||
-                    (f.customerPhone || '').includes(q) ||
-                    (f.vehicleModel || '').toLowerCase().includes(q) ||
-                    (f.targetBankName || '').toLowerCase().includes(q) ||
-                    (f.roName || '').toLowerCase().includes(q)
-                );
-            }
-            if (dseFilterStatus.value === 'in_progress') {
-                list = list.filter(f => {
-                    const s = (f.status || '').toUpperCase();
-                    return f.allocationStatus === 'pending_sm_dispatch' || s === 'INBOUND' || s === 'LOGIN' || s === 'FI';
-                });
-            } else if (dseFilterStatus.value === 'sanction') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION');
-            } else if (dseFilterStatus.value === 'disbursed') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED');
-            }
-            return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        });
-
-        const getDseDeliveryStage = (file) => {
-            if (!file) return { stageIndex: 1, stageName: 'Punch Submitted', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', isReady: false, isDelivered: false };
-            const s = (file.status || '').toUpperCase();
-            if (s === 'DISBURSED') {
-                return { stageIndex: 5, stageName: 'Delivered & Disbursed', badgeClass: 'bg-purple-100 text-purple-800 border-purple-200', isReady: true, isDelivered: true };
-            }
-            if (s === 'SANCTION') {
-                return { stageIndex: 4, stageName: 'Sanctioned & DO Released', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', isReady: true, isDelivered: false };
-            }
-            if (s === 'REJECTED' || s === 'CANCELLED') {
-                return { stageIndex: 0, stageName: 'Declined / Re-route Bank', badgeClass: 'bg-rose-100 text-rose-800 border-rose-200', isReady: false, isDelivered: false };
-            }
-            if (file.roName && file.roName !== 'Pending SM Dispatch') {
-                return { stageIndex: 3, stageName: 'Bank Credit Review', badgeClass: 'bg-indigo-100 text-[#4F46E5] border-indigo-200', isReady: false, isDelivered: false };
-            }
-            if (file.allocationStatus === 'pending_sm_dispatch') {
-                return { stageIndex: 1, stageName: 'Punch Received at Hub', badgeClass: 'bg-amber-100 text-amber-800 border-amber-200', isReady: false, isDelivered: false };
-            }
-            return { stageIndex: 2, stageName: 'Bank RO Assigned', badgeClass: 'bg-blue-100 text-blue-800 border-blue-200', isReady: false, isDelivered: false };
-        };
-
-        const filteredDseTrackingFiles = computed(() => {
-            let list = dseFiles.value || [];
-            const q = (dseTrackingSearch.value || '').trim().toLowerCase();
-            if (q) {
-                list = list.filter(f => 
-                    (f.customerName || '').toLowerCase().includes(q) ||
-                    (f.customerPhone || '').includes(q) ||
-                    (f.vehicleModel || '').toLowerCase().includes(q) ||
-                    (f.appId || '').toLowerCase().includes(q) ||
-                    (f.targetBankName || '').toLowerCase().includes(q) ||
-                    (f.roName || '').toLowerCase().includes(q)
-                );
-            }
-            const filter = dseTrackingFilter.value;
-            if (filter === 'sanction') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'SANCTION');
-            } else if (filter === 'in_progress') {
-                list = list.filter(f => {
-                    const s = (f.status || '').toUpperCase();
-                    return s !== 'SANCTION' && s !== 'DISBURSED' && s !== 'REJECTED' && s !== 'CANCELLED' && f.allocationStatus !== 'pending_sm_dispatch';
-                });
-            } else if (filter === 'pending_ro') {
-                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch' || !f.roName || f.roName === 'Pending SM Dispatch');
-            } else if (filter === 'disbursed') {
-                list = list.filter(f => (f.status || '').toUpperCase() === 'DISBURSED');
-            }
-            return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        });
-
-        const dsePersonalApplyUrl = computed(() => {
-            if (!currentUser.value) return window.location.origin;
-            const params = new URLSearchParams();
-            const tenantId = currentUser.value.tenantId || '';
-            if (tenantId) params.set('apply', tenantId);
-            if (currentUser.value.dealershipName) params.set('dealer', currentUser.value.dealershipName);
-            if (currentUser.value.showroomBrand) params.set('brand', currentUser.value.showroomBrand);
-            if (currentUser.value.name) params.set('dse', currentUser.value.name);
-            if (currentUser.value.phone) params.set('dsePhone', currentUser.value.phone);
-            if (currentUser.value.salesLinkId) params.set('dseId', currentUser.value.salesLinkId);
-            return `${window.location.origin}/?${params.toString()}`;
-        });
-
-        const copyDsePersonalApplyLink = async () => {
-            const url = dsePersonalApplyUrl.value;
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(url);
-                } else {
-                    const ta = document.createElement('textarea');
-                    ta.value = url;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                }
-                copiedSalesLinkIdToast.value = true;
-                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
-            } catch (e) {
-                alert("Showroom Apply Link copied: " + url);
-            }
-        };
-
-        const shareDsePersonalWhatsApp = () => {
-            const url = dsePersonalApplyUrl.value;
-            const brand = currentUser.value?.showroomBrand || 'Car Showroom';
-            const dealership = currentUser.value?.dealershipName || 'Our Showroom';
-            const dseName = currentUser.value?.name || 'Sales Consultant';
-            const msg = `Dear Customer,\n\n` +
-                `Welcome to *${dealership}* (${brand})!\n\n` +
-                `Please use my official showroom digital loan desk to check car loan eligibility and get instant bank sanction approvals:\n\n` +
-                `📲 *Apply Online / Punch Loan:* ${url}\n\n` +
-                `We will track your sanction live and fast-track your car delivery!\n\n` +
-                `Regards,\n*${dseName}*\nSales Consultant, ${dealership}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const getDseStatusInfo = (file) => {
-            if (!file) return { label: 'Submitted', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', icon: 'fas fa-clock', title: 'Submitted' };
-            const status = (file.status || '').toUpperCase();
-            if (status === 'DISBURSED') {
-                return {
-                    label: 'Delivered',
-                    title: 'Car Delivered & Financed',
-                    badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
-                    pillClass: 'bg-purple-100 text-purple-800',
-                    icon: 'fas fa-car-side',
-                    borderClass: 'border-purple-200 hover:border-purple-300',
-                    bannerClass: 'bg-purple-50/80 border-purple-200 text-purple-900',
-                    bannerText: 'Car Delivered & Disbursed'
-                };
-            }
-            if (status === 'SANCTION') {
-                return {
-                    label: 'Approved',
-                    title: 'Loan Approved — Ready for Car Delivery!',
-                    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                    pillClass: 'bg-emerald-100 text-emerald-800',
-                    icon: 'fas fa-check-circle',
-                    borderClass: 'border-emerald-300 ring-1 ring-emerald-500/20 hover:border-emerald-400',
-                    bannerClass: 'bg-emerald-50/90 border-emerald-200 text-emerald-900',
-                    bannerText: 'Loan Approved — Cleared for Delivery'
-                };
-            }
-            if (file.allocationStatus === 'pending_sm_dispatch') {
-                return {
-                    label: 'Submitted',
-                    title: 'Awaiting Bank Officer Assignment',
-                    badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
-                    pillClass: 'bg-amber-100 text-amber-800',
-                    icon: 'fas fa-paper-plane',
-                    borderClass: 'border-amber-200 hover:border-amber-300',
-                    bannerClass: 'bg-amber-50/80 border-amber-200 text-amber-900',
-                    bannerText: 'Submitted to Bank Hub — Assigning RO'
-                };
-            }
-            return {
-                label: 'In Progress',
-                title: 'Bank Verification in Progress',
-                badgeClass: 'bg-indigo-50 text-[#4F46E5] border-indigo-200',
-                pillClass: 'bg-indigo-100 text-indigo-800',
-                icon: 'fas fa-arrows-rotate',
-                borderClass: 'border-indigo-200 hover:border-indigo-300',
-                bannerClass: 'bg-indigo-50/80 border-indigo-200 text-indigo-900',
-                bannerText: file.roName && file.roName !== 'Pending SM Dispatch'
-                    ? `Processing with ${file.roName} (${file.targetBankName || 'Bank'})`
-                    : `In Bank Verification (${file.targetBankName || 'Bank'})`
-            };
-        };
-
-        const getRelativeTime = (isoString) => {
-            if (!isoString) return '';
-            try {
-                const date = new Date(isoString);
-                const now = new Date();
-                const diffMs = now - date;
-                const diffMins = Math.floor(diffMs / (1000 * 60));
-                const diffHours = Math.floor(diffMins / 60);
-                const diffDays = Math.floor(diffHours / 24);
-
-                if (diffMins < 2) return 'Just now';
-                if (diffMins < 60) return `${diffMins}m ago`;
-                if (diffHours < 24) return `${diffHours}h ago`;
-                if (diffDays === 1) return 'Yesterday';
-                if (diffDays < 7) return `${diffDays}d ago`;
-                return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-            } catch (e) {
-                return '';
-            }
-        };
-
-        const sendCustomerLoanUpdateWhatsApp = (file) => {
-            if (!file || !file.customerPhone) return;
-            const statusUpper = (file.status || '').toUpperCase();
-            let msg = '';
-            if (statusUpper === 'SANCTION') {
-                msg = `Hi ${file.customerName}, great news from ${currentUser.value?.dealershipName || 'our showroom'}! 🎉 Your car loan of ₹${file.sanctionAmount || file.loanAmount} Lakhs for ${file.vehicleModel} has been APPROVED by ${file.targetBankName || 'the bank'}. We are getting your car ready for delivery!`;
-            } else if (statusUpper === 'DISBURSED') {
-                msg = `Congratulations ${file.customerName}! 🚗 Your car loan for ${file.vehicleModel} is disbursed and car delivery is confirmed. Thank you for choosing ${currentUser.value?.dealershipName || 'us'}!`;
-            } else {
-                msg = `Hi ${file.customerName}, this is ${currentUser.value?.name || 'your Sales Executive'} from ${currentUser.value?.dealershipName || 'the dealership'}. Your car loan application for ${file.vehicleModel} with ${file.targetBankName || 'our partner bank'} is currently in progress. We will keep you updated!`;
-            }
-            const phoneDigits = file.customerPhone.replace(/\D/g, '');
-            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
-            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const sendDseRoNudgeWhatsApp = (file) => {
-            if (!file) return;
-            const msg = `Hi ${file.roName || 'Officer'}, checking update for car loan of *${file.customerName}* (${file.vehicleModel}) punched from *${currentUser.value?.dealershipName || 'our showroom'}*. Could you please share the latest sanction / delivery status? Thanks!`;
-            const phone = file.roPhone || file.assignedRoPhone || '';
-            const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
-            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
-            if (targetPhone) {
-                window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-            } else {
-                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-            }
-        };
-
-        // --- Showroom QR & Public Apply Ecosystem ---
-        const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-        const initialApplyParam = searchParams ? (searchParams.get('apply') || searchParams.get('hub') || searchParams.get('ref')) : null;
-
-        const isPublicApplyMode = ref(!!initialApplyParam);
-        const publicApplyWorkspace = ref(initialApplyParam ? {
-            id: initialApplyParam,
-            bankName: searchParams.get('bank') || 'Axis Bank',
-            name: searchParams.get('hub') || 'Branch Hub',
-            managerName: searchParams.get('sm') || 'Sales Manager',
-            managerPhone: searchParams.get('phone') || searchParams.get('p') || '',
-            salesLinkId: searchParams.get('smId') || ''
-        } : null);
-        const publicApplySmUser = ref(null);
-        const isResolvingPublicHub = ref(false);
-        const publicHubError = ref('');
-        const showSmQrStandeeModal = ref(false);
-
-        const publicApplyForm = ref({
-            dealershipName: searchParams ? (searchParams.get('dealer') || searchParams.get('dealership') || '') : '',
-            showroomBrand: searchParams ? (searchParams.get('brand') || 'Maruti Suzuki Arena') : 'Maruti Suzuki Arena',
-            dseName: searchParams ? (searchParams.get('dse') || searchParams.get('executive') || '') : '',
-            dsePhone: searchParams ? (searchParams.get('dsePhone') || searchParams.get('dp') || '') : '',
-            customerName: '',
-            customerPhone: '',
-            vehicleModel: '',
-            onRoadPrice: '',
-            loanAmount: '',
-            customerProfile: 'Salaried (Form 16 / ITR)',
-            notes: ''
-        });
-        const isSubmittingPublicApply = ref(false);
-        const publicApplyError = ref('');
-        const publicApplySubmitted = ref(false);
-        const publicApplySuccessFile = ref(null);
-
-        // Showroom Consultant Account Onboarding
-        const showDseAccountPromptModal = ref(false);
-        const showDseQuickRegisterModal = ref(false);
-        const dseQuickRegisterForm = ref({
-            showroomBrand: 'Maruti Suzuki Arena',
-            dealershipName: '',
-            name: '',
-            employeeCode: '',
-            region: '',
-            phone: ''
-        });
-        const isDseRegistering = ref(false);
-        const dseRegisterError = ref('');
-
-        const openDseRegisterFromApply = () => {
-            dseRegisterError.value = '';
-            dseQuickRegisterForm.value = {
-                showroomBrand: publicApplyForm.value.showroomBrand || 'Maruti Suzuki Arena',
-                dealershipName: publicApplyForm.value.dealershipName || '',
-                name: publicApplyForm.value.dseName || '',
-                employeeCode: '',
-                region: publicApplyWorkspace.value?.name || '',
-                phone: publicApplyForm.value.dsePhone || ''
-            };
-            showDseAccountPromptModal.value = false;
-            showDseQuickRegisterModal.value = true;
-        };
-
-        const loginDseFromApply = async () => {
-            dseRegisterError.value = '';
-            try {
-                const googleUser = await db.loginWithGoogle();
-                const email = googleUser.email.toLowerCase();
-                let existing = await db.getUserByEmail(email);
-                if (existing) {
-                    if (existing.status === 'resigned' || existing.status === 'suspended') {
-                        alert("Your account has been deactivated. Please contact your manager.");
-                        return;
-                    }
-                    if (existing.role !== 'dse') {
-                        if (!existing.dealershipName) {
-                            openDseRegisterFromApply();
-                            return;
-                        }
-                        existing.role = 'dse';
-                        await db.updateUser(existing.id, { role: 'dse' });
-                    }
-                    const newSessionId = generateSessionId();
-                    localStorage.setItem('axis_active_session_id', newSessionId);
-                    existing.activeSessionId = newSessionId;
-                    try {
-                        await db.updateUser(existing.id, { lastLoginAt: new Date().toISOString() });
-                    } catch (e) {}
-
-                    localStorage.setItem('axis_user', JSON.stringify(existing));
-                    currentUser.value = existing;
-                    startUserSecurityListener(existing.id);
-                    isPublicApplyMode.value = false;
-                    currentTab.value = 'dse-dashboard';
-                    if (window.history && window.history.replaceState) {
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    }
-                    await loadDseData();
-                } else {
-                    openDseRegisterFromApply();
-                }
-            } catch (err) {
-                console.warn("DSE sign in error:", err);
-            }
-        };
-
-        const proceedDseAccountRegistration = () => {
-            openDseRegisterFromApply();
-        };
-
-        const submitDseQuickRegistration = async () => {
-            if (isDseRegistering.value) return;
-            dseRegisterError.value = '';
-
-            const form = dseQuickRegisterForm.value;
-            if (!form.dealershipName?.trim()) {
-                dseRegisterError.value = 'Dealership / Showroom Name is mandatory.';
-                return;
-            }
-            if (!form.name?.trim()) {
-                dseRegisterError.value = 'Sales Consultant Full Name is mandatory.';
-                return;
-            }
-            if (!form.employeeCode?.trim()) {
-                dseRegisterError.value = 'Official Staff / Employee ID is mandatory.';
-                return;
-            }
-            if (!form.phone || form.phone.replace(/\D/g, '').length < 10) {
-                dseRegisterError.value = 'Please provide a valid 10-digit mobile number.';
-                return;
-            }
-
-            isDseRegistering.value = true;
-            try {
-                const googleUser = await db.loginWithGoogle();
-                const email = googleUser.email.toLowerCase();
-                let user = await db.getUserByEmail(email);
-
-                const newSalesLinkId = db.generateSalesLinkId('dse');
-                const tenantId = publicApplyWorkspace.value?.id || null;
-                const newSessionId = generateSessionId();
-                localStorage.setItem('axis_active_session_id', newSessionId);
-
-                if (!user) {
-                    const newUserId = await db.addUser({
-                        email: email,
-                        role: 'dse',
-                        name: form.name.trim(),
-                        dealershipName: form.dealershipName.trim(),
-                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
-                        employeeCode: form.employeeCode.trim().toUpperCase(),
-                        region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
-                        phone: form.phone.trim(),
-                        salesLinkId: newSalesLinkId,
-                        tenantId: null, // DSE belongs to Showroom, not bank branch!
-                        linkedBankTenantId: tenantId,
-                        designation: 'Dealership Sales Executive (DSE)',
-                        status: 'active',
-                        activeSessionId: newSessionId,
-                        createdAt: new Date().toISOString(),
-                        lastLoginAt: new Date().toISOString()
-                    });
-
-                    user = {
-                        id: newUserId || email,
-                        email: email,
-                        username: form.name.trim(),
-                        role: 'dse',
-                        name: form.name.trim(),
-                        dealershipName: form.dealershipName.trim(),
-                        showroomBrand: form.showroomBrand || 'Maruti Suzuki Arena',
-                        employeeCode: form.employeeCode.trim().toUpperCase(),
-                        region: form.region?.trim() || publicApplyWorkspace.value?.name || 'Branch Hub',
-                        phone: form.phone.trim(),
-                        salesLinkId: newSalesLinkId,
-                        tenantId: null,
-                        linkedBankTenantId: tenantId,
-                        designation: 'Dealership Sales Executive (DSE)',
-                        status: 'active',
-                        activeSessionId: newSessionId
-                    };
-                } else {
-                    // Upgrading / linking existing user account to DSE Showroom Partner
-                    const updatePayload = {
-                        role: 'dse',
-                        name: form.name.trim() || user.name || googleUser.displayName || 'Showroom Consultant',
-                        dealershipName: form.dealershipName.trim(),
-                        showroomBrand: form.showroomBrand || user.showroomBrand || 'Maruti Suzuki Arena',
-                        employeeCode: form.employeeCode.trim().toUpperCase() || user.employeeCode || '',
-                        region: form.region?.trim() || user.region || publicApplyWorkspace.value?.name || 'Branch Hub',
-                        phone: form.phone.trim() || user.phone || '',
-                        tenantId: null, // Clear bank tenantId so DSE never lands inside SM workspace!
-                        linkedBankTenantId: tenantId || user.linkedBankTenantId || user.tenantId || null,
-                        designation: 'Dealership Sales Executive (DSE)',
-                        status: 'active',
-                        activeSessionId: newSessionId,
-                        lastLoginAt: new Date().toISOString()
-                    };
-                    if (!user.salesLinkId) {
-                        updatePayload.salesLinkId = newSalesLinkId;
-                    }
-                    await db.updateUser(user.id, updatePayload);
-                    user = {
-                        ...user,
-                        ...updatePayload,
-                        salesLinkId: user.salesLinkId || newSalesLinkId
-                    };
-                }
-
-                localStorage.setItem('axis_user', JSON.stringify(user));
-                currentUser.value = user;
-                startUserSecurityListener(user.id);
-
-                // If customer details were filled in publicApplyForm, automatically punch the lead under this DSE!
-                const custName = publicApplyForm.value.customerName?.trim();
-                const custPhone = publicApplyForm.value.customerPhone?.trim();
-                const vehModel = publicApplyForm.value.vehicleModel?.trim();
-                const loanAmt = Number(publicApplyForm.value.loanAmount);
-
-                if (custName && custPhone && vehModel && loanAmt > 0) {
-                    const createdAtIso = new Date().toISOString();
-                    const randId = await db.generateUniqueAppId('QR');
-                    const ws = publicApplyWorkspace.value || {};
-                    const newFile = {
-                        appId: randId,
-                        customerName: custName.toUpperCase(),
-                        customerPhone: custPhone,
-                        vehicleModel: vehModel.toUpperCase(),
-                        onRoadPrice: Number(publicApplyForm.value.onRoadPrice) || 0,
-                        loanAmount: loanAmt,
-                        customerProfile: publicApplyForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
-                        notes: (publicApplyForm.value.notes || '').trim(),
-                        nclUcl: 'NCL',
-                        userId: user.id,
-                        userEmail: user.email,
-                        sourcingChannel: user.dealershipName || form.dealershipName.trim(),
-                        dealershipName: user.dealershipName || form.dealershipName.trim(),
-                        showroomBrand: user.showroomBrand || form.showroomBrand || 'Maruti Suzuki Arena',
-                        dseId: user.id,
-                        dseName: user.name,
-                        dsePhone: user.phone,
-                        loginDate: createdAtIso.split('T')[0],
-                        origin: 'showroom_qr',
-                        tenantId: user.tenantId || ws.id,
-                        targetBankName: ws.bankName || 'Axis Bank',
-                        targetHubName: ws.name || 'Branch Hub',
-                        smName: ws.managerName || (publicApplySmUser.value?.name || 'Branch SM'),
-                        allocationStatus: 'pending_sm_dispatch',
-                        status: 'Inbound',
-                        roId: null,
-                        roName: 'Pending SM Dispatch',
-                        createdAt: createdAtIso,
-                        updatedAt: createdAtIso
-                    };
-
-                    try {
-                        await db.addLoanFile(newFile);
-                    } catch (e) {
-                        console.warn("Could not write file immediately:", e);
-                    }
-                    publicApplySuccessFile.value = newFile;
-                }
-
-                showDseQuickRegisterModal.value = false;
-                showDseAccountPromptModal.value = false;
-                isPublicApplyMode.value = false;
-                currentTab.value = 'dse-dashboard';
-                if (window.history && window.history.replaceState) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-                await loadDseData();
-
-                alert(`🎉 DSE Account Activated!\n\nWelcome, ${user.name}! Your showroom desk is connected to ${publicApplyWorkspace.value?.bankName || 'Axis Bank'} (${publicApplyWorkspace.value?.name || 'Branch Hub'}).\n\nAll customer loan sanctions & delivery statuses are live in your Showroom Radar.`);
-            } catch (err) {
-                console.error("DSE quick registration error:", err);
-                dseRegisterError.value = err.message || 'Error signing in with Google.';
-            } finally {
-                isDseRegistering.value = false;
-            }
-        };
-
-        const smPublicApplyUrl = computed(() => {
-            const tenantId = currentUser.value?.tenantId || currentUser.value?.salesLinkId || '';
-            if (!tenantId) return window.location.origin;
-            const params = new URLSearchParams();
-            params.set('apply', tenantId);
-            if (currentUser.value?.bankName) params.set('bank', currentUser.value.bankName);
-            if (currentUser.value?.region) params.set('hub', currentUser.value.region);
-            if (currentUser.value?.name) params.set('sm', currentUser.value.name);
-            if (currentUser.value?.phone) params.set('phone', currentUser.value.phone);
-            if (currentUser.value?.salesLinkId) params.set('smId', currentUser.value.salesLinkId);
-            return `${window.location.origin}/?${params.toString()}`;
-        });
-
-        const copySmApplyLink = async () => {
-            const url = smPublicApplyUrl.value;
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(url);
-                } else {
-                    const ta = document.createElement('textarea');
-                    ta.value = url;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                }
-                copiedSalesLinkIdToast.value = true;
-                setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
-            } catch (e) {
-                alert("Apply link copied: " + url);
-            }
-        };
-
-        const shareSmApplyWhatsApp = () => {
-            const url = smPublicApplyUrl.value;
-            const bank = currentUser.value?.bankName || 'Axis Bank';
-            const hub = currentUser.value?.region || 'Branch Hub';
-            const msg = `Dear Car Showroom Partners,\n\n` +
-                `Please use our official *${bank} (${hub})* showroom digital car loan desk to submit customer inquiries directly to our branch credit team for spot sanctions:\n\n` +
-                `📲 *Apply Online / Punch File:* ${url}\n\n` +
-                `Every customer file is tracked live by our branch desk.\n\n` +
-                `Regards,\n*${currentUser.value?.name || 'Sales Manager'}*\nSales Manager, ${bank}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const initPublicApplyHub = async (hubKey) => {
-            if (!hubKey) return;
-            isResolvingPublicHub.value = true;
-            publicHubError.value = '';
-            try {
-                let ws = null;
-                try {
-                    ws = await db.getWorkspace(hubKey);
-                    if (!ws) {
-                        ws = await db.getWorkspaceBySalesLinkId(hubKey);
-                    }
-                    if (!ws) {
-                        const smUser = await db.getUserBySalesLinkId(hubKey) || await db.getUserById(hubKey);
-                        if (smUser) {
-                            publicApplySmUser.value = smUser;
-                            if (smUser.tenantId) {
-                                ws = await db.getWorkspace(smUser.tenantId);
-                            } else {
-                                ws = {
-                                    id: smUser.tenantId || smUser.id,
-                                    name: smUser.region || `${smUser.name}'s Branch Hub`,
-                                    bankName: smUser.bankName || 'Axis Bank',
-                                    managerName: smUser.name,
-                                    managerPhone: smUser.phone || '',
-                                    division: smUser.division || 'Auto Loans (Car Loans)'
-                                };
-                            }
-                        }
-                    }
-                } catch (fsErr) {
-                    console.debug("Public guest mode: Using URL parameters for hub metadata");
-                }
-
-                if (ws) {
-                    publicApplyWorkspace.value = {
-                        ...(publicApplyWorkspace.value || {}),
-                        ...ws,
-                        bankName: ws.bankName || publicApplyWorkspace.value?.bankName || 'Axis Bank',
-                        name: ws.name || publicApplyWorkspace.value?.name || 'Branch Hub',
-                        managerName: ws.managerName || publicApplyWorkspace.value?.managerName || 'Sales Manager',
-                        managerPhone: ws.managerPhone || publicApplyWorkspace.value?.managerPhone || ''
-                    };
-                }
-                isPublicApplyMode.value = true;
-            } catch (e) {
-                console.warn("initPublicApplyHub notice:", e);
-            } finally {
-                isResolvingPublicHub.value = false;
-            }
-        };
-
-        const submitPublicLoanApplication = async () => {
-            if (isSubmittingPublicApply.value) return;
-            publicApplyError.value = '';
-
-            const custName = publicApplyForm.value.customerName?.trim();
-            const custPhone = publicApplyForm.value.customerPhone?.trim();
-            const vehModel = publicApplyForm.value.vehicleModel?.trim();
-            const loanAmt = Number(publicApplyForm.value.loanAmount);
-
-            if (!custName) {
-                publicApplyError.value = 'Customer Name is mandatory.';
-                return;
-            }
-            if (!custPhone || custPhone.replace(/\D/g, '').length < 10) {
-                publicApplyError.value = 'Please provide a valid 10-digit customer mobile number.';
-                return;
-            }
-            if (!vehModel) {
-                publicApplyError.value = 'Car Model & Variant is mandatory (e.g. Brezza ZXi+ / Creta SX).';
-                return;
-            }
-            if (!loanAmt || loanAmt <= 0) {
-                publicApplyError.value = 'Please enter a valid Loan Amount requested (₹ Lakhs).';
-                return;
-            }
-
-            if (!publicApplyWorkspace.value?.id) {
-                publicApplyError.value = 'Branch hub reference missing. Please refresh the page.';
-                return;
-            }
-
-            // If not logged in, ask the DSE to create an account for live tracking before submission
-            if (!currentUser.value) {
-                showDseAccountPromptModal.value = true;
-                return;
-            }
-
-            await executePublicFileSubmission();
-        };
-
-        const confirmGuestSubmission = async () => {
-            showDseAccountPromptModal.value = false;
-            await executePublicFileSubmission();
-        };
-
-        const executePublicFileSubmission = async () => {
-            isSubmittingPublicApply.value = true;
-            publicApplyError.value = '';
-            try {
-                const createdAtIso = new Date().toISOString();
-                const randId = await db.generateUniqueAppId('QR');
-                const ws = publicApplyWorkspace.value || {};
-                const user = currentUser.value;
-                const newFile = {
-                    appId: randId,
-                    customerName: publicApplyForm.value.customerName?.trim().toUpperCase(),
-                    customerPhone: publicApplyForm.value.customerPhone?.trim(),
-                    vehicleModel: publicApplyForm.value.vehicleModel?.trim().toUpperCase(),
-                    onRoadPrice: Number(publicApplyForm.value.onRoadPrice) || 0,
-                    loanAmount: Number(publicApplyForm.value.loanAmount),
-                    customerProfile: publicApplyForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
-                    notes: (publicApplyForm.value.notes || '').trim(),
-                    nclUcl: 'NCL',
-                    userId: user?.id || null,
-                    userEmail: user?.email || null,
-                    sourcingChannel: (user?.dealershipName || publicApplyForm.value.dealershipName || 'SHOWROOM_QR').trim(),
-                    dealershipName: (user?.dealershipName || publicApplyForm.value.dealershipName || '').trim(),
-                    showroomBrand: (user?.showroomBrand || publicApplyForm.value.showroomBrand || 'Car Showroom Partner').trim(),
-                    dseId: user?.id || null,
-                    dseName: (user?.name || publicApplyForm.value.dseName || '').trim(),
-                    dsePhone: (user?.phone || publicApplyForm.value.dsePhone || '').trim(),
-                    loginDate: createdAtIso.split('T')[0],
-                    origin: 'showroom_qr',
-                    tenantId: ws.id || 'default-tenant',
-                    targetBankName: ws.bankName || 'Axis Bank',
-                    targetHubName: ws.name || 'Branch Hub',
-                    smName: ws.managerName || (publicApplySmUser.value?.name || 'Branch SM'),
-                    allocationStatus: 'pending_sm_dispatch',
-                    status: 'Inbound',
-                    roId: null,
-                    roName: 'Pending SM Dispatch',
-                    createdAt: createdAtIso,
-                    updatedAt: createdAtIso
-                };
-
-                let leadSaved = false;
-                // If user is authenticated, attempt direct loanFiles write
-                if (db.auth?.currentUser) {
-                    try {
-                        await db.addLoanFile(newFile);
-                        leadSaved = true;
-                    } catch (fsErr) {
-                        console.debug("Direct write restricted, falling back to public leads intake:", fsErr);
-                    }
-                }
-
-                // If not saved via direct write, route to public leads intake
-                if (!leadSaved) {
-                    try {
-                        await db.addPublicLead(newFile);
-                        leadSaved = true;
-                    } catch (intakeErr) {
-                        console.error("Public intake error:", intakeErr);
-                        const fallbackPhone = ws.managerPhone ? ` (Branch Manager: ${ws.managerPhone})` : '';
-                        throw new Error(`Submission Failed: Unable to deliver customer lead to ${ws.name || 'Branch Hub'}${fallbackPhone}. Please verify connection and retry, or contact the branch directly.`);
-                    }
-                }
-
-                publicApplySuccessFile.value = newFile;
-                publicApplySubmitted.value = true;
-            } catch (e) {
-                console.error("submitPublicLoanApplication error:", e);
-                publicApplyError.value = e.message || 'Error submitting application.';
-                publicApplySubmitted.value = false;
-            } finally {
-                isSubmittingPublicApply.value = false;
-            }
-        };
-
-        const resetPublicApplyForm = () => {
-            publicApplyForm.value = {
-                dealershipName: publicApplyForm.value.dealershipName || '',
-                showroomBrand: publicApplyForm.value.showroomBrand || 'Maruti Suzuki Arena',
-                dseName: publicApplyForm.value.dseName || '',
-                dsePhone: publicApplyForm.value.dsePhone || '',
-                customerName: '',
-                customerPhone: '',
-                vehicleModel: '',
-                onRoadPrice: '',
-                loanAmount: '',
-                customerProfile: 'Salaried (Form 16 / ITR)',
-                notes: ''
-            };
-            publicApplySubmitted.value = false;
-            publicApplySuccessFile.value = null;
-            publicApplyError.value = '';
-        };
-
-        const sendPublicApplySmWhatsApp = () => {
-            if (!publicApplySuccessFile.value || !publicApplyWorkspace.value) return;
-            const file = publicApplySuccessFile.value;
-            const ws = publicApplyWorkspace.value;
-
-            // Generate 1-tap import link for SM
-            const importPayload = {
-                appId: file.appId,
-                customerName: file.customerName,
-                customerPhone: file.customerPhone,
-                vehicleModel: file.vehicleModel,
-                loanAmount: file.loanAmount,
-                onRoadPrice: file.onRoadPrice,
-                dealershipName: file.dealershipName,
-                showroomBrand: file.showroomBrand,
-                dseName: file.dseName,
-                dsePhone: file.dsePhone,
-                notes: file.notes,
-                customerProfile: file.customerProfile,
-                tenantId: ws.id,
-                origin: 'showroom_qr',
-                allocationStatus: 'pending_sm_dispatch',
-                status: 'Inbound',
-                createdAt: file.createdAt
-            };
-            const importEncoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(importPayload)))));
-            const importLink = `${window.location.origin}/?importLead=${importEncoded}`;
-
-            const msg = `Hi ${ws.managerName || 'Sales Manager'}, a new car loan inquiry has been submitted via your Showroom QR!\n\n` +
-                `👤 Customer: *${file.customerName}* (📞 ${file.customerPhone})\n` +
-                `🚗 Car: *${file.vehicleModel}*\n` +
-                `💰 Loan Req: *₹${file.loanAmount} Lakhs*` + (file.onRoadPrice ? ` (On-Road: ₹${file.onRoadPrice} L)` : '') + `\n` +
-                (file.dealershipName ? `🏢 Dealership: *${file.dealershipName}*\n` : '') +
-                (file.dseName ? `👨‍💼 Showroom Exec: *${file.dseName}* (📞 ${file.dsePhone || 'N/A'})\n` : '') +
-                (file.notes ? `📝 Remarks: "${file.notes}"\n` : '') +
-                `\n📥 *1-Tap Import to Inbound Radar:*\n${importLink}`;
-            
-            const smPhone = ws.managerPhone || publicApplySmUser.value?.phone || '';
-            const smPhoneDigits = smPhone.replace(/\D/g, '').slice(-10);
-            const targetUrl = smPhoneDigits.length === 10 
-                ? `https://wa.me/91${smPhoneDigits}?text=${encodeURIComponent(msg)}`
-                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-            window.open(targetUrl, '_blank');
-        };
-
-        // SM Inbound Queue State
-        const inboundShowroomFiles = ref([]);
-        const inboundSelectedRo = ref({});
-        const inboundSubmitting = ref({});
-        const smInboundSubTab = ref('all');
-        const smInboundSearch = ref('');
-        const smInboundFilter = ref('pending');
-
-        const selectRegisterRole = (role) => {
-            registerForm.value.role = role;
-            if (role === 'dse') {
-                registerForm.value.showroomBrand = registerForm.value.showroomBrand || 'Maruti Suzuki Arena';
-                registerForm.value.dealershipName = registerForm.value.dealershipName || '';
-            }
-            registerStep.value = 2;
-            registerError.value = '';
-            registerConfirmed.value = true;
-        };
-        const divisionOptions = [
-            'Auto Loans (Car Loans)',
-            'Personal Loans (PL)',
-            'Home Loans & LAP (Mortgage)',
-            'Business Loans & SME Finance',
-            'Commercial Vehicle & CE (CV/CE)',
-            'Two-Wheeler Loans (2W)',
-            'Gold Loans',
-            'General Retail Assets'
-        ];
-        const bankOptions = {
-            private: [
-                'HDFC Bank',
-                'ICICI Bank',
-                'Kotak Mahindra Bank',
-                'IndusInd Bank',
-                'Yes Bank',
-                'IDFC FIRST Bank',
-                'Federal Bank',
-                'Bandhan Bank',
-                'RBL Bank',
-                'South Indian Bank',
-                'City Union Bank',
-                'Karur Vysya Bank',
-                'Karnataka Bank',
-                'Tamilnad Mercantile Bank',
-                'CSB Bank',
-                'DCB Bank',
-                'Jammu & Kashmir Bank',
-                'Dhanlaxmi Bank',
-                'Nainital Bank'
-            ],
-            public: [
-                'State Bank of India (SBI)',
-                'Punjab National Bank (PNB)',
-                'Bank of Baroda (BOB)',
-                'Canara Bank',
-                'Union Bank of India',
-                'Bank of India (BOI)',
-                'Indian Bank',
-                'Central Bank of India',
-                'Indian Overseas Bank (IOB)',
-                'UCO Bank',
-                'Bank of Maharashtra',
-                'Punjab & Sind Bank'
-            ],
-            sfb: [
-                'AU Small Finance Bank',
-                'Equitas Small Finance Bank',
-                'Ujjivan Small Finance Bank',
-                'Jana Small Finance Bank',
-                'Capital Small Finance Bank',
-                'ESAF Small Finance Bank',
-                'Suryoday Small Finance Bank',
-                'Utkarsh Small Finance Bank',
-                'Unity Small Finance Bank',
-                'Shivalik Small Finance Bank',
-                'Fincare Small Finance Bank',
-                'North East Small Finance Bank'
-            ],
-            nbfc: [
-                'Bajaj Finance Ltd',
-                'Tata Capital',
-                'Mahindra & Mahindra Financial Services (Mahindra Finance)',
-                'Cholamandalam Investment and Finance (Chola)',
-                'Shriram Finance Ltd',
-                'Muthoot Finance',
-                'Manappuram Finance',
-                'Sundaram Finance',
-                'L&T Finance Holdings',
-                'Poonawalla Fincorp',
-                'Aditya Birla Finance',
-                'Piramal Capital & Housing Finance',
-                'Hero FinCorp',
-                'HDB Financial Services',
-                'TVS Credit Services',
-                'SMFG India Credit (Fullerton India)',
-                'IIFL Finance',
-                'InCred Financial Services',
-                'DMI Finance',
-                'Clix Capital',
-                'Capri Global Capital',
-                'Fedbank Financial Services (Fedfina)',
-                'Five-Star Business Finance',
-                'SK Finance',
-                'Kogta Financial',
-                'MAS Financial Services',
-                'Northern Arc Capital',
-                'Navi Finserv',
-                'KreditBee / KrazyBee',
-                'Moneyview (Whizdm Innovations)',
-                'Protium Finance',
-                'Oxyzo Financial Services',
-                'Vivriti Capital',
-                'Aye Finance',
-                'Kinara Capital',
-                'NeoGrowth Credit',
-                'Lendingkart Finance',
-                'Avanse Financial Services',
-                'Auxilo Finserve',
-                'Hiranandani Financial Services'
-            ],
-            hfc: [
-                'LIC Housing Finance',
-                'PNB Housing Finance',
-                'Can Fin Homes',
-                'Aavas Financiers',
-                'Home First Finance Company (HFFC)',
-                'Aptus Value Housing Finance',
-                'Repco Home Finance',
-                'GIC Housing Finance',
-                'Vastu Housing Finance',
-                'Shubham Housing Development Finance',
-                'Grihum Housing Finance',
-                'India Shelter Finance Corporation',
-                'Svatantra Housing Finance',
-                'Star Housing Finance'
-            ],
-            foreign: [
-                'Standard Chartered Bank',
-                'Citibank India',
-                'HSBC Bank India',
-                'Barclays Bank',
-                'Deutsche Bank',
-                'DBS Bank India',
-                'Bank of America',
-                'JP Morgan Chase Bank',
-                'BNP Paribas',
-                'State Bank of Mauritius (SBM Bank India)'
-            ]
-        };
-        const registerError = ref('');
-        
-        const getInitialTab = () => {
-            if (!initialUser) return '';
-            if (initialUser.role === 'super_admin') return 'super-admin-dashboard';
-            if (initialUser.role === 'zsm') return 'zsm-dashboard';
-            if (initialUser.role === 'asm') return 'asm-dashboard';
-            if (initialUser.role === 'sm' || initialUser.role === 'admin') return 'dashboard';
-            if (initialUser.role === 'dse') return 'dse-dashboard';
-            return 'ro-dashboard';
-        };
-        const currentTab = ref(getInitialTab());
-        const goToTab = (tab) => {
-            if (tab) {
-                if (isDSE.value && tab === 'targets-drives') {
-                    currentTab.value = 'dse-dashboard';
-                    return;
-                }
-                currentTab.value = tab;
-                if (tab === 'sm-inbound' && isSM.value) {
-                    loadInboundShowroomFiles();
-                }
-                if (tab === 'profile') {
-                    initProfileForm();
-                    profileActiveTab.value = 'overview';
-                }
-                nextTick(() => {
-                    const scrollContainer = document.querySelector('.overflow-y-auto');
-                    if (scrollContainer) scrollContainer.scrollTop = 0;
-                });
-            }
-        };
+        // --- Core Root Reactive State ---
+        const currentTab = ref('login');
         const mobileMenuOpen = ref(false);
-
-        // Data arrays
+        const allWorkspaces = ref([]);
         const roUsers = ref([]);
-        const allFiles = ref([]);
-        const myFiles = ref([]); // For ROs
-        const allWorkspaces = ref([]); // For Super Admin
-
-        // Modals & Forms
-        const showAddRoModal = ref(false);
-        const addRoStep = ref('form'); // 'form' | 'success'
-        const newRoForm = ref({ name: '', email: '', phone: '', employeeCode: '' });
-        const addRoError = ref('');
-        const isSavingRo = ref(false);
-        const newlyCreatedRo = ref(null);
-        const copyRoInviteSuccess = ref(false);
-
-        const openAddRoModal = () => {
-            addRoStep.value = 'form';
-            newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
-            addRoError.value = '';
-            newlyCreatedRo.value = null;
-            copyRoInviteSuccess.value = false;
-            showAddRoModal.value = true;
-        };
-
-        const closeAddRoModal = () => {
-            showAddRoModal.value = false;
-            addRoStep.value = 'form';
-            newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
-            addRoError.value = '';
-            newlyCreatedRo.value = null;
-            copyRoInviteSuccess.value = false;
-        };
-
-        const appendGmailDomain = () => {
-            if (!newRoForm.value.email) {
-                newRoForm.value.email = '@gmail.com';
-                return;
-            }
-            const clean = newRoForm.value.email.trim();
-            if (!clean.includes('@')) {
-                newRoForm.value.email = clean + '@gmail.com';
-            }
-        };
-
-        const getRoInviteWhatsAppText = (ro) => {
-            if (!ro) return '';
-            const smName = currentUser.value ? (currentUser.value.name || 'Sales Manager') : 'Sales Manager';
-            const staffCodeLine = ro.employeeCode ? `\n👔 *Staff Code:* ${ro.employeeCode}` : '';
-            return `👋 *Hi ${ro.name}*,\n\nWelcome to the team! You have been onboarded as a Relationship Officer on *SalesLink*.\n\n🔗 *Login Portal:* https://saleslink.in\n📧 *Google Account:* ${ro.email}\n🆔 *SalesLink ID:* ${ro.salesLinkId || 'Pending'}${staffCodeLine}\n\n👉 *Instructions:* Tap the login link above and click *"Sign in with Google"* using ${ro.email} to start logging customer files & daily EOD.\n\nBest regards,\n${smName}`;
-        };
-
-        const shareRoInviteWhatsApp = (ro) => {
-            if (!ro || !ro.phone) return;
-            const text = getRoInviteWhatsAppText(ro);
-            const phone = String(ro.phone).replace(/\D/g, '').slice(-10);
-            const url = `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
-        };
-
-        const copyRoInviteMessage = async (ro) => {
-            if (!ro) return;
-            const text = getRoInviteWhatsAppText(ro);
-            try {
-                await navigator.clipboard.writeText(text);
-                copyRoInviteSuccess.value = true;
-                setTimeout(() => {
-                    copyRoInviteSuccess.value = false;
-                }, 2500);
-            } catch (e) {
-                console.error('Clipboard copy error:', e);
-            }
-        };
-
-        // Date Helpers
-        const getTodayDateStr = () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        };
-
-        const getYesterdayDateStr = () => {
-            const d = new Date();
-            d.setDate(d.getDate() - 1);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        };
-
-        const STANDARD_STATUSES = ['Lead', 'FI', 'FCU', 'UW', 'Sanction', 'Approved', 'Rejected', 'Disbursed', 'Cancelled'];
         const defaultSmName = ref(localStorage.getItem('axis_default_sm') || '');
-        const newFileForm = ref({
-            appId: 'ALA00000',
-            customerName: '',
-            nclUcl: 'NCL',
-            sourcingChannel: 'DSA',
-            loginDate: getTodayDateStr(),
-            loanAmount: '',
-            status: 'FI',
-            customStatus: '',
-            ppc: '',
-            smName: defaultSmName.value || '',
-            vcip: '',
-            mi: ''
-        });
-        
-        // Full File Edit Modal (RO & Admin)
-        const showEditFileModal = ref(false);
-        const editFileForm = ref({
-            id: '',
-            appId: '',
-            customerName: '',
-            nclUcl: 'NCL',
-            sourcingChannel: 'DSA',
-            loginDate: getTodayDateStr(),
-            loanAmount: '',
-            status: 'FI',
-            customStatus: '',
-            ppc: '',
-            smName: defaultSmName.value || '',
-            vcip: '',
-            mi: ''
-        });
+        const systemAnnouncement = ref('');
+        const adminAnnouncementInput = ref('');
+        const showMoreModal = ref(false);
+        const targetsDrivesSubTab = ref('targets');
+        const upcomingFeatureVotes = ref(JSON.parse(localStorage.getItem('upcoming_votes') || '{}'));
 
-        const showUpdateStatusModal = ref(false);
-        const selectedFile = ref(null);
-        const statusUpdateForm = ref({ status: '', customStatus: '', note: '' });
-
-        const showViewFileModal = ref(false);
-
-        // Filters (Admin Tracking)
-        const filters = ref({ search: '', status: '', roId: '' });
-        
-        // Filters & Sorting (RO Tracking)
-        const roFilters = ref({
-            search: '',
-            status: '',
-            nclUcl: '',
-            sourcingChannel: '',
-            timeline: 'this-month', // 'today', 'yesterday', 'this-week', 'this-month', 'all', 'custom'
-            customDate: '',
-            sortBy: 'newest' // 'newest', 'oldest', 'amount-desc', 'amount-asc', 'name-asc'
-        });
-
-                // Helper: Sanction / Disbursal status matchers
-        const isSanctionStatus = (status) => {
-            if (!status) return false;
-            const s = String(status).trim().toLowerCase();
-            return s === 'approved' || s === 'sanction' || s === 'sanctioned';
+        const toggleUpcomingVote = (featureKey) => {
+            const votes = { ...upcomingFeatureVotes.value };
+            votes[featureKey] = (votes[featureKey] || 0) + 1;
+            upcomingFeatureVotes.value = votes;
+            localStorage.setItem('upcoming_votes', JSON.stringify(votes));
         };
 
-        const isDisbursedStatus = (status) => {
-            if (!status) return false;
-            const s = String(status).trim().toLowerCase();
-            return s === 'disbursed';
+        const goToTab = (tab) => {
+            currentTab.value = tab;
+            mobileMenuOpen.value = false;
         };
 
-        const matchesFileTimeline = (f, timeline, customDate) => {
-            if (!f) return false;
-            if (timeline === 'all') return true;
-            if (f.loginDate && matchesTimeline(f.loginDate, timeline, customDate)) return true;
-            if (f.updatedAt && matchesTimeline(f.updatedAt, timeline, customDate)) return true;
-            if (f.createdAt && matchesTimeline(f.createdAt, timeline, customDate)) return true;
-            return false;
-        };
-
-        // Helper: Date timeline matching (supports YYYY-MM-DD strings and ISO timestamps)
-        const matchesTimeline = (fileDateStr, timeline, customDate) => {
-            if (!fileDateStr) return timeline === 'all';
-            
-            let fileYear, fileMonth, fileDate;
-            if (typeof fileDateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fileDateStr)) {
-                const parts = fileDateStr.substring(0, 10).split('-').map(Number);
-                fileYear = parts[0];
-                fileMonth = parts[1] - 1;
-                fileDate = parts[2];
-            } else {
-                const fileD = new Date(fileDateStr);
-                if (isNaN(fileD.getTime())) return true;
-                fileYear = fileD.getFullYear();
-                fileMonth = fileD.getMonth();
-                fileDate = fileD.getDate();
-            }
-
-            const now = new Date();
-            const nowYear = now.getFullYear();
-            const nowMonth = now.getMonth();
-            const nowDate = now.getDate();
-
-            const todayDateObj = new Date(nowYear, nowMonth, nowDate);
-            const fileDateObj = new Date(fileYear, fileMonth, fileDate);
-            const diffDays = Math.round((todayDateObj - fileDateObj) / (1000 * 60 * 60 * 24));
-
-            switch (timeline) {
-                case 'today':
-                    return diffDays === 0;
-                case 'yesterday':
-                    return diffDays === 1;
-                case 'this-week':
-                    return diffDays >= 0 && diffDays <= 7;
-                case 'this-month':
-                    return fileYear === nowYear && fileMonth === nowMonth;
-                case 'custom':
-                    if (!customDate) return true;
-                    const [cYear, cMonth, cDay] = customDate.split('-').map(Number);
-                    return fileYear === cYear && fileMonth === (cMonth - 1) && fileDate === cDay;
-                case 'all':
-                default:
-                    return true;
-            }
-        };
-
-        // --- Computed ---
-        const isSuperAdmin = computed(() => (currentUser.value?.role || '').toLowerCase() === 'super_admin');
-        const isSM = computed(() => {
-            const r = (currentUser.value?.role || '').toLowerCase();
-            return r === 'sm' || r === 'admin';
-        }); // fallback for legacy
-        const isRO = computed(() => (currentUser.value?.role || '').toLowerCase() === 'ro');
-        const isASM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'asm');
-        const isZSM = computed(() => (currentUser.value?.role || '').toLowerCase() === 'zsm');
-        const isDSE = computed(() => (currentUser.value?.role || '').toLowerCase() === 'dse');
-        const isDealerAdmin = computed(() => (currentUser.value?.role || '').toLowerCase() === 'dealer_admin');
-
-
-
-        // Loan Amount in Lakhs normalization and formatters
-        const toLakhs = (value) => {
-            if (value === null || value === undefined || value === '') return 0;
-            const num = Number(value);
-            if (isNaN(num)) return 0;
-            // Auto-normalize legacy entries stored in full rupees (>= 1000)
-            return num >= 1000 ? num / 100000 : num;
-        };
-
-        const formatCurrency = (value) => {
-            const lakhs = toLakhs(value);
-            return lakhs.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }) + ' L';
-        };
-
-        const formatLakhsToRupees = (value) => {
-            const lakhs = toLakhs(value);
-            if (!lakhs) return '₹0';
-            const rupees = Math.round(lakhs * 100000);
-            return '₹' + rupees.toLocaleString('en-IN');
-        };
-
-        // SM Overview State
-        const smOverviewTimeline = ref('this-month');
-        const smOverviewCustomDate = ref('');
-
-        // Admin Stats
-        const stats = computed(() => {
-            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, smOverviewTimeline.value, smOverviewCustomDate.value));
-            const approved = files.filter(f => f.status === 'Approved');
-            const disbursed = files.filter(f => f.status === 'Disbursed');
-            const login = files.filter(f => f.status === 'FI');
-            const rejected = files.filter(f => f.status === 'Rejected');
-            
-            const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const disbursedAmount = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const loginAmount = login.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const rejectedAmount = rejected.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-
-            const approvalRate = files.length ? Math.round(((approved.length + disbursed.length) / files.length) * 100) : 0;
-
-            return {
-                totalFiles: files.length,
-                totalValue: totalAmount,
-                approvedFiles: approved.length,
-                approvedCount: approved.length,
-                approvedAmount,
-                disbursedCount: disbursed.length,
-                disbursedAmount,
-                loginCount: login.length,
-                loginAmount,
-                rejectedCount: rejected.length,
-                rejectedAmount,
-                approvalRate
-            };
-        });
-
-        // SM Leaderboard
-        const smLeaderboard = computed(() => {
-            if (!roUsers.value || roUsers.value.length === 0) return [];
-            
-            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, smOverviewTimeline.value, smOverviewCustomDate.value));
-            
-            return roUsers.value.map(ro => {
-                const roFiles = files.filter(f => f.roId === ro.id);
-                const approvedFiles = roFiles.filter(f => f.status === 'Approved' || f.status === 'Disbursed');
-                const disbursedFiles = roFiles.filter(f => f.status === 'Disbursed');
-                
-                const totalAmount = roFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                const disbursedAmount = disbursedFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                
-                return {
-                    id: ro.id,
-                    name: ro.name,
-                    email: ro.email,
-                    user: ro,
-                    totalFiles: roFiles.length,
-                    totalAmount,
-                    approvedFiles: approvedFiles.length,
-                    disbursedAmount,
-                    conversionRate: roFiles.length > 0 ? Math.round((disbursedFiles.length / roFiles.length) * 100) : 0
-                };
-            }).sort((a, b) => b.disbursedAmount - a.disbursedAmount || b.totalFiles - a.totalFiles);
-        });
-
-        // Split active, suspended, and resigned/offboarded ROs for clear visual separation & governance
+        // --- Active / Suspended / Resigned RO Splitting ---
         const activeRoUsers = computed(() => {
             return (roUsers.value || []).filter(u => u.status !== 'suspended' && u.status !== 'resigned');
         });
@@ -1475,137 +66,50 @@ const app = createApp({
             return (roUsers.value || []).filter(u => u.status === 'resigned');
         });
 
-        // SM User Management Filter & Tab State
-        const smUsersTab = ref('active'); // 'active' | 'suspended' | 'resigned'
-        const smUsersSearch = ref('');
-
-        const filteredActiveRos = computed(() => {
-            const q = (smUsersSearch.value || '').trim().toLowerCase();
-            if (!q) return activeRoUsers.value;
-            return activeRoUsers.value.filter(u => 
-                (u.name && u.name.toLowerCase().includes(q)) ||
-                (u.email && u.email.toLowerCase().includes(q)) ||
-                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
-                (u.phone && String(u.phone).includes(q))
-            );
+        // --- Instantiate Composables ---
+        const auth = useAuth({
+            currentTab,
+            loadData: async () => { await loadData(); },
+            loadDseData: async () => { await dse.loadDseData(); },
+            initUserSm: async () => { await initUserSm(); },
+            allWorkspaces,
+            roUsers
         });
 
-        const filteredSuspendedRos = computed(() => {
-            const q = (smUsersSearch.value || '').trim().toLowerCase();
-            if (!q) return suspendedRoUsers.value;
-            return suspendedRoUsers.value.filter(u => 
-                (u.name && u.name.toLowerCase().includes(q)) ||
-                (u.email && u.email.toLowerCase().includes(q)) ||
-                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
-                (u.phone && String(u.phone).includes(q))
-            );
+        const dse = useDse({
+            currentUser: auth.currentUser,
+            allWorkspaces
         });
 
-        const filteredResignedRos = computed(() => {
-            const q = (smUsersSearch.value || '').trim().toLowerCase();
-            if (!q) return resignedRoUsers.value;
-            return resignedRoUsers.value.filter(u => 
-                (u.name && u.name.toLowerCase().includes(q)) ||
-                (u.email && u.email.toLowerCase().includes(q)) ||
-                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
-                (u.transferredToRoName && u.transferredToRoName.toLowerCase().includes(q))
-            );
+        const loanFiles = useLoanFiles({
+            currentUser: auth.currentUser,
+            isSM: auth.isSM,
+            isASM: auth.isASM,
+            isRO: auth.isRO,
+            defaultSmName,
+            roUsers,
+            activeRoUsers,
+            currentTab,
+            initUserSm: async () => { await initUserSm(); },
+            loadData: async () => { await loadData(); },
+            loadAsmData: async () => { await hierarchy.loadAsmData(); },
+            areaFiles: computed(() => hierarchy.areaFiles.value),
+            supervisedSMs: computed(() => hierarchy.supervisedSMs.value),
+            openOffboardModal: (u) => hierarchy.openOffboardModal(u)
         });
 
-        // --- Employee Resignation & Pipeline Handoff State ---
-        const showOffboardModal = ref(false);
-        const userToOffboard = ref(null);
-        const offboardReplacementRoId = ref('');
-        const offboardReason = ref('resigned');
-        const offboardConfirm = ref(false);
-        const isOffboarding = ref(false);
-        const offboardError = ref('');
-        const offboardSuccess = ref('');
-
-        const availableReplacementRos = computed(() => {
-            if (!userToOffboard.value) return activeRoUsers.value;
-            return activeRoUsers.value.filter(u => u.id !== userToOffboard.value.id);
+        const hierarchy = useHierarchy({
+            currentUser: auth.currentUser,
+            allFiles: loanFiles.allFiles,
+            activeRoUsers,
+            allSalesTargets: loanFiles.allSalesTargets,
+            loadData: async () => { await loadData(); }
         });
 
-        const offboardCandidateFiles = computed(() => {
-            if (!userToOffboard.value) return [];
-            const uid = userToOffboard.value.id;
-            const uName = (userToOffboard.value.name || '').trim().toUpperCase();
-            return (allFiles.value || []).filter(f => f.roId === uid || (uName && f.roName && f.roName.trim().toUpperCase() === uName));
-        });
-
-        const offboardActiveFiles = computed(() => {
-            return offboardCandidateFiles.value.filter(f => {
-                const s = (f.status || '').toLowerCase();
-                return s !== 'disbursed' && s !== 'rejected' && s !== 'cancelled';
-            });
-        });
-
-        const offboardDisbursedFiles = computed(() => {
-            return offboardCandidateFiles.value.filter(f => (f.status || '').toLowerCase() === 'disbursed');
-        });
-
-        const offboardActiveFilesVolume = computed(() => {
-            return offboardActiveFiles.value.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-        });
-
-        const openOffboardModal = (user) => {
-            userToOffboard.value = user;
-            offboardReplacementRoId.value = '';
-            offboardReason.value = 'resigned';
-            offboardConfirm.value = false;
-            offboardError.value = '';
-            offboardSuccess.value = '';
-            isOffboarding.value = false;
-            showOffboardModal.value = true;
-        };
-
-        const submitOffboardUser = async () => {
-            if (!userToOffboard.value) return;
-            offboardError.value = '';
-            offboardSuccess.value = '';
-
-            if (offboardActiveFiles.value.length > 0 && !offboardReplacementRoId.value) {
-                offboardError.value = 'Please select an active officer to inherit this active loan pipeline.';
-                return;
-            }
-
-            if (!offboardConfirm.value) {
-                offboardError.value = 'Please confirm the employee resignation and credential revocation checkbox.';
-                return;
-            }
-
-            isOffboarding.value = true;
-            try {
-                const result = await db.offboardAndReassignRo({
-                    resignedUserId: userToOffboard.value.id,
-                    replacementUserId: offboardReplacementRoId.value || null,
-                    supervisorId: currentUser.value?.id || '',
-                    reason: offboardReason.value
-                });
-
-                const repName = result.replacementUser?.name || 'designated officer';
-                offboardSuccess.value = `✓ Offboarding complete! Reassigned ${result.transferredCount} active files to ${repName} and permanently revoked login access for ${result.resignedUser.name}.`;
-
-                await loadData();
-
-                setTimeout(() => {
-                    showOffboardModal.value = false;
-                    userToOffboard.value = null;
-                    offboardSuccess.value = '';
-                }, 2800);
-            } catch (err) {
-                console.error("Offboard error:", err);
-                offboardError.value = err.message || 'Failed to offboard employee.';
-            } finally {
-                isOffboarding.value = false;
-            }
-        };
-
-        // RO 360 Inspector Drawer State & Logic (For SM Monitoring)
+        // --- RO 360 Inspector Drawer State & Logic (For SM Monitoring) ---
         const selectedRoForInspection = ref(null);
         const showRoInspectorDrawer = ref(false);
-        const roInspectorActiveTab = ref('overview'); // 'overview' | 'pipeline' | 'stalled'
+        const roInspectorActiveTab = ref('overview');
 
         const openRoInspector = (ro) => {
             const roUser = roUsers.value.find(u => u.id === (ro.id || ro)) || ro;
@@ -1625,10 +129,8 @@ const app = createApp({
             const roId = ro.id;
             const roName = (ro.name || '').trim().toUpperCase();
 
-            // All files for this RO across entire tenant
-            const roAllFiles = allFiles.value.filter(f => f.roId === roId || (f.roName && f.roName.trim().toUpperCase() === roName));
+            const roAllFiles = loanFiles.allFiles.value.filter(f => f.roId === roId || (f.roName && f.roName.trim().toUpperCase() === roName));
             
-            // Today's files
             const today = new Date().toISOString().split('T')[0];
             const todayLogins = roAllFiles.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
             const todayDisb = roAllFiles.filter(f => f.status === 'Disbursed' && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
@@ -1637,11 +139,9 @@ const app = createApp({
             const todayDisbCount = todayDisb.length;
             const todayDisbVolume = todayDisb.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
-            // Today's EOD Report for this RO
-            const todayEod = smEods.value.find(e => e.userId === roId && e.date === today);
+            const todayEod = loanFiles.smEods.value.find(e => e.userId === roId && e.date === today);
             const hasSubmittedToday = Boolean(todayEod);
 
-            // MTD Files (Current Month)
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
@@ -1661,11 +161,9 @@ const app = createApp({
             const mtdDisbCount = mtdDisbursed.length;
             const mtdDisbVolume = mtdDisbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
-            // Conversion rate: Disbursed / Total MTD Logins
             const conversionRate = mtdCount > 0 ? Math.round((mtdDisbCount / mtdCount) * 100) : 0;
             const approvalRate = mtdCount > 0 ? Math.round(((mtdApprovedCount + mtdDisbCount) / mtdCount) * 100) : 0;
 
-            // NCL vs UCL split
             const nclFiles = mtdFiles.filter(f => (f.nclUcl || '').toUpperCase() === 'NCL');
             const uclFiles = mtdFiles.filter(f => (f.nclUcl || '').toUpperCase() === 'UCL');
             const nclCount = nclFiles.length;
@@ -1673,10 +171,8 @@ const app = createApp({
             const nclVolume = nclFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
             const uclVolume = uclFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
 
-            // Active / Open Pipeline (Not Disbursed, Cancelled, Rejected)
             const activePipelineFiles = roAllFiles.filter(f => !['Disbursed', 'Cancelled', 'Rejected'].includes(f.status));
 
-            // Stalled / Attention cases for this RO (> 3 days in Lead/FI/UW or > 4 days in Approved)
             const stalledFiles = roAllFiles.filter(f => {
                 if (['Cancelled', 'Rejected', 'Disbursed'].includes(f.status)) return false;
                 const updatedTime = new Date(f.updatedAt || f.createdAt || Date.now());
@@ -1745,17 +241,13 @@ const app = createApp({
             return encodeURIComponent(msg);
         };
 
-        // SaaS Owner (Super Admin) Overview State
+        // --- SaaS Owner (Super Admin) Overview State & Operations ---
         const saasOverviewTimeline = ref('this-month');
         const saasOverviewCustomDate = ref('');
 
         const saasStats = computed(() => {
-            const files = allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, saasOverviewTimeline.value, saasOverviewCustomDate.value));
-            
-            // To calculate Active Users in the selected timeframe, we find unique roIds in the files logged in that timeframe.
+            const files = loanFiles.allFiles.value.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, saasOverviewTimeline.value, saasOverviewCustomDate.value));
             const activeUserIds = new Set(files.filter(f => f.roId).map(f => f.roId));
-            
-            // Workspaces created in the selected timeframe
             const newWorkspaces = allWorkspaces.value.filter(w => matchesTimeline(w.createdAt, saasOverviewTimeline.value, saasOverviewCustomDate.value));
             
             return {
@@ -1764,14 +256,14 @@ const app = createApp({
                 totalUsers: roUsers.value.length,
                 activeUsers: activeUserIds.size,
                 totalFiles: files.length,
-                filesAllTime: allFiles.value.length
+                filesAllTime: loanFiles.allFiles.value.length
             };
         });
 
         const tenantHealthList = computed(() => {
             return allWorkspaces.value.map(workspace => {
                 const wUsers = roUsers.value.filter(u => u.tenantId === workspace.id && u.role !== 'dse' && !u.dealershipName);
-                const wFiles = allFiles.value.filter(f => f.tenantId === workspace.id || (!f.tenantId && f.smName === workspace.id));
+                const wFiles = loanFiles.allFiles.value.filter(f => f.tenantId === workspace.id || (!f.tenantId && f.smName === workspace.id));
                 
                 let lastActive = null;
                 if (wFiles.length > 0) {
@@ -1815,7 +307,7 @@ const app = createApp({
             }
         }, { immediate: true });
 
-        const superAdminUsersTab = ref('bank'); // 'bank' | 'dse'
+        const superAdminUsersTab = ref('bank');
         const dseDirectorySearch = ref('');
         const dseDirectoryFilterBrand = ref('all');
         const dseDirectoryFilterStatus = ref('all');
@@ -1835,7 +327,6 @@ const app = createApp({
         });
 
         const groupedUsers = computed(() => {
-            // Strictly Bank Platform Users: SM, RO, ASM, ZSM (Strictly EXCLUDES DSEs so they never land inside an SM!)
             let allPlatformUsers = (roUsers.value || []).filter(u => 
                 u.role !== 'super_admin' && 
                 u.role !== 'dse' &&
@@ -1859,7 +350,7 @@ const app = createApp({
                 const wUsers = allPlatformUsers.filter(u => u.tenantId === workspace.id);
                 
                 const enhancedUsers = wUsers.map(u => {
-                    const uFiles = allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
+                    const uFiles = loanFiles.allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
                     let lastActive = null;
                     if (uFiles.length > 0) {
                         lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
@@ -1871,14 +362,14 @@ const app = createApp({
                     workspace,
                     isExpanded: expandedWorkspaces.value.includes(workspace.id),
                     smUsers: enhancedUsers.filter(u => u.role === 'sm' || u.role === 'admin'),
-                    roUsers: enhancedUsers.filter(u => u.role === 'ro') // STRICTLY RO ONLY!
+                    roUsers: enhancedUsers.filter(u => u.role === 'ro')
                 };
             }).filter(group => group.smUsers.length > 0 || group.roUsers.length > 0)
               .sort((a, b) => a.workspace.name.localeCompare(b.workspace.name));
             
             if (systemUsers.length > 0) {
                 const enhancedSystem = systemUsers.map(u => {
-                    const uFiles = allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
+                    const uFiles = loanFiles.allFiles.value.filter(f => f.userId === u.id || f.roId === u.id);
                     let lastActive = null;
                     if (uFiles.length > 0) {
                         lastActive = [...uFiles].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt;
@@ -1922,40 +413,40 @@ const app = createApp({
                 );
             }
 
-            return list.map(dse => {
-                const email = (dse.email || '').toLowerCase();
-                const sid = dse.salesLinkId || '';
-                const files = (allFiles.value || []).filter(f => 
-                    f.dseId === dse.id || 
+            return list.map(dseItem => {
+                const email = (dseItem.email || '').toLowerCase();
+                const sid = dseItem.salesLinkId || '';
+                const files = (loanFiles.allFiles.value || []).filter(f => 
+                    f.dseId === dseItem.id || 
                     (sid && f.dseId === sid) ||
                     (email && f.userEmail && f.userEmail.toLowerCase() === email) ||
-                    (dse.name && f.dseName && f.dseName.toLowerCase() === dse.name.toLowerCase())
+                    (dseItem.name && f.dseName && f.dseName.toLowerCase() === dseItem.name.toLowerCase())
                 );
                 const totalPunched = files.length;
                 const totalSanctioned = files.filter(f => (f.status || '').toUpperCase() === 'SANCTION').length;
                 const totalDelivered = files.filter(f => (f.status || '').toUpperCase() === 'DISBURSED').length;
                 const totalVolume = files.reduce((acc, f) => acc + (Number(f.sanctionAmount || f.loanAmount) || 0), 0);
 
-                let lastActive = dse.lastLoginAt || null;
+                let lastActive = dseItem.lastLoginAt || null;
                 if (files.length > 0) {
                     const sorted = [...files].sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                     lastActive = sorted[0].createdAt;
                 }
 
                 let linkedHub = null;
-                const tid = dse.linkedBankTenantId || dse.tenantId;
+                const tid = dseItem.linkedBankTenantId || dseItem.tenantId;
                 if (tid) {
                     linkedHub = (allWorkspaces.value || []).find(w => w.id === tid);
                 }
 
                 return {
-                    ...dse,
+                    ...dseItem,
                     totalPunched,
                     totalSanctioned,
                     totalDelivered,
                     totalVolume: totalVolume.toFixed(2),
                     lastActive,
-                    linkedHubName: linkedHub ? linkedHub.name : (dse.region || 'Multi-Bank Desk')
+                    linkedHubName: linkedHub ? linkedHub.name : (dseItem.region || 'Multi-Bank Desk')
                 };
             }).sort((a, b) => b.totalPunched - a.totalPunched || (b.createdAt || '').localeCompare(a.createdAt || ''));
         });
@@ -2005,7 +496,6 @@ const app = createApp({
                     return;
                 }
 
-                // Verify Employee ID uniqueness across other users/SMs
                 if (cleanedEmp) {
                     const existingEmp = await db.getUserByEmployeeCode(cleanedEmp);
                     if (existingEmp && existingEmp.id !== editUserForm.value.id) {
@@ -2015,7 +505,6 @@ const app = createApp({
                     }
                 }
 
-                // Verify Email uniqueness across other users/SMs
                 const existingEmail = await db.getUserByEmail(cleanedEmail);
                 if (existingEmail && existingEmail.id !== editUserForm.value.id) {
                     const supName = await db.getSupervisorNameForUser(existingEmail);
@@ -2035,7 +524,7 @@ const app = createApp({
                         updatePayload.dealershipName = (editUserForm.value.dealershipName || '').trim();
                         updatePayload.showroomBrand = editUserForm.value.showroomBrand || 'Maruti Suzuki Arena';
                         updatePayload.designation = 'Dealership Sales Executive (DSE)';
-                        updatePayload.tenantId = null; // Clear bank tenant so DSE belongs exclusively to DSE Directory!
+                        updatePayload.tenantId = null;
                     }
                 }
                 if (editUserForm.value.role !== 'dse' && editUserForm.value.tenantId !== undefined) {
@@ -2061,3645 +550,6 @@ const app = createApp({
             }
         };
 
-        // RO Overview State
-        const roOverviewTimeline = ref('this-month');
-        const roOverviewCustomDate = ref('');
-
-        // RO Overview KPIs
-        const roStats = computed(() => {
-            const files = myFiles.value.filter(f => matchesFileTimeline(f, roOverviewTimeline.value, roOverviewCustomDate.value));
-            const approved = files.filter(f => isSanctionStatus(f.status));
-            const disbursed = files.filter(f => isDisbursedStatus(f.status));
-            const inProcess = files.filter(f => ['lead', 'fi', 'fcu', 'uw'].includes((f.status || '').toLowerCase()));
-            const login = files.filter(f => (f.status || '').toLowerCase() === 'fi');
-            const rejected = files.filter(f => (f.status || '').toLowerCase() === 'rejected');
-            const ncl = files.filter(f => (f.nclUcl || '').toUpperCase() === 'NCL');
-            const ucl = files.filter(f => (f.nclUcl || '').toUpperCase() === 'UCL');
-
-            const totalAmount = files.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const approvedAmount = approved.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const disbursedAmount = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const inProcessAmount = inProcess.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const loginAmount = login.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const rejectedAmount = rejected.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-
-            const nclAmount = ncl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-            const uclAmount = ucl.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-
-            // EOD alignment fallback: ensures metrics from EOD reports reflect even if files haven't been separately logged
-            const eodSancCount = (roOverviewTimeline.value === 'this-month') 
-                ? (eodMtdTotals.value?.sanctionCount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.sanctionCount || 0) : 0);
-            const eodSancAmt = (roOverviewTimeline.value === 'this-month')
-                ? (eodMtdTotals.value?.sanctionAmount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.sanctionAmount || 0) : 0);
-
-            const eodDisbCount = (roOverviewTimeline.value === 'this-month') 
-                ? (eodMtdTotals.value?.disbCount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.disbCount || 0) : 0);
-            const eodDisbAmt = (roOverviewTimeline.value === 'this-month')
-                ? (eodMtdTotals.value?.disbAmount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.disbAmount || 0) : 0);
-
-            const eodLoginCount = (roOverviewTimeline.value === 'this-month') 
-                ? (eodMtdTotals.value?.loginCount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.loginCount || 0) : 0);
-            const eodLoginAmt = (roOverviewTimeline.value === 'this-month')
-                ? (eodMtdTotals.value?.loginAmount || 0)
-                : (roOverviewTimeline.value === 'today' ? (eodTotals.value?.loginAmount || 0) : 0);
-
-            const finalApprovedCount = Math.max(approved.length, eodSancCount);
-            const finalApprovedAmount = Math.max(approvedAmount, eodSancAmt);
-            const finalDisbCount = Math.max(disbursed.length, eodDisbCount);
-            const finalDisbAmount = Math.max(disbursedAmount, eodDisbAmt);
-            const finalTotalFiles = Math.max(files.length, eodLoginCount, finalApprovedCount);
-            const finalTotalAmount = Math.max(totalAmount, eodLoginAmt, finalApprovedAmount);
-
-            const approvalRate = finalTotalFiles ? Math.round(((finalApprovedCount + finalDisbCount) / finalTotalFiles) * 100) : 0;
-
-            const todayStr = getTodayDateStr();
-            const todayLogged = myFiles.value.filter(f => (f.loginDate === todayStr) || (f.createdAt && f.createdAt.startsWith(todayStr)));
-            const todayDisb = myFiles.value.filter(f => isDisbursedStatus(f.status) && ((f.loginDate === todayStr) || (f.updatedAt && f.updatedAt.startsWith(todayStr))));
-
-            const stages = {
-                Lead: files.filter(f => (f.status || '').toLowerCase() === 'lead').length,
-                FI: files.filter(f => (f.status || '').toLowerCase() === 'fi').length,
-                FCU: files.filter(f => (f.status || '').toLowerCase() === 'fcu').length,
-                UW: files.filter(f => (f.status || '').toLowerCase() === 'uw').length,
-                Approved: finalApprovedCount,
-                Sanction: finalApprovedCount,
-                Disbursed: finalDisbCount,
-                Rejected: rejected.length
-            };
-
-            return {
-                totalFiles: finalTotalFiles,
-                totalAmount: finalTotalAmount,
-                approvedCount: finalApprovedCount,
-                approvedAmount: finalApprovedAmount,
-                sanctionCount: finalApprovedCount,
-                sanctionAmount: finalApprovedAmount,
-                disbursedCount: finalDisbCount,
-                disbursedAmount: finalDisbAmount,
-                inProcessCount: inProcess.length,
-                inProcessAmount,
-                loginCount: login.length,
-                loginAmount,
-                rejectedCount: rejected.length,
-                rejectedAmount,
-                nclCount: ncl.length,
-                nclAmount,
-                uclCount: ucl.length,
-                uclAmount,
-                approvalRate,
-                stages,
-                todayLoggedCount: todayLogged.length,
-                todayLoggedAmount: todayLogged.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0),
-                todayDisbCount: todayDisb.length,
-                todayDisbAmount: todayDisb.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0)
-            };
-        });
-
-        const myRecentFiles = computed(() => {
-            return [...myFiles.value].sort((a, b) => new Date(b.createdAt || b.loginDate || 0) - new Date(a.createdAt || a.loginDate || 0)).slice(0, 4);
-        });
-
-        const navigateRoStatusFilter = (status) => {
-            roFilters.value.status = status;
-            roFilters.value.timeline = roOverviewTimeline.value;
-            currentTab.value = 'ro-tracking';
-        };
-        const recentFiles = computed(() => {
-            return [...allFiles.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
-        });
-
-        const filteredFiles = computed(() => {
-            const q = roFilters.value.search.trim().toLowerCase();
-            let list = allFiles.value.filter(file => {
-                const matchSearch = !q || 
-                    (file.customerName && file.customerName.toLowerCase().includes(q)) || 
-                    (file.appId && file.appId.toLowerCase().includes(q)) ||
-                    (file.smName && file.smName.toLowerCase().includes(q)) ||
-                    (file.roName && file.roName.toLowerCase().includes(q)) ||
-                    (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
-                    (file.status && file.status.toLowerCase().includes(q)) ||
-                    (file.ppc && file.ppc.toLowerCase().includes(q));
-                const matchStatus = roFilters.value.status 
-                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
-                    : true;
-                const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
-                const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
-                const matchRo = filters.value.roId ? file.roId === filters.value.roId : true;
-                const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
-                return matchSearch && matchStatus && matchCategory && matchSourcing && matchRo && matchTime;
-            });
-
-            // Sorting
-            return list.sort((a, b) => {
-                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt);
-                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt);
-                switch (roFilters.value.sortBy) {
-                    case 'newest':
-                        return dateB - dateA;
-                    case 'oldest':
-                        return dateA - dateB;
-                    case 'amount-desc':
-                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
-                    case 'amount-asc':
-                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
-                    case 'name-asc':
-                        return (a.customerName || '').localeCompare(b.customerName || '');
-                    default:
-                        return dateB - dateA;
-                }
-            });
-        });
-
-        // RO Pipeline & Overview Tracking (with filtering, timeline & sorting)
-        const filteredMyFiles = computed(() => {
-            const q = roFilters.value.search.trim().toLowerCase();
-            let list = myFiles.value.filter(file => {
-                const matchSearch = !q ||
-                    (file.customerName && file.customerName.toLowerCase().includes(q)) ||
-                    (file.appId && file.appId.toLowerCase().includes(q)) ||
-                    (file.smName && file.smName.toLowerCase().includes(q)) ||
-                    (file.sourcingChannel && file.sourcingChannel.toLowerCase().includes(q)) ||
-                    (file.status && file.status.toLowerCase().includes(q)) ||
-                    (file.ppc && file.ppc.toLowerCase().includes(q));
-                const matchStatus = roFilters.value.status 
-                    ? (['approved', 'sanction', 'sanctioned'].includes(roFilters.value.status.toLowerCase()) ? isSanctionStatus(file.status) : (roFilters.value.status === 'Custom' ? !STANDARD_STATUSES.includes(file.status) : (file.status || '').toLowerCase() === roFilters.value.status.toLowerCase())) 
-                    : true;
-                const matchCategory = roFilters.value.nclUcl ? file.nclUcl === roFilters.value.nclUcl : true;
-                const matchSourcing = roFilters.value.sourcingChannel ? file.sourcingChannel === roFilters.value.sourcingChannel : true;
-                const matchTime = matchesTimeline(file.loginDate || file.createdAt || file.updatedAt, roFilters.value.timeline, roFilters.value.customDate);
-                return matchSearch && matchStatus && matchCategory && matchSourcing && matchTime;
-            });
-
-            // Sorting
-            return list.sort((a, b) => {
-                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt);
-                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt);
-                switch (roFilters.value.sortBy) {
-                    case 'newest':
-                        return dateB - dateA;
-                    case 'oldest':
-                        return dateA - dateB;
-                    case 'amount-desc':
-                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
-                    case 'amount-asc':
-                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
-                    case 'name-asc':
-                        return (a.customerName || '').localeCompare(b.customerName || '');
-                    default:
-                        return dateB - dateA;
-                }
-            });
-        });
-
-
-        // --- Methods ---
-
-        // Helpers
-
-        const formatDateOnly = (dateStr) => {
-            if (!dateStr) return '';
-            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                const [y, m, d] = dateStr.split('-');
-                return `${d}/${m}/${y}`;
-            }
-            const d = new Date(dateStr);
-            return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-IN');
-        };
-
-        const formatDate = (isoString) => {
-            if (!isoString) return '';
-            const d = new Date(isoString);
-            return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-        };
-
-        const formatCapitalizeName = (str) => {
-            if (!str) return '';
-            return str.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        };
-
-        const getStatusBadgeClass = (status) => {
-            switch (status) {
-                case 'Lead': return 'px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full text-[11px] font-semibold';
-                case 'FI': return 'px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold';
-                case 'FCU': return 'px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-semibold';
-                case 'UW': return 'px-2.5 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[11px] font-semibold';
-                case 'Cancelled': return 'px-2.5 py-0.5 bg-stone-50 text-stone-700 rounded-full text-[11px] font-semibold';
-                case 'Sanction':
-                case 'Sanctioned':
-                case 'Approved': return 'px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[11px] font-semibold';
-                case 'Rejected': return 'px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-[11px] font-semibold';
-                case 'Disbursed': return 'px-2.5 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[11px] font-semibold';
-                default: return 'px-2.5 py-0.5 bg-fuchsia-50 text-fuchsia-700 rounded-full text-[11px] font-semibold';
-            }
-        };
-
-        const getTabTitle = (tab) => {
-            switch (tab) {
-                case 'dse-dashboard': return 'Showroom Delivery Radar';
-                case 'sm-inbound': return 'Showroom Inflow Queue';
-                case 'ro-dashboard': return 'Portfolio Overview';
-                case 'ro-tracking': return 'Saved Login Details';
-                case 'ro-add-file': return 'New Customer Login';
-                case 'ro-eod': return 'Daily EOD Report';
-                case 'sm-eod': return 'RO Daily EOD Submissions';
-                case 'dashboard': return 'Global Dashboard';
-                case 'tracking': return 'Live File Tracking';
-                case 'users': return 'User Management';
-                case 'asm-dashboard': return 'Area Dashboard';
-                case 'asm-tracking': return 'File Tracking';
-                case 'asm-team': return 'Team Users';
-                case 'asm-eod': return 'SM Daily EODs';
-                case 'zsm-dashboard': return 'Zonal Operations Cockpit';
-                case 'zsm-team': return 'Supervised Area Managers';
-                case 'targets-drives': return 'Sales Targets & Drives';
-                case 'profile': return 'My Profile & Account';
-                case 'settings': return 'Settings & Preferences';
-                case 'more': return 'More Options';
-                default: return tab ? tab.replace('-', ' ') : '';
-            }
-        };
-
-        const getTimelineLabel = (timeline, customDate) => {
-            switch (timeline) {
-                case 'today': return 'Today';
-                case 'yesterday': return 'Yesterday';
-                case 'this-week': return 'This Week';
-                case 'this-month': return 'This Month';
-                case 'custom': return (customDate || roFilters.value.customDate) ? `Date: ${customDate || roFilters.value.customDate}` : 'Custom Date';
-                case 'all': return 'All Time';
-                default: return 'All Time';
-            }
-        };
-
-        const getSortLabel = (sortBy) => {
-            switch (sortBy) {
-                case 'oldest': return 'Oldest First';
-                case 'amount-desc': return 'Amount: High to Low';
-                case 'amount-asc': return 'Amount: Low to High';
-                case 'name-asc': return 'Name: A to Z';
-                default: return 'Newest First';
-            }
-        };
-
-        const resetRoFilters = () => {
-            roFilters.value = {
-                search: '',
-                status: '',
-                nclUcl: '',
-                sourcingChannel: '',
-                timeline: 'today',
-                customDate: '',
-                sortBy: 'newest'
-            };
-            filters.value.roId = '';
-            showCustomDateInput.value = false;
-        };
-
-        // --- EOD Logic ---
-        const metricsConfig = [
-            { label: 'Open Market', key: 'loginOpenMarket', category: 'Login', type: 'both' },
-            { label: 'Branch', key: 'loginBranch', category: 'Login', type: 'both' },
-            { label: 'Used Car', key: 'loginUsedCar', category: 'Login', type: 'both' },
-            { label: 'Open Market', key: 'sanctionOpenMarket', category: 'Sanction', type: 'both' },
-            { label: 'Branch', key: 'loginBranchSanction', category: 'Sanction', type: 'both' },
-            { label: 'Used Car', key: 'sanctionUsedCar', category: 'Sanction', type: 'both' },
-            { label: 'Open Market', key: 'disbOpenMarket', category: 'Disbursement', type: 'both' },
-            { label: 'Branch', key: 'disbBranch', category: 'Disbursement', type: 'both' },
-            { label: 'Used Car', key: 'disbUsedCar', category: 'Disbursement', type: 'both' },
-            { label: 'VICP/CRM', key: 'vicpCrm', category: 'Other', type: 'count' },
-            { label: 'MI', key: 'mi', category: 'Other', type: 'count' },
-            { label: 'Maruti Login', key: 'marutiLogin', category: 'Maruti', type: 'both' },
-            { label: 'Maruti Disb', key: 'marutiDisb', category: 'Maruti', type: 'both' }
-        ];
-
-        const validateEOD = (metrics) => {
-            const errs = [];
-            const keys = Object.keys(metrics);
-            keys.forEach(k => {
-                const m = metrics[k];
-                if (m?.count !== undefined && (m.count < 0 || !Number.isFinite(m.count))) {
-                    errs.push(`${k} count must be a non-negative number`);
-                }
-                if (m?.amount !== undefined) {
-                    if (m.amount < 0 || isNaN(Number(m.amount))) {
-                        errs.push(`${k} amount must be a non-negative number`);
-                    }
-                    if (!Number.isInteger(m.amount * 100)) {
-                        errs.push(`${k} amount must have at most 2 decimal places`);
-                    }
-                }
-            });
-            const anyFilled = keys.some(k => {
-                const m = metrics[k];
-                return (m?.count && m.count > 0) || (m?.amount && m.amount > 0);
-            });
-            if (!anyFilled) errs.push('Enter at least one metric before submitting');
-            return errs;
-        };
-
-        const eodForm = ref({
-            loginOpenMarket: { count: 0, amount: 0 },
-            loginBranch: { count: 0, amount: 0 },
-            loginUsedCar: { count: 0, amount: 0 },
-            sanctionOpenMarket: { count: 0, amount: 0 },
-            loginBranchSanction: { count: 0, amount: 0 },
-            sanctionUsedCar: { count: 0, amount: 0 },
-            disbOpenMarket: { count: 0, amount: 0 },
-            disbBranch: { count: 0, amount: 0 },
-            disbUsedCar: { count: 0, amount: 0 },
-            vicpCrm: { count: 0 },
-            marutiLogin: { count: 0, amount: 0 },
-            marutiDisb: { count: 0, amount: 0 },
-            mi: { count: 0 }
-        });
-        
-        const dealerVisitsInput = ref(0);
-        const tomorrowLoginsInput = ref('');
-        const tomorrowDisbInput = ref('');
-        const remarksInput = ref('');
-        const isEditingTodayEod = ref(false);
-        const showTodayFilesBreakdown = ref(false);
-        const eodCopiedToast = ref(false);
-        const eodResyncSuccess = ref(false);
-        const eodSubTab = ref('form');
-
-        // RO Personal Target & Pacing State
-        const roTargetFiles = ref(Number(localStorage.getItem('ro_target_files') || 25));
-        const roTargetVolume = ref(Number(localStorage.getItem('ro_target_volume') || 150)); // in Lakhs
-        const showEditTargetModal = ref(false);
-        const targetInputFiles = ref(roTargetFiles.value);
-        const targetInputVolume = ref(roTargetVolume.value);
-
-        const openEditTargetModal = () => {
-            targetInputFiles.value = roTargetFiles.value;
-            targetInputVolume.value = roTargetVolume.value;
-            showEditTargetModal.value = true;
-        };
-
-        const saveRoTarget = () => {
-            roTargetFiles.value = Math.max(1, Number(targetInputFiles.value) || 25);
-            roTargetVolume.value = Math.max(1, Number(targetInputVolume.value) || 150);
-            localStorage.setItem('ro_target_files', roTargetFiles.value);
-            localStorage.setItem('ro_target_volume', roTargetVolume.value);
-            showEditTargetModal.value = false;
-        };
-
-        // Files Logged & Disbursed Today for Live Audit Tray
-        const todayLoginsFiles = computed(() => {
-            const today = new Date().toISOString().split('T')[0];
-            return myFiles.value.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
-        });
-
-        const todayDisbFiles = computed(() => {
-            const today = new Date().toISOString().split('T')[0];
-            return myFiles.value.filter(f => f.status === 'Disbursed' && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
-        });
-
-        // Stale & Attention Cases Radar for RO
-        const roNeedsAttentionFiles = computed(() => {
-            const now = new Date();
-            return myFiles.value.filter(f => {
-                if (f.status === 'Cancelled' || f.status === 'Rejected' || f.status === 'Disbursed') return false;
-                const updatedTime = new Date(f.updatedAt || f.createdAt || Date.now());
-                const diffDays = Math.floor((now - updatedTime) / (1000 * 60 * 60 * 24));
-                // Approved > 4 days without disbursal
-                if (f.status === 'Approved' && diffDays >= 4) return true;
-                // In FI, FCU, UW for > 3 days without movement
-                if (['Lead', 'FI', 'FCU', 'UW'].includes(f.status) && diffDays >= 3) return true;
-                return false;
-            });
-        });
-
-        // RO Target Pacing Calculation
-        const roTargetPacing = computed(() => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-            const currentDay = now.getDate();
-            const daysRemaining = Math.max(1, totalDaysInMonth - currentDay);
-
-            // MTD files from myFiles for current month
-            const thisMonthFiles = myFiles.value.filter(f => {
-                const d = f.loginDate || f.createdAt;
-                if (!d) return false;
-                const parts = d.substring(0, 10).split('-').map(Number);
-                return parts[0] === year && parts[1] === (month + 1);
-            });
-
-            const mtdFilesCount = thisMonthFiles.length;
-            const mtdVolumeLakhs = thisMonthFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-
-            const targetFiles = roTargetFiles.value || 25;
-            const targetVolume = roTargetVolume.value || 150;
-
-            const filesPercent = Math.min(100, Math.round((mtdFilesCount / targetFiles) * 100));
-            const volumePercent = Math.min(100, Math.round((mtdVolumeLakhs / targetVolume) * 100));
-
-            const expectedProgressPercent = Math.round((currentDay / totalDaysInMonth) * 100);
-            const filesRemaining = Math.max(0, targetFiles - mtdFilesCount);
-            const volumeRemaining = Math.max(0, targetVolume - mtdVolumeLakhs);
-
-            const requiredDailyFiles = (filesRemaining / daysRemaining).toFixed(1);
-            const requiredDailyVolume = (volumeRemaining / daysRemaining).toFixed(1);
-
-            let paceStatus = 'on-track';
-            let paceBadgeText = '⚡ On Pace';
-            let paceColorClass = 'text-blue-700 bg-blue-50 border-blue-200';
-
-            if (filesPercent >= expectedProgressPercent + 10) {
-                paceStatus = 'ahead';
-                paceBadgeText = '🔥 Ahead of Target Pace';
-                paceColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
-            } else if (filesPercent < expectedProgressPercent - 10) {
-                paceStatus = 'behind';
-                paceBadgeText = '⚠️ Behind Target Pace';
-                paceColorClass = 'text-amber-700 bg-amber-50 border-amber-200';
-            }
-
-            return {
-                totalDaysInMonth,
-                currentDay,
-                daysRemaining,
-                mtdFilesCount,
-                mtdVolumeLakhs,
-                targetFiles,
-                targetVolume,
-                filesPercent,
-                volumePercent,
-                expectedProgressPercent,
-                filesRemaining,
-                volumeRemaining,
-                requiredDailyFiles,
-                requiredDailyVolume,
-                paceStatus,
-                paceBadgeText,
-                paceColorClass
-            };
-        });
-
-        // =========================================================
-        // CASCADING SALES TARGETS & SALES DRIVES MODULE
-        // =========================================================
-        const showMoreModal = ref(false);
-        const targetsDrivesSubTab = ref('targets'); // 'targets' | 'drives' | 'upcoming'
-        const allSalesTargets = ref([]);
-        const allSalesDrives = ref([]);
-        const showSetTargetModal = ref(false);
-        const targetModalForm = ref({
-            id: '',
-            assignedToUserId: '',
-            assignedToUserName: '',
-            assignedToUserRole: '',
-            targetFiles: 25,
-            targetVolume: 150,
-            targetLogins: 35,
-            remarks: ''
-        });
-        const isSavingTarget = ref(false);
-        const targetSaveSuccess = ref(false);
-        const targetSaveError = ref('');
-
-        const showNewDriveModal = ref(false);
-        const driveModalForm = ref({
-            title: '',
-            description: '',
-            targetMetric: 'volume', // 'volume' | 'files' | 'logins'
-            targetValue: 300,
-            startDate: '',
-            endDate: '',
-            incentiveNote: ''
-        });
-        const isSavingDrive = ref(false);
-        const driveSaveSuccess = ref(false);
-        const driveSaveError = ref('');
-
-        const upcomingFeatureVotes = ref(JSON.parse(localStorage.getItem('upcoming_votes') || '{}'));
-
-        const currentMonthKey = computed(() => {
-            const d = new Date();
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            return `${y}-${m}`;
-        });
-
-        // 1. SM View: Targets for each RO under their branch
-        const smRoTargetsList = computed(() => {
-            const month = currentMonthKey.value;
-            const ros = activeRoUsers.value && activeRoUsers.value.length > 0 ? activeRoUsers.value : (roUsers.value || []);
-            return ros.map(ro => {
-                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === ro.id && t.month === month);
-                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 25) : 25;
-                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 150) : 150;
-                const targetLogins = targetDoc ? (Number(targetDoc.targetLogins) || 35) : 35;
-                const remarks = targetDoc ? targetDoc.remarks : '';
-
-                // Calculate actuals from allFiles
-                const normName = (ro.name || '').trim().toUpperCase();
-                const roFiles = (allFiles.value || []).filter(f => {
-                    const matchId = f.roId === ro.id;
-                    const matchName = normName && f.roName && f.roName.trim().toUpperCase() === normName;
-                    return matchId || matchName;
-                });
-                const disbursedFiles = roFiles.filter(f => f.status === 'Disbursed');
-                const actualFiles = disbursedFiles.length;
-                const actualVolume = disbursedFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                const actualLogins = roFiles.filter(f => f.status === 'FI' || f.status === 'Sanctioned' || f.status === 'Disbursed').length;
-
-                const percentFiles = Math.min(100, Math.round((actualFiles / targetFiles) * 100));
-                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
-
-                let statusBadge = 'On Track';
-                let statusClass = 'text-blue-700 bg-blue-50 border-blue-200';
-                if (percentVolume >= 100) {
-                    statusBadge = 'Target Hit! 🎯';
-                    statusClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
-                } else if (percentVolume >= 60) {
-                    statusBadge = 'On Track';
-                    statusClass = 'text-indigo-700 bg-indigo-50 border-indigo-200';
-                } else {
-                    statusBadge = 'Needs Focus';
-                    statusClass = 'text-amber-700 bg-amber-50 border-amber-200';
-                }
-
-                return {
-                    id: ro.id,
-                    targetDocId: targetDoc?.id || null,
-                    name: ro.name,
-                    salesLinkId: ro.salesLinkId,
-                    phone: ro.phone,
-                    targetFiles,
-                    targetVolume,
-                    targetLogins,
-                    remarks,
-                    actualFiles,
-                    actualVolume,
-                    actualLogins,
-                    percentFiles,
-                    percentVolume,
-                    statusBadge,
-                    statusClass
-                };
-            });
-        });
-
-        // 2. ASM View: Targets for each SM (Branch Manager) under this ASM
-        const asmSmTargetsList = computed(() => {
-            const month = currentMonthKey.value;
-            const sms = supervisedSMs.value || [];
-            return sms.map(sm => {
-                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === sm.id && t.month === month);
-                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 450) : 450;
-                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 75) : 75;
-                const remarks = targetDoc ? targetDoc.remarks : '';
-
-                // Actuals from areaFiles for this SM's branch
-                const branchFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
-                const disbursed = branchFiles.filter(f => f.status === 'Disbursed');
-                const actualFiles = disbursed.length;
-                const actualVolume = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
-
-                let statusBadge = 'On Track';
-                let statusClass = 'text-blue-700 bg-blue-50 border-blue-200';
-                if (percentVolume >= 100) {
-                    statusBadge = 'Exceeded 🏆';
-                    statusClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
-                } else if (percentVolume < 50) {
-                    statusBadge = 'Lagging';
-                    statusClass = 'text-amber-700 bg-amber-50 border-amber-200';
-                }
-
-                return {
-                    id: sm.id,
-                    targetDocId: targetDoc?.id || null,
-                    name: sm.name,
-                    region: sm.region,
-                    salesLinkId: sm.salesLinkId,
-                    targetVolume,
-                    targetFiles,
-                    remarks,
-                    actualFiles,
-                    actualVolume,
-                    percentVolume,
-                    statusBadge,
-                    statusClass
-                };
-            });
-        });
-
-        // 3. ZSM View: Targets for each ASM under this ZSM
-        const zsmAsmTargetsList = computed(() => {
-            const month = currentMonthKey.value;
-            const asms = supervisedASMs.value || [];
-            return asms.map(asm => {
-                const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === asm.id && t.month === month);
-                const targetVolume = targetDoc ? (Number(targetDoc.targetVolume) || 1200) : 1200;
-                const targetFiles = targetDoc ? (Number(targetDoc.targetFiles) || 200) : 200;
-                const remarks = targetDoc ? targetDoc.remarks : '';
-
-                let actualVolume = 0;
-                let actualFiles = 0;
-                (asm.supervisedSMs || []).forEach(sm => {
-                    const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId && f.status === 'Disbursed');
-                    actualFiles += smFiles.length;
-                    actualVolume += smFiles.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                });
-                const percentVolume = Math.min(100, Math.round((actualVolume / targetVolume) * 100));
-
-                return {
-                    id: asm.id,
-                    targetDocId: targetDoc?.id || null,
-                    name: asm.name,
-                    region: asm.region,
-                    salesLinkId: asm.salesLinkId,
-                    targetVolume,
-                    targetFiles,
-                    remarks,
-                    actualFiles,
-                    actualVolume,
-                    percentVolume
-                };
-            });
-        });
-
-        // 4. RO Official Assigned Target (by SM)
-        const roOfficialTarget = computed(() => {
-            if (!currentUser.value?.id) return null;
-            const month = currentMonthKey.value;
-            const targetDoc = allSalesTargets.value.find(t => t.assignedToUserId === currentUser.value.id && t.month === month);
-            if (targetDoc) {
-                return {
-                    isCustom: true,
-                    assignedByName: targetDoc.assignedByUserName || 'Branch Sales Manager',
-                    targetFiles: Number(targetDoc.targetFiles) || 25,
-                    targetVolume: Number(targetDoc.targetVolume) || 150,
-                    targetLogins: Number(targetDoc.targetLogins) || 35,
-                    remarks: targetDoc.remarks || ''
-                };
-            }
-            return {
-                isCustom: false,
-                assignedByName: defaultSmName.value || 'Branch Sales Manager',
-                targetFiles: roTargetFiles.value || 25,
-                targetVolume: roTargetVolume.value || 150,
-                targetLogins: 35,
-                remarks: 'Branch Standard Target'
-            };
-        });
-
-        // 5. Drives with Real-Time Progress & Top Contributors
-        const drivesWithProgress = computed(() => {
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-
-            return allSalesDrives.value.map(drive => {
-                const start = drive.startDate || todayStr;
-                const end = drive.endDate || todayStr;
-
-                const isEnded = todayStr > end;
-                const isUpcoming = todayStr < start;
-                const isActive = !isEnded && !isUpcoming;
-
-                const endDateObj = new Date(end);
-                const diffTime = endDateObj.getTime() - now.getTime();
-                const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-
-                const pool = (allFiles.value && allFiles.value.length > 0) ? allFiles.value : (areaFiles.value || []);
-                const matchingFiles = pool.filter(f => {
-                    const date = f.disbursalDate || f.updatedAt || f.loginDate || f.createdAt || '';
-                    const dateStr = String(date).split('T')[0];
-                    return dateStr >= start && dateStr <= end;
-                });
-
-                const metric = drive.targetMetric || 'volume';
-                const targetVal = Number(drive.targetValue) || 100;
-                let currentVal = 0;
-
-                if (metric === 'volume') {
-                    const disbursed = matchingFiles.filter(f => f.status === 'Disbursed');
-                    currentVal = disbursed.reduce((sum, f) => sum + toLakhs(f.loanAmount), 0);
-                } else if (metric === 'files') {
-                    currentVal = matchingFiles.filter(f => f.status === 'Disbursed').length;
-                } else {
-                    currentVal = matchingFiles.length; // logins
-                }
-
-                const percent = Math.min(100, Math.round((currentVal / targetVal) * 100));
-
-                return {
-                    ...drive,
-                    isActive,
-                    isUpcoming,
-                    isEnded,
-                    daysRemaining,
-                    currentVal: Number(currentVal.toFixed(1)),
-                    targetVal,
-                    percent
-                };
-            });
-        });
-
-        const activeSalesDrivesCount = computed(() => {
-            return drivesWithProgress.value.filter(d => d.isActive).length;
-        });
-
-        // Methods for setting Targets
-        const openSetTargetModal = (user, defaultRole = 'ro') => {
-            const month = currentMonthKey.value;
-            const existing = allSalesTargets.value.find(t => t.assignedToUserId === user.id && t.month === month);
-            targetModalForm.value = {
-                id: existing?.id || '',
-                assignedToUserId: user.id,
-                assignedToUserName: user.name || 'Officer',
-                assignedToUserRole: defaultRole,
-                targetFiles: existing ? Number(existing.targetFiles) : (defaultRole === 'ro' ? 25 : (defaultRole === 'sm' ? 60 : 200)),
-                targetVolume: existing ? Number(existing.targetVolume) : (defaultRole === 'ro' ? 150 : (defaultRole === 'sm' ? 400 : 1200)),
-                targetLogins: existing ? Number(existing.targetLogins) : 35,
-                remarks: existing?.remarks || ''
-            };
-            targetSaveError.value = '';
-            targetSaveSuccess.value = false;
-            showSetTargetModal.value = true;
-        };
-
-        const saveSalesTarget = async () => {
-            if (!targetModalForm.value.assignedToUserId) return;
-            isSavingTarget.value = true;
-            targetSaveError.value = '';
-            try {
-                const payload = {
-                    assignedToUserId: targetModalForm.value.assignedToUserId,
-                    assignedToUserName: targetModalForm.value.assignedToUserName,
-                    assignedToUserRole: targetModalForm.value.assignedToUserRole,
-                    assignedByUserId: currentUser.value?.id || '',
-                    assignedByUserName: currentUser.value?.name || 'Sales Leadership',
-                    assignedByUserRole: currentUser.value?.role || 'sm',
-                    tenantId: currentUser.value?.tenantId || null,
-                    month: currentMonthKey.value,
-                    targetFiles: Math.max(1, Number(targetModalForm.value.targetFiles) || 25),
-                    targetVolume: Math.max(1, Number(targetModalForm.value.targetVolume) || 150),
-                    targetLogins: Math.max(1, Number(targetModalForm.value.targetLogins) || 35),
-                    remarks: (targetModalForm.value.remarks || '').trim()
-                };
-                if (targetModalForm.value.id) {
-                    payload.id = targetModalForm.value.id;
-                }
-                const savedId = await db.saveSalesTarget(payload);
-                payload.id = savedId;
-
-                const idx = allSalesTargets.value.findIndex(t => t.assignedToUserId === payload.assignedToUserId && t.month === payload.month);
-                if (idx !== -1) {
-                    allSalesTargets.value[idx] = payload;
-                } else {
-                    allSalesTargets.value.push(payload);
-                }
-
-                targetSaveSuccess.value = true;
-                setTimeout(() => {
-                    showSetTargetModal.value = false;
-                    targetSaveSuccess.value = false;
-                }, 1200);
-            } catch (err) {
-                console.error("Save target error:", err);
-                targetSaveError.value = err.message || 'Failed to save sales target.';
-            } finally {
-                isSavingTarget.value = false;
-            }
-        };
-
-        // Methods for Sales Drives
-        const openNewDriveModal = () => {
-            const today = new Date().toISOString().split('T')[0];
-            const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
-            driveModalForm.value = {
-                title: '',
-                description: '',
-                targetMetric: 'volume',
-                targetValue: 400,
-                startDate: today,
-                endDate: endOfMonth,
-                incentiveNote: ''
-            };
-            driveSaveError.value = '';
-            driveSaveSuccess.value = false;
-            showNewDriveModal.value = true;
-        };
-
-        const saveSalesDrive = async () => {
-            if (!driveModalForm.value.title.trim()) {
-                driveSaveError.value = 'Sales Drive title is mandatory.';
-                return;
-            }
-            isSavingDrive.value = true;
-            driveSaveError.value = '';
-            try {
-                const payload = {
-                    title: driveModalForm.value.title.trim(),
-                    description: (driveModalForm.value.description || '').trim(),
-                    targetMetric: driveModalForm.value.targetMetric,
-                    targetValue: Number(driveModalForm.value.targetValue) || 100,
-                    startDate: driveModalForm.value.startDate,
-                    endDate: driveModalForm.value.endDate,
-                    incentiveNote: (driveModalForm.value.incentiveNote || '').trim(),
-                    scope: isSM.value ? 'branch' : (isASM.value ? 'area' : 'zonal'),
-                    createdByRole: currentUser.value?.role || 'sm',
-                    createdByName: currentUser.value?.name || 'Manager',
-                    tenantId: currentUser.value?.tenantId || null
-                };
-                const driveId = await db.saveSalesDrive(payload);
-                payload.id = driveId;
-                allSalesDrives.value.unshift(payload);
-
-                driveSaveSuccess.value = true;
-                setTimeout(() => {
-                    showNewDriveModal.value = false;
-                    driveSaveSuccess.value = false;
-                }, 1200);
-            } catch (err) {
-                console.error("Save drive error:", err);
-                driveSaveError.value = err.message || 'Failed to launch sales drive.';
-            } finally {
-                isSavingDrive.value = false;
-            }
-        };
-
-        const deleteSalesDrive = async (id) => {
-            if (!confirm("Are you sure you want to remove this sales drive?")) return;
-            try {
-                await db.deleteSalesDrive(id);
-                allSalesDrives.value = allSalesDrives.value.filter(d => d.id !== id);
-            } catch (err) {
-                console.error("Delete drive error:", err);
-            }
-        };
-
-        const toggleUpcomingVote = (featureKey) => {
-            const votes = { ...upcomingFeatureVotes.value };
-            votes[featureKey] = (votes[featureKey] || 0) + 1;
-            upcomingFeatureVotes.value = votes;
-            localStorage.setItem('upcoming_votes', JSON.stringify(votes));
-        };
-
-        
-        const eodSubmitError = ref('');
-        const eodSubmitSuccess = ref(false);
-        const submitting = ref(false);
-        const myEods = ref([]);
-        const smEods = ref([]);
-        
-        const hasSubmittedToday = computed(() => {
-            const today = new Date().toISOString().split('T')[0];
-            return myEods.value.some(e => e.date === today);
-        });
-
-        const eodTotals = computed(() => {
-            const f = eodForm.value;
-            const sCount = (f.sanctionOpenMarket?.count || 0) + (f.loginBranchSanction?.count || 0) + (f.sanctionUsedCar?.count || 0);
-            const sAmt = (f.sanctionOpenMarket?.amount || 0) + (f.loginBranchSanction?.amount || 0) + (f.sanctionUsedCar?.amount || 0);
-            return {
-                loginCount: (f.loginOpenMarket.count||0) + (f.loginBranch.count||0) + (f.loginUsedCar.count||0),
-                loginAmount: (f.loginOpenMarket.amount||0) + (f.loginBranch.amount||0) + (f.loginUsedCar.amount||0),
-                disbCount: (f.disbOpenMarket.count||0) + (f.disbBranch.count||0) + (f.disbUsedCar.count||0),
-                disbAmount: (f.disbOpenMarket.amount||0) + (f.disbBranch.amount||0) + (f.disbUsedCar.amount||0),
-                sanctionCount: sCount,
-                sanctionAmt: sAmt,
-                sanctionAmount: sAmt,
-                vcipCount: (f.vicpCrm?.count || 0),
-                miCount: (f.mi?.count || 0)
-            };
-        });
-
-        // 100% Accurate MTD calculation engine
-        const getRoMtdForDate = (eodDate, currentMetrics = null) => {
-            const targetDate = eodDate || getTodayDateStr();
-            const currentMonth = targetDate.substring(0, 7);
-
-            const m = {
-                loginOpenMarket: { count: 0, amount: 0 },
-                loginBranch: { count: 0, amount: 0 },
-                loginUsedCar: { count: 0, amount: 0 },
-                sanctionOpenMarket: { count: 0, amount: 0 },
-                loginBranchSanction: { count: 0, amount: 0 },
-                sanctionUsedCar: { count: 0, amount: 0 },
-                disbOpenMarket: { count: 0, amount: 0 },
-                disbBranch: { count: 0, amount: 0 },
-                disbUsedCar: { count: 0, amount: 0 },
-                vicpCrm: { count: 0 },
-                marutiLogin: { count: 0, amount: 0 },
-                marutiDisb: { count: 0, amount: 0 },
-                mi: { count: 0 }
-            };
-
-            // 1. Files in current month prior to targetDate
-            const priorFiles = (myFiles.value || []).filter(f => {
-                const fDate = f.loginDate || (f.createdAt ? f.createdAt.split('T')[0] : '');
-                return fDate && fDate.startsWith(currentMonth) && fDate < targetDate;
-            });
-
-            priorFiles.forEach(f => {
-                const amt = toLakhs(f.loanAmount) || 0;
-                const chan = (f.sourcingChannel || '').toUpperCase();
-                const cat = (f.nclUcl || '').toUpperCase();
-
-                if (cat === 'UCL') {
-                    m.loginUsedCar.count += 1;
-                    m.loginUsedCar.amount += amt;
-                } else if (chan === 'BRANCH') {
-                    m.loginBranch.count += 1;
-                    m.loginBranch.amount += amt;
-                } else {
-                    m.loginOpenMarket.count += 1;
-                    m.loginOpenMarket.amount += amt;
-                }
-
-                if (isSanctionStatus(f.status) || isDisbursedStatus(f.status)) {
-                    if (cat === 'UCL') {
-                        m.sanctionUsedCar.count += 1;
-                        m.sanctionUsedCar.amount += amt;
-                    } else if (chan === 'BRANCH') {
-                        m.loginBranchSanction.count += 1;
-                        m.loginBranchSanction.amount += amt;
-                    } else {
-                        m.sanctionOpenMarket.count += 1;
-                        m.sanctionOpenMarket.amount += amt;
-                    }
-                }
-
-                if (f.status === 'Disbursed') {
-                    if (cat === 'UCL') {
-                        m.disbUsedCar.count += 1;
-                        m.disbUsedCar.amount += amt;
-                    } else if (chan === 'BRANCH') {
-                        m.disbBranch.count += 1;
-                        m.disbBranch.amount += amt;
-                    } else {
-                        m.disbOpenMarket.count += 1;
-                        m.disbOpenMarket.amount += amt;
-                    }
-                }
-
-                let vcipVal = f.vcip ? String(f.vcip).trim().toLowerCase() : '';
-                if (vcipVal && vcipVal !== '0' && vcipVal !== 'no' && vcipVal !== 'n/a' && vcipVal !== 'false') {
-                    m.vicpCrm.count += 1;
-                }
-                let miVal = f.mi ? String(f.mi).trim().toLowerCase() : '';
-                if (miVal && miVal !== '0' && miVal !== 'no' && miVal !== 'n/a' && miVal !== 'false') {
-                    m.mi.count += 1;
-                }
-            });
-
-            // 2. Prior EODs in current month
-            const priorEods = (myEods.value || []).filter(e => e.date && e.date.startsWith(currentMonth) && e.date < targetDate);
-            priorEods.forEach(e => {
-                if (!e.metrics) return;
-                m.marutiLogin.count += (e.metrics.marutiLogin?.count || 0);
-                m.marutiLogin.amount += (e.metrics.marutiLogin?.amount || 0);
-                m.marutiDisb.count += (e.metrics.marutiDisb?.count || 0);
-                m.marutiDisb.amount += (e.metrics.marutiDisb?.amount || 0);
-            });
-
-            // 3. Add current metrics for the target date
-            const f = currentMetrics || eodForm.value;
-            if (f) {
-                Object.keys(f).forEach(k => {
-                    if (!m[k]) return;
-                    m[k].count += (f[k].count || 0);
-                    if (m[k].amount !== undefined) {
-                        m[k].amount += (f[k].amount || 0);
-                    }
-                });
-            }
-
-            return m;
-        };
-
-        const currentRoMtd = computed(() => {
-            return getRoMtdForDate(getTodayDateStr(), eodForm.value);
-        });
-
-        const eodMtdTotals = computed(() => {
-            const m = currentRoMtd.value || {};
-            const loginCount = (m.loginOpenMarket?.count || 0) + (m.loginBranch?.count || 0) + (m.loginUsedCar?.count || 0);
-            const loginAmount = (m.loginOpenMarket?.amount || 0) + (m.loginBranch?.amount || 0) + (m.loginUsedCar?.amount || 0);
-            const disbCount = (m.disbOpenMarket?.count || 0) + (m.disbBranch?.count || 0) + (m.disbUsedCar?.count || 0);
-            const disbAmount = (m.disbOpenMarket?.amount || 0) + (m.disbBranch?.amount || 0) + (m.disbUsedCar?.amount || 0);
-            const sanctionCount = (m.sanctionOpenMarket?.count || 0) + (m.loginBranchSanction?.count || 0) + (m.sanctionUsedCar?.count || 0);
-            const sanctionAmount = (m.sanctionOpenMarket?.amount || 0) + (m.loginBranchSanction?.amount || 0) + (m.sanctionUsedCar?.amount || 0);
-            return { loginCount, loginAmount, disbCount, disbAmount, sanctionCount, sanctionAmount, sanctionAmt: sanctionAmount };
-        });
-
-        const smEodSummary = computed(() => {
-            const today = new Date().toISOString().split('T')[0];
-            const currentMonth = today.substring(0, 7); // YYYY-MM
-
-            const summaryMap = {};
-            roUsers.value.forEach(ro => {
-                summaryMap[ro.id] = {
-                    id: ro.id,
-                    name: ro.name,
-                    submittedToday: false,
-                    ftd: {
-                        loginOpenMarket: { count: 0, amount: 0 },
-                        loginBranch: { count: 0, amount: 0 },
-                        loginUsedCar: { count: 0, amount: 0 },
-                        sanctionOpenMarket: { count: 0, amount: 0 },
-                        loginBranchSanction: { count: 0, amount: 0 },
-                        sanctionUsedCar: { count: 0, amount: 0 },
-                        disbOpenMarket: { count: 0, amount: 0 },
-                        disbBranch: { count: 0, amount: 0 },
-                        disbUsedCar: { count: 0, amount: 0 },
-                        vicpCrm: { count: 0 },
-                        marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
-                    },
-                    mtd: {
-                        loginOpenMarket: { count: 0, amount: 0 },
-                        loginBranch: { count: 0, amount: 0 },
-                        loginUsedCar: { count: 0, amount: 0 },
-                        sanctionOpenMarket: { count: 0, amount: 0 },
-                        loginBranchSanction: { count: 0, amount: 0 },
-                        sanctionUsedCar: { count: 0, amount: 0 },
-                        disbOpenMarket: { count: 0, amount: 0 },
-                        disbBranch: { count: 0, amount: 0 },
-                        disbUsedCar: { count: 0, amount: 0 },
-                        vicpCrm: { count: 0 },
-                        marutiLogin: { count: 0, amount: 0 }, marutiDisb: { count: 0, amount: 0 }, mi: { count: 0 }
-                    }
-                };
-            });
-
-            smEods.value.forEach(eod => {
-                if (!summaryMap[eod.userId]) return;
-                const isToday = eod.date === today;
-                const isCurrentMonth = eod.date.startsWith(currentMonth);
-
-                if (!isCurrentMonth) return;
-
-                if (isToday) summaryMap[eod.userId].submittedToday = true;
-
-                // Sum metrics
-                Object.keys(eod.metrics).forEach(key => {
-                    const m = eod.metrics[key];
-                    if (isToday) {
-                        summaryMap[eod.userId].ftd[key].count += (m.count || 0);
-                        if (m.amount !== undefined) summaryMap[eod.userId].ftd[key].amount += (m.amount || 0);
-                    }
-                    summaryMap[eod.userId].mtd[key].count += (m.count || 0);
-                    if (m.amount !== undefined) summaryMap[eod.userId].mtd[key].amount += (m.amount || 0);
-                });
-            });
-
-            return Object.values(summaryMap);
-        });
-
-        const missingEods = computed(() => {
-            return smEodSummary.value.filter(s => !s.submittedToday);
-        });
-
-        const generateEodWhatsApp = () => {
-            const today = new Date().toLocaleDateString('en-IN');
-            let text = `*Daily EOD Summary - ${today}*\n\n`;
-
-            let totalFtdLogin = { count: 0, amount: 0 };
-            let totalMtdLogin = { count: 0, amount: 0 };
-            let totalFtdDisb = { count: 0, amount: 0 };
-            let totalMtdDisb = { count: 0, amount: 0 };
-
-            smEodSummary.value.forEach(s => {
-                const fl = s.ftd.loginOpenMarket.count + s.ftd.loginBranch.count + s.ftd.loginUsedCar.count;
-                const fla = s.ftd.loginOpenMarket.amount + s.ftd.loginBranch.amount + s.ftd.loginUsedCar.amount;
-                const ml = s.mtd.loginOpenMarket.count + s.mtd.loginBranch.count + s.mtd.loginUsedCar.count;
-                const mla = s.mtd.loginOpenMarket.amount + s.mtd.loginBranch.amount + s.mtd.loginUsedCar.amount;
-                
-                totalFtdLogin.count += fl; totalFtdLogin.amount += fla;
-                totalMtdLogin.count += ml; totalMtdLogin.amount += mla;
-
-                const fd = s.ftd.disbOpenMarket.count + s.ftd.disbBranch.count + s.ftd.disbUsedCar.count;
-                const fda = s.ftd.disbOpenMarket.amount + s.ftd.disbBranch.amount + s.ftd.disbUsedCar.amount;
-                const md = s.mtd.disbOpenMarket.count + s.mtd.disbBranch.count + s.mtd.disbUsedCar.count;
-                const mda = s.mtd.disbOpenMarket.amount + s.mtd.disbBranch.amount + s.mtd.disbUsedCar.amount;
-
-                totalFtdDisb.count += fd; totalFtdDisb.amount += fda;
-                totalMtdDisb.count += md; totalMtdDisb.amount += mda;
-            });
-
-            text += `*Logins:*\nFTD: ${totalFtdLogin.count} (${totalFtdLogin.amount.toFixed(2)}L)\nMTD: ${totalMtdLogin.count} (${totalMtdLogin.amount.toFixed(2)}L)\n\n`;
-            text += `*Disb:*\nFTD: ${totalFtdDisb.count} (${totalFtdDisb.amount.toFixed(2)}L)\nMTD: ${totalMtdDisb.count} (${totalMtdDisb.amount.toFixed(2)}L)\n\n`;
-            
-            text += `*RO Breakdown (FTD/MTD)*\n`;
-            smEodSummary.value.forEach(s => {
-                const fl = s.ftd.loginOpenMarket.count + s.ftd.loginBranch.count + s.ftd.loginUsedCar.count;
-                const ml = s.mtd.loginOpenMarket.count + s.mtd.loginBranch.count + s.mtd.loginUsedCar.count;
-                const fd = s.ftd.disbOpenMarket.count + s.ftd.disbBranch.count + s.ftd.disbUsedCar.count;
-                const md = s.mtd.disbOpenMarket.count + s.mtd.disbBranch.count + s.mtd.disbUsedCar.count;
-                
-                text += `${s.name} - L: ${fl}/${ml} | D: ${fd}/${md}\n`;
-            });
-
-            return encodeURIComponent(text);
-        };
-
-        const generateRoWhatsAppText = (eod) => {
-            if (!eod || !eod.metrics) return '';
-
-            const m = getRoMtdForDate(eod.date, eod.metrics);
-            const f = eod.metrics;
-
-            let dateStr = '';
-            if (eod.date) {
-                const parts = eod.date.split('-');
-                if (parts.length === 3) {
-                    dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                } else {
-                    dateStr = new Date(eod.date).toLocaleDateString('en-GB');
-                }
-            } else {
-                const now = new Date();
-                dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-            }
-
-            const formatVal = (count, amt) => {
-                const c = Number(count) || 0;
-                const a = Number(amt) || 0;
-                if (c === 0 && a === 0) return '0/0.0cr';
-                return `${c}/${a.toFixed(2)}L`;
-            };
-
-            const tlFtd = (f.loginOpenMarket.count || 0) + (f.loginBranch.count || 0) + (f.loginUsedCar.count || 0);
-            const tlaFtd = (f.loginOpenMarket.amount || 0) + (f.loginBranch.amount || 0) + (f.loginUsedCar.amount || 0);
-            const tlMtd = (m.loginOpenMarket.count || 0) + (m.loginBranch.count || 0) + (m.loginUsedCar.count || 0);
-            const tlaMtd = (m.loginOpenMarket.amount || 0) + (m.loginBranch.amount || 0) + (m.loginUsedCar.amount || 0);
-
-            const tdFtd = (f.disbOpenMarket.count || 0) + (f.disbBranch.count || 0) + (f.disbUsedCar.count || 0);
-            const tdaFtd = (f.disbOpenMarket.amount || 0) + (f.disbBranch.amount || 0) + (f.disbUsedCar.amount || 0);
-            const tdMtd = (m.disbOpenMarket.count || 0) + (m.disbBranch.count || 0) + (m.disbUsedCar.count || 0);
-            const tdaMtd = (m.disbOpenMarket.amount || 0) + (m.disbBranch.amount || 0) + (m.disbUsedCar.amount || 0);
-
-            const sTotalFtd = (f.sanctionOpenMarket?.count || 0) + (f.loginBranchSanction?.count || 0) + (f.sanctionUsedCar?.count || 0);
-            const sTotalAmountFtd = (f.sanctionOpenMarket?.amount || 0) + (f.loginBranchSanction?.amount || 0) + (f.sanctionUsedCar?.amount || 0);
-            const sTotalMtd = (m.sanctionOpenMarket?.count || 0) + (m.loginBranchSanction?.count || 0) + (m.sanctionUsedCar?.count || 0);
-            const sTotalAmountMtd = (m.sanctionOpenMarket?.amount || 0) + (m.loginBranchSanction?.amount || 0) + (m.sanctionUsedCar?.amount || 0);
-
-            let text = `${dateStr}\n`;
-            text += `*Login :*\n`;
-            text += `*Open Market :*\n`;
-            text += `FTD : ${formatVal(f.loginOpenMarket.count, f.loginOpenMarket.amount)}\n`;
-            text += `MTD: ${formatVal(m.loginOpenMarket.count, m.loginOpenMarket.amount)}\n`;
-            text += `*Branch*\n`;
-            text += `FTD : ${formatVal(f.loginBranch.count, f.loginBranch.amount)}\n`;
-            text += `MTD:  ${formatVal(m.loginBranch.count, m.loginBranch.amount)}\n`;
-            text += `Sanction: ${formatVal(f.loginBranchSanction?.count, f.loginBranchSanction?.amount)}\n`;
-            text += `MTD sanction: ${m.loginBranchSanction?.count || 0}\n`;
-            text += `*Used Car*\n`;
-            text += `FTD - ${formatVal(f.loginUsedCar.count, f.loginUsedCar.amount)}\n`;
-            text += `MTD - ${formatVal(m.loginUsedCar.count, m.loginUsedCar.amount)}\n\n`;
-
-            text += `Total FTD :  ${formatVal(tlFtd, tlaFtd)}\n`;
-            text += `Total MTD: ${formatVal(tlMtd, tlaMtd)} \n\n`;
-
-            text += `*Sanction :*\n`;
-            text += `*Open Market :* FTD: ${formatVal(f.sanctionOpenMarket?.count, f.sanctionOpenMarket?.amount)} | MTD: ${formatVal(m.sanctionOpenMarket?.count, m.sanctionOpenMarket?.amount)}\n`;
-            text += `*Branch :* FTD: ${formatVal(f.loginBranchSanction?.count, f.loginBranchSanction?.amount)} | MTD: ${formatVal(m.loginBranchSanction?.count, m.loginBranchSanction?.amount)}\n`;
-            text += `*Used Car :* FTD: ${formatVal(f.sanctionUsedCar?.count, f.sanctionUsedCar?.amount)} | MTD: ${formatVal(m.sanctionUsedCar?.count, m.sanctionUsedCar?.amount)}\n`;
-            text += `Total Sanction FTD: ${formatVal(sTotalFtd, sTotalAmountFtd)} | MTD: ${formatVal(sTotalMtd, sTotalAmountMtd)}\n\n`;
-
-            text += `*Disb :*\n`;
-            text += `*Open Market :* \n`;
-            text += `FTD : ${formatVal(f.disbOpenMarket.count, f.disbOpenMarket.amount)}\n`;
-            text += `MTD: ${formatVal(m.disbOpenMarket.count, m.disbOpenMarket.amount)}\n`;
-            text += `*Branch :*\n`;
-            text += `FTD : ${formatVal(f.disbBranch.count, f.disbBranch.amount)}\n`;
-            text += `MTD: ${formatVal(m.disbBranch.count, m.disbBranch.amount)}\n`;
-            text += `*Used :*\n`;
-            text += `FTD : ${f.disbUsedCar.count || 0}\n`;
-            text += `MTD: ${m.disbUsedCar.count || 0}\n\n`;
-
-            text += `Total FTD : ${formatVal(tdFtd, tdaFtd)}\n`;
-            text += `Total MTD: ${formatVal(tdMtd, tdaMtd)}\n\n`;
-
-            text += `FTD vicp/CRM: ${f.vicpCrm?.count || 0}\n`;
-            text += `MTD vicp/CRM: ${m.vicpCrm?.count || 0}\n\n`;
-
-            text += `*Maruti*\n`;
-            text += `Login FTD/MTD- ${f.marutiLogin?.count || 0}/${m.marutiLogin?.count || 0}\n`;
-            text += `Disb Ftd /Mtd  :  ${f.marutiDisb?.count || 0}/${m.marutiDisb?.count || 0}\n\n`;
-
-            text += `MI FTD - ${f.mi?.count || 0}\n`;
-            text += `MI MTD - ${m.mi?.count || 0}\n`;
-
-            return text;
-        };
-
-        const generateRoWhatsApp = (eod) => {
-            const raw = generateRoWhatsAppText(eod);
-            return encodeURIComponent(raw);
-        };
-
-        const copyRoEodToClipboard = async (eod) => {
-            const raw = generateRoWhatsAppText(eod);
-            if (!raw) return;
-            try {
-                if (navigator?.clipboard?.writeText) {
-                    await navigator.clipboard.writeText(raw);
-                } else {
-                    const ta = document.createElement('textarea');
-                    ta.value = raw;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                }
-                eodCopiedToast.value = true;
-                setTimeout(() => { eodCopiedToast.value = false; }, 3000);
-            } catch (err) {
-                console.error('Clipboard error:', err);
-            }
-        };
-
-        const startReviseTodayEod = () => {
-            const today = new Date().toISOString().split('T')[0];
-            const todayEod = myEods.value.find(e => e.date === today);
-            if (todayEod && todayEod.metrics) {
-                eodForm.value = JSON.parse(JSON.stringify(todayEod.metrics));
-                dealerVisitsInput.value = todayEod.dealerVisits || 0;
-                tomorrowLoginsInput.value = todayEod.tomorrowLogins || '';
-                tomorrowDisbInput.value = todayEod.tomorrowDisb || '';
-                remarksInput.value = todayEod.remarks || '';
-            } else {
-                autoFillEOD();
-            }
-            isEditingTodayEod.value = true;
-            eodSubmitError.value = '';
-            eodSubmitSuccess.value = false;
-        };
-
-        const cancelReviseTodayEod = () => {
-            isEditingTodayEod.value = false;
-            eodSubmitError.value = '';
-        };
-
-        const triggerResyncEod = () => {
-            autoFillEOD();
-            eodResyncSuccess.value = true;
-            setTimeout(() => { eodResyncSuccess.value = false; }, 2500);
-        };
-        
-        const autoFillEOD = () => {
-            const today = new Date().toISOString().split('T')[0];
-            resetEodForm();
-            
-            const loginsToday = myFiles.value.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
-            loginsToday.forEach(f => {
-                const amt = toLakhs(f.loanAmount) || 0;
-                const chan = (f.sourcingChannel || '').toUpperCase();
-                const cat = (f.nclUcl || '').toUpperCase();
-
-                if (cat === 'UCL') {
-                    eodForm.value.loginUsedCar.count += 1;
-                    eodForm.value.loginUsedCar.amount += amt;
-                } else if (chan === 'BRANCH') {
-                    eodForm.value.loginBranch.count += 1;
-                    eodForm.value.loginBranch.amount += amt;
-                } else {
-                    eodForm.value.loginOpenMarket.count += 1;
-                    eodForm.value.loginOpenMarket.amount += amt;
-                }
-
-                let vcipVal = f.vcip ? String(f.vcip).trim().toLowerCase() : '';
-                if (vcipVal && vcipVal !== '0' && vcipVal !== 'no' && vcipVal !== 'n/a' && vcipVal !== 'false') {
-                    eodForm.value.vicpCrm.count += 1;
-                }
-                
-                let miVal = f.mi ? String(f.mi).trim().toLowerCase() : '';
-                if (miVal && miVal !== '0' && miVal !== 'no' && miVal !== 'n/a' && miVal !== 'false') {
-                    eodForm.value.mi.count += 1;
-                }
-            });
-
-            const disbToday = myFiles.value.filter(f => f.status === 'Disbursed' && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
-            disbToday.forEach(f => {
-                const amt = toLakhs(f.loanAmount) || 0;
-                const chan = (f.sourcingChannel || '').toUpperCase();
-                const cat = (f.nclUcl || '').toUpperCase();
-
-                if (cat === 'UCL') {
-                    eodForm.value.disbUsedCar.count += 1;
-                    eodForm.value.disbUsedCar.amount += amt;
-                } else if (chan === 'BRANCH') {
-                    eodForm.value.disbBranch.count += 1;
-                    eodForm.value.disbBranch.amount += amt;
-                } else {
-                    eodForm.value.disbOpenMarket.count += 1;
-                    eodForm.value.disbOpenMarket.amount += amt;
-                }
-            });
-
-            const approvedToday = myFiles.value.filter(f => (isSanctionStatus(f.status) || isDisbursedStatus(f.status)) && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
-            approvedToday.forEach(f => {
-                const amt = toLakhs(f.loanAmount) || 0;
-                const chan = (f.sourcingChannel || '').toUpperCase();
-                const cat = (f.nclUcl || '').toUpperCase();
-
-                if (cat === 'UCL') {
-                    eodForm.value.sanctionUsedCar.count += 1;
-                    eodForm.value.sanctionUsedCar.amount += amt;
-                } else if (chan === 'BRANCH') {
-                    eodForm.value.loginBranchSanction.count += 1;
-                    eodForm.value.loginBranchSanction.amount += amt;
-                } else {
-                    eodForm.value.sanctionOpenMarket.count += 1;
-                    eodForm.value.sanctionOpenMarket.amount += amt;
-                }
-            });
-            
-            Object.keys(eodForm.value).forEach(k => {
-                if (eodForm.value[k].amount !== undefined) {
-                    eodForm.value[k].amount = parseFloat(eodForm.value[k].amount.toFixed(2));
-                }
-            });
-        };
-
-        watch(currentTab, async (newTab) => {
-            if (newTab === 'ro-eod' && isRO.value) {
-                const today = new Date().toISOString().split('T')[0];
-                const alreadySubmitted = myEods.value.some(e => e.date === today);
-                if (!alreadySubmitted) {
-                    autoFillEOD();
-                }
-            } else if (newTab === 'ro-add-file' && isRO.value) {
-                if (!newFileForm.value.appId) {
-                    newFileForm.value.appId = 'ALA00000';
-                }
-                if (!newFileForm.value.smName) {
-                    await initUserSm();
-                }
-            }
-        });
-
-        const resetEodForm = () => {
-            eodForm.value = {
-                loginOpenMarket: { count: 0, amount: 0 },
-                loginBranch: { count: 0, amount: 0 },
-                loginUsedCar: { count: 0, amount: 0 },
-                sanctionOpenMarket: { count: 0, amount: 0 },
-                loginBranchSanction: { count: 0, amount: 0 },
-                sanctionUsedCar: { count: 0, amount: 0 },
-                disbOpenMarket: { count: 0, amount: 0 },
-                disbBranch: { count: 0, amount: 0 },
-                disbUsedCar: { count: 0, amount: 0 },
-                vicpCrm: { count: 0 },
-                marutiLogin: { count: 0, amount: 0 },
-                marutiDisb: { count: 0, amount: 0 },
-                mi: { count: 0 }
-            };
-            eodSubmitError.value = '';
-            eodSubmitSuccess.value = false;
-        };
-
-        const submitEOD = async (isRevision = false) => {
-            console.log("Submit EOD button clicked!");
-            eodSubmitError.value = '';
-            eodSubmitSuccess.value = false;
-            
-            if (!currentUser.value?.id) {
-                eodSubmitError.value = 'You must be logged in to submit an EOD report.';
-                return;
-            }
-
-            const validationErrors = validateEOD(eodForm.value);
-            if (validationErrors.length) {
-                eodSubmitError.value = validationErrors.join(' | ');
-                return;
-            }
-
-            submitting.value = true;
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const existingEodIndex = myEods.value.findIndex(e => e.date === today);
-                const alreadySubmitted = existingEodIndex !== -1;
-
-                if (alreadySubmitted && !isRevision && !isEditingTodayEod.value) {
-                    eodSubmitError.value = 'You have already submitted your EOD report for today. Click Revise to edit.';
-                    return;
-                }
-
-                const report = {
-                    userId: currentUser.value.id,
-                    userName: currentUser.value.name,
-                    tenantId: currentUser.value.tenantId,
-                    date: today,
-                    updatedAt: new Date().toISOString(),
-                    metrics: JSON.parse(JSON.stringify(eodForm.value)),
-                    dealerVisits: Number(dealerVisitsInput.value) || 0,
-                    tomorrowLogins: tomorrowLoginsInput.value || '',
-                    tomorrowDisb: tomorrowDisbInput.value || '',
-                    remarks: remarksInput.value || '',
-                    isRevised: Boolean(isRevision || isEditingTodayEod.value)
-                };
-
-                if (alreadySubmitted && (isRevision || isEditingTodayEod.value)) {
-                    const existingId = myEods.value[existingEodIndex].id;
-                    await db.updateEODReport(existingId, report);
-                    myEods.value[existingEodIndex] = { ...report, id: existingId };
-                    isEditingTodayEod.value = false;
-                    eodSubmitSuccess.value = true;
-                } else {
-                    report.createdAt = new Date().toISOString();
-                    const newId = await db.addEODReport(report);
-                    myEods.value.unshift({ ...report, id: newId });
-                    eodSubmitSuccess.value = true;
-                }
-            } catch (e) {
-                console.error('Submit EOD Error:', e);
-                eodSubmitError.value = 'Error: ' + (e.message || 'Failed to submit EOD. Please try again.');
-            } finally {
-                submitting.value = false;
-            }
-        };
-
-        // --- SalesLink Identity & Invitation Handshake State ---
-        const copiedSalesLinkIdToast = ref(false);
-        let copyToastTimer = null;
-        const copySalesLinkId = async (id, event) => {
-            if (event && event.stopPropagation) event.stopPropagation();
-            const targetId = id || currentUser.value?.salesLinkId;
-            if (!targetId || targetId === 'Syncing...' || targetId.includes('...')) return;
-            try {
-                await navigator.clipboard.writeText(targetId);
-                copiedSalesLinkIdToast.value = true;
-                if (copyToastTimer) clearTimeout(copyToastTimer);
-                copyToastTimer = setTimeout(() => { copiedSalesLinkIdToast.value = false; }, 2500);
-            } catch (e) {
-                console.warn('Could not copy SalesLink ID to clipboard:', e);
-            }
-        };
-
-        const pendingInvitations = ref([]);
-        const isRespondingInvite = ref(false);
-
-        const acceptSupervisorInvite = async (invitation) => {
-            if (!invitation || !currentUser.value) return;
-            isRespondingInvite.value = true;
-            try {
-                await db.acceptInvitation(invitation.id, currentUser.value.id);
-                currentUser.value.supervisorId = invitation.fromUserId;
-                currentUser.value.supervisorName = invitation.fromName;
-                currentUser.value.supervisorRole = invitation.fromRole;
-                currentUser.value.supervisorSalesLinkId = invitation.fromSalesLinkId;
-                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-                pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
-                await loadData();
-            } catch (e) {
-                console.error('Accept invite error:', e);
-                alert(e.message || 'Error accepting invitation');
-            } finally {
-                isRespondingInvite.value = false;
-            }
-        };
-
-        const declineSupervisorInvite = async (invitation) => {
-            if (!invitation) return;
-            if (!confirm(`Are you sure you want to decline this invitation from ${invitation.fromName || 'Manager'}?`)) return;
-            isRespondingInvite.value = true;
-            try {
-                await db.declineInvitation(invitation.id);
-                pendingInvitations.value = pendingInvitations.value.filter(i => i.id !== invitation.id);
-            } catch (e) {
-                console.error('Decline invite error:', e);
-            } finally {
-                isRespondingInvite.value = false;
-            }
-        };
-
-
-        // --- SM Self-Connect to Supervisor State & Handlers (Dynamic Dropdown + Instant Conflict Detection) ---
-        const showConnectSupervisorModal = ref(false);
-        const connectSupervisorMethod = ref('phone'); // 'phone' | 'email' | 'employeeCode' | 'salesLinkId'
-        const connectSupervisorInput = ref('');
-        const connectSupervisorWarning = ref('');
-        const isConnectingSupervisor = ref(false);
-        const connectSupervisorError = ref('');
-        const connectSupervisorSuccess = ref('');
-        const connectedSupervisorData = ref(null);
-
-        const onConnectSupervisorMethodChange = () => {
-            connectSupervisorInput.value = '';
-            connectSupervisorWarning.value = '';
-            connectSupervisorError.value = '';
-            connectSupervisorSuccess.value = '';
-            connectedSupervisorData.value = null;
-        };
-
-        const resetConnectSupervisorModal = () => {
-            connectSupervisorMethod.value = 'phone';
-            connectSupervisorInput.value = '';
-            connectSupervisorWarning.value = '';
-            connectSupervisorError.value = '';
-            connectSupervisorSuccess.value = '';
-            connectedSupervisorData.value = null;
-            isConnectingSupervisor.value = false;
-        };
-
-        const openConnectSupervisorModal = () => {
-            resetConnectSupervisorModal();
-            showConnectSupervisorModal.value = true;
-        };
-
-        const submitConnectSupervisor = async () => {
-            if (!currentUser.value?.id) return;
-            connectSupervisorWarning.value = '';
-            connectSupervisorError.value = '';
-            connectSupervisorSuccess.value = '';
-            connectedSupervisorData.value = null;
-
-            const val = (connectSupervisorInput.value || '').trim();
-            if (!val) {
-                if (connectSupervisorMethod.value === 'phone') connectSupervisorError.value = 'Please enter your Area Manager’s 10-digit mobile number.';
-                else if (connectSupervisorMethod.value === 'email') connectSupervisorError.value = 'Please enter your Area Manager’s Gmail address.';
-                else if (connectSupervisorMethod.value === 'employeeCode') connectSupervisorError.value = 'Please enter your Area Manager’s Employee / Staff ID.';
-                else connectSupervisorError.value = 'Please enter your Area Manager’s SalesLink ID.';
-                return;
-            }
-
-            // Client-side validations
-            if (connectSupervisorMethod.value === 'phone') {
-                const digits = val.replace(/\D/g, '');
-                if (digits.length < 10) {
-                    connectSupervisorError.value = 'Please enter a valid 10-digit mobile number.';
-                    return;
-                }
-            } else if (connectSupervisorMethod.value === 'email') {
-                if (!val.includes('@') || !val.includes('.')) {
-                    connectSupervisorError.value = 'Please enter a valid Google email address.';
-                    return;
-                }
-            } else if (connectSupervisorMethod.value === 'employeeCode') {
-                if (val.length < 3) {
-                    connectSupervisorError.value = 'Please enter a valid Employee / Staff ID (at least 3 characters).';
-                    return;
-                }
-            }
-
-            isConnectingSupervisor.value = true;
-            try {
-                const supervisor = await db.linkSmToSupervisor(currentUser.value.id, val);
-                connectedSupervisorData.value = supervisor;
-
-                currentUser.value.supervisorId = supervisor.id;
-                currentUser.value.supervisorName = supervisor.name || 'Area Sales Manager';
-                currentUser.value.supervisorRole = supervisor.role;
-                currentUser.value.supervisorSalesLinkId = supervisor.salesLinkId || '';
-                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-
-                const roleLabel = supervisor.role === 'asm' ? 'Area Sales Manager (ASM)' : (supervisor.role === 'zsm' ? 'Zonal Sales Manager (ZSM)' : 'Area Supervisor');
-                connectSupervisorSuccess.value = `✓ Successfully linked branch hub to ${supervisor.name || 'Area Manager'} (${roleLabel})!`;
-
-                try {
-                    await loadData();
-                } catch (e) {
-                    console.warn("Error refreshing data after supervisor link:", e);
-                }
-
-                setTimeout(() => {
-                    if (showConnectSupervisorModal.value && !connectSupervisorError.value) {
-                        showConnectSupervisorModal.value = false;
-                        resetConnectSupervisorModal();
-                    }
-                }, 3000);
-            } catch (err) {
-                console.error("Connect supervisor error:", err);
-                const msg = err.message || 'Failed to connect to Area Manager.';
-                if (msg.includes('Role Conflict') || msg.includes('registered as a Relationship Officer') || msg.includes('registered as a Branch Sales Manager')) {
-                    connectSupervisorWarning.value = msg;
-                } else {
-                    connectSupervisorError.value = msg;
-                }
-            } finally {
-                isConnectingSupervisor.value = false;
-            }
-        };
-
-        const openAsmWhatsAppNotify = (asm) => {
-            if (!asm || !asm.phone) return;
-            const cleanPhone = asm.phone.replace(/\D/g, '').slice(-10);
-            if (!cleanPhone) return;
-            const branchName = currentUser.value?.region || 'our branch hub';
-            const smName = currentUser.value?.name || 'Sales Manager';
-            const text = encodeURIComponent(`Hi ${asm.name || 'Area Manager'}, I (${smName}) have connected our branch hub (${branchName}) to your Area supervision on SalesLink. Looking forward to working together!`);
-            window.open(`https://wa.me/91${cleanPhone}?text=${text}`, '_blank');
-        };
-
-
-
-        const unlinkFromSupervisor = async () => {
-            if (!confirm('Are you sure you want to disconnect from your Area Sales Manager? You will need a new invite to reconnect.')) return;
-            try {
-                await db.unlinkSupervisor(currentUser.value.id);
-                currentUser.value.supervisorId = null;
-                currentUser.value.supervisorName = null;
-                currentUser.value.supervisorRole = null;
-                currentUser.value.supervisorSalesLinkId = null;
-                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-                await loadData();
-            } catch (e) {
-                console.error('Unlink error:', e);
-                alert(e.message || 'Error disconnecting');
-            }
-        };
-
-
-        // --- User Profile State & Firestore Operations ---
-        const assignedSm = ref({ name: '', phone: '', email: '', salesLinkId: '' });
-        const profileForm = ref({
-            name: '',
-            phone: '',
-            employeeCode: '',
-            designation: '',
-            branchAddress: '',
-            bankName: 'Axis Bank',
-            division: 'Auto Loans (Car Loans)',
-            region: ''
-        });
-        const profileActiveTab = ref('overview'); // 'overview' | 'edit'
-        const isSavingProfile = ref(false);
-        const profileSaveSuccess = ref(false);
-        const profileSaveError = ref('');
-
-        const initProfileForm = () => {
-            if (!currentUser.value) return;
-            const defaultRoleDesignation = isSuperAdmin.value ? 'Platform Administrator' : (isZSM.value ? 'Zonal Sales Manager' : (isASM.value ? 'Area Sales Manager' : (isSM.value ? 'SM (Sales Manager)' : (isDSE.value ? 'Dealership Sales Executive (DSE)' : 'Relationship Officer'))));
-            profileForm.value = {
-                name: currentUser.value.name || currentUser.value.username || '',
-                phone: currentUser.value.phone || '',
-                employeeCode: currentUser.value.employeeCode || '',
-                designation: currentUser.value.designation || defaultRoleDesignation,
-                branchAddress: currentUser.value.branchAddress || '',
-                bankName: currentUser.value.bankName || 'Axis Bank',
-                division: currentUser.value.division || 'Auto Loans (Car Loans)',
-                region: currentUser.value.region || ''
-            };
-        };
-
-        const profileCompletion = computed(() => {
-            if (!currentUser.value) return { percentage: 0, items: [] };
-            const u = currentUser.value;
-            const items = [
-                { label: 'Google Account', completed: !!u.email, icon: 'fab fa-google' },
-                { label: 'Mobile Number', completed: !!(u.phone && u.phone.replace(/\D/g, '').length >= 10), icon: 'fas fa-phone' },
-                { label: 'Bank & Division', completed: !!(u.bankName && u.division), icon: 'fas fa-building-columns' },
-                { label: 'Operating Hub', completed: !!u.region, icon: 'fas fa-location-dot' },
-                { label: 'Staff Code', completed: !!u.employeeCode, icon: 'fas fa-id-card' },
-                { 
-                    label: isRO.value ? 'Supervisor Linked' : (isSM.value ? 'Area ASM Connected' : 'Jurisdiction Defined'), 
-                    completed: isRO.value ? !!defaultSmName.value : (isSM.value ? !!u.supervisorName : !!u.region),
-                    icon: 'fas fa-sitemap'
-                }
-            ];
-            const completedCount = items.filter(i => i.completed).length;
-            const percentage = Math.round((completedCount / items.length) * 100);
-            return { percentage, items, completedCount, totalCount: items.length };
-        });
-
-        const openRoWhatsAppChat = (ro) => {
-            if (!ro?.phone) return;
-            const cleanPhone = ro.phone.replace(/\D/g, '');
-            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-            const text = encodeURIComponent(`Hi ${ro.name || 'Officer'}, checking in regarding today's loan files and logins for ${currentUser.value?.region || 'our branch'}.`);
-            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
-        };
-
-        const openSmWhatsAppChat = () => {
-            if (!assignedSm.value?.phone) return;
-            const cleanPhone = assignedSm.value.phone.replace(/\D/g, '');
-            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-            const text = encodeURIComponent(`Hi ${assignedSm.value.name || 'Manager'}, checking in regarding loan files from ${currentUser.value?.name || 'RO'}.`);
-            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
-        };
-
-        const isResyncingProfile = ref(false);
-        const profileResyncSuccess = ref(false);
-        const triggerProfileResync = async () => {
-            if (isResyncingProfile.value) return;
-            isResyncingProfile.value = true;
-            try {
-                await loadData();
-                if (isRO.value) await initUserSm();
-                initProfileForm();
-                profileResyncSuccess.value = true;
-                setTimeout(() => { profileResyncSuccess.value = false; }, 3500);
-            } catch (e) {
-                console.error("Resync failed:", e);
-                alert("Could not refresh data: " + (e.message || e));
-            } finally {
-                isResyncingProfile.value = false;
-            }
-        };
-
-        watch(currentUser, (newVal) => {
-            if (newVal) {
-                initProfileForm();
-            }
-        }, { immediate: true });
-
-        const saveUserProfile = async () => {
-            if (!currentUser.value?.id) return;
-            profileSaveError.value = '';
-            profileSaveSuccess.value = false;
-
-            const trimmedName = formatCapitalizeName(profileForm.value.name);
-            if (!trimmedName) {
-                profileSaveError.value = 'Full name is mandatory.';
-                return;
-            }
-
-            const trimmedPhone = profileForm.value.phone?.trim();
-            if (!trimmedPhone) {
-                profileSaveError.value = 'Contact Phone / WhatsApp number is mandatory.';
-                return;
-            }
-            if (trimmedPhone.replace(/\D/g, '').length < 10) {
-                profileSaveError.value = 'Please provide a valid 10-digit mobile number.';
-                return;
-            }
-
-            const empCode = (profileForm.value.employeeCode || '').trim().toUpperCase();
-            if (empCode) {
-                const existingEmp = await db.getUserByEmployeeCode(empCode);
-                if (existingEmp && existingEmp.id !== currentUser.value.id) {
-                    const supName = await db.getSupervisorNameForUser(existingEmp);
-                    profileSaveError.value = `This Employee ID (${empCode}) is already linked with another account under Sales Manager (${supName}). Duplicate Employee IDs are not permitted.`;
-                    return;
-                }
-            }
-
-            isSavingProfile.value = true;
-            try {
-                const updatePayload = {
-                    name: trimmedName,
-                    phone: trimmedPhone,
-                    employeeCode: empCode,
-                    designation: (profileForm.value.designation || '').trim(),
-                    branchAddress: (profileForm.value.branchAddress || '').trim(),
-                    bankName: profileForm.value.bankName?.trim() || 'Axis Bank',
-                    division: profileForm.value.division?.trim() || 'Auto Loans (Car Loans)',
-                    region: profileForm.value.region?.trim() || '',
-                    updatedAt: new Date().toISOString()
-                };
-
-                // 1. Update user in Firestore users collection
-                await db.updateUser(currentUser.value.id, updatePayload);
-
-                // 2. If SM and has workspace, sync workspace metadata
-                if (isSM.value && currentUser.value.tenantId) {
-                    try {
-                        await db.updateWorkspace(currentUser.value.tenantId, {
-                            managerName: trimmedName,
-                            bankName: updatePayload.bankName,
-                            division: updatePayload.division,
-                            region: updatePayload.region,
-                            branchAddress: updatePayload.branchAddress
-                        });
-                    } catch (wsErr) {
-                        console.warn('Workspace sync warning:', wsErr);
-                    }
-                }
-
-                // 3. Update active session state & local storage
-                currentUser.value.name = trimmedName;
-                currentUser.value.phone = updatePayload.phone;
-                currentUser.value.employeeCode = updatePayload.employeeCode;
-                currentUser.value.designation = updatePayload.designation;
-                currentUser.value.branchAddress = updatePayload.branchAddress;
-                currentUser.value.bankName = updatePayload.bankName;
-                currentUser.value.division = updatePayload.division;
-                currentUser.value.region = updatePayload.region;
-                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-
-                profileSaveSuccess.value = true;
-                profileActiveTab.value = 'overview';
-                setTimeout(() => { profileSaveSuccess.value = false; }, 4000);
-            } catch (err) {
-                console.error('Error saving profile:', err);
-                profileSaveError.value = err.message || 'Failed to save profile changes.';
-            } finally {
-                isSavingProfile.value = false;
-            }
-        };
-
-
-
-        // --- Area Sales Manager (ASM) State & Operations ---
-        const supervisedSMs = ref([]);
-        const areaFiles = ref([]);
-        const areaEods = ref([]);
-        const areaInvitations = ref([]);
-        const showInviteSmModal = ref(false);
-        const inviteSmForm = ref({ email: '', phone: '', salesLinkId: '', territoryName: '' });
-        const inviteSmError = ref('');
-        const inviteSmSuccess = ref('');
-        const isInvitingSm = ref(false);
-        const selectedSmDrilldown = ref(null);
-        const asmFilters = ref({
-            search: '',
-            status: '',
-            hubId: 'All',
-            timeline: 'all',
-            customDate: '',
-            nclUcl: '',
-            sourcingChannel: '',
-            sortBy: 'newest',
-            showMenu: false
-        });
-
-        const asmHubFilter = computed({
-            get: () => asmFilters.value.hubId,
-            set: (val) => { asmFilters.value.hubId = val; }
-        });
-        const asmSearchQuery = computed({
-            get: () => asmFilters.value.search,
-            set: (val) => { asmFilters.value.search = val; }
-        });
-        const asmStatusFilter = computed({
-            get: () => asmFilters.value.status,
-            set: (val) => { asmFilters.value.status = val; }
-        });
-        const asmTimelineFilter = computed({
-            get: () => asmFilters.value.timeline,
-            set: (val) => { asmFilters.value.timeline = val; }
-        });
-        const asmCategoryFilter = computed({
-            get: () => asmFilters.value.nclUcl,
-            set: (val) => { asmFilters.value.nclUcl = val; }
-        });
-        const asmChannelFilter = computed({
-            get: () => asmFilters.value.sourcingChannel,
-            set: (val) => { asmFilters.value.sourcingChannel = val; }
-        });
-        const asmSortBy = computed({
-            get: () => asmFilters.value.sortBy,
-            set: (val) => { asmFilters.value.sortBy = val; }
-        });
-
-        const resetAsmFilters = () => {
-            asmFilters.value = {
-                search: '',
-                status: '',
-                hubId: 'All',
-                timeline: 'all',
-                customDate: '',
-                nclUcl: '',
-                sourcingChannel: '',
-                sortBy: 'newest',
-                showMenu: false
-            };
-        };
-
-        // Simple Dynamic Connector State (Dropdown method + dynamic input box + conflict warning)
-        const allRegisteredSMs = ref([]);
-        const inviteMethod = ref('phone'); // 'phone' | 'email' | 'employeeCode' | 'salesLinkId'
-        const inviteInputValue = ref('');
-        const inviteWarning = ref('');
-        const linkedManagerDetails = ref(null);
-        const isSubmittingInvite = ref(false);
-        const connectSmError = ref('');
-        const connectSmSuccess = ref('');
-
-        const onInviteMethodChange = () => {
-            inviteInputValue.value = '';
-            inviteWarning.value = '';
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-            linkedManagerDetails.value = null;
-        };
-
-        const resetInviteModal = () => {
-            inviteMethod.value = 'phone';
-            inviteInputValue.value = '';
-            inviteWarning.value = '';
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-            linkedManagerDetails.value = null;
-            isSubmittingInvite.value = false;
-        };
-
-        const openConnectSmModal = () => {
-            resetInviteModal();
-            showInviteSmModal.value = true;
-        };
-
-        const submitInviteSm = async () => {
-            inviteWarning.value = '';
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-            linkedManagerDetails.value = null;
-
-            const val = (inviteInputValue.value || '').trim();
-            if (!val) {
-                if (inviteMethod.value === 'phone') connectSmError.value = 'Please enter a 10-digit mobile number.';
-                else if (inviteMethod.value === 'email') connectSmError.value = 'Please enter a valid Gmail address.';
-                else if (inviteMethod.value === 'employeeCode') connectSmError.value = 'Please enter an Employee / Staff ID.';
-                else connectSmError.value = 'Please enter a SalesLink ID.';
-                return;
-            }
-
-            if (inviteMethod.value === 'phone' && val.replace(/\D/g, '').length < 10) {
-                connectSmError.value = 'Please enter a valid 10-digit mobile number.';
-                return;
-            }
-            if (inviteMethod.value === 'email' && !val.includes('@')) {
-                connectSmError.value = 'Please enter a valid email address.';
-                return;
-            }
-
-            isSubmittingInvite.value = true;
-            try {
-                // 1. Check existing users in-memory and in Firestore
-                let foundUser = null;
-                const cleanLower = val.toLowerCase();
-                const cleanDigits = val.replace(/\D/g, '');
-                const cleanUpper = val.toUpperCase();
-
-                // Search in allRegisteredSMs memory
-                foundUser = allRegisteredSMs.value.find(u => {
-                    if (inviteMethod.value === 'phone') {
-                        return u.phone && u.phone.replace(/\D/g, '').endsWith(cleanDigits.slice(-10));
-                    } else if (inviteMethod.value === 'email') {
-                        return u.email && u.email.toLowerCase() === cleanLower;
-                    } else if (inviteMethod.value === 'employeeCode') {
-                        return u.employeeCode && u.employeeCode.toUpperCase() === cleanUpper;
-                    } else {
-                        return u.salesLinkId && u.salesLinkId.toUpperCase() === cleanUpper;
-                    }
-                });
-
-                // If not found in memory, query database
-                if (!foundUser) {
-                    foundUser = await db.findUserByAnyIdentifier(val);
-                }
-
-                const methodLabel = inviteMethod.value === 'phone' ? 'Phone Number' : (inviteMethod.value === 'email' ? 'Gmail ID' : (inviteMethod.value === 'employeeCode' ? 'Employee ID' : 'SalesLink ID'));
-
-                // 2. SCENARIO: User found in database!
-                if (foundUser) {
-                    linkedManagerDetails.value = foundUser;
-
-                    if (foundUser.role !== 'sm' && foundUser.role !== 'admin') {
-                        connectSmError.value = `This user (${foundUser.name || val}) has role "${foundUser.role}". Only Branch Sales Managers (SM) can be connected under an Area.`;
-                        return;
-                    }
-
-                    // CHECK FOR CONFLICT (LINKED TO ANOTHER SM/SUPERVISOR):
-                    if (foundUser.supervisorId && foundUser.supervisorId !== currentUser.value.id) {
-                        const supName = foundUser.supervisorName || 'another Area Sales Manager';
-                        inviteWarning.value = `This ${methodLabel} (${val}) is already linked to Sales Manager "${foundUser.name || 'Manager'}" (${foundUser.region || 'Branch Hub'}) who is currently reporting to ${supName}. They must be disconnected from their current supervisor before they can join your Area.`;
-                        return;
-                    }
-
-                    // CHECK IF ALREADY LINKED TO THIS ASM:
-                    if (foundUser.supervisorId === currentUser.value.id) {
-                        inviteWarning.value = `Sales Manager "${foundUser.name}" (${foundUser.region || 'Branch Hub'}) is already connected under your Area Cluster.`;
-                        return;
-                    }
-
-                    // UNASSIGNED SM FOUND: DIRECT CONNECT IMMEDIATELY!
-                    await db.directConnectSupervisorToSm(currentUser.value, foundUser.id);
-                    connectSmSuccess.value = `✓ Connected! Sales Manager "${foundUser.name}" (${foundUser.region || 'Branch Hub'}) has been successfully attached to your Area Cluster.`;
-                    await loadAsmData();
-                    setTimeout(() => {
-                        showInviteSmModal.value = false;
-                        resetInviteModal();
-                    }, 2500);
-                    return;
-                }
-
-                // 3. SCENARIO: User not registered yet (Queue area invitation)
-                const invitePayload = {
-                    fromUserId: currentUser.value.id,
-                    fromName: currentUser.value.name,
-                    fromEmail: currentUser.value.email,
-                    fromRole: 'asm',
-                    fromSalesLinkId: currentUser.value.salesLinkId || '',
-                    toRole: 'sm',
-                    territoryName: currentUser.value.region || 'Area Jurisdiction',
-                    bankName: currentUser.value.bankName || 'Axis Bank',
-                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
-                };
-
-                if (inviteMethod.value === 'phone') {
-                    invitePayload.toPhone = cleanDigits.slice(-10);
-                } else if (inviteMethod.value === 'email') {
-                    invitePayload.toEmail = cleanLower;
-                } else if (inviteMethod.value === 'employeeCode') {
-                    invitePayload.toEmployeeCode = cleanUpper;
-                } else {
-                    invitePayload.toSalesLinkId = cleanUpper;
-                }
-
-                await db.createInvitation(invitePayload);
-                connectSmSuccess.value = `✓ Area Invitation sent! As soon as this Sales Manager signs into SalesLink with this ${methodLabel} (${val}), their branch hub will be automatically connected to your Area.`;
-                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                setTimeout(() => {
-                    showInviteSmModal.value = false;
-                    resetInviteModal();
-                }, 2800);
-            } catch (err) {
-                console.error("Invite / Connect error:", err);
-                connectSmError.value = err.message || 'Failed to submit invitation.';
-            } finally {
-                isSubmittingInvite.value = false;
-            }
-        };
-
-        const openSmWhatsAppNotify = (sm) => {
-            const target = sm || matchedSm.value;
-            if (!target?.phone) return;
-            const cleanPhone = target.phone.replace(/\D/g, '');
-            const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-            const text = encodeURIComponent(`Hi ${target.name || 'Manager'}, your ${target.region || 'branch'} hub has been connected under my Area Cluster (${currentUser.value?.region || 'Area Jurisdiction'}) on SalesLink. You can view your updated Area ASM directly in your SalesLink Profile.`);
-            window.open(`https://wa.me/${num}?text=${text}`, '_blank');
-        };
-
-        const loadAsmData = async () => {
-            if (!currentUser.value?.id) return;
-            try {
-                supervisedSMs.value = await db.getUsersBySupervisor(currentUser.value.id);
-                const wsIds = supervisedSMs.value.map(s => s.tenantId).filter(Boolean);
-                areaFiles.value = await db.getLoanFilesByTenantIds(wsIds);
-                areaEods.value = await db.getEODReportsByTenantIds(wsIds);
-                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email, currentUser.value.phone, currentUser.value.salesLinkId, currentUser.value.employeeCode);
-
-                // Fetch all registered SM users for dropdown and live multi-identifier matching
-                try {
-                    const smList = await db.getUsersByRole('sm');
-                    allRegisteredSMs.value = smList.filter(u => u.id !== currentUser.value.id);
-                } catch (smErr) {
-                    console.warn("Could not load all SMs:", smErr);
-                }
-            } catch (e) {
-                console.error('Error loading ASM data:', e);
-            }
-        };
-
-        const sendSmInvitation = async () => {
-            inviteSmError.value = '';
-            inviteSmSuccess.value = '';
-            connectSmError.value = '';
-            connectSmSuccess.value = '';
-
-            const email = (inviteSmForm.value.email || '').trim().toLowerCase();
-            if (!email) {
-                connectSmError.value = 'Please enter a valid Gmail address.';
-                return;
-            }
-            isInvitingSm.value = true;
-            try {
-                await db.createInvitation({
-                    fromUserId: currentUser.value.id,
-                    fromName: currentUser.value.name,
-                    fromEmail: currentUser.value.email,
-                    fromRole: 'asm',
-                    fromSalesLinkId: currentUser.value.salesLinkId || '',
-                    toEmail: email,
-                    toPhone: (inviteSmForm.value.phone || '').trim(),
-                    toSalesLinkId: (inviteSmForm.value.salesLinkId || '').trim().toUpperCase(),
-                    toRole: 'sm',
-                    territoryName: inviteSmForm.value.territoryName || currentUser.value.region || 'Area Hub',
-                    bankName: currentUser.value.bankName || 'Axis Bank',
-                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
-                });
-                connectSmSuccess.value = `✓ Invitation successfully queued for ${email}! They will be prompted to connect when they log in.`;
-                inviteSmForm.value = { email: '', phone: '', salesLinkId: '', territoryName: '' };
-                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                setTimeout(() => {
-                    showInviteSmModal.value = false;
-                    connectSmSuccess.value = '';
-                }, 2500);
-            } catch (e) {
-                console.error('Send invite error:', e);
-                connectSmError.value = e.message || 'Failed to send invitation.';
-            } finally {
-                isInvitingSm.value = false;
-            }
-        };
-
-        const cancelInvitation = async (invId) => {
-            if (!confirm('Are you sure you want to cancel this pending invitation?')) return;
-            try {
-                await db.revokeInvitation(invId);
-                areaInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-            } catch (e) {
-                console.error('Revoke invite error:', e);
-            }
-        };
-
-        const releaseSm = async (smUser) => {
-            if (!confirm(`Are you sure you want to release Sales Manager "${smUser.name || smUser.email}" from your Area? Their files and hub will be unlinked from your dashboard.`)) return;
-            try {
-                await db.unlinkSupervisor(smUser.id);
-                await loadAsmData();
-            } catch (e) {
-                console.error('Release SM error:', e);
-            }
-        };
-
-        const asmStats = computed(() => {
-            const files = areaFiles.value || [];
-            const now = new Date();
-            const curY = now.getFullYear();
-            const curM = now.getMonth();
-            
-            const mtdFiles = files.filter(f => {
-                const dStr = f.loginDate || f.createdAt;
-                if (!dStr) return false;
-                const d = new Date(dStr);
-                return d.getFullYear() === curY && d.getMonth() === curM;
-            });
-
-            const mtdLoginCount = mtdFiles.length;
-            const mtdLoginVol = mtdFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-
-            const mtdSancFiles = mtdFiles.filter(f => isSanctionStatus(f.status));
-            const mtdSancCount = mtdSancFiles.length;
-            const mtdSancVol = mtdSancFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-
-            const mtdDisbFiles = mtdFiles.filter(f => isDisbursedStatus(f.status));
-            const mtdDisbCount = mtdDisbFiles.length;
-            const mtdDisbVol = mtdDisbFiles.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-
-            const activeHubsCount = supervisedSMs.value.length;
-
-            return {
-                mtdLoginCount,
-                mtdLoginVol,
-                mtdSancCount,
-                mtdSancVol,
-                mtdDisbCount,
-                mtdDisbVol,
-                activeHubsCount
-            };
-        });
-
-        const smPerformanceList = computed(() => {
-            const todayStr = getTodayDateStr();
-            return (supervisedSMs.value || []).map(sm => {
-                const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
-                const now = new Date();
-                const curY = now.getFullYear();
-                const curM = now.getMonth();
-                const mtdF = smFiles.filter(f => {
-                    const dStr = f.loginDate || f.createdAt;
-                    if (!dStr) return false;
-                    const d = new Date(dStr);
-                    return d.getFullYear() === curY && d.getMonth() === curM;
-                });
-                const mtdLogins = mtdF.length;
-                const mtdLoginVol = mtdF.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-                const mtdSanc = mtdF.filter(f => isSanctionStatus(f.status));
-                const mtdSancVol = mtdSanc.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-                const mtdDisb = mtdF.filter(f => isDisbursedStatus(f.status));
-                const mtdDisbVol = mtdDisb.reduce((acc, f) => acc + toLakhs(f.loanAmount), 0);
-
-                const smTodayEods = (areaEods.value || []).filter(e => e.tenantId === sm.tenantId && e.date === todayStr);
-
-                return {
-                    id: sm.id,
-                    name: sm.name || 'Sales Manager',
-                    email: sm.email,
-                    phone: sm.phone || '-',
-                    salesLinkId: sm.salesLinkId || 'SL-SM-PENDING',
-                    tenantId: sm.tenantId,
-                    region: sm.region || 'Branch Hub',
-                    bankName: sm.bankName || 'Axis Bank',
-                    mtdLoginCount: mtdLogins,
-                    mtdLoginVol: mtdLoginVol,
-                    mtdSancCount: mtdSanc.length,
-                    mtdSancVol: mtdSancVol,
-                    mtdDisbCount: mtdDisb.length,
-                    mtdDisbVol: mtdDisbVol,
-                    todayEodsCount: smTodayEods.length,
-                    allFilesCount: smFiles.length
-                };
-            });
-        });
-
-        // Computed SM Distribution & Breakdown for Frictionless Navigation
-        const asmSmDistribution = computed(() => {
-            return (supervisedSMs.value || []).map(sm => {
-                const smFiles = (areaFiles.value || []).filter(f => f.tenantId === sm.tenantId);
-                const totalFiles = smFiles.length;
-                const totalVolume = smFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-                const disbursedFiles = smFiles.filter(f => (f.status || '').toLowerCase() === 'disbursed');
-                const disbursedVolume = disbursedFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-                const pipelineFiles = smFiles.filter(f => (f.status || '').toLowerCase() !== 'disbursed' && (f.status || '').toLowerCase() !== 'rejected' && (f.status || '').toLowerCase() !== 'cancelled');
-                const pipelineVolume = pipelineFiles.reduce((sum, f) => sum + (Number(f.loanAmount) || 0), 0);
-
-                return {
-                    id: sm.id,
-                    name: sm.name || 'Branch Manager',
-                    region: sm.region || 'Branch Hub',
-                    tenantId: sm.tenantId,
-                    phone: sm.phone || '',
-                    totalFiles,
-                    totalVolume,
-                    disbursedCount: disbursedFiles.length,
-                    disbursedVolume,
-                    pipelineCount: pipelineFiles.length,
-                    pipelineVolume
-                };
-            });
-        });
-
-        // Stage counts matching active hub filter (or all hubs)
-        const asmStatusCounts = computed(() => {
-            let files = areaFiles.value || [];
-            if (asmHubFilter.value && asmHubFilter.value !== 'All') {
-                files = files.filter(f => f.tenantId === asmHubFilter.value);
-            }
-            const all = files.length;
-            const logged = files.filter(f => (f.status || '').toLowerCase() === 'logged' || (f.status || '').toLowerCase() === 'lead').length;
-            const fi = files.filter(f => (f.status || '').toLowerCase() === 'fi').length;
-            const fcu = files.filter(f => (f.status || '').toLowerCase() === 'fcu').length;
-            const uw = files.filter(f => (f.status || '').toLowerCase() === 'uw').length;
-            const sanctioned = files.filter(f => (f.status || '').toLowerCase() === 'approved' || (f.status || '').toLowerCase() === 'sanction').length;
-            const disbursed = files.filter(f => (f.status || '').toLowerCase() === 'disbursed').length;
-            const rejected = files.filter(f => (f.status || '').toLowerCase() === 'rejected' || (f.status || '').toLowerCase() === 'cancelled').length;
-
-            return { all, logged, fi, fcu, uw, sanctioned, disbursed, rejected };
-        });
-
-        const filteredAreaFiles = computed(() => {
-            let list = (areaFiles.value || []).map(f => {
-                const sm = supervisedSMs.value.find(s => s.tenantId === f.tenantId);
-                return {
-                    ...f,
-                    hubName: sm ? (sm.region || sm.name) : (f.branchName || 'Branch Hub'),
-                    smDisplayName: sm ? sm.name : (f.smName || 'Branch Manager'),
-                    smPhone: sm ? sm.phone : ''
-                };
-            });
-
-            // 1. Hub / SM Filter
-            if (asmFilters.value.hubId && asmFilters.value.hubId !== 'All') {
-                list = list.filter(f => f.tenantId === asmFilters.value.hubId);
-            }
-
-            // 2. Status Stage Filter
-            if (asmFilters.value.status && asmFilters.value.status !== 'All') {
-                const s = asmFilters.value.status.toLowerCase();
-                if (['approved', 'sanction', 'sanctioned'].includes(s)) {
-                    list = list.filter(f => isSanctionStatus(f.status));
-                } else if (s === 'logged' || s === 'lead') {
-                    list = list.filter(f => (f.status || '').toLowerCase() === 'logged' || (f.status || '').toLowerCase() === 'lead');
-                } else if (s === 'rejected' || s === 'cancelled') {
-                    list = list.filter(f => (f.status || '').toLowerCase() === 'rejected' || (f.status || '').toLowerCase() === 'cancelled');
-                } else if (asmFilters.value.status === 'Custom') {
-                    list = list.filter(f => !STANDARD_STATUSES.includes(f.status));
-                } else {
-                    list = list.filter(f => (f.status || '').toLowerCase() === s);
-                }
-            }
-
-            // 3. Search Query
-            if (asmFilters.value.search) {
-                const q = asmFilters.value.search.trim().toLowerCase();
-                list = list.filter(f => 
-                    (f.customerName || '').toLowerCase().includes(q) ||
-                    (f.appId || '').toLowerCase().includes(q) ||
-                    (f.roName || '').toLowerCase().includes(q) ||
-                    (f.smDisplayName || '').toLowerCase().includes(q) ||
-                    (f.hubName || '').toLowerCase().includes(q) ||
-                    (f.sourcingChannel || '').toLowerCase().includes(q) ||
-                    (f.nclUcl || '').toLowerCase().includes(q) ||
-                    (f.vehicleModel || '').toLowerCase().includes(q)
-                );
-            }
-
-            // 4. Timeline Filter
-            if (asmFilters.value.timeline && asmFilters.value.timeline !== 'all') {
-                list = list.filter(f => matchesTimeline(f.loginDate || f.createdAt || f.updatedAt, asmFilters.value.timeline, asmFilters.value.customDate));
-            }
-
-            // 5. Category Filter
-            if (asmFilters.value.nclUcl && asmFilters.value.nclUcl !== 'All') {
-                list = list.filter(f => (f.nclUcl || '').toUpperCase() === asmFilters.value.nclUcl.toUpperCase());
-            }
-
-            // 6. Channel Filter
-            if (asmFilters.value.sourcingChannel && asmFilters.value.sourcingChannel !== 'All') {
-                list = list.filter(f => (f.sourcingChannel || '').toLowerCase() === asmFilters.value.sourcingChannel.toLowerCase());
-            }
-
-            // 7. Sort
-            return list.sort((a, b) => {
-                const dateA = a.loginDate ? new Date(a.loginDate + 'T00:00:00') : new Date(a.createdAt || a.updatedAt || 0);
-                const dateB = b.loginDate ? new Date(b.loginDate + 'T00:00:00') : new Date(b.createdAt || b.updatedAt || 0);
-                switch (asmFilters.value.sortBy) {
-                    case 'newest':
-                        return dateB - dateA;
-                    case 'oldest':
-                        return dateA - dateB;
-                    case 'amount-desc':
-                        return toLakhs(b.loanAmount) - toLakhs(a.loanAmount);
-                    case 'amount-asc':
-                        return toLakhs(a.loanAmount) - toLakhs(b.loanAmount);
-                    case 'name-asc':
-                        return (a.customerName || '').localeCompare(b.customerName || '');
-                    default:
-                        return dateB - dateA;
-                }
-            });
-        });
-
-        const sendFileAlertToSm = (file) => {
-            const sm = supervisedSMs.value.find(s => s.tenantId === file.tenantId);
-            const targetPhone = sm?.phone || file.smPhone || file.roPhone;
-            if (!targetPhone) {
-                alert("No phone number on file for this branch manager or relationship officer.");
-                return;
-            }
-            const cleanPhone = targetPhone.replace(/\D/g, '').slice(-10);
-            const text = encodeURIComponent(`Hi ${sm?.name || 'Manager'}, regarding file #${file.appId || ''} (${file.customerName} - ₹${formatCurrency(file.loanAmount)}) at ${file.hubName || 'branch hub'}. Current status is "${file.status}". Please provide an update.`);
-            window.open(`https://wa.me/91${cleanPhone}?text=${text}`, '_blank');
-        };
-
-        // --- Zonal Sales Manager (ZSM) State & Operations ---
-        const supervisedASMs = ref([]);
-        const zsmInvitations = ref([]);
-        const showInviteAsmModal = ref(false);
-        const inviteAsmForm = ref({ email: '', salesLinkId: '', territoryName: '' });
-        const inviteAsmError = ref('');
-        const inviteAsmSuccess = ref('');
-        const isInvitingAsm = ref(false);
-        const selectedAsmDrilldown = ref(null);
-
-        const loadZsmData = async () => {
-            if (!currentUser.value?.id) return;
-            try {
-                supervisedASMs.value = await db.getUsersBySupervisor(currentUser.value.id);
-                zsmInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
-            } catch (e) {
-                console.error('Error loading ZSM data:', e);
-            }
-        };
-
-        const sendAsmInvitation = async () => {
-            inviteAsmError.value = '';
-            inviteAsmSuccess.value = '';
-            const email = (inviteAsmForm.value.email || '').trim().toLowerCase();
-            if (!email) {
-                inviteAsmError.value = 'Please enter a valid Gmail address.';
-                return;
-            }
-            isInvitingAsm.value = true;
-            try {
-                await db.createInvitation({
-                    fromUserId: currentUser.value.id,
-                    fromName: currentUser.value.name,
-                    fromEmail: currentUser.value.email,
-                    fromRole: 'zsm',
-                    fromSalesLinkId: currentUser.value.salesLinkId || '',
-                    toEmail: email,
-                    toSalesLinkId: (inviteAsmForm.value.salesLinkId || '').trim().toUpperCase(),
-                    toRole: 'asm',
-                    territoryName: inviteAsmForm.value.territoryName || currentUser.value.region || 'Zonal Area',
-                    bankName: currentUser.value.bankName || 'Axis Bank',
-                    division: currentUser.value.division || 'Auto Loans (Car Loans)'
-                });
-                inviteAsmSuccess.value = `Invitation successfully sent to ${email}!`;
-                inviteAsmForm.value = { email: '', salesLinkId: '', territoryName: '' };
-                zsmInvitations.value = await db.getInvitationsSentByUser(currentUser.value.id);
-                setTimeout(() => {
-                    showInviteAsmModal.value = false;
-                    inviteAsmSuccess.value = '';
-                }, 2500);
-            } catch (e) {
-                console.error('Send invite error:', e);
-                inviteAsmError.value = e.message || 'Failed to send invitation.';
-            } finally {
-                isInvitingAsm.value = false;
-            }
-        };
-
-        const zsmStats = computed(() => {
-            const asms = supervisedASMs.value || [];
-            let totalDisbVol = 0;
-            let totalDisbCount = 0;
-            let totalTargetVol = 0;
-            let totalHubs = 0;
-
-            (zsmAsmTargetsList.value || []).forEach(item => {
-                totalDisbVol += (item.actualVolume || 0);
-                totalDisbCount += (item.actualFiles || 0);
-                totalTargetVol += (item.targetVolume || 0);
-            });
-
-            asms.forEach(asm => {
-                totalHubs += (asm.supervisedSMs || []).length;
-            });
-
-            const overallPercent = totalTargetVol > 0 ? Math.min(100, Math.round((totalDisbVol / totalTargetVol) * 100)) : 0;
-
-            return {
-                totalAreas: asms.length,
-                totalHubs,
-                totalDisbVol,
-                totalDisbCount,
-                totalTargetVol,
-                overallPercent
-            };
-        });
-
-        const openInviteAsmModal = () => {
-            inviteAsmError.value = '';
-            inviteAsmSuccess.value = '';
-            inviteAsmForm.value = { email: '', salesLinkId: '', territoryName: '' };
-            showInviteAsmModal.value = true;
-        };
-
-        const releaseAsm = async (asm) => {
-            if (!confirm(`Are you sure you want to disconnect Area Sales Manager "${asm.name}" from your Zonal supervision?`)) return;
-            try {
-                await db.unlinkUserFromSupervisor(asm.id);
-                supervisedASMs.value = supervisedASMs.value.filter(a => a.id !== asm.id);
-            } catch (e) {
-                alert('Failed to disconnect ASM: ' + e.message);
-            }
-        };
-
-
-        // Data Loading
-        const loadSuperAdminData = async () => {
-            // super_admin only: system-wide workspace inventory
-            allWorkspaces.value = await db.getAllWorkspaces();
-            // super_admin only: full platform personnel roster
-            roUsers.value = await db.getAllUsers();
-            // super_admin only: system-wide loan file ledger
-            allFiles.value = await db.getAllLoanFiles();
-        };
-
-        const loadDseData = async () => {
-            if (!currentUser.value?.id) return;
-            try {
-                dseFiles.value = await db.getLoanFilesByDSE(currentUser.value.id);
-                allWorkspaces.value = await db.getActiveWorkspaces();
-                if (!newDseFileForm.value.targetTenantId && allWorkspaces.value.length > 0) {
-                    newDseFileForm.value.targetTenantId = allWorkspaces.value[0].id;
-                }
-            } catch (e) {
-                console.warn("loadDseData error:", e);
-            }
-        };
-
-        const openDseFileModal = async () => {
-            dseFileError.value = '';
-            if (allWorkspaces.value.length === 0) {
-                try {
-                    allWorkspaces.value = await db.getActiveWorkspaces();
-                } catch(e) {}
-            }
-            newDseFileForm.value = {
-                customerName: '',
-                customerPhone: '',
-                vehicleModel: '',
-                onRoadPrice: '',
-                loanAmount: '',
-                targetTenantId: allWorkspaces.value.length > 0 ? allWorkspaces.value[0].id : '',
-                customerProfile: 'Salaried (Form 16 / ITR)',
-                notes: ''
-            };
-            isDseFileModalOpen.value = true;
-        };
-
-        const closeDseFileModal = () => {
-            isDseFileModalOpen.value = false;
-            dseFileError.value = '';
-        };
-
-        const submitDseLoanFile = async () => {
-            if (isSubmittingDseFile.value) return;
-            dseFileError.value = '';
-
-            const custName = newDseFileForm.value.customerName?.trim();
-            const custPhone = newDseFileForm.value.customerPhone?.trim();
-            const vehModel = newDseFileForm.value.vehicleModel?.trim();
-            const loanAmt = Number(newDseFileForm.value.loanAmount);
-            const targetTenantId = newDseFileForm.value.targetTenantId;
-
-            if (!custName) {
-                dseFileError.value = 'Customer Name is mandatory.';
-                return;
-            }
-            if (!custPhone || custPhone.replace(/\D/g, '').length < 10) {
-                dseFileError.value = 'Please provide a valid 10-digit customer mobile number.';
-                return;
-            }
-            if (!vehModel) {
-                dseFileError.value = 'Vehicle Model & Variant is mandatory.';
-                return;
-            }
-            if (!loanAmt || loanAmt <= 0) {
-                dseFileError.value = 'Loan Amount requested is mandatory (e.g. 7.50 L).';
-                return;
-            }
-            if (!targetTenantId) {
-                dseFileError.value = 'Please select a target Lending Partner & Branch Hub.';
-                return;
-            }
-
-            const selectedHub = allWorkspaces.value.find(w => w.id === targetTenantId) || {
-                id: targetTenantId,
-                name: 'Selected Branch Hub',
-                bankName: 'Axis Bank',
-                managerName: 'Branch SM'
-            };
-
-            isSubmittingDseFile.value = true;
-            try {
-                const createdAtIso = new Date().toISOString();
-                const randId = await db.generateUniqueAppId('DLR');
-                const newFile = {
-                    appId: randId,
-                    customerName: custName.toUpperCase(),
-                    customerPhone: custPhone,
-                    vehicleModel: vehModel.toUpperCase(),
-                    onRoadPrice: Number(newDseFileForm.value.onRoadPrice) || 0,
-                    loanAmount: loanAmt,
-                    customerProfile: newDseFileForm.value.customerProfile || 'Salaried (Form 16 / ITR)',
-                    notes: (newDseFileForm.value.notes || '').trim(),
-                    nclUcl: 'NCL',
-                    sourcingChannel: currentUser.value.showroomBrand || 'DEALER',
-                    loginDate: createdAtIso.split('T')[0],
-                    origin: 'dealer_portal',
-                    dealershipName: currentUser.value.dealershipName || '',
-                    showroomBrand: currentUser.value.showroomBrand || '',
-                    dseId: currentUser.value.id,
-                    dseName: currentUser.value.name,
-                    dsePhone: currentUser.value.phone || '',
-                    dseEmployeeCode: currentUser.value.employeeCode || '',
-                    tenantId: selectedHub.id,
-                    targetBankName: selectedHub.bankName || 'Axis Bank',
-                    targetHubName: selectedHub.name,
-                    smName: selectedHub.managerName || 'Branch SM',
-                    allocationStatus: 'pending_sm_dispatch',
-                    status: 'Inbound',
-                    roId: null,
-                    roName: 'Pending SM Dispatch',
-                    createdAt: createdAtIso,
-                    updatedAt: createdAtIso
-                };
-
-                await db.addLoanFile(newFile);
-                isDseFileModalOpen.value = false;
-                await loadDseData();
-            } catch (e) {
-                console.error("submitDseLoanFile error:", e);
-                dseFileError.value = e.message || 'Error submitting loan file.';
-            } finally {
-                isSubmittingDseFile.value = false;
-            }
-        };
-
-        const loadInboundShowroomFiles = async () => {
-            if (!currentUser.value?.tenantId) return;
-            try {
-                inboundShowroomFiles.value = await db.getInboundShowroomFilesByTenant(currentUser.value.tenantId);
-            } catch (e) {
-                console.warn("loadInboundShowroomFiles error:", e);
-            }
-        };
-
-        const assignInboundFileToRo = async (file, roId) => {
-            if (!file || !roId) return;
-            const ro = roUsers.value.find(u => u.id === roId);
-            if (!ro) return;
-
-            inboundSubmitting.value[file.id] = true;
-            try {
-                await db.assignInboundFileToRO(file.id, ro, file);
-                file.roId = ro.id;
-                file.roName = ro.name;
-                file.allocationStatus = 'dispatched_to_ro';
-                file.status = 'Login';
-                file.allocatedAt = new Date().toISOString();
-                
-                const idx = allFiles.value.findIndex(f => f.id === file.id);
-                if (idx !== -1) {
-                    allFiles.value[idx].roId = ro.id;
-                    allFiles.value[idx].roName = ro.name;
-                    allFiles.value[idx].allocationStatus = 'dispatched_to_ro';
-                    allFiles.value[idx].status = 'Login';
-                }
-            } catch (e) {
-                console.error("assignInboundFileToRo error:", e);
-                alert("Failed to allocate file: " + e.message);
-            } finally {
-                inboundSubmitting.value[file.id] = false;
-            }
-        };
-
-        const sendRoDispatchWhatsApp = (file) => {
-            const ro = roUsers.value.find(u => u.id === file.roId);
-            if (!ro || !ro.phone) return;
-            const msg = `🚗 *New Showroom Loan Lead Assigned!*\n\n` +
-                `Showroom: *${file.dealershipName || file.sourcingChannel}*\n` +
-                `DSE: *${file.dseName}* (📞 ${file.dsePhone || 'N/A'})\n` +
-                `Customer: *${file.customerName}* (📞 ${file.customerPhone || 'N/A'})\n` +
-                `Car Model: *${file.vehicleModel || 'N/A'}*\n` +
-                `Loan Amount: *₹${file.loanAmount} L*\n` +
-                `Profile: *${file.customerProfile || 'Salaried'}*\n\n` +
-                `Please initiate customer contact & docs pickup immediately.`;
-            const cleanPhone = ro.phone.replace(/\D/g, '');
-            const fullPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-            window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const smInboundStats = computed(() => {
-            const list = inboundShowroomFiles.value || [];
-            const total = list.length;
-            const pending = list.filter(f => f.allocationStatus === 'pending_sm_dispatch').length;
-            const dispatched = list.filter(f => f.allocationStatus === 'dispatched_to_ro').length;
-            const sanctioned = list.filter(f => {
-                const s = (f.status || '').toUpperCase();
-                return s === 'SANCTION' || s === 'DISBURSED';
-            }).length;
-            const totalVol = list.reduce((acc, f) => acc + (toLakhs(f.loanAmount) || 0), 0);
-            return {
-                total,
-                pending,
-                dispatched,
-                sanctioned,
-                totalVol: totalVol.toFixed(1)
-            };
-        });
-
-        const filteredInboundFiles = computed(() => {
-            let list = inboundShowroomFiles.value || [];
-
-            // Tab / Status filter
-            if (smInboundFilter.value === 'pending') {
-                list = list.filter(f => f.allocationStatus === 'pending_sm_dispatch');
-            } else if (smInboundFilter.value === 'dispatched') {
-                list = list.filter(f => f.allocationStatus === 'dispatched_to_ro');
-            } else if (smInboundFilter.value === 'sanction') {
-                list = list.filter(f => {
-                    const s = (f.status || '').toUpperCase();
-                    return s === 'SANCTION' || s === 'DISBURSED';
-                });
-            }
-
-            // Search query filter
-            const q = (smInboundSearch.value || '').trim().toLowerCase();
-            if (q) {
-                list = list.filter(f => {
-                    const customerName = (f.customerName || '').toLowerCase();
-                    const customerPhone = (f.customerPhone || '').toLowerCase();
-                    const vehicle = (f.vehicleModel || '').toLowerCase();
-                    const dse = (f.dseName || '').toLowerCase();
-                    const dealer = (f.dealershipName || f.sourcingChannel || '').toLowerCase();
-                    const brand = (f.showroomBrand || '').toLowerCase();
-                    const ro = (f.roName || '').toLowerCase();
-                    const id = (f.salesLinkId || f.id || '').toLowerCase();
-                    return customerName.includes(q) ||
-                        customerPhone.includes(q) ||
-                        vehicle.includes(q) ||
-                        dse.includes(q) ||
-                        dealer.includes(q) ||
-                        brand.includes(q) ||
-                        ro.includes(q) ||
-                        id.includes(q);
-                });
-            }
-
-            // Order: pending files first, then newest first
-            return [...list].sort((a, b) => {
-                const aPending = a.allocationStatus === 'pending_sm_dispatch' ? 1 : 0;
-                const bPending = b.allocationStatus === 'pending_sm_dispatch' ? 1 : 0;
-                if (aPending !== bPending) return bPending - aPending;
-                const timeA = new Date(a.createdAt || 0).getTime();
-                const timeB = new Date(b.createdAt || 0).getTime();
-                return timeB - timeA;
-            });
-        });
-
-        const contactCustomerWhatsApp = (file) => {
-            if (!file || !file.customerPhone) return;
-            const msg = `Hi ${file.customerName}, this is ${currentUser.value?.name || 'the Sales Manager'} from ${currentUser.value?.branchName || 'the Bank'}. We received your car loan application for *${file.vehicleModel || 'your vehicle'}* from *${file.dealershipName || 'the showroom'}*. Our Relationship Officer will assist you for fast track sanction and delivery.`;
-            const phoneDigits = file.customerPhone.replace(/\D/g, '');
-            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
-            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const contactDseWhatsApp = (file) => {
-            if (!file || !file.dsePhone) return;
-            const msg = `Hi ${file.dseName}, Sales Manager ${currentUser.value?.name || ''} here. We have received your car loan punch for *${file.customerName}* (${file.vehicleModel || 'Car Loan'}). We have routed it into active underwriting for priority sanction!`;
-            const phoneDigits = file.dsePhone.replace(/\D/g, '');
-            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
-            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        const loadSmData = async () => {
-            if (currentUser.value?.tenantId) {
-                allFiles.value = await db.getLoanFilesByTenant(currentUser.value.tenantId);
-                roUsers.value = await db.getROUsersByTenant(currentUser.value.tenantId);
-                smEods.value = await db.getEODReportsByTenant(currentUser.value.tenantId);
-            } else {
-                allFiles.value = [];
-                roUsers.value = [];
-                smEods.value = [];
-            }
-
-            // Ensure salesLinkId exists for SM
-            if (currentUser.value && !currentUser.value.salesLinkId && currentUser.value.email) {
-                try {
-                    const fresh = await db.getUserByEmail(currentUser.value.email);
-                    if (fresh) {
-                        if (!fresh.salesLinkId) {
-                            const newId = db.generateSalesLinkId('sm');
-                            await db.updateUser(fresh.id, { salesLinkId: newId });
-                            fresh.salesLinkId = newId;
-                        }
-                        currentUser.value.salesLinkId = fresh.salesLinkId;
-                        localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-                    }
-                } catch (e) {
-                    console.warn('Could not sync SM salesLinkId:', e);
-                }
-            }
-
-            try {
-                pendingInvitations.value = await db.getPendingInvitationsForEmail(currentUser.value.email);
-            } catch (e) {
-                console.warn('Could not fetch pending invitations for SM:', e);
-            }
-        };
-
-        const loadRoData = async () => {
-            if (!currentUser.value) return;
-            await initUserSm();
-            myFiles.value = await db.getLoanFilesByRO(currentUser.value.id);
-            const tenantEods = await db.getEODReportsByTenant(currentUser.value.tenantId);
-            myEods.value = tenantEods.filter(e => e.userId === currentUser.value.id);
-        };
-
-        const loadData = async () => {
-            if (!currentUser.value) return;
-
-            // Real-Time Security Gatekeeper: Verify current user status directly from Firestore
-            if (currentUser.value?.id) {
-                try {
-                    const freshUser = await db.getUserById(currentUser.value.id);
-                    if (freshUser && (freshUser.status === 'suspended' || freshUser.status === 'resigned' || freshUser.status === 'inactive')) {
-                        console.warn("Security Kill-Switch: Account suspended or revoked by supervisor.");
-                        localStorage.removeItem('axis_user');
-                        currentUser.value = null;
-                        alert("⚠️ Access Revoked: Your account has been locked by your Sales Manager. All session data has been wiped.");
-                        window.location.reload();
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("User status check error in loadData:", e);
-                }
-            }
-            if (isSuperAdmin.value) {
-                await loadSuperAdminData();
-            } else if (isZSM.value) {
-                await loadZsmData();
-            } else if (isASM.value) {
-                await loadAsmData();
-            } else if (isSM.value) {
-                await loadSmData();
-                await loadInboundShowroomFiles();
-            } else if (isDSE.value) {
-                await loadDseData();
-            } else {
-                await loadRoData();
-            }
-            // Load Sales Targets & Drives
-            try {
-                const month = new Date().toISOString().substring(0, 7);
-                allSalesTargets.value = await db.getSalesTargets(month);
-                allSalesDrives.value = await db.getAllSalesDrives();
-            } catch (err) {
-                console.warn("Could not load targets/drives:", err);
-            }
-        };
-
-        const originalUser = ref(null);
-
-        const impersonateUser = async (user) => {
-            if (!user) return;
-
-            // Server-verified super_admin check
-            const actorEmail = (originalUser.value?.email || currentUser.value?.email || '').toLowerCase();
-            const actorDoc = await db.getUserByEmail(actorEmail);
-            if (!actorDoc || actorDoc.role !== 'super_admin') {
-                alert("Access Denied: Impersonation requires verified super_admin authority.");
-                return;
-            }
-
-            if (!originalUser.value && currentUser.value.role === 'super_admin') {
-                originalUser.value = { ...currentUser.value };
-            }
-
-            // Write immutable audit log event
-            try {
-                await db.logAuditEvent({
-                    action: 'impersonate_user',
-                    actorEmail: actorEmail,
-                    actorId: actorDoc.id,
-                    targetEmail: user.email,
-                    targetRole: user.role,
-                    targetId: user.id,
-                    at: new Date().toISOString()
-                });
-            } catch (auditErr) {
-                console.warn("Audit logging notice:", auditErr);
-            }
-            
-            const sessionUser = { 
-                id: user.id, 
-                email: user.email, 
-                username: user.name, 
-                role: user.role, 
-                name: user.name, 
-                salesLinkId: user.salesLinkId || null,
-                supervisorId: user.supervisorId || null,
-                supervisorName: user.supervisorName || null,
-                supervisorRole: user.supervisorRole || null,
-                supervisorSalesLinkId: user.supervisorSalesLinkId || null,
-                tenantId: user.tenantId || user.id,
-                phone: user.phone || '',
-                bankName: user.bankName,
-                division: user.division,
-                region: user.region,
-                employeeCode: user.employeeCode || '',
-                designation: user.designation || '',
-                branchAddress: user.branchAddress || '',
-                createdAt: user.createdAt || ''
-            };
-            localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-            currentUser.value = sessionUser;
-            
-            allWorkspaces.value = [];
-            roUsers.value = [];
-            allFiles.value = [];
-            myFiles.value = [];
-            
-            await loadData();
-            
-            if (sessionUser.role === 'sm') currentTab.value = 'dashboard';
-            else if (sessionUser.role === 'ro') currentTab.value = 'ro-dashboard';
-        };
-
-        const stopImpersonation = async () => {
-            if (originalUser.value) {
-                localStorage.setItem('axis_user', JSON.stringify(originalUser.value));
-                currentUser.value = originalUser.value;
-                originalUser.value = null;
-                
-                allWorkspaces.value = [];
-                roUsers.value = [];
-                allFiles.value = [];
-                myFiles.value = [];
-                
-                await loadData();
-                currentTab.value = 'super-admin-dashboard';
-            }
-        };
-
-        const initUserSm = async () => {
-            if (!currentUser.value) return;
-
-            let smName = '';
-            let smObj = { name: '', phone: '', email: '', salesLinkId: '' };
-
-            // 1. If SM or Admin, their own name is the SM Name
-            if (isSM.value) {
-                smName = currentUser.value.name || currentUser.value.username || '';
-                smObj = {
-                    name: smName,
-                    phone: currentUser.value.phone || '',
-                    email: currentUser.value.email || '',
-                    salesLinkId: currentUser.value.salesLinkId || ''
-                };
-            } else if (currentUser.value.tenantId) {
-                // 2. Look in users collection for SM of this tenant
-                try {
-                    const smUser = await db.getSMUserByTenant(currentUser.value.tenantId);
-                    if (smUser) {
-                        smName = smUser.name ? smUser.name.trim() : '';
-                        smObj = {
-                            name: smUser.name || '',
-                            phone: smUser.phone || '',
-                            email: smUser.email || '',
-                            salesLinkId: smUser.salesLinkId || ''
-                        };
-                    }
-                } catch (e) {
-                    console.warn("Could not fetch SM user for tenant:", e);
-                }
-
-                // 3. Fallback: Fetch from Workspace (managerName)
-                if (!smName) {
-                    try {
-                        const ws = await db.getWorkspace(currentUser.value.tenantId);
-                        if (ws && ws.managerName) {
-                            smName = ws.managerName.trim();
-                            smObj.name = smName;
-                        }
-                    } catch (e) {
-                        console.warn("Could not fetch workspace managerName:", e);
-                    }
-                }
-            }
-
-            // 4. Fallback to localStorage if still not found
-            if (!smName) {
-                smName = localStorage.getItem('axis_default_sm_' + currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
-                smObj.name = smName;
-            }
-
-            if (smName) {
-                const upperSm = smName.toUpperCase();
-                defaultSmName.value = upperSm;
-                smObj.name = upperSm;
-                newFileForm.value.smName = upperSm;
-                localStorage.setItem('axis_default_sm_' + currentUser.value.id, upperSm);
-                localStorage.setItem('axis_default_sm', upperSm);
-            }
-            assignedSm.value = smObj;
-        };
-
-        const systemAnnouncement = ref('');
-        const adminAnnouncementInput = ref('');
-        
-        const saveAnnouncement = async () => {
-            try {
-                await db.setAnnouncement(adminAnnouncementInput.value);
-                systemAnnouncement.value = adminAnnouncementInput.value;
-                alert('Announcement updated successfully!');
-            } catch(e) {
-                console.error("Error saving announcement", e);
-                alert("Failed to save announcement");
-            }
-        };
-
-        // Auth & Registration
-        const registerSM = async () => {
-            if (isRegistering.value) return;
-            registerError.value = '';
-
-            const chosenRole = registerForm.value.role || 'sm';
-
-            if (chosenRole === 'dse') {
-                const dseBrand = registerForm.value.showroomBrand?.trim() || 'Maruti Suzuki Arena';
-                const dseDealership = registerForm.value.dealershipName?.trim();
-                const dseName = registerForm.value.name?.trim();
-                const dseCode = registerForm.value.employeeCode?.trim();
-                const dseCity = registerForm.value.region?.trim();
-                const dsePhone = registerForm.value.phone?.trim() || '';
-
-                if (!dseDealership) {
-                    registerError.value = 'Dealership / Showroom Name is mandatory.';
-                    return;
-                }
-                if (!dseName) {
-                    registerError.value = 'Sales Consultant Full Name is mandatory.';
-                    return;
-                }
-                if (!dseCode) {
-                    registerError.value = 'Official Staff / Employee ID is mandatory.';
-                    return;
-                }
-                if (!dseCity) {
-                    registerError.value = 'Showroom Location / City is mandatory.';
-                    return;
-                }
-                if (!dsePhone || dsePhone.replace(/\D/g, '').length < 10) {
-                    registerError.value = 'Please provide a valid 10-digit mobile number.';
-                    return;
-                }
-
-                isRegistering.value = true;
-                registerStage.value = 'selecting';
-                try {
-                    const googleUser = await db.loginWithGoogle();
-                    registerStage.value = 'setting_up';
-                    const email = googleUser.email.toLowerCase();
-
-                    const existing = await db.getUserByEmail(email);
-                    if (existing) {
-                        if (googleUser?.uid) {
-                            db.upsertDirectoryEntry(googleUser.uid, {
-                                email: email,
-                                role: 'dse',
-                                tenantId: null,
-                                status: 'active',
-                                userId: existing.id
-                            }).catch(() => {});
-                        }
-                        if (existing.role === 'dse') {
-                            localStorage.setItem('axis_user', JSON.stringify(existing));
-                            currentUser.value = existing;
-                            currentTab.value = 'dse-dashboard';
-                            await loadDseData();
-                            showRegisterMode.value = false;
-                            registerStep.value = 1;
-                            registerConfirmed.value = false;
-                            return;
-                        } else {
-                            const updatePayload = {
-                                role: 'dse',
-                                name: dseName || existing.name,
-                                dealershipName: dseDealership,
-                                showroomBrand: dseBrand,
-                                employeeCode: dseCode,
-                                region: dseCity,
-                                phone: dsePhone,
-                                designation: 'Dealership Sales Executive (DSE)',
-                                status: 'active'
-                            };
-                            await db.updateUser(existing.id, updatePayload);
-                            const sessionUser = { ...existing, ...updatePayload };
-                            localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                            currentUser.value = sessionUser;
-                            currentTab.value = 'dse-dashboard';
-                            await loadDseData();
-                            showRegisterMode.value = false;
-                            registerStep.value = 1;
-                            registerConfirmed.value = false;
-                            return;
-                        }
-                    }
-
-                    const newSalesLinkId = db.generateSalesLinkId('dse');
-
-                    const newUserId = await db.addUser({
-                        email: email,
-                        role: 'dse',
-                        name: dseName,
-                        dealershipName: dseDealership,
-                        showroomBrand: dseBrand,
-                        employeeCode: dseCode,
-                        region: dseCity,
-                        phone: dsePhone,
-                        salesLinkId: newSalesLinkId,
-                        status: 'active',
-                        createdAt: new Date().toISOString()
-                    });
-
-                    if (googleUser?.uid) {
-                        db.upsertDirectoryEntry(googleUser.uid, {
-                            email: email,
-                            role: 'dse',
-                            tenantId: null,
-                            status: 'active',
-                            userId: newUserId || email
-                        }).catch(() => {});
-                    }
-
-                    const sessionUser = {
-                        id: newUserId || email,
-                        email: email,
-                        username: dseName,
-                        role: 'dse',
-                        name: dseName,
-                        dealershipName: dseDealership,
-                        showroomBrand: dseBrand,
-                        employeeCode: dseCode,
-                        region: dseCity,
-                        phone: dsePhone,
-                        salesLinkId: newSalesLinkId,
-                        tenantId: null
-                    };
-
-                    localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                    currentUser.value = sessionUser;
-                    currentTab.value = 'dse-dashboard';
-                    await loadDseData();
-
-                    showRegisterMode.value = false;
-                    registerStep.value = 1;
-                    registerConfirmed.value = false;
-                    registerForm.value = { role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
-                    return;
-                } catch (error) {
-                    console.error("DSE Registration Error:", error);
-                    if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
-                        return;
-                    }
-                    registerError.value = error.message || 'Error creating DSE account.';
-                    return;
-                } finally {
-                    isRegistering.value = false;
-                    registerStage.value = '';
-                }
-            }
-
-            if (!registerConfirmed.value) {
-                registerError.value = 'Please confirm the leadership mandate checkbox before proceeding.';
-                return;
-            }
-
-            const smName = registerForm.value.name?.trim();
-            const smRegion = registerForm.value.region?.trim();
-            const smPhone = registerForm.value.phone?.trim() || '';
-            let smBank = registerForm.value.bankName?.trim() || 'Axis Bank';
-            if (smBank === 'Other') {
-                smBank = registerForm.value.customBankName?.trim();
-            }
-            const smDivision = registerForm.value.division?.trim() || 'Auto Loans (Car Loans)';
-
-            if (!smBank) {
-                registerError.value = 'Please select or specify your Bank or Financial Institution.';
-                return;
-            }
-            if (!smDivision) {
-                registerError.value = 'Please select your Sales Division / Asset Vertical.';
-                return;
-            }
-            if (!smName) {
-                registerError.value = 'Sales Manager Name is mandatory.';
-                return;
-            }
-            if (!smRegion) {
-                registerError.value = 'Operating Region / Zone is mandatory.';
-                return;
-            }
-            if (!smPhone) {
-                registerError.value = 'Contact Phone / WhatsApp number is mandatory.';
-                return;
-            }
-            if (smPhone.replace(/\D/g, '').length < 10) {
-                registerError.value = 'Please provide a valid 10-digit mobile number.';
-                return;
-            }
-
-            const wsName = smBank === 'Axis Bank' ? `${smRegion} Hub` : `${smBank} - ${smRegion} Hub`;
-
-            isRegistering.value = true;
-            registerStage.value = 'selecting';
-            try {
-                const googleUser = await db.loginWithGoogle();
-                registerStage.value = 'setting_up';
-                const email = googleUser.email.toLowerCase();
-
-                const existing = await db.getUserByEmail(email);
-                if (existing) {
-                    if (existing.role === 'ro') {
-                        registerError.value = `This account (${email}) is already registered as a Relationship Officer (RO). Please switch back to "Sign In" to access your workspace.`;
-                    } else {
-                        registerError.value = `The Google account (${email}) is already registered. Please sign in normally.`;
-                    }
-                    return;
-                }
-                
-                const chosenRole = registerForm.value.role || 'sm';
-                let workspaceId = '';
-                if (chosenRole === 'sm') {
-                    workspaceId = await db.addWorkspace({
-                        name: wsName,
-                        bankName: smBank,
-                        division: smDivision,
-                        region: smRegion,
-                        managerName: smName,
-                        status: 'active',
-                        createdAt: new Date().toISOString()
-                    });
-                }
-
-                const newSalesLinkId = db.generateSalesLinkId(chosenRole);
-
-                const newUserId = await db.addUser({
-                    email: email,
-                    role: chosenRole,
-                    name: smName,
-                    bankName: smBank,
-                    division: smDivision,
-                    region: smRegion,
-                    phone: smPhone,
-                    salesLinkId: newSalesLinkId,
-                    tenantId: workspaceId || null,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                });
-
-                if (googleUser?.uid) {
-                    db.upsertDirectoryEntry(googleUser.uid, {
-                        email: email,
-                        role: chosenRole,
-                        tenantId: workspaceId || null,
-                        status: 'active',
-                        userId: newUserId || email
-                    }).catch(() => {});
-                }
-
-                // Auto sign-in new user
-                const sessionUser = {
-                    id: newUserId || email,
-                    email: email,
-                    username: smName,
-                    role: chosenRole,
-                    name: smName,
-                    bankName: smBank,
-                    division: smDivision,
-                    region: smRegion,
-                    salesLinkId: newSalesLinkId,
-                    tenantId: workspaceId || null
-                };
-
-                localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                currentUser.value = sessionUser;
-                initUserSm();
-                if (chosenRole === 'zsm') currentTab.value = 'zsm-dashboard';
-                else if (chosenRole === 'asm') currentTab.value = 'asm-dashboard';
-                else currentTab.value = 'dashboard';
-                await loadData();
-
-                showRegisterMode.value = false;
-                registerStep.value = 1;
-                registerConfirmed.value = false;
-                registerForm.value = { role: 'sm', name: '', region: '', phone: '', bankName: 'Axis Bank', customBankName: '', division: 'Auto Loans (Car Loans)' };
-            } catch (error) {
-                console.error("Registration Error:", error);
-                if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
-                    // User closed popup without selecting an account
-                    return;
-                }
-                registerError.value = error.message || 'Error creating account.';
-            } finally {
-                isRegistering.value = false;
-                registerStage.value = '';
-            }
-        };
-
-        const processUserLogin = async (googleUser) => {
-            const email = (googleUser.email || '').toLowerCase().trim();
-            let user = await db.getUserByEmail(email);
-
-            // Ensure super_admin can be bootstrapped from data-driven system/owners document
-            if (!user) {
-                const owners = await db.getSystemOwners();
-                if (owners.includes(email)) {
-                    const ownerData = {
-                        email: email,
-                        role: 'super_admin',
-                        name: googleUser.displayName || 'Platform Owner',
-                        status: 'active',
-                        createdAt: new Date().toISOString()
-                    };
-                    await db.addUser(ownerData);
-                    user = await db.getUserByEmail(email);
-                }
-            }
-            
-            if (user) {
-                // Upsert identity directory entry for Firestore rules authorization
-                const authUid = googleUser?.uid || (db.auth?.currentUser ? db.auth.currentUser.uid : null);
-                if (authUid) {
-                    db.upsertDirectoryEntry(authUid, {
-                        email: user.email,
-                        role: user.role,
-                        tenantId: user.tenantId || null,
-                        status: user.status || 'active',
-                        userId: user.id
-                    }).catch(e => console.warn("Directory upsert notice:", e));
-                }
-
-                // Validate role against known roles
-                const validRoles = ['super_admin', 'zsm', 'asm', 'sm', 'ro', 'dse'];
-                const role = (user.role || '').toLowerCase().trim();
-                if (!validRoles.includes(role)) {
-                    loginError.value = `Access Denied: Unrecognized account role "${user.role}". Please contact platform administration.`;
-                    return;
-                }
-
-                // Check if account has been frozen/locked or resigned
-                if (user.status === 'suspended') {
-                    const sup = user.supervisorName || 'your Sales Manager';
-                    loginError.value = `⛔ Account Locked: Your access has been frozen by your Sales Manager (${sup}). Please contact your supervisor to unlock your account.`;
-                    return;
-                }
-                if (user.status === 'resigned' || user.status === 'inactive') {
-                    loginError.value = '⛔ Access Revoked: This account has been offboarded due to resignation. Pipeline has been reassigned.';
-                    return;
-                }
-
-                // Check workspace status for SM and RO
-                if (user.role !== 'super_admin' && user.tenantId) {
-                    const workspace = await db.getWorkspace(user.tenantId);
-                    if (workspace && workspace.status === 'frozen') {
-                        loginError.value = '⛔ Branch Workspace Locked: Your branch workspace is currently frozen by the administrator.';
-                        return;
-                    }
-                }
-
-                // If RO, ensure supervisor linkage is maintained
-                if (user.role === 'ro' && user.tenantId && (!user.supervisorId || !user.supervisorName)) {
-                    try {
-                        const smUser = await db.getSMUserByTenant(user.tenantId);
-                        if (smUser) {
-                            user.supervisorId = smUser.id;
-                            user.supervisorName = smUser.name;
-                            user.supervisorSalesLinkId = smUser.salesLinkId || null;
-                            await db.updateUser(user.id, {
-                                supervisorId: smUser.id,
-                                supervisorName: smUser.name,
-                                supervisorSalesLinkId: smUser.salesLinkId || null
-                            });
-                        }
-                    } catch (e) {
-                        console.warn("Could not backfill supervisor on login:", e);
-                    }
-                }
-
-                // Auto assign SalesLink ID if missing (backward compatibility)
-                if (!user.salesLinkId) {
-                    try {
-                        const newSalesLinkId = db.generateSalesLinkId(user.role);
-                        await db.updateUser(user.id, { salesLinkId: newSalesLinkId });
-                        user.salesLinkId = newSalesLinkId;
-                    } catch (e) {
-                        console.warn('Could not backfill salesLinkId:', e);
-                    }
-                }
-
-                // Record login timestamp
-                const newSessionId = generateSessionId();
-                localStorage.setItem('axis_active_session_id', newSessionId);
-                try {
-                    await db.updateUser(user.id, {
-                        lastLoginAt: new Date().toISOString()
-                    });
-                } catch (e) {
-                    console.warn("Could not write lastLoginAt to Firestore:", e);
-                }
-
-                // Store user session
-                const sessionUser = {
-                    id: user.id,
-                    email: user.email,
-                    username: user.name,
-                    role: user.role,
-                    name: user.name,
-                    salesLinkId: user.salesLinkId,
-                    supervisorId: user.supervisorId || null,
-                    supervisorName: user.supervisorName || null,
-                    supervisorRole: user.supervisorRole || null,
-                    supervisorSalesLinkId: user.supervisorSalesLinkId || null,
-                    tenantId: user.tenantId || null,
-                    phone: user.phone || '',
-                    bankName: user.bankName,
-                    division: user.division,
-                    dealershipName: user.dealershipName || '',
-                    showroomBrand: user.showroomBrand || '',
-                    region: user.region,
-                    employeeCode: user.employeeCode || '',
-                    designation: user.designation || '',
-                    branchAddress: user.branchAddress || '',
-                    createdAt: user.createdAt || '',
-                    activeSessionId: newSessionId
-                };
-                localStorage.setItem('axis_user', JSON.stringify(sessionUser));
-                currentUser.value = sessionUser;
-                initUserSm();
-
-                // Start real-time security gatekeeper
-                startUserSecurityListener(user.id);
-                
-                if (isSuperAdmin.value) currentTab.value = 'super-admin-dashboard';
-                else if (isZSM.value) currentTab.value = 'zsm-dashboard';
-                else if (isASM.value) currentTab.value = 'asm-dashboard';
-                else if (isSM.value) currentTab.value = 'dashboard';
-                else if (isDSE.value) currentTab.value = 'dse-dashboard';
-                else currentTab.value = 'ro-dashboard';
-
-                await loadData();
-            } else {
-                loginError.value = `⛔ Account Not Registered: The Google account (${email}) is not registered in SalesLink. If you are a Sales Manager, please register your workspace below, or ask your supervisor to invite your account.`;
-            }
-        };
-
-        const login = async () => {
-            if (isLoggingIn.value) return;
-            loginError.value = '';
-            isLoggingIn.value = true;
-            loginStage.value = 'selecting';
-            try {
-                const googleUser = await db.loginWithGoogle();
-                loginStage.value = 'verifying';
-                await processUserLogin(googleUser);
-            } catch (error) {
-                console.error("Login Error:", error);
-                if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed')) {
-                    // User closed popup without selecting an account
-                    return;
-                }
-                loginError.value = error.message;
-            } finally {
-                isLoggingIn.value = false;
-                loginStage.value = '';
-            }
-        };
-
-        const loginRedirect = async () => {
-            loginError.value = '';
-            isLoggingIn.value = true;
-            loginStage.value = 'redirecting';
-            try {
-                await db.loginWithRedirect();
-            } catch (error) {
-                console.error("Redirect Login Error:", error);
-                loginError.value = error.message;
-                isLoggingIn.value = false;
-                loginStage.value = '';
-            }
-        };
-
-        const logout = async () => {
-            if (userSecurityUnsub) {
-                userSecurityUnsub();
-                userSecurityUnsub = null;
-            }
-            try {
-                if (db.auth) await db.signOut(db.auth);
-            } catch (e) {
-                console.warn("Firebase signOut error on logout:", e);
-            }
-            localStorage.removeItem('axis_user');
-            localStorage.removeItem('axis_active_session_id');
-            currentUser.value = null;
-            loginForm.value = { username: '' };
-            allWorkspaces.value = [];
-            roUsers.value = [];
-            allFiles.value = [];
-            myFiles.value = [];
-            currentTab.value = 'dashboard';
-        };
-
-        // Admin/SM: Users & Workspaces
-        const saveNewRo = async () => {
-            addRoError.value = '';
-            if (isSavingRo.value) return;
-
-            const rawName = (newRoForm.value.name || '').trim();
-            const rawEmail = (newRoForm.value.email || '').trim().toLowerCase();
-            const rawPhone = (newRoForm.value.phone || '').trim();
-            const empCode = (newRoForm.value.employeeCode || '').trim().toUpperCase();
-
-            if (!rawName) {
-                addRoError.value = 'Officer full name is mandatory.';
-                return;
-            }
-
-            const name = formatCapitalizeName(rawName);
-
-            if (!rawEmail || !rawEmail.includes('@')) {
-                addRoError.value = 'Please provide a valid Gmail address.';
-                return;
-            }
-
-            const cleanDigits = rawPhone.replace(/\D/g, '');
-            if (cleanDigits.length < 10) {
-                addRoError.value = 'Please enter a valid 10-digit mobile number.';
-                return;
-            }
-            const phone = cleanDigits.slice(-10);
-
-            try {
-                isSavingRo.value = true;
-
-                // 1. Check if Employee ID is entered and already linked with another user / SM
-                if (empCode) {
-                    const existingEmp = await db.getUserByEmployeeCode(empCode);
-                    if (existingEmp) {
-                        const supName = await db.getSupervisorNameForUser(existingEmp);
-                        addRoError.value = `⚠️ This Employee ID (${empCode}) is already linked with another Sales Manager (${supName}) for officer "${existingEmp.name || 'Staff'}". Duplicate Employee IDs are not permitted.`;
-                        isSavingRo.value = false;
-                        return;
-                    }
-                }
-
-                // 2. Check if Email already exists in the system
-                const existingEmail = await db.getUserByEmail(rawEmail);
-                if (existingEmail) {
-                    const supName = await db.getSupervisorNameForUser(existingEmail);
-                    addRoError.value = `⚠️ Account with Google email (${rawEmail}) is already registered under Sales Manager "${supName}". Duplicate email accounts are not permitted.`;
-                    isSavingRo.value = false;
-                    return;
-                }
-
-                // 3. Check if Mobile / Phone is already linked to another officer
-                const existingPhone = await db.getUserByPhone(phone);
-                if (existingPhone) {
-                    const supName = await db.getSupervisorNameForUser(existingPhone);
-                    addRoError.value = `⚠️ Mobile number (+91 ${phone}) is already registered under Sales Manager "${supName}" for officer "${existingPhone.name}".`;
-                    isSavingRo.value = false;
-                    return;
-                }
-
-                const generatedSalesLinkId = db.generateSalesLinkId ? db.generateSalesLinkId('ro') : ('RO-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-
-                const newRoData = {
-                    email: rawEmail,
-                    role: 'ro',
-                    name: name,
-                    phone: phone,
-                    employeeCode: empCode,
-                    salesLinkId: generatedSalesLinkId,
-                    tenantId: currentUser.value.tenantId,
-                    supervisorId: currentUser.value.id || null,
-                    supervisorName: currentUser.value.name || 'Sales Manager',
-                    supervisorSalesLinkId: currentUser.value.salesLinkId || null,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                };
-
-                const docRef = await db.addUser(newRoData);
-                newlyCreatedRo.value = {
-                    id: (docRef && docRef.id) ? docRef.id : '',
-                    ...newRoData
-                };
-
-                addRoStep.value = 'success';
-                await loadData();
-            } catch (err) {
-                console.error('Error adding RO:', err);
-                addRoError.value = err.message || 'Failed to add Relationship Officer. Please try again.';
-            } finally {
-                isSavingRo.value = false;
-            }
-        };
-
-        const toggleUserStatus = async (user) => {
-            const isLocking = user.status === 'active';
-            const actionVerb = isLocking ? 'FREEZE & LOCK' : 'ACTIVATE & UNLOCK';
-            const confirmMsg = isLocking 
-                ? `Are you sure you want to FREEZE & LOCK ${user.name}'s account?\n\n• Their login access will be blocked immediately.\n• Active sessions will be revoked.\n• Customer files will remain safely preserved.`
-                : `Are you sure you want to UNLOCK ${user.name}'s account?\n\n• Their login access will be restored immediately.`;
-            
-            if (!confirm(confirmMsg)) return;
-
-            try {
-                const now = new Date().toISOString();
-                const updatePayload = {
-                    status: isLocking ? 'suspended' : 'active',
-                    statusUpdatedAt: now,
-                    statusUpdatedBy: currentUser.value?.id || '',
-                    statusUpdatedByName: currentUser.value?.name || 'Sales Manager'
-                };
-                if (isLocking) {
-                    updatePayload.suspendedAt = now;
-                    updatePayload.suspendedBy = currentUser.value?.id || '';
-                    updatePayload.suspendedByName = currentUser.value?.name || 'Sales Manager';
-                } else {
-                    updatePayload.reactivatedAt = now;
-                    updatePayload.reactivatedBy = currentUser.value?.id || '';
-                }
-
-                await db.updateUser(user.id, updatePayload);
-                await loadData();
-
-                alert(`✅ Account for ${user.name} has been ${isLocking ? 'LOCKED / FROZEN' : 'UNLOCKED / ACTIVATED'} successfully.`);
-            } catch (err) {
-                console.error("Toggle user status error:", err);
-                alert("Failed to update officer status: " + err.message);
-            }
-        };
-
-        const deleteRoUser = async (user) => {
-            if (!user || !user.id) return;
-
-            // Check if this RO has historical logged files
-            const filesCount = (allFiles.value || []).filter(f => f.roId === user.id || (f.roName && f.roName.trim().toUpperCase() === (user.name || '').trim().toUpperCase())).length;
-
-            if (filesCount > 0) {
-                alert(`⚠️ Cannot Delete Profile "${user.name || 'User'}":\n\nThis officer has ${filesCount} loan file(s) assigned in the branch pipeline.\n\nOpening the Offboarding & Pipeline Reassignment workflow so you can safely reassign their active files to another officer before removing their profile.`);
-                openOffboardModal(user);
-                return;
-            }
-
-            const confirmMsg = `Are you sure you want to remove profile "${user.name || 'User'}" (${user.email})?\n\nThis will revoke their login access immediately.`;
-            if (!confirm(confirmMsg)) return;
-
-            try {
-                await db.deleteUser(user.id);
-                roUsers.value = roUsers.value.filter(u => u.id !== user.id);
-                await loadData();
-                alert(`User ${user.name || user.email} was successfully removed.`);
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                alert("Failed to delete user: " + (error.message || error));
-            }
-        };
-
         const toggleWorkspaceStatus = async (workspace) => {
             const newStatus = workspace.status === 'active' ? 'frozen' : 'active';
             await db.updateWorkspace(workspace.id, { status: newStatus });
@@ -5713,7 +563,6 @@ const app = createApp({
                 return;
             }
 
-            // Verify live counts of users and files for this workspace to prevent orphaned data
             const wsUsers = await db.getUsersByTenant(workspace.id);
             const wsFiles = await db.getLoanFilesByTenant(workspace.id);
             const userCount = wsUsers.filter(u => u.status !== 'deleted' && !u.deletedAt).length;
@@ -5737,458 +586,396 @@ const app = createApp({
             }
         };
 
-        // RO: Add File
-        const resetNewFileForm = async () => {
-            let uniqueAppId = 'ALA00000';
+        // --- SM Users Tab & Search State ---
+        const smUsersTab = ref('active');
+        const smUsersSearch = ref('');
+
+        const filteredActiveRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return activeRoUsers.value;
+            return activeRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.phone && String(u.phone).includes(q))
+            );
+        });
+
+        const filteredSuspendedRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return suspendedRoUsers.value;
+            return suspendedRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.phone && String(u.phone).includes(q))
+            );
+        });
+
+        const filteredResignedRos = computed(() => {
+            const q = (smUsersSearch.value || '').trim().toLowerCase();
+            if (!q) return resignedRoUsers.value;
+            return resignedRoUsers.value.filter(u => 
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.employeeCode && String(u.employeeCode).toLowerCase().includes(q)) ||
+                (u.transferredToRoName && u.transferredToRoName.toLowerCase().includes(q))
+            );
+        });
+
+        // --- Add RO Modal State & Handlers ---
+        const showAddRoModal = ref(false);
+        const addRoStep = ref(1);
+        const addRoError = ref('');
+        const isSavingRo = ref(false);
+        const newlyCreatedRo = ref(null);
+        const copyRoInviteSuccess = ref(false);
+        let copyRoInviteTimer = null;
+
+        const newRoForm = ref({
+            name: '',
+            email: '',
+            phone: '',
+            employeeCode: ''
+        });
+
+        const openAddRoModal = () => {
+            addRoStep.value = 1;
+            addRoError.value = '';
+            newRoForm.value = { name: '', email: '', phone: '', employeeCode: '' };
+            newlyCreatedRo.value = null;
+            copyRoInviteSuccess.value = false;
+            showAddRoModal.value = true;
+        };
+
+        const closeAddRoModal = () => {
+            showAddRoModal.value = false;
+        };
+
+        const appendGmailDomain = () => {
+            const current = (newRoForm.value.email || '').trim();
+            if (!current) {
+                newRoForm.value.email = '@gmail.com';
+                return;
+            }
+            if (!current.includes('@')) {
+                newRoForm.value.email = current + '@gmail.com';
+            }
+        };
+
+        const shareRoInviteWhatsApp = (ro) => {
+            const target = ro || newlyCreatedRo.value;
+            if (!target) return;
+            const branchName = auth.currentUser.value?.region || 'our branch hub';
+            const smName = auth.currentUser.value?.name || 'Sales Manager';
+            const inviteUrl = window.location.origin + window.location.pathname;
+            const msg = `*SalesLink Invitation - Retail Asset Lending*\n\nHi ${target.name},\nYou have been authorized as a Relationship Officer (RO) under Sales Manager ${smName} at ${branchName}.\n\n*Your Assigned SalesLink ID:* ${target.salesLinkId}\n*Designated Email:* ${target.email}\n\nAccess the portal directly with your Google Sign-In:\n${inviteUrl}\n\nPlease log in to start tracking customer loan files and daily EODs.`;
+            const phoneDigits = (target.phone || '').replace(/\D/g, '');
+            const targetPhone = phoneDigits.length === 10 ? '91' + phoneDigits : phoneDigits;
+            window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        const copyRoInviteMessage = async (ro) => {
+            const target = ro || newlyCreatedRo.value;
+            if (!target) return;
+            const branchName = auth.currentUser.value?.region || 'our branch hub';
+            const smName = auth.currentUser.value?.name || 'Sales Manager';
+            const inviteUrl = window.location.origin + window.location.pathname;
+            const msg = `*SalesLink Invitation - Retail Asset Lending*\n\nHi ${target.name},\nYou have been authorized as a Relationship Officer (RO) under Sales Manager ${smName} at ${branchName}.\n\n*Your Assigned SalesLink ID:* ${target.salesLinkId}\n*Designated Email:* ${target.email}\n\nAccess the portal directly with your Google Sign-In:\n${inviteUrl}\n\nPlease log in to start tracking customer loan files and daily EODs.`;
             try {
-                uniqueAppId = await db.generateUniqueAppId('ALA');
-            } catch (e) {}
-            newFileForm.value = {
-                appId: uniqueAppId,
-                customerName: '',
-                nclUcl: 'NCL',
-                sourcingChannel: 'DSA',
-                loginDate: getTodayDateStr(),
-                loanAmount: '',
-                status: 'FI',
-                customStatus: '',
-                ppc: '',
-                smName: defaultSmName.value || '',
-                vcip: '',
-                mi: ''
-            };
-        };
-
-        const saveNewFile = async () => {
-            if (!currentUser.value) return;
-            
-            const rawSm = (newFileForm.value.smName ? newFileForm.value.smName.trim() : (defaultSmName.value || '')).toUpperCase();
-            if (rawSm) {
-                defaultSmName.value = rawSm;
-                localStorage.setItem('axis_default_sm_' + currentUser.value.id, defaultSmName.value);
-                localStorage.setItem('axis_default_sm', defaultSmName.value);
-            }
-
-            const chosenDate = newFileForm.value.loginDate || getTodayDateStr();
-            const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
-            const createdAtIso = `${chosenDate}T${timeStr}.000Z`;
-            
-            let finalStatus = newFileForm.value.status || 'FI';
-            if (finalStatus === 'Custom' && newFileForm.value.customStatus) {
-                finalStatus = newFileForm.value.customStatus.trim().toUpperCase();
-            }
-            
-            const newFile = {
-                appId: (newFileForm.value.appId || 'ALA00000').trim().toUpperCase(),
-                customerName: (newFileForm.value.customerName || '').trim().toUpperCase(),
-                nclUcl: (newFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
-                sourcingChannel: (newFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
-                loginDate: chosenDate,
-                loanAmount: Number(newFileForm.value.loanAmount) || 0,
-                status: finalStatus,
-                ppc: (newFileForm.value.ppc || '').trim().toUpperCase(),
-                smName: rawSm,
-                vcip: (newFileForm.value.vcip || '').trim().toUpperCase(),
-                mi: (newFileForm.value.mi || '').trim().toUpperCase(),
-                roId: currentUser.value.id,
-                roName: currentUser.value.name,
-                tenantId: currentUser.value.tenantId,
-                createdAt: createdAtIso,
-                updatedAt: new Date().toISOString()
-            };
-            
-            await db.addLoanFile(newFile);
-            resetNewFileForm();
-            currentTab.value = 'ro-tracking';
-            await loadRoData();
-        };
-
-        // Full File Edit Modal (RO & Admin)
-        const openEditFileModal = (file) => {
-            let fDate = file.loginDate;
-            if (!fDate && file.createdAt) {
-                fDate = file.createdAt.substring(0, 10);
-            }
-            const isStandard = STANDARD_STATUSES.includes(file.status);
-            editFileForm.value = {
-                id: file.id,
-                appId: (file.appId || '').toUpperCase(),
-                customerName: (file.customerName || '').toUpperCase(),
-                nclUcl: (file.nclUcl || 'NCL').toUpperCase(),
-                sourcingChannel: (file.sourcingChannel || 'DSA').toUpperCase(),
-                loginDate: fDate || getTodayDateStr(),
-                loanAmount: toLakhs(file.loanAmount),
-                status: isStandard ? file.status : 'Custom',
-                customStatus: isStandard ? '' : file.status,
-                ppc: (file.ppc || '').toUpperCase(),
-                smName: (file.smName || defaultSmName.value || '').toUpperCase(),
-                vcip: (file.vcip || '').toUpperCase(),
-                mi: (file.mi || '').toUpperCase()
-            };
-            showEditFileModal.value = true;
-        };
-
-        const saveEditedFile = async () => {
-            if (!editFileForm.value.id) return;
-            
-            let finalStatus = editFileForm.value.status;
-            if (finalStatus === 'Custom' && editFileForm.value.customStatus) {
-                finalStatus = editFileForm.value.customStatus.trim().toUpperCase();
-            }
-            
-            const updatedData = {
-                appId: (editFileForm.value.appId || '').trim().toUpperCase(),
-                customerName: (editFileForm.value.customerName || '').trim().toUpperCase(),
-                nclUcl: (editFileForm.value.nclUcl || 'NCL').trim().toUpperCase(),
-                sourcingChannel: (editFileForm.value.sourcingChannel || 'DSA').trim().toUpperCase(),
-                loginDate: editFileForm.value.loginDate || getTodayDateStr(),
-                loanAmount: Number(editFileForm.value.loanAmount) || 0,
-                status: finalStatus,
-                ppc: (editFileForm.value.ppc || '').trim().toUpperCase(),
-                smName: (editFileForm.value.smName || '').trim().toUpperCase(),
-                vcip: (editFileForm.value.vcip || '').trim().toUpperCase(),
-                mi: (editFileForm.value.mi || '').trim().toUpperCase(),
-                updatedAt: new Date().toISOString()
-            };
-            
-            await db.updateLoanFile(editFileForm.value.id, updatedData);
-            showEditFileModal.value = false;
-            if (isSM.value) {
-                await loadData();
-            } else if (isASM.value) {
-                await loadAsmData();
-            } else {
-                await loadRoData();
+                await navigator.clipboard.writeText(msg);
+                copyRoInviteSuccess.value = true;
+                if (copyRoInviteTimer) clearTimeout(copyRoInviteTimer);
+                copyRoInviteTimer = setTimeout(() => { copyRoInviteSuccess.value = false; }, 3000);
+            } catch (e) {
+                console.warn('Clipboard write error:', e);
             }
         };
 
-        const shareFileWhatsApp = (file) => {
-            const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
-            const loanAmtStr = formatCurrency(file.loanAmount);
-            
-            let msg = `*Sales Link - Login Details*\n\n`;
-            msg += `*App ID:* #${file.appId || 'N/A'}\n`;
-            msg += `*Customer Name:* ${file.customerName}\n`;
-            msg += `*Loan Amount:* Rs. ${loanAmtStr}\n`;
-            msg += `*Category:* ${file.nclUcl || 'N/A'}\n`;
-            msg += `*Channel:* ${file.sourcingChannel || 'N/A'}\n`;
-            if (file.ppc) msg += `*PPC:* ${file.ppc}\n`;
-            if (file.vcip) msg += `*VCIP:* ${file.vcip}\n`;
-            if (file.mi) msg += `*MI:* ${file.mi}\n`;
-            msg += `*Status:* ${file.status}\n`;
-            msg += `*Login Date:* ${dateStr}\n`;
-            
-            const encodedMsg = encodeURIComponent(msg);
-            window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
-        };
+        const saveNewRo = async () => {
+            addRoError.value = '';
+            const name = formatCapitalizeName(newRoForm.value.name);
+            const rawEmail = (newRoForm.value.email || '').trim().toLowerCase();
+            const phone = (newRoForm.value.phone || '').trim().replace(/\D/g, '');
+            const empCode = (newRoForm.value.employeeCode || '').trim().toUpperCase();
 
-        const shareBulkWhatsApp = () => {
-            if (!filteredMyFiles.value || filteredMyFiles.value.length === 0) return;
-            
-            let msg = `*Sales Link - Bulk Login Details*\n`;
-            msg += `*Total Files:* ${filteredMyFiles.value.length}\n`;
-            msg += `*Date:* ${getTodayDateStr()}\n\n`;
-            
-            filteredMyFiles.value.forEach((file, index) => {
-                const dateStr = file.loginDate ? formatDateOnly(file.loginDate) : formatDateOnly(file.createdAt);
-                const loanAmtStr = formatCurrency(file.loanAmount);
-                
-                msg += `*${index + 1}. Customer:* ${file.customerName} (#${file.appId || 'N/A'})\n`;
-                msg += `   *Amount:* Rs. ${loanAmtStr} | *Category:* ${file.nclUcl || 'N/A'} | *Channel:* ${file.sourcingChannel || 'N/A'}\n`;
-                if (file.ppc || file.vcip || file.mi) {
-                    msg += `   `;
-                    if (file.ppc) msg += `*PPC:* ${file.ppc} `;
-                    if (file.vcip) msg += `*VCIP:* ${file.vcip} `;
-                    if (file.mi) msg += `*MI:* ${file.mi} `;
-                    msg += `\n`;
-                }
-                msg += `   *Status:* ${file.status} | *Login Date:* ${dateStr}\n\n`;
-            });
-            
-            const encodedMsg = encodeURIComponent(msg);
-            window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
-        };
-
-        const deleteFile = async (file) => {
-            if (confirm(`Are you sure you want to delete the file for "${file.customerName}" (#${file.appId || 'No ID'})?`)) {
-                await db.deleteLoanFile(file.id);
-                if (isSM.value) {
-                    await loadData();
-                } else if (isASM.value) {
-                    await loadAsmData();
-                } else {
-                    await loadRoData();
-                }
+            if (!name) {
+                addRoError.value = 'Please enter the officer’s full official name.';
+                return;
             }
-        };
-
-        // Export RO Files to Excel
-        const exportRoFilesToExcel = () => {
-            if (filteredMyFiles.value.length === 0) {
-                alert("No files to export based on current filters.");
+            if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
+                addRoError.value = 'Please provide a valid official Gmail address.';
+                return;
+            }
+            if (phone.length !== 10) {
+                addRoError.value = 'Mobile number must be exactly 10 digits.';
+                return;
+            }
+            if (!empCode || empCode.length < 3) {
+                addRoError.value = 'Employee code / staff ID must be at least 3 characters.';
                 return;
             }
 
-            const exportData = filteredMyFiles.value.map(file => ({
-                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
-                'App ID': file.appId || '',
-                'Customer Name': file.customerName || '',
-                'Category': file.nclUcl || '',
-                'Channel': file.sourcingChannel || 'DSA',
-                'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
-                'Status': file.status || '',
-                'SM Name': file.smName || '',
-                'PPC': file.ppc || '',
-                'VCIP': file.vcip || '',
-                'MI': file.mi || '',
-                'RO Name': file.roName || '',
-                'Created At': formatDate(file.createdAt),
-                'Last Updated': formatDate(file.updatedAt || file.createdAt)
-            }));
-
-            const headers = [
-                'Login Date',
-                'App ID',
-                'Customer Name',
-                'Category',
-                'Channel',
-                'Loan Amount (Rs)',
-                'Status',
-                'SM Name',
-                'PPC',
-                'VCIP',
-                'MI',
-                'RO Name',
-                'Created At',
-                'Last Updated'
-            ];
-
-            const worksheet = XLSX.utils.json_to_sheet(exportData, { header: headers });
-            worksheet['!cols'] = [
-                { wch: 14 },
-                { wch: 12 },
-                { wch: 24 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 18 },
-                { wch: 14 },
-                { wch: 18 },
-                { wch: 12 },
-                { wch: 12 },
-                { wch: 12 },
-                { wch: 18 },
-                { wch: 20 },
-                { wch: 20 }
-            ];
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "My_Login_Details");
-            
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `SalesLink_Login_Details_${currentUser.value?.name || 'RO'}_${dateStr}.xlsx`;
-            XLSX.writeFile(workbook, filename);
-        };
-
-        // File Management (Status Only)
-        const openEditStatusModal = (file) => {
-            selectedFile.value = file;
-            const isStandard = STANDARD_STATUSES.includes(file.status);
-            statusUpdateForm.value = { 
-                status: isStandard ? file.status : 'Custom', 
-                customStatus: isStandard ? '' : file.status,
-                note: '' 
-            };
-            showUpdateStatusModal.value = true;
-        };
-
-        const saveFileStatus = async () => {
-            if (!selectedFile.value) return;
-            
-            let finalStatus = statusUpdateForm.value.status;
-            if (finalStatus === 'Custom' && statusUpdateForm.value.customStatus) {
-                finalStatus = statusUpdateForm.value.customStatus.trim().toUpperCase();
-            }
-            
-            await db.updateLoanFile(selectedFile.value.id, {
-                status: finalStatus,
-                note: (statusUpdateForm.value.note || '').trim().toUpperCase(),
-                updatedAt: new Date().toISOString()
-            });
-            
-            showUpdateStatusModal.value = false;
-            if (isSM.value) {
-                await loadData();
-            } else {
-                await loadRoData();
-            }
-        };
-
-        // View Detail
-        const openViewFileModal = (file) => {
-            selectedFile.value = file;
-            showViewFileModal.value = true;
-        };
-
-        // Export to Excel (Supports ASM Area Files & SM Files)
-        const exportToExcel = () => {
-            if (isASM.value) {
-                if (filteredAreaFiles.value.length === 0) {
-                    alert("No area loan files to export based on current filters.");
+            isSavingRo.value = true;
+            try {
+                const existingEmp = await db.getUserByEmployeeCode(empCode);
+                if (existingEmp) {
+                    const supName = await db.getSupervisorNameForUser(existingEmp);
+                    addRoError.value = `⚠️ Employee ID (${empCode}) is already registered under Sales Manager "${supName}" for officer "${existingEmp.name}". Duplicate Employee IDs cannot be registered.`;
+                    isSavingRo.value = false;
                     return;
                 }
-                const exportData = filteredAreaFiles.value.map(file => ({
-                    'Branch Hub': file.hubName || '',
-                    'Sales Manager': file.smDisplayName || '',
-                    'Relationship Officer': file.roName || '',
-                    'App ID': file.appId || '',
-                    'Customer Name': file.customerName || '',
-                    'Category': file.nclUcl || '',
-                    'Channel': file.sourcingChannel || 'DSA',
-                    'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
-                    'Status': file.status || '',
-                    'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
-                    'Last Updated': file.updatedAt || ''
-                }));
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Area_Files");
-                const dateStr = new Date().toISOString().split('T')[0];
-                const filename = `SalesLink_Area_Files_${currentUser.value?.region || 'Area'}_${dateStr}.xlsx`;
-                XLSX.writeFile(workbook, filename);
+
+                const existingEmail = await db.getUserByEmail(rawEmail);
+                if (existingEmail) {
+                    const supName = await db.getSupervisorNameForUser(existingEmail);
+                    addRoError.value = `⚠️ Google email (${rawEmail}) is already registered under Sales Manager "${supName}". Each officer must use a distinct Gmail.`;
+                    isSavingRo.value = false;
+                    return;
+                }
+
+                const existingPhone = await db.getUserByPhone(phone);
+                if (existingPhone) {
+                    const supName = await db.getSupervisorNameForUser(existingPhone);
+                    addRoError.value = `⚠️ Mobile number (+91 ${phone}) is already registered under Sales Manager "${supName}" for officer "${existingPhone.name}".`;
+                    isSavingRo.value = false;
+                    return;
+                }
+
+                const generatedSalesLinkId = db.generateSalesLinkId ? db.generateSalesLinkId('ro') : ('RO-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+
+                const newRoData = {
+                    email: rawEmail,
+                    role: 'ro',
+                    name: name,
+                    phone: phone,
+                    employeeCode: empCode,
+                    salesLinkId: generatedSalesLinkId,
+                    tenantId: auth.currentUser.value.tenantId,
+                    supervisorId: auth.currentUser.value.id || null,
+                    supervisorName: auth.currentUser.value.name || 'Sales Manager',
+                    supervisorSalesLinkId: auth.currentUser.value.salesLinkId || null,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                };
+
+                const docRef = await db.addUser(newRoData);
+                newlyCreatedRo.value = {
+                    id: (docRef && docRef.id) ? docRef.id : '',
+                    ...newRoData
+                };
+
+                addRoStep.value = 'success';
+                await loadData();
+            } catch (err) {
+                console.error('Error adding RO:', err);
+                addRoError.value = err.message || 'Failed to add Relationship Officer. Please try again.';
+            } finally {
+                isSavingRo.value = false;
+            }
+        };
+
+        const toggleUserStatus = async (user) => {
+            const isLocking = user.status === 'active';
+            const confirmMsg = isLocking 
+                ? `Are you sure you want to FREEZE & LOCK ${user.name}'s account?\n\n• Their login access will be blocked immediately.\n• Active sessions will be revoked.\n• Customer files will remain safely preserved.`
+                : `Are you sure you want to UNLOCK ${user.name}'s account?\n\n• Their login access will be restored immediately.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const now = new Date().toISOString();
+                const updatePayload = {
+                    status: isLocking ? 'suspended' : 'active',
+                    statusUpdatedAt: now,
+                    statusUpdatedBy: auth.currentUser.value?.id || '',
+                    statusUpdatedByName: auth.currentUser.value?.name || 'Sales Manager'
+                };
+                if (isLocking) {
+                    updatePayload.suspendedAt = now;
+                    updatePayload.suspendedBy = auth.currentUser.value?.id || '';
+                    updatePayload.suspendedByName = auth.currentUser.value?.name || 'Sales Manager';
+                } else {
+                    updatePayload.reactivatedAt = now;
+                    updatePayload.reactivatedBy = auth.currentUser.value?.id || '';
+                }
+
+                await db.updateUser(user.id, updatePayload);
+                await loadData();
+
+                alert(`✅ Account for ${user.name} has been ${isLocking ? 'LOCKED / FROZEN' : 'UNLOCKED / ACTIVATED'} successfully.`);
+            } catch (err) {
+                console.error("Toggle user status error:", err);
+                alert("Failed to update officer status: " + err.message);
+            }
+        };
+
+        const deleteRoUser = async (user) => {
+            if (!user || !user.id) return;
+
+            const filesCount = (loanFiles.allFiles.value || []).filter(f => f.roId === user.id || (f.roName && f.roName.trim().toUpperCase() === (user.name || '').trim().toUpperCase())).length;
+
+            if (filesCount > 0) {
+                alert(`⚠️ Cannot Delete Profile "${user.name || 'User'}":\n\nThis officer has ${filesCount} loan file(s) assigned in the branch pipeline.\n\nOpening the Offboarding & Pipeline Reassignment workflow so you can safely reassign their active files to another officer before removing their profile.`);
+                hierarchy.openOffboardModal(user);
                 return;
             }
 
-            if (filteredFiles.value.length === 0) {
-                alert("No data to export based on current filters.");
+            const confirmMsg = `Are you sure you want to remove profile "${user.name || 'User'}" (${user.email})?\n\nThis will revoke their login access immediately.`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                await db.deleteUser(user.id);
+                roUsers.value = roUsers.value.filter(u => u.id !== user.id);
+                await loadData();
+                alert(`User ${user.name || user.email} was successfully removed.`);
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Failed to delete user: " + (error.message || error));
+            }
+        };
+
+        // --- User Profile State & Operations ---
+        const profileForm = ref({
+            name: '',
+            phone: '',
+            employeeCode: '',
+            designation: '',
+            branchAddress: '',
+            bankName: 'Axis Bank',
+            division: 'Auto Loans (Car Loans)',
+            region: ''
+        });
+        const profileActiveTab = ref('overview');
+        const isSavingProfile = ref(false);
+        const profileSaveSuccess = ref(false);
+        const profileSaveError = ref('');
+
+        const initProfileForm = () => {
+            if (!auth.currentUser.value) return;
+            const u = auth.currentUser.value;
+            const defaultRoleDesignation = auth.isSuperAdmin.value ? 'Platform Administrator' : (auth.isZSM.value ? 'Zonal Sales Manager' : (auth.isASM.value ? 'Area Sales Manager' : (auth.isSM.value ? 'SM (Sales Manager)' : (auth.isDSE.value ? 'Dealership Sales Executive (DSE)' : 'Relationship Officer'))));
+            profileForm.value = {
+                name: u.name || u.username || '',
+                phone: u.phone || '',
+                employeeCode: u.employeeCode || '',
+                designation: u.designation || defaultRoleDesignation,
+                branchAddress: u.branchAddress || '',
+                bankName: u.bankName || 'Axis Bank',
+                division: u.division || 'Auto Loans (Car Loans)',
+                region: u.region || ''
+            };
+        };
+
+        const profileCompletion = computed(() => {
+            if (!auth.currentUser.value) return { percentage: 0, items: [] };
+            const u = auth.currentUser.value;
+            const checks = [
+                { label: 'Full Official Name', done: Boolean(u.name && u.name.trim().length > 1) },
+                { label: 'Google Email ID', done: Boolean(u.email) },
+                { label: 'Mobile Number', done: Boolean(u.phone && u.phone.replace(/\D/g, '').length === 10) },
+                { label: 'Employee Code / Staff ID', done: Boolean(u.employeeCode && u.employeeCode.trim().length >= 3) },
+                { label: 'Official Designation', done: Boolean(u.designation) },
+                { label: 'Assigned Branch / Hub', done: Boolean(u.region) },
+                { label: 'Official Branch Address', done: Boolean(u.branchAddress && u.branchAddress.trim().length > 5) }
+            ];
+            const completedCount = checks.filter(c => c.done).length;
+            const percentage = Math.round((completedCount / checks.length) * 100);
+            return { percentage, items: checks, completedCount, totalCount: checks.length };
+        });
+
+        const isResyncingProfile = ref(false);
+        const profileResyncSuccess = ref(false);
+        const triggerProfileResync = async () => {
+            if (isResyncingProfile.value) return;
+            isResyncingProfile.value = true;
+            try {
+                await loadData();
+                if (auth.isRO.value) await initUserSm();
+                initProfileForm();
+                profileResyncSuccess.value = true;
+                setTimeout(() => { profileResyncSuccess.value = false; }, 3000);
+            } catch (e) {
+                console.warn('Profile resync error:', e);
+            } finally {
+                isResyncingProfile.value = false;
+            }
+        };
+
+        const saveUserProfile = async () => {
+            if (!auth.currentUser.value?.id) return;
+            profileSaveError.value = '';
+            profileSaveSuccess.value = false;
+
+            const name = formatCapitalizeName(profileForm.value.name);
+            const phone = (profileForm.value.phone || '').trim().replace(/\D/g, '');
+            const empCode = (profileForm.value.employeeCode || '').trim().toUpperCase();
+
+            if (!name) {
+                profileSaveError.value = 'Please provide your full official name.';
+                return;
+            }
+            if (phone && phone.length !== 10) {
+                profileSaveError.value = 'Mobile number must be exactly 10 digits.';
+                return;
+            }
+            if (empCode && empCode.length < 3) {
+                profileSaveError.value = 'Employee / Staff ID must be at least 3 characters.';
                 return;
             }
 
-            const exportData = filteredFiles.value.map(file => ({
-                'Login Date': file.loginDate || (file.createdAt ? file.createdAt.substring(0, 10) : ''),
-                'App ID': file.appId || '',
-                'Customer Name': file.customerName || '',
-                'Category': file.nclUcl || '',
-                'Channel': file.sourcingChannel || 'DSA',
-                'Loan Amount (Rs)': Math.round(toLakhs(file.loanAmount) * 100000),
-                'Status': file.status || '',
-                'SM Name': file.smName || '',
-                'PPC': file.ppc || '',
-                'VCIP': file.vcip || '',
-                'MI': file.mi || '',
-                'RO Name': file.roName || '',
-                'Created At': formatDate(file.createdAt),
-                'Last Updated': formatDate(file.updatedAt || file.createdAt)
-            }));
+            isSavingProfile.value = true;
+            try {
+                if (empCode && empCode !== (auth.currentUser.value.employeeCode || '')) {
+                    const existingEmp = await db.getUserByEmployeeCode(empCode);
+                    if (existingEmp && existingEmp.id !== auth.currentUser.value.id) {
+                        const supName = await db.getSupervisorNameForUser(existingEmp);
+                        profileSaveError.value = `⚠️ Employee ID (${empCode}) is already linked with another Sales Manager (${supName}) for officer "${existingEmp.name}". Duplicate Employee IDs cannot be registered.`;
+                        isSavingProfile.value = false;
+                        return;
+                    }
+                }
 
-            const headers = [
-                'Login Date',
-                'App ID',
-                'Customer Name',
-                'Category',
-                'Channel',
-                'Loan Amount (Rs)',
-                'Status',
-                'SM Name',
-                'PPC',
-                'VCIP',
-                'MI',
-                'RO Name',
-                'Created At',
-                'Last Updated'
-            ];
+                const updates = {
+                    name,
+                    phone,
+                    employeeCode: empCode,
+                    designation: profileForm.value.designation || '',
+                    branchAddress: profileForm.value.branchAddress || '',
+                    bankName: profileForm.value.bankName || 'Axis Bank',
+                    division: profileForm.value.division || 'Auto Loans (Car Loans)',
+                    region: profileForm.value.region || auth.currentUser.value.region || '',
+                    updatedAt: new Date().toISOString()
+                };
 
-            const worksheet = XLSX.utils.json_to_sheet(exportData, { header: headers });
-            worksheet['!cols'] = [
-                { wch: 14 },
-                { wch: 12 },
-                { wch: 24 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 18 },
-                { wch: 14 },
-                { wch: 18 },
-                { wch: 12 },
-                { wch: 12 },
-                { wch: 12 },
-                { wch: 18 },
-                { wch: 20 },
-                { wch: 20 }
-            ];
+                await db.updateUser(auth.currentUser.value.id, updates);
+                Object.assign(auth.currentUser.value, updates);
+                localStorage.setItem('axis_user', JSON.stringify(auth.currentUser.value));
 
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Files");
-            
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `SalesLink_Export_${dateStr}.xlsx`;
-            XLSX.writeFile(workbook, filename);
+                profileSaveSuccess.value = true;
+                profileActiveTab.value = 'overview';
+                setTimeout(() => { profileSaveSuccess.value = false; }, 4000);
+            } catch (err) {
+                console.error('Error saving profile:', err);
+                profileSaveError.value = err.message || 'Failed to save profile changes.';
+            } finally {
+                isSavingProfile.value = false;
+            }
         };
 
-
-        let growthChartInstance = null;
-
-        const renderGrowthChart = () => {
-            if (!isSuperAdmin.value || currentTab.value !== 'super-admin-dashboard') return;
-            
-            // Wait for DOM
-            setTimeout(() => {
-                const ctx = document.getElementById('saasGrowthChart');
-                if (!ctx) return;
-                
-                // Prepare data: count files by date for last 30 days
-                const last30Days = [...Array(30)].map((_, i) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() - (29 - i));
-                    return d.toISOString().split('T')[0];
-                });
-                
-                const fileCounts = last30Days.map(dateStr => {
-                    return allFiles.value.filter(f => {
-                        const d = f.createdAt || f.updatedAt;
-                        return d && d.startsWith(dateStr);
-                    }).length;
-                });
-                
-                if (growthChartInstance) {
-                    growthChartInstance.destroy();
-                }
-                
-                // Only create if Chart is defined (loaded via CDN)
-                if (typeof window.Chart !== 'undefined') {
-                    growthChartInstance = new window.Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: last30Days.map(d => d.substring(5)), // MM-DD
-                            datasets: [{
-                                label: 'New Files',
-                                data: fileCounts,
-                                borderColor: '#4F46E5',
-                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#4F46E5'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
-                                x: { grid: { display: false } }
-                            }
-                        }
-                    });
-                }
-            }, 100);
+        // --- System Announcements ---
+        const saveAnnouncement = async () => {
+            try {
+                await db.setAnnouncement(adminAnnouncementInput.value);
+                systemAnnouncement.value = adminAnnouncementInput.value;
+                alert('Announcement updated successfully!');
+            } catch(e) {
+                console.error("Error saving announcement", e);
+                alert("Failed to save announcement");
+            }
         };
 
-        watch([allFiles, currentTab], renderGrowthChart);
-
-        // --- PWA (Progressive Web App) Install State ---
+        // --- PWA State & Operations ---
         const deferredInstallPrompt = ref(null);
         const showInstallBanner = ref(false);
         const showIosInstallModal = ref(false);
@@ -6227,79 +1014,133 @@ const app = createApp({
             } catch(e) {}
         };
 
-        // --- Lifecycle ---
-        
-        // =========================================================
-        // APP SETTINGS & PREFERENCES MODULE
-        // =========================================================
-        const appSettings = ref({
-            notifyEodReminder: true,
-            notifyStalledCases: true,
-            notifyNewDrives: true,
-            compactView: false,
-            currencyFormat: 'lakhs', // 'lakhs' | 'full'
-            defaultTimeline: 'this-month' // 'today' | 'this-month'
-        });
-
-        const settingsSaveToast = ref(false);
-
-        const loadAppSettings = () => {
-            try {
-                const saved = localStorage.getItem('saleslink_user_settings');
-                if (saved) {
-                    appSettings.value = { ...appSettings.value, ...JSON.parse(saved) };
-                }
-            } catch (e) {
-                console.warn('Could not load user settings', e);
-            }
+        // --- Data Orchestration ---
+        const loadSuperAdminData = async () => {
+            allWorkspaces.value = await db.getAllWorkspaces();
+            roUsers.value = await db.getAllUsers();
+            loanFiles.allFiles.value = await db.getAllLoanFiles();
         };
 
-        const updateSetting = (key, val) => {
-            appSettings.value[key] = val;
-            try {
-                localStorage.setItem('saleslink_user_settings', JSON.stringify(appSettings.value));
-                settingsSaveToast.value = true;
-                setTimeout(() => { settingsSaveToast.value = false; }, 2000);
-            } catch (e) {
-                console.warn('Could not save setting', e);
+        const initUserSm = async () => {
+            if (!auth.currentUser.value) return;
+
+            let smName = '';
+            let smObj = { name: '', phone: '', email: '', salesLinkId: '' };
+
+            if (auth.isSM.value) {
+                smName = auth.currentUser.value.name || auth.currentUser.value.username || '';
+                smObj = {
+                    name: smName,
+                    phone: auth.currentUser.value.phone || '',
+                    email: auth.currentUser.value.email || '',
+                    salesLinkId: auth.currentUser.value.salesLinkId || ''
+                };
+            } else if (auth.currentUser.value.tenantId) {
+                try {
+                    const smUser = await db.getSMUserByTenant(auth.currentUser.value.tenantId);
+                    if (smUser) {
+                        smName = smUser.name ? smUser.name.trim() : '';
+                        smObj = {
+                            name: smUser.name || '',
+                            phone: smUser.phone || '',
+                            email: smUser.email || '',
+                            salesLinkId: smUser.salesLinkId || ''
+                        };
+                    }
+                } catch (e) {
+                    console.warn("Could not fetch SM user for tenant:", e);
+                }
+
+                if (!smName) {
+                    try {
+                        const ws = await db.getWorkspace(auth.currentUser.value.tenantId);
+                        if (ws && ws.managerName) {
+                            smName = ws.managerName.trim();
+                            smObj.name = smName;
+                        }
+                    } catch (e) {
+                        console.warn("Could not fetch workspace managerName:", e);
+                    }
+                }
             }
+
+            if (!smName) {
+                smName = localStorage.getItem('axis_default_sm_' + auth.currentUser.value.id) || localStorage.getItem('axis_default_sm') || '';
+                smObj.name = smName;
+            }
+
+            if (smName) {
+                const upperSm = smName.toUpperCase();
+                defaultSmName.value = upperSm;
+                smObj.name = upperSm;
+                loanFiles.newFileForm.value.smName = upperSm;
+                localStorage.setItem('axis_default_sm_' + auth.currentUser.value.id, upperSm);
+                localStorage.setItem('axis_default_sm', upperSm);
+            }
+            hierarchy.assignedSm.value = smObj;
         };
 
-        const clearAppCacheAndReload = async () => {
-            try {
-                if ('caches' in window) {
-                    const cacheKeys = await caches.keys();
-                    await Promise.all(cacheKeys.map(k => caches.delete(k)));
+        const loadData = async () => {
+            if (!auth.currentUser.value) return;
+
+            if (auth.currentUser.value?.id) {
+                try {
+                    const freshUser = await db.getUserById(auth.currentUser.value.id);
+                    if (freshUser && (freshUser.status === 'suspended' || freshUser.status === 'resigned' || freshUser.status === 'inactive')) {
+                        console.warn("Security Kill-Switch: Account suspended or revoked by supervisor.");
+                        localStorage.removeItem('axis_user');
+                        auth.currentUser.value = null;
+                        alert("⚠️ Access Revoked: Your account has been locked by your Sales Manager. All session data has been wiped.");
+                        window.location.reload();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("User status check error in loadData:", e);
                 }
-                window.location.reload();
-            } catch (e) {
-                console.error('Error clearing cache', e);
-                window.location.reload();
+            }
+
+            if (auth.isSuperAdmin.value) {
+                await loadSuperAdminData();
+            } else if (auth.isZSM.value) {
+                await hierarchy.loadZsmData();
+            } else if (auth.isASM.value) {
+                await hierarchy.loadAsmData();
+            } else if (auth.isSM.value) {
+                await loanFiles.loadSmData();
+                await loanFiles.loadInboundShowroomFiles();
+            } else if (auth.isDSE.value) {
+                await dse.loadDseData();
+            } else {
+                await loanFiles.loadRoData();
+            }
+
+            try {
+                loanFiles.allSalesTargets.value = await db.getSalesTargets();
+                loanFiles.allSalesDrives.value = await db.getSalesDrives();
+            } catch (targetErr) {
+                console.warn("Could not load targets/drives:", targetErr);
             }
         };
 
         onMounted(async () => {
-            loadAppSettings();
-            // Check for Public Showroom QR Apply URL parameter (?apply=TENANT_ID or ?hub=TENANT_ID)
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const applyParam = urlParams.get('apply') || urlParams.get('hub') || urlParams.get('ref');
                 if (applyParam) {
-                    await initPublicApplyHub(applyParam);
+                    await dse.initPublicApplyHub(applyParam);
                 }
-                // Check for Inbound Lead 1-Tap Import (?importLead=BASE64)
                 const importParam = urlParams.get('importLead');
-                if (importParam && currentUser.value) {
+                if (importParam && auth.currentUser.value) {
                     try {
                         const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(importParam))));
                         const leadData = JSON.parse(jsonStr);
                         if (leadData && leadData.customerName) {
-                            const exists = allFiles.value.some(f => f.appId === leadData.appId);
+                            const exists = loanFiles.allFiles.value.some(f => f.appId === leadData.appId);
                             if (!exists) {
-                                leadData.tenantId = currentUser.value.tenantId || leadData.tenantId;
-                                leadData.targetBankName = currentUser.value.bankName || leadData.targetBankName;
-                                leadData.targetHubName = currentUser.value.region || leadData.targetHubName;
-                                leadData.smName = currentUser.value.name || leadData.smName;
+                                leadData.tenantId = auth.currentUser.value.tenantId || leadData.tenantId;
+                                leadData.targetBankName = auth.currentUser.value.bankName || leadData.targetBankName;
+                                leadData.targetHubName = auth.currentUser.value.region || leadData.targetHubName;
+                                leadData.smName = auth.currentUser.value.name || leadData.smName;
                                 await db.addLoanFile(leadData);
                                 await loadData();
                                 alert(`🎉 Inbound Showroom Lead Imported!\n\nCustomer: ${leadData.customerName}\nVehicle: ${leadData.vehicleModel}\nDealership: ${leadData.dealershipName || 'Showroom QR'}\n\nAdded to your Inbound Radar for RO allocation.`);
@@ -6317,7 +1158,7 @@ const app = createApp({
             } catch (err) {
                 console.warn("Public apply param error:", err);
             }
-            // PWA Standalone & Install detection
+
             isStandalone.value = checkStandalone();
             isIos.value = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
@@ -6333,7 +1174,6 @@ const app = createApp({
                 isStandalone.value = true;
             });
 
-            // Global Escape key listener to close modals
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (showIosInstallModal.value) closeIosInstallModal();
@@ -6346,24 +1186,22 @@ const app = createApp({
                 adminAnnouncementInput.value = systemAnnouncement.value;
             } catch(e) { console.error(e); }
 
-            // Check if returning from Direct Sign-In (Redirect)
             try {
                 const redirectUser = await db.checkRedirectResult();
                 if (redirectUser) {
-                    isLoggingIn.value = true;
-                    loginStage.value = 'verifying';
-                    await processUserLogin(redirectUser);
-                    isLoggingIn.value = false;
-                    loginStage.value = '';
+                    auth.isLoggingIn.value = true;
+                    auth.loginStage.value = 'verifying';
+                    await auth.processUserLogin(redirectUser);
+                    auth.isLoggingIn.value = false;
+                    auth.loginStage.value = '';
                 }
             } catch (e) {
                 console.error("Redirect login processing error:", e);
-                loginError.value = e.message;
-                isLoggingIn.value = false;
-                loginStage.value = '';
+                auth.loginError.value = e.message;
+                auth.isLoggingIn.value = false;
+                auth.loginStage.value = '';
             }
 
-            // Authoritative Firebase Auth Gatekeeper & State Synchronizer
             try {
                 if (db.onAuthStateChanged && db.auth) {
                     db.onAuthStateChanged(db.auth, async (firebaseUser) => {
@@ -6373,10 +1211,9 @@ const app = createApp({
                                 const fresh = await db.getUserByEmail(email);
                                 if (fresh) {
                                     if (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive') {
-                                        await handleSecurityLockout('Your account has been deactivated or offboarded.');
+                                        await auth.handleSecurityLockout('Your account has been deactivated or offboarded.');
                                         return;
                                     }
-                                    // Authoritative session directly validated from Firestore
                                     const authUser = {
                                         id: fresh.id,
                                         email: fresh.email,
@@ -6398,185 +1235,186 @@ const app = createApp({
                                         employeeCode: fresh.employeeCode || '',
                                         designation: fresh.designation || '',
                                         branchAddress: fresh.branchAddress || '',
-                                        createdAt: fresh.createdAt || '',
-                                        activeSessionId: localStorage.getItem('axis_active_session_id') || generateSessionId()
-                                    };
-                                    localStorage.setItem('axis_user', JSON.stringify(authUser));
-                                    currentUser.value = authUser;
-                                    startUserSecurityListener(fresh.id);
-                                    db.upsertDirectoryEntry(firebaseUser.uid, {
-                                        email: fresh.email,
-                                        role: fresh.role,
-                                        tenantId: fresh.tenantId || null,
                                         status: fresh.status || 'active',
-                                        userId: fresh.id
-                                    }).catch(() => {});
-                                } else {
-                                    // Firebase authenticated but no corresponding profile in Firestore
-                                    if (currentUser.value && !originalUser.value) {
-                                        localStorage.removeItem('axis_user');
-                                        currentUser.value = null;
+                                        createdAt: fresh.createdAt || '',
+                                        sessionId: auth.currentUser.value?.sessionId || db.generateSessionId()
+                                    };
+                                    auth.currentUser.value = authUser;
+                                    localStorage.setItem('axis_user', JSON.stringify(authUser));
+
+                                    try {
+                                        await db.upsertDirectoryEntry(firebaseUser.uid, {
+                                            uid: firebaseUser.uid,
+                                            userId: fresh.id,
+                                            email: fresh.email,
+                                            role: fresh.role,
+                                            tenantId: fresh.tenantId || null,
+                                            status: fresh.status || 'active',
+                                            updatedAt: new Date().toISOString()
+                                        });
+                                    } catch (dirErr) {
+                                        console.warn("Directory sync warning:", dirErr);
                                     }
+
+                                    if (currentTab.value === 'login') {
+                                        if (fresh.role === 'super_admin') currentTab.value = 'super-admin-dashboard';
+                                        else if (fresh.role === 'zsm') currentTab.value = 'zsm-dashboard';
+                                        else if (fresh.role === 'asm') currentTab.value = 'asm-dashboard';
+                                        else if (fresh.role === 'sm' || fresh.role === 'admin') currentTab.value = 'dashboard';
+                                        else if (fresh.role === 'dse') currentTab.value = 'dse-dashboard';
+                                        else currentTab.value = 'ro-dashboard';
+                                    }
+
+                                    auth.startUserSecurityListener(fresh.id);
+                                    await loadData();
                                 }
-                            } catch (authErr) {
-                                console.warn("Authoritative user verification warning:", authErr);
-                            }
-                        } else {
-                            // User is signed out in Firebase Auth: invalidate any local cache
-                            if (currentUser.value && !originalUser.value) {
-                                localStorage.removeItem('axis_user');
-                                currentUser.value = null;
+                            } catch (err) {
+                                console.warn("onAuthStateChanged sync error:", err);
                             }
                         }
                     });
                 }
             } catch (authErr) {
-                console.warn("Auth listener registration warning:", authErr);
+                console.warn("Could not register onAuthStateChanged:", authErr);
             }
 
-            // Check for existing session
-            if (currentUser.value) {
-                initUserSm();
-
-                // Ensure session token exists locally
-                let localSess = localStorage.getItem('axis_active_session_id');
-                if (!localSess) {
-                    localSess = generateSessionId();
-                    localStorage.setItem('axis_active_session_id', localSess);
-                }
-
-                // Attach real-time security watcher immediately
-                if (currentUser.value.id) {
-                    startUserSecurityListener(currentUser.value.id);
-                }
-                
-                // Self-healing session sync & Enterprise Kill-Switch (Remote Wipe)
-                (async () => {
-                    try {
-                        let fresh = null;
-                        if (currentUser.value.id) fresh = await db.getUserById(currentUser.value.id);
-                        if (!fresh && currentUser.value.email) fresh = await db.getUserByEmail(currentUser.value.email);
-
-                        if (fresh) {
-                            // KILL-SWITCH: If user was marked resigned or suspended, wipe device storage immediately
-                            if (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive') {
-                                console.warn("Remote Wipe Triggered: Account has been deactivated or resigned.");
-                                localStorage.removeItem('axis_user');
-                                currentUser.value = null;
-                                alert("⚠️ Access Revoked: Your SalesLink account has been deactivated by your branch supervisor. All session data has been wiped.");
-                                window.location.reload();
-                                return;
-                            }
-                            if (currentUser.value.email) {
-                                if (!fresh.salesLinkId) {
-                                    const newId = db.generateSalesLinkId(fresh.role || currentUser.value.role || 'sm');
-                                    await db.updateUser(fresh.id, { salesLinkId: newId });
-                                    fresh.salesLinkId = newId;
-                                }
-                                currentUser.value.salesLinkId = fresh.salesLinkId;
-                                currentUser.value.supervisorId = fresh.supervisorId || null;
-                                currentUser.value.supervisorName = fresh.supervisorName || null;
-                                currentUser.value.supervisorRole = fresh.supervisorRole || null;
-                                currentUser.value.supervisorSalesLinkId = fresh.supervisorSalesLinkId || null;
-                                if (fresh.tenantId) currentUser.value.tenantId = fresh.tenantId;
-                                if (fresh.phone) currentUser.value.phone = fresh.phone;
-                                if (fresh.region) currentUser.value.region = fresh.region;
-                                if (fresh.bankName) currentUser.value.bankName = fresh.bankName;
-                                if (fresh.division) currentUser.value.division = fresh.division;
-                                if (fresh.employeeCode) currentUser.value.employeeCode = fresh.employeeCode;
-                                if (fresh.designation) currentUser.value.designation = fresh.designation;
-                                if (fresh.branchAddress) currentUser.value.branchAddress = fresh.branchAddress;
-                                if (fresh.dealershipName) currentUser.value.dealershipName = fresh.dealershipName;
-                                if (fresh.showroomBrand) currentUser.value.showroomBrand = fresh.showroomBrand;
-                                if (fresh.role) currentUser.value.role = fresh.role;
-                                if (fresh.createdAt) currentUser.value.createdAt = fresh.createdAt;
-                                localStorage.setItem('axis_user', JSON.stringify(currentUser.value));
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Session refresh error:", e);
-                    }
-                })();
-
-                try {
-                    if (currentUser.value?.role === 'dse') {
-                        await loadDseData();
-                    } else {
-                        await loadData();
-                    }
-                } catch (e) {
-                    console.error("Failed to load initial data, you may need to re-login:", e);
-                }
-            } else {
-                localStorage.removeItem('axis_user');
+            if (auth.currentUser.value) {
+                auth.startUserSecurityListener(auth.currentUser.value.id);
+                initProfileForm();
+                await loadData();
+                if (auth.isRO.value) await initUserSm();
             }
-
-            // Real-Time Background Kill-Switch: check account status whenever employee returns to app
-            document.addEventListener('visibilitychange', async () => {
-                if (document.visibilityState === 'visible' && currentUser.value?.id) {
-                    try {
-                        const fresh = await db.getUserById(currentUser.value.id);
-                        if (fresh && (fresh.status === 'suspended' || fresh.status === 'resigned' || fresh.status === 'inactive')) {
-                            console.warn("Account deactivated while app was in background. Executing remote wipe...");
-                            localStorage.removeItem('axis_user');
-                            currentUser.value = null;
-                            alert("⚠️ Access Revoked: Your SalesLink account has been deactivated by your branch supervisor. All cached data has been wiped.");
-                            window.location.reload();
-                        }
-                    } catch (e) {}
-                }
-            });
         });
 
-        // Return everything needed by the template
+        // --- Master Return Object (100% Template Compatibility) ---
         return {
-            currentUser, loginForm, loginError, isLoggingIn, loginStage, isRegistering, registerStage, currentTab, mobileMenuOpen, defaultSmName,
-            isSuperAdmin, isSM, isRO, stats, smLeaderboard, roStats, saasOverviewTimeline, saasOverviewCustomDate, saasStats, tenantHealthList, groupedUsers, recentFiles, filteredFiles, filteredMyFiles, roUsers, activeRoUsers, suspendedRoUsers, resignedRoUsers, smUsersTab, smUsersSearch, filteredActiveRos, filteredSuspendedRos, filteredResignedRos, myFiles, allWorkspaces, allFiles,
-            showOffboardModal, userToOffboard, offboardReplacementRoId, offboardReason, offboardConfirm, isOffboarding, offboardError, offboardSuccess,
-            availableReplacementRos, offboardActiveFiles, offboardDisbursedFiles, offboardActiveFilesVolume, openOffboardModal, submitOffboardUser,
-            userSearchQuery, userFilterStatus, expandedWorkspaces, toggleWorkspaceExpansion, expandAllWorkspaces, collapseAllWorkspaces, showEditUserModal, editUserForm, openEditUserModal, saveUserEdit,
-            superAdminUsersTab, dseDirectorySearch, dseDirectoryFilterBrand, dseDirectoryFilterStatus, dseDirectoryList, dseDirectoryStats, totalBankUsersCount, goToSuperAdminDirectory,
-            showRegisterMode, loginPortalMode, showMobileFeatures, showBankSelector, registerForm, registerStep, registerConfirmed, selectRegisterRole, registerError, registerSM, bankOptions, divisionOptions, toggleWorkspaceStatus, deleteWorkspace,
-            showAddRoModal, newRoForm, addRoError, addRoStep, isSavingRo, newlyCreatedRo, copyRoInviteSuccess, openAddRoModal, closeAddRoModal, appendGmailDomain, shareRoInviteWhatsApp, copyRoInviteMessage, formatCapitalizeName,
-            newFileForm, showEditFileModal, editFileForm, showUpdateStatusModal, selectedFile, statusUpdateForm,
-            showViewFileModal, filters, roFilters, showMobileFilterDrawer, roOverviewTimeline, roOverviewCustomDate, smOverviewTimeline, smOverviewCustomDate,
-            formatCurrency, formatLakhsToRupees, toLakhs, formatDate, formatDateOnly, getStatusBadgeClass, getTabTitle, getTimelineLabel, getSortLabel, resetRoFilters,
-            getTodayDateStr, getYesterdayDateStr,
-            login, loginRedirect, logout, saveNewRo, toggleUserStatus, deleteRoUser,
-            resetNewFileForm, saveNewFile, openEditFileModal, saveEditedFile, deleteFile, shareFileWhatsApp, shareBulkWhatsApp,
-            originalUser, impersonateUser, stopImpersonation,
-            systemAnnouncement, adminAnnouncementInput, saveAnnouncement,
-            openEditStatusModal, saveFileStatus, openViewFileModal, exportToExcel, exportRoFilesToExcel,
-            eodForm, eodSubmitError, eodSubmitSuccess, submitting, metricsConfig, validateEOD, myEods, smEods, submitEOD,
-            smEodSummary, missingEods, generateEodWhatsApp, generateRoWhatsApp, hasSubmittedToday, eodTotals,
-            dealerVisitsInput, tomorrowLoginsInput, tomorrowDisbInput, remarksInput,
-            isEditingTodayEod, startReviseTodayEod, cancelReviseTodayEod,
-            showTodayFilesBreakdown, todayLoginsFiles, todayDisbFiles,
-            eodSubTab, eodCopiedToast, copyRoEodToClipboard, eodResyncSuccess, triggerResyncEod,
-            roTargetFiles, roTargetVolume, showEditTargetModal, targetInputFiles, targetInputVolume, openEditTargetModal, saveRoTarget, roTargetPacing,
-            roNeedsAttentionFiles,
-            selectedRoForInspection, showRoInspectorDrawer, roInspectorActiveTab, openRoInspector, closeRoInspector, selectedRoAnalytics, generateSmNudgeWhatsApp, generateFileAlertWhatsApp, myRecentFiles, navigateRoStatusFilter, currentRoMtd, eodMtdTotals, getRoMtdForDate, goToTab, deferredInstallPrompt, showInstallBanner, showIosInstallModal, closeIosInstallModal, isStandalone, isIos, installPwaApp, dismissInstallBanner, isASM, isZSM, copiedSalesLinkIdToast, copySalesLinkId, pendingInvitations, isRespondingInvite, acceptSupervisorInvite, declineSupervisorInvite, unlinkFromSupervisor, supervisedSMs, areaFiles, areaEods, areaInvitations, showInviteSmModal, inviteSmForm, inviteSmError, inviteSmSuccess, isInvitingSm, selectedSmDrilldown, asmFilters, asmSearchQuery, asmStatusFilter, asmHubFilter, asmTimelineFilter, asmCategoryFilter, asmChannelFilter, asmSortBy, resetAsmFilters, asmSmDistribution, asmStatusCounts, sendFileAlertToSm, loadAsmData, sendSmInvitation,
-            allRegisteredSMs, inviteMethod, inviteInputValue, inviteWarning, linkedManagerDetails, isSubmittingInvite, connectSmError, connectSmSuccess, onInviteMethodChange, resetInviteModal, openConnectSmModal, submitInviteSm, openSmWhatsAppNotify, cancelInvitation, releaseSm, asmStats, smPerformanceList, filteredAreaFiles, supervisedASMs, zsmInvitations, showInviteAsmModal, inviteAsmForm, inviteAsmError, inviteAsmSuccess, isInvitingAsm, selectedAsmDrilldown, loadZsmData, sendAsmInvitation, zsmStats, openInviteAsmModal, releaseAsm,
-            profileActiveTab, profileForm, isSavingProfile, profileSaveSuccess, profileSaveError, initProfileForm, saveUserProfile,
-            assignedSm, profileCompletion, openRoWhatsAppChat, openSmWhatsAppChat, isResyncingProfile, profileResyncSuccess, triggerProfileResync,
-            showConnectSupervisorModal, connectSupervisorMethod, connectSupervisorInput, connectSupervisorWarning, isConnectingSupervisor, connectSupervisorError, connectSupervisorSuccess, connectedSupervisorData,
-            onConnectSupervisorMethodChange, resetConnectSupervisorModal, openConnectSupervisorModal, submitConnectSupervisor, openAsmWhatsAppNotify,
-            showMoreModal, targetsDrivesSubTab, allSalesTargets, allSalesDrives, currentMonthKey,
-            smRoTargetsList, asmSmTargetsList, zsmAsmTargetsList, roOfficialTarget,
-            drivesWithProgress, activeSalesDrivesCount, showSetTargetModal, targetModalForm,
-            isSavingTarget, targetSaveSuccess, targetSaveError, openSetTargetModal, saveSalesTarget,
-            showNewDriveModal, driveModalForm, isSavingDrive, driveSaveSuccess, driveSaveError,
-            openNewDriveModal, saveSalesDrive, deleteSalesDrive, upcomingFeatureVotes, toggleUpcomingVote,
-            isDSE, isDealerAdmin, dseFiles, isDseFileModalOpen, isSubmittingDseFile, dseFileError, dseFilterStatus, dseSearchQuery, newDseFileForm, showroomBrandOptions, dseStats, filteredDseFiles, getDseStatusInfo, getRelativeTime, sendCustomerLoanUpdateWhatsApp, sendDseRoNudgeWhatsApp,
-            dseTrackingFilter, dseTrackingSearch, showDseInspectorDrawer, selectedDseFile, showDseQrModal, openDseInspector, closeDseInspector, openDseQrModal, closeDseQrModal, dsePersonalApplyUrl, copyDsePersonalApplyLink, shareDsePersonalWhatsApp, getDseDeliveryStage, filteredDseTrackingFiles,
-            openDseFileModal, closeDseFileModal, submitDseLoanFile, loadDseData,
-            inboundShowroomFiles, inboundSelectedRo, inboundSubmitting, smInboundSubTab, smInboundSearch, smInboundFilter, smInboundStats, filteredInboundFiles, contactCustomerWhatsApp, contactDseWhatsApp, loadInboundShowroomFiles, assignInboundFileToRo, sendRoDispatchWhatsApp,
-            isPublicApplyMode, publicApplyWorkspace, publicApplySmUser, isResolvingPublicHub, publicHubError, showSmQrStandeeModal, publicApplyForm, isSubmittingPublicApply, publicApplyError, publicApplySubmitted, publicApplySuccessFile, smPublicApplyUrl, copySmApplyLink, shareSmApplyWhatsApp, submitPublicLoanApplication, resetPublicApplyForm, sendPublicApplySmWhatsApp,
-            showDseAccountPromptModal, showDseQuickRegisterModal, dseQuickRegisterForm, isDseRegistering, dseRegisterError, openDseRegisterFromApply, loginDseFromApply, proceedDseAccountRegistration, submitDseQuickRegistration, confirmGuestSubmission
+            // Root State & Functions
+            currentTab,
+            mobileMenuOpen,
+            allWorkspaces,
+            roUsers,
+            defaultSmName,
+            systemAnnouncement,
+            adminAnnouncementInput,
+            saveAnnouncement,
+            showMoreModal,
+            targetsDrivesSubTab,
+            upcomingFeatureVotes,
+            toggleUpcomingVote,
+            goToTab,
+
+            // Active / Suspended / Resigned ROs
+            activeRoUsers,
+            suspendedRoUsers,
+            resignedRoUsers,
+            smUsersTab,
+            smUsersSearch,
+            filteredActiveRos,
+            filteredSuspendedRos,
+            filteredResignedRos,
+            showAddRoModal,
+            newRoForm,
+            addRoError,
+            addRoStep,
+            isSavingRo,
+            newlyCreatedRo,
+            copyRoInviteSuccess,
+            openAddRoModal,
+            closeAddRoModal,
+            appendGmailDomain,
+            shareRoInviteWhatsApp,
+            copyRoInviteMessage,
+            saveNewRo,
+            toggleUserStatus,
+            deleteRoUser,
+
+            // Super Admin Overview & Management
+            saasOverviewTimeline,
+            saasOverviewCustomDate,
+            saasStats,
+            tenantHealthList,
+            userSearchQuery,
+            userFilterStatus,
+            expandedWorkspaces,
+            toggleWorkspaceExpansion,
+            expandAllWorkspaces,
+            collapseAllWorkspaces,
+            toggleWorkspaceStatus,
+            deleteWorkspace,
+            superAdminUsersTab,
+            dseDirectorySearch,
+            dseDirectoryFilterBrand,
+            dseDirectoryFilterStatus,
+            dseDirectoryList,
+            dseDirectoryStats,
+            totalBankUsersCount,
+            goToSuperAdminDirectory,
+            groupedUsers,
+            showEditUserModal,
+            editUserForm,
+            openEditUserModal,
+            saveUserEdit,
+
+            // RO 360 Inspector
+            selectedRoForInspection,
+            showRoInspectorDrawer,
+            roInspectorActiveTab,
+            openRoInspector,
+            closeRoInspector,
+            selectedRoAnalytics,
+            generateSmNudgeWhatsApp,
+            generateFileAlertWhatsApp,
+
+            // User Profile
+            profileActiveTab,
+            profileForm,
+            isSavingProfile,
+            profileSaveSuccess,
+            profileSaveError,
+            initProfileForm,
+            saveUserProfile,
+            profileCompletion,
+            isResyncingProfile,
+            profileResyncSuccess,
+            triggerProfileResync,
+
+            // PWA
+            deferredInstallPrompt,
+            showInstallBanner,
+            showIosInstallModal,
+            closeIosInstallModal,
+            isStandalone,
+            isIos,
+            installPwaApp,
+            dismissInstallBanner,
+
+            // Helpers & Formatters
+            formatCurrency,
+            formatLakhsToRupees,
+            toLakhs,
+            formatDate,
+            formatDateOnly,
+            formatCapitalizeName,
+            getStatusBadgeClass,
+            getTabTitle,
+            getTimelineLabel,
+            getSortLabel,
+            getTodayDateStr,
+            getYesterdayDateStr,
+
+            // Spread Auth Composable
+            ...auth,
+
+            // Spread DSE Composable
+            ...dse,
+
+            // Spread Loan Files Composable
+            ...loanFiles,
+
+            // Spread Hierarchy Composable
+            ...hierarchy
         };
     }
 });
 
 app.mount('#app');
-
-
