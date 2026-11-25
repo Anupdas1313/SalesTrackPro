@@ -2080,6 +2080,17 @@
                                         <i class="fas fa-file-excel"></i>
                                     </button>
                                 </div>
+
+                                <!-- Mobile Quick-Status Filter Chips -->
+                                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto hide-scrollbar pt-0.5">
+                                    <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'UW', label:'UW'}, {val:'Approved', label:'Approved'}, {val:'Disbursed', label:'Disbursed'}]"
+                                        :key="'mob-st-'+st.val"
+                                        @click="roFilters.status = st.val"
+                                        :class="roFilters.status === st.val ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0 transition cursor-pointer">
+                                        {{ st.label }}
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Desktop Filters (Hidden on Mobile) -->
@@ -2245,6 +2256,12 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- Mobile Summary Strip -->
+                            <div v-if="filteredFiles.length > 0" class="md:hidden flex items-center justify-between px-1 pb-1.5 text-[11px] text-slate-500 font-semibold">
+                                <span>{{ filteredFiles.length }} {{ filteredFiles.length === 1 ? 'file' : 'files' }}</span>
+                                <span class="font-bold text-slate-800 tabular-nums">Total: ₹{{ formatCurrency(filteredFiles.reduce((s, f) => s + (Number(f.loanAmount) || 0), 0)) }}</span>
                             </div>
 
                             <!-- Mobile Professional List (Scannable 3-tier hierarchy) -->
@@ -2511,6 +2528,17 @@
                                     <!-- Mobile Export Button -->
                                     <button @click="exportToExcel" class="shrink-0 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 h-[34px]" title="Export to Excel">
                                         <i class="fas fa-file-excel"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Mobile Quick-Status Filter Chips -->
+                                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto hide-scrollbar pt-0.5">
+                                    <button v-for="st in [{val:'', label:'All'}, {val:'Lead', label:'Lead'}, {val:'FI', label:'FI'}, {val:'UW', label:'UW'}, {val:'Approved', label:'Approved'}, {val:'Disbursed', label:'Disbursed'}]"
+                                        :key="'mob-st-'+st.val"
+                                        @click="roFilters.status = st.val"
+                                        :class="roFilters.status === st.val ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0 transition cursor-pointer">
+                                        {{ st.label }}
                                     </button>
                                 </div>
                             </div>
