@@ -8,6 +8,7 @@ import {
     formatDate,
     formatDateOnly,
     getTodayDateStr,
+    getYesterdayDateStr,
     isSanctionStatus,
     isDisbursedStatus,
     matchesTimeline,
@@ -1411,6 +1412,58 @@ export function useLoanFiles({
         return encodeURIComponent(text);
     };
 
+    // SM EOD UI Controls, Filtering & Safe Totals
+    const smEodDateFilter = ref('today'); // 'today' | 'yesterday' | 'this-month' | 'all'
+    const smEodRoFilter = ref('');
+    const smEodSummaryMode = ref('ftd'); // 'ftd' | 'mtd'
+    const expandedEodId = ref(null);
+
+    const getEodTotals = (eod) => {
+        const m = eod?.metrics || {};
+        return {
+            loginCount: (m.loginOpenMarket?.count || 0) + (m.loginBranch?.count || 0) + (m.loginUsedCar?.count || 0),
+            loginAmount: (m.loginOpenMarket?.amount || 0) + (m.loginBranch?.amount || 0) + (m.loginUsedCar?.amount || 0),
+            sancCount: (m.sanctionOpenMarket?.count || 0) + (m.loginBranchSanction?.count || 0) + (m.sanctionUsedCar?.count || 0),
+            sancAmount: (m.sanctionOpenMarket?.amount || 0) + (m.loginBranchSanction?.amount || 0) + (m.sanctionUsedCar?.amount || 0),
+            disbCount: (m.disbOpenMarket?.count || 0) + (m.disbBranch?.count || 0) + (m.disbUsedCar?.count || 0),
+            disbAmount: (m.disbOpenMarket?.amount || 0) + (m.disbBranch?.amount || 0) + (m.disbUsedCar?.amount || 0),
+            vicpCount: m.vicpCrm?.count || 0,
+            miCount: m.mi?.count || 0,
+            marutiLoginCount: m.marutiLogin?.count || 0,
+            marutiLoginAmount: m.marutiLogin?.amount || 0,
+            marutiDisbCount: m.marutiDisb?.count || 0,
+            marutiDisbAmount: m.marutiDisb?.amount || 0
+        };
+    };
+
+    const filteredSmEods = computed(() => {
+        const today = getTodayDateStr();
+        const yesterday = getYesterdayDateStr();
+        const currentMonth = today.substring(0, 7);
+
+        return (smEods.value || [])
+            .filter(eod => {
+                if (smEodRoFilter.value && eod.userId !== smEodRoFilter.value) return false;
+                if (smEodDateFilter.value === 'today') return eod.date === today;
+                if (smEodDateFilter.value === 'yesterday') return eod.date === yesterday;
+                if (smEodDateFilter.value === 'this-month') return eod.date && eod.date.startsWith(currentMonth);
+                return true;
+            })
+            .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+    });
+
+    const sendEodReminderWhatsApp = (ro) => {
+        if (!ro) return;
+        const name = ro.name || 'Team';
+        const today = getTodayDateStr();
+        const msg = `Hi ${name}, please submit your Daily EOD report for *${today}* on SalesLink before wrap-up.`;
+        const digits = String(ro.phone || '').replace(/\D/g, '').slice(-10);
+        const url = digits.length === 10
+            ? `https://wa.me/91${digits}?text=${encodeURIComponent(msg)}`
+            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    };
+
     // --- RO Personal Targets & Pacing ---
     const roTargetFiles = ref(Number(localStorage.getItem('ro_target_files') || 25));
     const roTargetVolume = ref(Number(localStorage.getItem('ro_target_volume') || 150));
@@ -1913,6 +1966,13 @@ export function useLoanFiles({
         missingEods,
         generateEodWhatsApp,
         generateRoWhatsApp,
+        smEodDateFilter,
+        smEodRoFilter,
+        smEodSummaryMode,
+        expandedEodId,
+        filteredSmEods,
+        getEodTotals,
+        sendEodReminderWhatsApp,
         hasSubmittedToday,
         eodTotals,
         dealerVisitsInput,

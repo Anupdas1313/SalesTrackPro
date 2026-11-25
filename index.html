@@ -5553,49 +5553,210 @@
 
 
                     <!-- SM: EOD REPORTS DIRECTORY -->
-                    <div v-if="currentTab === 'sm-eod' && isSM" class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-slate-800 mb-0">RO Daily EOD Submissions</h3>
+                    <div v-if="currentTab === 'sm-eod' && isSM" class="space-y-4 max-w-5xl mx-auto pb-14">
+                        <!-- Top Header + Branch FTD/MTD Summary -->
+                        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-base sm:text-lg font-bold text-slate-900">RO Daily EODs</h3>
+                                        <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                                            :class="smEodSummary.todaySubmissions >= smEodSummary.totalRos && smEodSummary.totalRos > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'">
+                                            Today: {{ smEodSummary.todaySubmissions }}/{{ smEodSummary.totalRos }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-0.5">Daily branch login, sanction & disbursal reporting</p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <!-- FTD / MTD Toggle -->
+                                    <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs">
+                                        <button type="button" @click="smEodSummaryMode = 'ftd'"
+                                            :class="smEodSummaryMode === 'ftd' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 font-medium'"
+                                            class="px-2.5 py-1 rounded-lg transition cursor-pointer">FTD</button>
+                                        <button type="button" @click="smEodSummaryMode = 'mtd'"
+                                            :class="smEodSummaryMode === 'mtd' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 font-medium'"
+                                            class="px-2.5 py-1 rounded-lg transition cursor-pointer">MTD</button>
+                                    </div>
+
+                                    <!-- Share Branch Summary on WhatsApp -->
+                                    <a :href="`https://wa.me/?text=${generateEodWhatsApp()}`" target="_blank"
+                                        class="px-3 py-1.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <span class="hidden sm:inline">Share Summary</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- 3-Metric Rollup Strip -->
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-slate-100">
+                                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Logins ({{ smEodSummaryMode.toUpperCase() }})</div>
+                                    <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
+                                        {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.loginCount : smEodSummary.mtd.loginCount) }}
+                                        <span class="text-xs font-semibold text-slate-500">· {{ ((smEodSummaryMode === 'ftd' ? smEodSummary.ftd.loginAmount : smEodSummary.mtd.loginAmount) || 0).toFixed(1) }}L</span>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sanctions ({{ smEodSummaryMode.toUpperCase() }})</div>
+                                    <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
+                                        {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.sancCount || smEodSummary.ftd.sanctionCount : smEodSummary.mtd.sancCount || smEodSummary.mtd.sanctionCount) }}
+                                        <span class="text-xs font-semibold text-slate-500">· {{ ((smEodSummaryMode === 'ftd' ? smEodSummary.ftd.sanctionAmount : smEodSummary.mtd.sanctionAmount) || 0).toFixed(1) }}L</span>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Disbursals ({{ smEodSummaryMode.toUpperCase() }})</div>
+                                    <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
+                                        {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.disbCount : smEodSummary.mtd.disbCount) }}
+                                        <span class="text-xs font-semibold text-slate-500">· {{ ((smEodSummaryMode === 'ftd' ? smEodSummary.ftd.disbAmount : smEodSummary.mtd.disbAmount) || 0).toFixed(1) }}L</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm text-slate-600">
-                                    <thead class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100">
-                                        <tr>
-                                            <th class="px-4 py-2">Date</th>
-                                            <th class="px-4 py-2">RO Name</th>
-                                            <th class="px-4 py-2 text-center">Total Logins (FTD)</th>
-                                            <th class="px-4 py-2 text-center">Total Disb (FTD)</th>
-                                            <th class="px-4 py-2 text-center">Total Sanc (FTD)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-50 font-medium">
-                                        <tr v-for="eod in smEods" :key="eod.id" class="hover:bg-slate-50 transition">
-                                            <td class="px-4 py-3 text-slate-800 font-bold">{{ new Date(eod.date).toLocaleDateString() }}</td>
-                                            <td class="px-4 py-3 uppercase text-xs">{{ eod.userName }}</td>
-                                            <td class="px-4 py-3 text-center">
-                                                {{ (eod.metrics.loginOpenMarket.count || 0) + (eod.metrics.loginBranch.count || 0) + (eod.metrics.loginUsedCar.count || 0) }} / 
-                                                {{ ((eod.metrics.loginOpenMarket.amount || 0) + (eod.metrics.loginBranch.amount || 0) + (eod.metrics.loginUsedCar.amount || 0)).toFixed(2) }}L
+
+                        <!-- Pending EODs Compliance Bar (Shown only if any active RO hasn't submitted today) -->
+                        <div v-if="missingEods.length > 0" class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div class="text-xs">
+                                <span class="font-bold text-amber-900">Pending Today ({{ missingEods.length }}):</span>
+                                <span class="text-amber-800 ml-1">Tap a name to send a WhatsApp reminder</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button v-for="ro in missingEods" :key="'miss-'+ro.id" type="button" @click="sendEodReminderWhatsApp(ro)"
+                                    class="px-2.5 py-1 bg-white hover:bg-amber-100/60 border border-amber-200 rounded-full text-[11px] font-semibold text-slate-800 flex items-center gap-1.5 transition cursor-pointer">
+                                    <span class="capitalize">{{ ro.name }}</span>
+                                    <i class="fab fa-whatsapp text-[#25D366] text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Date & RO Filter Bar -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-xs sm:w-auto">
+                                <button v-for="d in [{val:'today', label:'Today'}, {val:'yesterday', label:'Yesterday'}, {val:'this-month', label:'Month'}, {val:'all', label:'All'}]"
+                                    :key="'eod-df-'+d.val" type="button" @click="smEodDateFilter = d.val"
+                                    :class="smEodDateFilter === d.val ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                                    class="py-1.5 px-3 rounded-lg transition cursor-pointer text-center">
+                                    {{ d.label }}
+                                </button>
+                            </div>
+
+                            <select v-model="smEodRoFilter" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 transition cursor-pointer">
+                                <option value="">All Officers ({{ activeRoUsers.length }})</option>
+                                <option v-for="ro in roUsers" :key="'eod-ro-'+ro.id" :value="ro.id">{{ ro.name }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Desktop Table -->
+                        <div class="hidden md:block bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200/80 tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-3">Date</th>
+                                        <th class="px-4 py-3">Officer</th>
+                                        <th class="px-4 py-3 text-center">Logins</th>
+                                        <th class="px-4 py-3 text-center">Sanctions</th>
+                                        <th class="px-4 py-3 text-center">Disbursals</th>
+                                        <th class="px-4 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template v-for="eod in filteredSmEods" :key="eod.id">
+                                        <tr @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="hover:bg-slate-50/80 transition cursor-pointer">
+                                            <td class="px-4 py-3 text-slate-800 font-semibold whitespace-nowrap">{{ formatDateOnly(eod.date) }}</td>
+                                            <td class="px-4 py-3 font-bold text-slate-900 uppercase">{{ eod.userName }}</td>
+                                            <td class="px-4 py-3 text-center font-semibold text-slate-800 tabular-nums">
+                                                {{ getEodTotals(eod).loginCount }} / {{ getEodTotals(eod).loginAmount.toFixed(2) }}L
                                             </td>
-                                            <td class="px-4 py-3 text-center">
-                                                {{ (eod.metrics.disbOpenMarket.count || 0) + (eod.metrics.disbBranch.count || 0) + (eod.metrics.disbUsedCar.count || 0) }} / 
-                                                {{ ((eod.metrics.disbOpenMarket.amount || 0) + (eod.metrics.disbBranch.amount || 0) + (eod.metrics.disbUsedCar.amount || 0)).toFixed(2) }}L
+                                            <td class="px-4 py-3 text-center font-semibold text-slate-800 tabular-nums">
+                                                {{ getEodTotals(eod).sancCount }} / {{ getEodTotals(eod).sancAmount.toFixed(2) }}L
                                             </td>
-                                            <td class="px-4 py-3 text-center">
-                                                    {{ eod.metrics.loginBranchSanction.count || 0 }} / {{ (eod.metrics.loginBranchSanction.amount || 0).toFixed(2) }}L
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] hover:text-[#1ebd59] transition text-lg" title="Share to WhatsApp">
+                                            <td class="px-4 py-3 text-center font-semibold text-slate-800 tabular-nums">
+                                                {{ getEodTotals(eod).disbCount }} / {{ getEodTotals(eod).disbAmount.toFixed(2) }}L
+                                            </td>
+                                            <td class="px-4 py-3 text-right" @click.stop>
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] hover:text-[#1EBE5D] text-base" title="Share on WhatsApp">
                                                         <i class="fab fa-whatsapp"></i>
                                                     </a>
-                                                </td>
-                                            </tr>
-                                        <tr v-if="smEods.length === 0">
-                                            <td colspan="5" class="px-4 py-6 text-center text-slate-400">No EOD reports submitted yet.</td>
+                                                    <button type="button" @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer" title="Channel Breakdown">
+                                                        <i class="fas fa-chevron-down text-[10px] transition-transform" :class="expandedEodId === eod.id ? 'rotate-180' : ''"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    </tbody>
-                                </table>
+                                        <!-- Expanded Channel Breakdown Row -->
+                                        <tr v-if="expandedEodId === eod.id" class="bg-slate-50/70">
+                                            <td colspan="6" class="px-4 py-3 text-[11px] text-slate-600">
+                                                <div class="grid grid-cols-5 gap-3">
+                                                    <div><span class="text-slate-400 block">Open Mkt L/D</span><strong>{{ eod.metrics?.loginOpenMarket?.count || 0 }}L / {{ eod.metrics?.disbOpenMarket?.count || 0 }}D</strong></div>
+                                                    <div><span class="text-slate-400 block">Branch L/D</span><strong>{{ eod.metrics?.loginBranch?.count || 0 }}L / {{ eod.metrics?.disbBranch?.count || 0 }}D</strong></div>
+                                                    <div><span class="text-slate-400 block">Used Car L/D</span><strong>{{ eod.metrics?.loginUsedCar?.count || 0 }}L / {{ eod.metrics?.disbUsedCar?.count || 0 }}D</strong></div>
+                                                    <div><span class="text-slate-400 block">VICP / MI</span><strong>{{ getEodTotals(eod).vicpCount }} / {{ getEodTotals(eod).miCount }}</strong></div>
+                                                    <div><span class="text-slate-400 block">Dealer Visits</span><strong>{{ eod.dealerVisits ?? '-' }}</strong></div>
+                                                </div>
+                                                <div v-if="eod.remarks" class="mt-2 pt-2 border-t border-slate-200/70 text-slate-600">
+                                                    <span class="font-semibold text-slate-700">Remarks:</span> {{ eod.remarks }}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr v-if="filteredSmEods.length === 0">
+                                        <td colspan="6" class="px-4 py-10 text-center text-slate-400">No EOD reports found for the selected filter.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile Clean Card List -->
+                        <div v-if="filteredSmEods.length > 0" class="md:hidden bg-white border border-slate-200/80 rounded-2xl divide-y divide-slate-100 shadow-xs overflow-hidden">
+                            <div v-for="eod in filteredSmEods" :key="'mob-eod-'+eod.id" @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="p-3.5 hover:bg-slate-50/70 transition cursor-pointer space-y-2.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <h4 class="font-bold text-slate-900 text-sm uppercase truncate">{{ eod.userName }}</h4>
+                                        <p class="text-[11px] text-slate-400 font-medium">{{ formatDateOnly(eod.date) }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2.5 shrink-0" @click.stop>
+                                        <a :href="`https://wa.me/?text=${generateRoWhatsApp(eod)}`" target="_blank" class="text-[#25D366] text-lg" title="Share on WhatsApp">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </a>
+                                        <button type="button" @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="text-slate-400 p-1 cursor-pointer">
+                                            <i class="fas fa-chevron-down text-[10px] transition-transform" :class="expandedEodId === eod.id ? 'rotate-180' : ''"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold uppercase">Logins</div>
+                                        <div class="text-xs font-extrabold text-slate-900 tabular-nums">{{ getEodTotals(eod).loginCount }} · {{ getEodTotals(eod).loginAmount.toFixed(1) }}L</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold uppercase">Sanctions</div>
+                                        <div class="text-xs font-extrabold text-slate-900 tabular-nums">{{ getEodTotals(eod).sancCount }} · {{ getEodTotals(eod).sancAmount.toFixed(1) }}L</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold uppercase">Disbursals</div>
+                                        <div class="text-xs font-extrabold text-slate-900 tabular-nums">{{ getEodTotals(eod).disbCount }} · {{ getEodTotals(eod).disbAmount.toFixed(1) }}L</div>
+                                    </div>
+                                </div>
+
+                                <!-- Expandable Mobile Breakdown -->
+                                <div v-if="expandedEodId === eod.id" class="pt-2 border-t border-slate-100 text-[11px] text-slate-600 space-y-1.5">
+                                    <div class="grid grid-cols-2 gap-1.5">
+                                        <span>Open Mkt: <strong>{{ eod.metrics?.loginOpenMarket?.count || 0 }}L / {{ eod.metrics?.disbOpenMarket?.count || 0 }}D</strong></span>
+                                        <span>Branch: <strong>{{ eod.metrics?.loginBranch?.count || 0 }}L / {{ eod.metrics?.disbBranch?.count || 0 }}D</strong></span>
+                                        <span>Used Car: <strong>{{ eod.metrics?.loginUsedCar?.count || 0 }}L / {{ eod.metrics?.disbUsedCar?.count || 0 }}D</strong></span>
+                                        <span>VICP / MI: <strong>{{ getEodTotals(eod).vicpCount }} / {{ getEodTotals(eod).miCount }}</strong></span>
+                                    </div>
+                                    <div v-if="eod.remarks" class="text-slate-500 pt-1">
+                                        <strong class="text-slate-700">Remarks:</strong> {{ eod.remarks }}
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <div v-if="filteredSmEods.length === 0" class="md:hidden p-6 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 text-xs">
+                            No EOD reports found for this filter.
                         </div>
                     </div>
 
