@@ -905,7 +905,7 @@ export function useLoanFiles({
         };
     });
 
-    const getRoMtdForDate = (eodDate, currentMetrics = null) => {
+    const getRoMtdForDate = (eodDate, currentMetrics = null, targetUserId = null) => {
         const targetDate = eodDate || getTodayDateStr();
         const currentMonth = targetDate.substring(0, 7);
 
@@ -925,7 +925,11 @@ export function useLoanFiles({
             mi: { count: 0 }
         };
 
-        const priorFiles = (myFiles.value || []).filter(f => {
+        const sourceFiles = (targetUserId && (allFiles.value || []).length > 0)
+            ? allFiles.value.filter(f => f.roId === targetUserId || f.userId === targetUserId)
+            : (myFiles.value || []);
+
+        const priorFiles = sourceFiles.filter(f => {
             const fDate = f.loginDate || (f.createdAt ? f.createdAt.split('T')[0] : '');
             return fDate && fDate.startsWith(currentMonth) && fDate < targetDate;
         });
@@ -1021,12 +1025,12 @@ export function useLoanFiles({
     });
 
     const todayLoginsFiles = computed(() => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         return myFiles.value.filter(f => (f.createdAt && f.createdAt.startsWith(today)) || f.loginDate === today);
     });
 
     const todayDisbFiles = computed(() => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         return myFiles.value.filter(f => f.status === 'Disbursed' && ((f.updatedAt && f.updatedAt.startsWith(today)) || (f.loginDate === today)));
     });
 
@@ -1154,7 +1158,7 @@ export function useLoanFiles({
 
         submitting.value = true;
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTodayDateStr();
             const existingEodIndex = myEods.value.findIndex(e => e.date === today);
             const alreadySubmitted = existingEodIndex !== -1;
 
@@ -1198,7 +1202,7 @@ export function useLoanFiles({
     };
 
     const startReviseTodayEod = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         const todayEod = myEods.value.find(e => e.date === today);
         if (todayEod && todayEod.metrics) {
             eodForm.value = JSON.parse(JSON.stringify(todayEod.metrics));
@@ -1228,7 +1232,7 @@ export function useLoanFiles({
     const generateRoWhatsAppText = (eod) => {
         if (!eod || !eod.metrics) return '';
 
-        const m = getRoMtdForDate(eod.date, eod.metrics);
+        const m = getRoMtdForDate(eod.date, eod.metrics, eod.userId || null);
         const f = eod.metrics;
 
         let dateStr = '';
@@ -1343,7 +1347,7 @@ export function useLoanFiles({
     };
 
     const smEodSummary = computed(() => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         const currentMonth = today.substring(0, 7);
 
         const todayReports = smEods.value.filter(e => e.date === today);
@@ -1389,27 +1393,125 @@ export function useLoanFiles({
     });
 
     const missingEods = computed(() => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayDateStr();
         const submittedUserIds = smEods.value.filter(e => e.date === today).map(e => e.userId);
         return (activeRoUsers.value || []).filter(ro => !submittedUserIds.includes(ro.id));
     });
 
-    const generateEodWhatsApp = () => {
-        const today = new Date().toISOString().split('T')[0];
-        const currentMonth = today.substring(0, 7);
+    const smEodForecast = computed(() => {
+        const today = getTodayDateStr();
         const todayReports = smEods.value.filter(e => e.date === today);
-
-        let text = `*Daily EOD Summary - ${today}*\n\n`;
-        text += `*Submissions:* ${todayReports.length}/${(activeRoUsers.value || []).length}\n\n`;
-
+        let logins = 0;
+        let disb = 0;
+        let visits = 0;
         todayReports.forEach(r => {
-            const m = r.metrics || {};
-            const fl = (m.loginOpenMarket?.count||0) + (m.loginBranch?.count||0) + (m.loginUsedCar?.count||0);
-            const fd = (m.disbOpenMarket?.count||0) + (m.disbBranch?.count||0) + (m.disbUsedCar?.count||0);
-            text += `*${r.userName}:* L: ${fl} | D: ${fd}\n`;
+            logins += Number(r.tomorrowLogins) || 0;
+            disb += Number(r.tomorrowDisb) || 0;
+            visits += Number(r.dealerVisits) || 0;
         });
+        return { logins, disb, visits };
+    });
 
-        return encodeURIComponent(text);
+    const generateEodWhatsAppText = () => {
+        const today = getTodayDateStr();
+        const todayReports = smEods.value.filter(e => e.date === today);
+        const summary = smEodSummary.value;
+        const forecast = smEodForecast.value;
+
+        let text = `*Branch Daily EOD Summary - ${today}*\n`;
+        text += `Submissions: ${todayReports.length}/${(activeRoUsers.value || []).length}\n\n`;
+        text += `*FTD Totals:*\n`;
+        text += `Logins: ${summary.ftd.loginCount} (₹${summary.ftd.loginAmount.toFixed(2)}L)\n`;
+        text += `Sanctions: ${summary.ftd.sanctionCount} (₹${summary.ftd.sanctionAmount.toFixed(2)}L)\n`;
+        text += `Disbursals: ${summary.ftd.disbCount} (₹${summary.ftd.disbAmount.toFixed(2)}L)\n\n`;
+        text += `*MTD Totals:*\n`;
+        text += `Logins: ${summary.mtd.loginCount} (₹${summary.mtd.loginAmount.toFixed(2)}L)\n`;
+        text += `Sanctions: ${summary.mtd.sanctionCount} (₹${summary.mtd.sanctionAmount.toFixed(2)}L)\n`;
+        text += `Disbursals: ${summary.mtd.disbCount} (₹${summary.mtd.disbAmount.toFixed(2)}L)\n\n`;
+        text += `*Tomorrow Expected:* ${forecast.logins} Logins | ${forecast.disb} Disb | ${forecast.visits} Visits\n`;
+
+        if (todayReports.length > 0) {
+            text += `\n*Officer-wise (FTD):*\n`;
+            todayReports.forEach(r => {
+                const t = getEodTotals(r);
+                text += `- ${r.userName}: ${t.loginCount}L (${t.loginAmount.toFixed(1)}L) | ${t.sancCount}S | ${t.disbCount}D (${t.disbAmount.toFixed(1)}L)\n`;
+            });
+        }
+        if (missingEods.value.length > 0) {
+            text += `\n*Pending:* ${missingEods.value.map(ro => ro.name).join(', ')}`;
+        }
+        return text;
+    };
+
+    const generateEodWhatsApp = () => {
+        return encodeURIComponent(generateEodWhatsAppText());
+    };
+
+    const branchEodCopiedToast = ref(false);
+    const copyBranchEodToClipboard = async () => {
+        const text = generateEodWhatsAppText();
+        if (!text) return;
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            branchEodCopiedToast.value = true;
+            setTimeout(() => { branchEodCopiedToast.value = false; }, 2500);
+        } catch (err) {
+            console.error('Copy branch EOD error:', err);
+        }
+    };
+
+    const getEodPipelineVariance = (eod) => {
+        if (!eod?.date || !eod?.userId) return { liveLogins: 0, liveDisb: 0, matched: true };
+        const eodDate = eod.date;
+        const roFiles = (allFiles.value || []).filter(f => f.roId === eod.userId || f.userId === eod.userId);
+        const liveLogins = roFiles.filter(f => (f.loginDate === eodDate) || (f.createdAt && f.createdAt.startsWith(eodDate))).length;
+        const liveDisb = roFiles.filter(f => isDisbursedStatus(f.status) && ((f.updatedAt && f.updatedAt.startsWith(eodDate)) || (f.loginDate === eodDate))).length;
+        const t = getEodTotals(eod);
+        return {
+            liveLogins,
+            liveDisb,
+            matched: t.loginCount === liveLogins && t.disbCount === liveDisb
+        };
+    };
+
+    const exportSmEodsToExcel = () => {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel export library not loaded yet.');
+            return;
+        }
+        const rows = (filteredSmEods.value || []).map(eod => {
+            const t = getEodTotals(eod);
+            return {
+                Date: eod.date || '',
+                Officer: eod.userName || '',
+                'Logins (Count)': t.loginCount,
+                'Logins (Lakhs)': Number(t.loginAmount.toFixed(2)),
+                'Sanctions (Count)': t.sancCount,
+                'Sanctions (Lakhs)': Number(t.sancAmount.toFixed(2)),
+                'Disbursals (Count)': t.disbCount,
+                'Disbursals (Lakhs)': Number(t.disbAmount.toFixed(2)),
+                'Dealer Visits': Number(eod.dealerVisits) || 0,
+                'Tomorrow Logins': eod.tomorrowLogins || 0,
+                'Tomorrow Disb': eod.tomorrowDisb || 0,
+                'VICP/CRM': t.vicpCount,
+                'MI': t.miCount,
+                Revised: eod.isRevised ? 'Yes' : 'No',
+                Remarks: eod.remarks || ''
+            };
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'EOD Reports');
+        XLSX.writeFile(wb, `SalesLink_EOD_${getTodayDateStr()}.xlsx`);
     };
 
     // SM EOD UI Controls, Filtering & Safe Totals
@@ -1973,6 +2075,11 @@ export function useLoanFiles({
         filteredSmEods,
         getEodTotals,
         sendEodReminderWhatsApp,
+        smEodForecast,
+        branchEodCopiedToast,
+        copyBranchEodToClipboard,
+        getEodPipelineVariance,
+        exportSmEodsToExcel,
         hasSubmittedToday,
         eodTotals,
         dealerVisitsInput,

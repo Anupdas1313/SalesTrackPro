@@ -174,13 +174,18 @@ service cloud.firestore {
         isSuperAdmin() ||
         (active() && (
           (request.resource.data.tenantId != null && request.resource.data.tenantId == tenant()) ||
-          request.resource.data.userId == request.auth.uid
+          request.resource.data.userId == request.auth.uid ||
+          request.resource.data.userId == dir().userId
         ))
       );
 
       allow update: if signedIn() && (
         isSuperAdmin() ||
-        (active() && resource.data.userId == request.auth.uid)
+        (active() && (
+          resource.data.userId == request.auth.uid ||
+          resource.data.userId == dir().userId ||
+          (role() == 'sm' && resource.data.tenantId != null && resource.data.tenantId == tenant())
+        ))
       );
 
       allow delete: if isSuperAdmin();

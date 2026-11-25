@@ -2878,22 +2878,27 @@
                                         <tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                                             <th class="py-2.5 px-3">Date</th>
                                             <th class="py-2.5 px-3">Officer</th>
-                                            <th class="py-2.5 px-3 text-center">Dealer Visits</th>
-                                            <th class="py-2.5 px-3 text-right">Tomorrow Expected</th>
+                                            <th class="py-2.5 px-3 text-center">Logins</th>
+                                            <th class="py-2.5 px-3 text-center">Sanctions</th>
+                                            <th class="py-2.5 px-3 text-center">Disbursals</th>
+                                            <th class="py-2.5 px-3 text-center">Visits</th>
+                                            <th class="py-2.5 px-3 text-right">Tomorrow</th>
                                             <th class="py-2.5 px-3">Remarks</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-xs divide-y divide-slate-100">
                                         <tr v-if="areaEods.length === 0">
-                                            <td colspan="5" class="p-8 text-center text-slate-400">No EOD reports logged across the area yet.</td>
+                                            <td colspan="8" class="p-8 text-center text-slate-400">No EOD reports logged across the area yet.</td>
                                         </tr>
                                         <tr v-for="eod in areaEods" :key="eod.id" class="hover:bg-slate-50/70 transition">
-                                            <td class="py-3 px-3 font-mono font-bold text-slate-800">{{ eod.date }}</td>
+                                            <td class="py-3 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">{{ eod.date }}</td>
                                             <td class="py-3 px-3 font-semibold text-slate-900">{{ eod.userName || 'RO' }}</td>
-                                            <td class="py-3 px-3 text-center font-bold text-indigo-700">{{ eod.dealerVisits || 0 }} visits</td>
-                                            <td class="py-3 px-3 text-right text-slate-700">
-                                                <div>Logins: {{ eod.tomorrowLogins || '0' }}</div>
-                                                <div class="text-[10px] text-emerald-600 font-bold">Disb: {{ eod.tomorrowDisb || '0' }}</div>
+                                            <td class="py-3 px-3 text-center font-semibold text-slate-800 tabular-nums">{{ getEodTotals(eod).loginCount }} / {{ getEodTotals(eod).loginAmount.toFixed(1) }}L</td>
+                                            <td class="py-3 px-3 text-center font-semibold text-slate-800 tabular-nums">{{ getEodTotals(eod).sancCount }} / {{ getEodTotals(eod).sancAmount.toFixed(1) }}L</td>
+                                            <td class="py-3 px-3 text-center font-semibold text-slate-800 tabular-nums">{{ getEodTotals(eod).disbCount }} / {{ getEodTotals(eod).disbAmount.toFixed(1) }}L</td>
+                                            <td class="py-3 px-3 text-center font-bold text-slate-700">{{ eod.dealerVisits || 0 }}</td>
+                                            <td class="py-3 px-3 text-right text-slate-700 whitespace-nowrap">
+                                                {{ eod.tomorrowLogins || '0' }}L / {{ eod.tomorrowDisb || '0' }}D
                                             </td>
                                             <td class="py-3 px-3 text-slate-500 max-w-xs truncate">{{ eod.remarks || '-' }}</td>
                                         </tr>
@@ -5579,17 +5584,29 @@
                                             class="px-2.5 py-1 rounded-lg transition cursor-pointer">MTD</button>
                                     </div>
 
-                                    <!-- Share Branch Summary on WhatsApp -->
+                                    <!-- Share & Export Actions -->
+                                    <button type="button" @click="copyBranchEodToClipboard"
+                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                                        title="Copy Branch Summary">
+                                        <i :class="branchEodCopiedToast ? 'fas fa-check text-emerald-600' : 'far fa-copy'"></i>
+                                        <span class="hidden sm:inline">{{ branchEodCopiedToast ? 'Copied' : 'Copy' }}</span>
+                                    </button>
+                                    <button type="button" @click="exportSmEodsToExcel"
+                                        class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                                        title="Export EODs to Excel">
+                                        <i class="fas fa-file-excel text-emerald-700"></i>
+                                        <span class="hidden sm:inline">Excel</span>
+                                    </button>
                                     <a :href="`https://wa.me/?text=${generateEodWhatsApp()}`" target="_blank"
                                         class="px-3 py-1.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
                                         <i class="fab fa-whatsapp text-sm"></i>
-                                        <span class="hidden sm:inline">Share Summary</span>
+                                        <span class="hidden sm:inline">Share</span>
                                     </a>
                                 </div>
                             </div>
 
-                            <!-- 3-Metric Rollup Strip -->
-                            <div class="grid grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-slate-100">
+                            <!-- 3-Metric Rollup Strip + Tomorrow Forecast -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-slate-100">
                                 <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
                                     <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Logins ({{ smEodSummaryMode.toUpperCase() }})</div>
                                     <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
@@ -5600,7 +5617,7 @@
                                 <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
                                     <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sanctions ({{ smEodSummaryMode.toUpperCase() }})</div>
                                     <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
-                                        {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.sancCount || smEodSummary.ftd.sanctionCount : smEodSummary.mtd.sancCount || smEodSummary.mtd.sanctionCount) }}
+                                        {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.sanctionCount : smEodSummary.mtd.sanctionCount) }}
                                         <span class="text-xs font-semibold text-slate-500">· {{ ((smEodSummaryMode === 'ftd' ? smEodSummary.ftd.sanctionAmount : smEodSummary.mtd.sanctionAmount) || 0).toFixed(1) }}L</span>
                                     </div>
                                 </div>
@@ -5609,6 +5626,13 @@
                                     <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
                                         {{ (smEodSummaryMode === 'ftd' ? smEodSummary.ftd.disbCount : smEodSummary.mtd.disbCount) }}
                                         <span class="text-xs font-semibold text-slate-500">· {{ ((smEodSummaryMode === 'ftd' ? smEodSummary.ftd.disbAmount : smEodSummary.mtd.disbAmount) || 0).toFixed(1) }}L</span>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tomorrow Plan</div>
+                                    <div class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 tabular-nums">
+                                        {{ smEodForecast.logins }}L / {{ smEodForecast.disb }}D
+                                        <span class="text-xs font-semibold text-slate-500">· {{ smEodForecast.visits }}V</span>
                                     </div>
                                 </div>
                             </div>
@@ -5663,7 +5687,16 @@
                                     <template v-for="eod in filteredSmEods" :key="eod.id">
                                         <tr @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="hover:bg-slate-50/80 transition cursor-pointer">
                                             <td class="px-4 py-3 text-slate-800 font-semibold whitespace-nowrap">{{ formatDateOnly(eod.date) }}</td>
-                                            <td class="px-4 py-3 font-bold text-slate-900 uppercase">{{ eod.userName }}</td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-slate-900 uppercase">{{ eod.userName }}</span>
+                                                    <span v-if="eod.isRevised" class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">Revised</span>
+                                                    <span v-if="getEodPipelineVariance(eod).matched" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold" title="Matches live files">Verified</span>
+                                                    <span v-else class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[9px] font-bold" :title="`Live pipeline: ${getEodPipelineVariance(eod).liveLogins}L / ${getEodPipelineVariance(eod).liveDisb}D`">
+                                                        Live: {{ getEodPipelineVariance(eod).liveLogins }}L/{{ getEodPipelineVariance(eod).liveDisb }}D
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td class="px-4 py-3 text-center font-semibold text-slate-800 tabular-nums">
                                                 {{ getEodTotals(eod).loginCount }} / {{ getEodTotals(eod).loginAmount.toFixed(2) }}L
                                             </td>
@@ -5687,12 +5720,13 @@
                                         <!-- Expanded Channel Breakdown Row -->
                                         <tr v-if="expandedEodId === eod.id" class="bg-slate-50/70">
                                             <td colspan="6" class="px-4 py-3 text-[11px] text-slate-600">
-                                                <div class="grid grid-cols-5 gap-3">
+                                                <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
                                                     <div><span class="text-slate-400 block">Open Mkt L/D</span><strong>{{ eod.metrics?.loginOpenMarket?.count || 0 }}L / {{ eod.metrics?.disbOpenMarket?.count || 0 }}D</strong></div>
                                                     <div><span class="text-slate-400 block">Branch L/D</span><strong>{{ eod.metrics?.loginBranch?.count || 0 }}L / {{ eod.metrics?.disbBranch?.count || 0 }}D</strong></div>
                                                     <div><span class="text-slate-400 block">Used Car L/D</span><strong>{{ eod.metrics?.loginUsedCar?.count || 0 }}L / {{ eod.metrics?.disbUsedCar?.count || 0 }}D</strong></div>
                                                     <div><span class="text-slate-400 block">VICP / MI</span><strong>{{ getEodTotals(eod).vicpCount }} / {{ getEodTotals(eod).miCount }}</strong></div>
                                                     <div><span class="text-slate-400 block">Dealer Visits</span><strong>{{ eod.dealerVisits ?? '-' }}</strong></div>
+                                                    <div><span class="text-slate-400 block">Tomorrow Plan</span><strong>{{ eod.tomorrowLogins || 0 }}L / {{ eod.tomorrowDisb || 0 }}D</strong></div>
                                                 </div>
                                                 <div v-if="eod.remarks" class="mt-2 pt-2 border-t border-slate-200/70 text-slate-600">
                                                     <span class="font-semibold text-slate-700">Remarks:</span> {{ eod.remarks }}
@@ -5712,7 +5746,14 @@
                             <div v-for="eod in filteredSmEods" :key="'mob-eod-'+eod.id" @click="expandedEodId = expandedEodId === eod.id ? null : eod.id" class="p-3.5 hover:bg-slate-50/70 transition cursor-pointer space-y-2.5">
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="min-w-0">
-                                        <h4 class="font-bold text-slate-900 text-sm uppercase truncate">{{ eod.userName }}</h4>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <h4 class="font-bold text-slate-900 text-sm uppercase truncate">{{ eod.userName }}</h4>
+                                            <span v-if="eod.isRevised" class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">Revised</span>
+                                            <span v-if="getEodPipelineVariance(eod).matched" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold">Verified</span>
+                                            <span v-else class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[9px] font-bold">
+                                                Live {{ getEodPipelineVariance(eod).liveLogins }}L/{{ getEodPipelineVariance(eod).liveDisb }}D
+                                            </span>
+                                        </div>
                                         <p class="text-[11px] text-slate-400 font-medium">{{ formatDateOnly(eod.date) }}</p>
                                     </div>
                                     <div class="flex items-center gap-2.5 shrink-0" @click.stop>
@@ -5747,6 +5788,8 @@
                                         <span>Branch: <strong>{{ eod.metrics?.loginBranch?.count || 0 }}L / {{ eod.metrics?.disbBranch?.count || 0 }}D</strong></span>
                                         <span>Used Car: <strong>{{ eod.metrics?.loginUsedCar?.count || 0 }}L / {{ eod.metrics?.disbUsedCar?.count || 0 }}D</strong></span>
                                         <span>VICP / MI: <strong>{{ getEodTotals(eod).vicpCount }} / {{ getEodTotals(eod).miCount }}</strong></span>
+                                        <span>Visits: <strong>{{ eod.dealerVisits ?? 0 }}</strong></span>
+                                        <span>Tomorrow: <strong>{{ eod.tomorrowLogins || 0 }}L / {{ eod.tomorrowDisb || 0 }}D</strong></span>
                                     </div>
                                     <div v-if="eod.remarks" class="text-slate-500 pt-1">
                                         <strong class="text-slate-700">Remarks:</strong> {{ eod.remarks }}
